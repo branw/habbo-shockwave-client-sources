@@ -20,11 +20,22 @@ on startSong me, tSongData
   pSongData = tSongData.duplicate()
   me.processSongData()
   me.reserveSongChannels()
+  tOverShoot = pSongData[#offset] - pSongData[#offset] / 2000 * 2000
+  if tOverShoot <> 0 then
+    tWait = 2000 - tOverShoot
+    pSongData[#offset] = pSongData[#offset] + tWait
+    createTimeout(pQueueTimeout, tWait, #delayedSongStart, me.getID(), VOID, 1)
+  else
+    me.delayedSongStart()
+  end if
+  return 1
+end
+
+on delayedSongStart me
   createTimeout(pQueueTimeout, 50, #queueChannels, me.getID(), VOID, 1)
   if not timeoutExists(pUpdateTimeout) then
     createTimeout(pUpdateTimeout, 1500, #checkLoopData, me.getID(), VOID, 0)
   end if
-  return 1
 end
 
 on stopSong me

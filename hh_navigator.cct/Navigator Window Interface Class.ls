@@ -401,6 +401,9 @@ on showNodeInfo me, tNodeId
         tIconName = pDefaultPrivateRoomIcon
         tRoomDesc = getText("nav_private_helptext")
         tHeaderTxt = getText("nav_private_helptext_hd")
+        if textExists("nav_private_helptext_hd_main") then
+          tHeaderTxt = getText("nav_private_helptext_hd_main")
+        end if
     end case
     if tWndObj.elementExists("nav_modify_button") then
       tWndObj.getElement("nav_modify_button").hide()
