@@ -556,7 +556,9 @@ on clearWindow me, tWindowID
   tWndObj = getWindow(tWindowID)
   tWndObj.hide()
   tWndObj.unmerge()
-  pScroller.setScroll(0)
+  if objectp(pScroller) then
+    pScroller.setScroll(0)
+  end if
   return 1
 end
 

@@ -24,9 +24,10 @@ on select me
 end
 
 on showCard me
-  if not objectExists(pCardObj) then
-    createObject(pCardObj, "Package Card Class")
+  if objectExists(pCardObj) then
+    removeObject(pCardObj)
   end if
+  createObject(pCardObj, "Package Card Class")
   getObject(pCardObj).define([#id: me.getID(), #Msg: pMessage, #loc: me.pSprList[1].loc])
   return 1
 end

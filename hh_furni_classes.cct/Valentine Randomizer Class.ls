@@ -88,9 +88,9 @@ on setStateInternal me, tNewState
     if tNewState = 0 then
       pRollStartMillis = the milliSeconds
       if pRunning then
-        callAncestor(#setState, [me], pExtraStateCount - 1)
+        callAncestor(#setState, [me], pExtraStateCount - 1 - 1)
       else
-        callAncestor(#setState, [me], pExtraStateCount)
+        callAncestor(#setState, [me], pExtraStateCount - 1)
       end if
     else
       if tNewState >= 1 and tNewState <= pStateCount then
@@ -98,7 +98,7 @@ on setStateInternal me, tNewState
       end if
     end if
   else
-    tRetVal = callAncestor(#setState, [me], tNewState)
+    tRetVal = callAncestor(#setState, [me], tNewState - 1)
   end if
   return tRetVal
 end

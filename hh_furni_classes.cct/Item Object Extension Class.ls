@@ -71,13 +71,13 @@ on define me, tProps
       end if
     end if
   end if
-  if integerp(integer(tProps[#type])) and not (tProps[#type] contains "," or tProps[#type] contains "#") then
+  if integerp(integer(tProps[#type])) and string(integer(tProps[#type])) = string(tProps[#type]) then
     tstate = integer(tProps[#type])
+    if tstate <= 0 then
+      tstate = 0
+    end if
   else
     tstate = tProps[#type]
-  end if
-  if tstate = 0 then
-    tstate = 1
   end if
   me.setState(tstate)
   me.resetFrameNumbers()
@@ -354,7 +354,7 @@ on setState me, tNewState
   if ilk(integer(tNewState)) <> #integer then
     return 0
   end if
-  tNewState = integer(tNewState)
+  tNewState = integer(tNewState) + 1
   tNewIndex = 0
   repeat with tIndex = 1 to pStateSequenceList.count
     tstate = pStateSequenceList[tIndex]
@@ -408,23 +408,7 @@ on setState me, tNewState
 end
 
 on getNextState me
-  if pStateSequenceList.count < 1 then
-    return 0
-  end if
-  tStateIndex = pStateIndex mod pStateSequenceList.count + 1
-  tstate = pStateSequenceList[tStateIndex]
-  if ilk(tstate) = #list then
-    if tstate.count < 1 then
-      return 0
-    end if
-    tStateNew = tstate[random(tstate.count)]
-  else
-    tStateNew = tstate
-  end if
-  if tStateNew = pState then
-    return 0
-  end if
-  return getThread(#room).getComponent().getRoomConnection().send("SETITEMSTATE", [#string: string(me.id), #integer: tStateNew])
+  return getThread(#room).getComponent().getRoomConnection().send("USEWALLITEM", [#integer: integer(me.getID())])
 end
 
 on validateStateSequenceList me

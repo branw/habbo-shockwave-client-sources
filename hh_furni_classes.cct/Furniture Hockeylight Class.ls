@@ -9,7 +9,8 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if tValue = "I" then
+  tValue = integer(tValue)
+  if tValue = 1 then
     me.setOn()
   end if
   return 1
@@ -58,7 +59,7 @@ end
 
 on select me
   if the doubleClick then
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "I"])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

@@ -15,18 +15,20 @@ on getDate me
 end
 
 on handle_date me, tMsg
-  if stringp(tMsg.content) then
-    tMsg = tMsg.content
-    tDelim = the itemDelimiter
-    the itemDelimiter = "-"
-    if tMsg.item.count = 3 then
-      tMsg = tMsg.item[1] & "." & tMsg.item[2] & "." & tMsg.item[3]
-      getObject(#session).set("server_date", tMsg)
-      the itemDelimiter = tDelim
-      return executeMessage(#serverDate, tMsg)
-    end if
-    the itemDelimiter = tDelim
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
   end if
+  tMsg = tConn.GetStrFrom()
+  tDelim = the itemDelimiter
+  the itemDelimiter = "-"
+  if tMsg.item.count = 3 then
+    tMsg = tMsg.item[1] & "." & tMsg.item[2] & "." & tMsg.item[3]
+    getObject(#session).set("server_date", tMsg)
+    the itemDelimiter = tDelim
+    return executeMessage(#serverDate, tMsg)
+  end if
+  the itemDelimiter = tDelim
 end
 
 on regMsgList me, tBool

@@ -247,10 +247,15 @@ on createDialog me, tWndTitle, tWndType, tContentType, tEventProc
 end
 
 on removeDialog me, tWndTitle, tWndList
+  if not listp(tWndList) then
+    return 0
+  end if
   if tWndList.getOne(tWndTitle) then
     tWndList.deleteOne(tWndTitle)
-    if not voidp(pUrlList.getaProp(tWndTitle)) then
-      pUrlList.deleteProp(tWndTitle)
+    if pUrlList.ilk = #propList then
+      if not voidp(pUrlList.getaProp(tWndTitle)) then
+        pUrlList.deleteProp(tWndTitle)
+      end if
     end if
     return removeWindow(tWndTitle)
   else

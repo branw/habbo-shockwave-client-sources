@@ -28,8 +28,8 @@ on deconstruct me
     end if
     pPageImplObj = VOID
   end if
-  repeat with tTimeOutName in pTimeOutList
-    removeTimeout(tTimeOutName)
+  repeat with tTimeoutName in pTimeOutList
+    removeTimeout(tTimeoutName)
   end repeat
   return callAncestor(#deconstruct, [me])
 end
@@ -273,16 +273,16 @@ on downloadCompleted me, tProps
     end if
     pOldPageData["productList"][tItemIndex].setaProp("smallPrewImg", tPrev)
     me.pPageData[#offers][tItemIndex].setSmallPreview(tPrev)
-    tTimeOutName = "RefreshSmallIcon-" & tItemIndex & "-" & me.getID()
-    createTimeout(tTimeOutName, 10, #renderGridPreview, me.getID(), tItemIndex, 1)
-    pTimeOutList.add(tTimeOutName)
+    tTimeoutName = "RefreshSmallIcon-" & tItemIndex & "-" & me.getID()
+    createTimeout(tTimeoutName, 10, #renderGridPreview, me.getID(), tItemIndex, 1)
+    pTimeOutList.add(tTimeoutName)
   end if
 end
 
 on renderGridPreview me, tItemIndex
   repeat with i = 1 to pTimeOutList.count
-    tTimeOutName = pTimeOutList[i]
-    if tTimeOutName contains "RefreshSmallIcon-" & tItemIndex & me.getID() then
+    tTimeoutName = pTimeOutList[i]
+    if tTimeoutName contains "RefreshSmallIcon-" & tItemIndex & me.getID() then
       pTimeOutList.deleteAt(i)
       exit repeat
     end if

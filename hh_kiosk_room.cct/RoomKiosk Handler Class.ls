@@ -19,19 +19,12 @@ on deconstruct me
 end
 
 on handle_flatcreated me, tMsg
-  tID = tMsg.content.line[1].word[1]
-  tName = tMsg.content.line[2]
+  tID = tMsg.connection.GetIntFrom()
+  tName = tMsg.connection.GetStrFrom()
   me.getInterface().flatcreated(tName, tID)
 end
 
 on handle_error me, tMsg
-  tErr = tMsg.content
-  case tErr of
-    "Error creating a private room":
-      executeMessage(#alert, [#Msg: getText("roomatic_create_error")])
-      return me.getInterface().showHideRoomKiosk()
-  end case
-  return 1
 end
 
 on handle_webShortcut me, tMsg

@@ -132,7 +132,7 @@ on removeHelp me
   pOpenHelps = []
   unregisterMessage(#create_user, me.getID())
   getThread("infofeed").getComponent().removeButtonCallback(#next, #nextInfofeedItemCallback, me)
-  getThread("infofeed").getComponent().registerButtonCallback(#prev, #prevInfofeedItemCallback, me)
+  getThread("infofeed").getComponent().removeButtonCallback(#prev, #prevInfofeedItemCallback, me)
 end
 
 on showNewUserHelpItems me
@@ -365,7 +365,7 @@ end
 
 on handleAchievementsSelection me
   tRoomComponent = getThread("room").getComponent()
-  tUserObj = tRoomComponent.getUserObject(getObject(#session).GET("own_user_id"))
+  tUserObj = tRoomComponent.getUserObject(getObject(#session).GET("user_index"))
   if objectp(tUserObj) then
     me.selectUserInRoom(tUserObj)
   end if

@@ -254,7 +254,7 @@ on eventProc me, tEvent, tSprID, tProp
       pSelectedProduct["extra_parm"] = tText & tPet
       if connectionExists(getVariable("connection.info.id", #Info)) then
         pNameCheckPending = 1
-        getConnection(getVariable("connection.info.id", #Info)).send("APPROVENAME", [#string: tText, #integer: 1])
+        getConnection(getVariable("connection.info.id", #Info)).send("APPROVE_PET_NAME", [#string: tText])
       end if
     else
       if tSprID = "ctlg_nextmodel_button" then
@@ -292,7 +292,7 @@ on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(36, #handle_nameapproved)
   tCmds = [:]
-  tCmds.setaProp("APPROVENAME", 42)
+  tCmds.setaProp("APPROVE_PET_NAME", 42)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

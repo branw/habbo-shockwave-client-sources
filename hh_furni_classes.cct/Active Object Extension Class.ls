@@ -429,12 +429,13 @@ on setState me, tNewState
     pLoopCountList[tLayer] = 0
   end repeat
   if tNewState = EMPTY then
-    tNewState = 1
+    tNewState = 0
   end if
   if ilk(integer(tNewState)) <> #integer then
     return 0
   end if
   tNewState = integer(tNewState)
+  tNewState = tNewState + 1
   tNewIndex = 0
   repeat with tIndex = 1 to pStateSequenceList.count
     tstate = pStateSequenceList[tIndex]
@@ -490,24 +491,7 @@ on setState me, tNewState
 end
 
 on getNextState me
-  if pStateSequenceList.count < 1 then
-    return 0
-  end if
-  tStateIndex = pStateIndex mod pStateSequenceList.count + 1
-  tstate = pStateSequenceList[tStateIndex]
-  if ilk(tstate) = #list then
-    if tstate.count < 1 then
-      return 0
-    end if
-    tStateNew = tstate[random(tstate.count)]
-  else
-    tStateNew = tstate
-  end if
-  tStr = string(tStateNew)
-  if pStateStringList.count >= tStateNew then
-    tStr = string(pStateStringList[tStateNew])
-  end if
-  return getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
+  return getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end
 
 on validateStateSequenceList me

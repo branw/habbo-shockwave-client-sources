@@ -14,13 +14,13 @@ on setState me, tValue
     return 0
   end if
   pBlinkCounter = 0
-  pState = string(tValue)
-  me.pSprList[5].visible = pState = "1"
+  pState = integer(tValue)
+  me.pSprList[5].visible = pState <> 0
   return 1
 end
 
 on update me
-  if pState <> "1" then
+  if pState = 0 then
     return 1
   end if
   if me.pSprList.count < 5 then
@@ -40,13 +40,7 @@ end
 
 on select me
   if the doubleClick then
-    case pState of
-      "1":
-        pState = "0"
-      otherwise:
-        pState = "1"
-    end case
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: pState])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

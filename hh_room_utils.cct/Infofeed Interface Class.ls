@@ -7,10 +7,12 @@ on construct me
   pmode = pDefaultMode
   pDragStart = point(0, 0)
   tStageWidth = the stageRight - the stageLeft
-  pWndLoc = point(tStageWidth - 247, 4)
   tWndLocPref = string(getPref(getVariable("infofeed.window.location.prefname")))
   if tWndLocPref <> EMPTY then
     pWndLoc = value(tWndLocPref)
+  end if
+  if pWndLoc.ilk <> #point then
+    pWndLoc = point(tStageWidth - 247, 4)
   end if
   registerMessage(#changeRoom, me.getID(), #minimize)
   registerMessage(#tutorial_hand_opened, me.getID(), #pushBehindHand)

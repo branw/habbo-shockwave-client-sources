@@ -53,10 +53,10 @@ on setState me, tNewState
         pTargetState = tNewState
       end if
     else
-      tRetVal = callAncestor(#setState, [me], tNewState)
+      tRetVal = callAncestor(#setState, [me], tNewState - 1)
     end if
   else
-    tRetVal = callAncestor(#setState, [me], tNewState)
+    tRetVal = callAncestor(#setState, [me], tNewState - 1)
   end if
   return tRetVal
 end

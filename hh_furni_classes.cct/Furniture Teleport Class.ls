@@ -1,4 +1,4 @@
-property pDoorOpentimer, pProcessActive, pAnimActive, pAnimTime, pKickTime, pTargetData, pCloseDoorTimer
+property pProcessActive, pAnimCounter, pKickCounter, pKickMe, pTargetData, pResetStateCounter
 
 on prepare me, tdata
   if pProcessActive then
@@ -7,11 +7,10 @@ on prepare me, tdata
     pTargetData = [:]
   end if
   pProcessActive = 0
-  pAnimActive = 0
-  pAnimTime = 10
-  pKickTime = 0
-  pDoorOpentimer = 0
-  pCloseDoorTimer = 0
+  pAnimCounter = 0
+  pKickCounter = 0
+  pResetStateCounter = 0
+  pKickMe = 0
   if tdata.count > 0 then
     me.updateStuffdata(tdata[#stuffdata])
   else
@@ -21,6 +20,7 @@ on prepare me, tdata
     if getObject(#session).GET("target_door_ID") = me.getID() then
       getObject(#session).set("target_door_ID", 0)
       me.animate(12)
+      pKickMe = 1
       me.delay(800, #kickOut)
     end if
   end if
@@ -28,15 +28,7 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if tValue = "TRUE" then
-    tValue = 2
-    pDoorOpentimer = 18
-  else
-    if tValue = "FALSE" then
-      tValue = 1
-      pDoorOpentimer = 0
-    end if
-  end if
+  tValue = integer(tValue)
   me.setState(tValue)
 end
 
@@ -61,8 +53,7 @@ on select me
       end if
     end if
     if tUserIsClose then
-      tRoom.getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-      tRoom.getRoomConnection().send("INTODOOR", me.getID())
+      tRoom.getRoomConnection().send("INTODOOR", [#integer: integer(me.getID())])
       me.tryDoor()
     end if
   end if
@@ -78,7 +69,7 @@ on tryDoor me
   end if
   getObject(#session).set("current_door_ID", me.getID())
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("GETDOORFLAT", me.getID())
+    getConnection(getVariable("connection.info.id")).send("GETDOORFLAT", [#integer: integer(me.getID())])
   end if
   return 1
 end
@@ -87,7 +78,7 @@ on startTeleport me, tDataList
   pTargetData = tDataList
   pProcessActive = 1
   me.animate(50)
-  getThread(#room).getComponent().getRoomConnection().send("DOORGOIN", me.getID())
+  getThread(#room).getComponent().getRoomConnection().send("DOORGOIN", [#integer: integer(me.getID())])
 end
 
 on doorLogin me
@@ -98,17 +89,24 @@ end
 
 on prepareToKick me, tIncomer
   if tIncomer = getObject(#session).GET("user_name") then
-    pKickTime = 20
+    pKickMe = 1
+  else
+    pKickMe = 0
   end if
+  pKickCounter = 20
 end
 
 on kickOut me
   tRoom = getThread(#room).getComponent()
-  tRoom.getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-  tCloseList = ["0": [0, -1], "2": [1, 0], "4": [0, 1], "6": [-1, 0]]
-  tDelta = tCloseList[string(me.pDirection[1])]
-  if not voidp(tDelta) then
-    tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + tDelta[1], #short: me.pLocY + tDelta[2]])
+  me.setState(1)
+  pResetStateCounter = 20
+  if pKickMe then
+    pKickMe = 0
+    tCloseList = ["0": [0, -1], "2": [1, 0], "4": [0, 1], "6": [-1, 0]]
+    tDelta = tCloseList[string(me.pDirection[1])]
+    if not voidp(tDelta) then
+      tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + tDelta[1], #short: me.pLocY + tDelta[2]])
+    end if
   end if
 end
 
@@ -116,41 +114,33 @@ on animate me, tTime
   if voidp(tTime) then
     tTime = 25
   end if
-  pAnimTime = tTime
-  pAnimActive = 1
+  pAnimCounter = tTime
 end
 
 on update me
   callAncestor(#update, [me])
-  if pDoorOpentimer > 0 then
-    pDoorOpentimer = pDoorOpentimer - 1
-    if pDoorOpentimer = 0 then
-      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "FALSE"])
-    end if
-  end if
-  if pAnimActive > 0 then
-    pAnimActive = (pAnimActive + 1) mod pAnimTime
+  if pAnimCounter > 0 then
+    pAnimCounter = pAnimCounter - 1
     if me.pState = 1 then
-      me.setState(3)
+      me.setState(2)
+    end if
+    if pAnimCounter = 0 then
+      pResetStateCounter = 20
+      if pProcessActive then
+        return me.doorLogin()
+      end if
     end if
   end if
-  if pAnimActive = pAnimTime - 1 then
-    pAnimActive = 0
-    pCloseDoorTimer = 20
-    if pProcessActive then
-      return me.doorLogin()
-    end if
-  end if
-  if pKickTime > 0 then
-    pKickTime = pKickTime - 1
-    if pKickTime = 0 then
+  if pKickCounter > 0 then
+    pKickCounter = pKickCounter - 1
+    if pKickCounter = 0 then
       me.kickOut()
     end if
   end if
-  if pCloseDoorTimer > 0 then
-    pCloseDoorTimer = pCloseDoorTimer - 1
-    if pCloseDoorTimer = 0 then
-      me.setState(1)
+  if pResetStateCounter > 0 then
+    pResetStateCounter = pResetStateCounter - 1
+    if pResetStateCounter = 0 then
+      me.setState(0)
     end if
   end if
 end

@@ -29,7 +29,7 @@ on update me
     return 
   end if
   pLastLoc = the mouseLoc
-  tCrd = pGeometry.getWorldCoordinate(the mouseH, the mouseV)
+  tCrd = pGeometry.getFloorCoordinate(the mouseH, the mouseV)
   if the optionDown then
     if pLastCrd <> tCrd then
       put tCrd

@@ -156,10 +156,7 @@ on handle_purchase_nobalance me, tMsg
 end
 
 on handle_tickets me, tMsg
-  tNum = integer(tMsg.content.line[1].word[1])
-  if not integerp(tNum) then
-    return 0
-  end if
+  tNum = tMsg.connection.GetIntFrom()
   getObject(#session).set("user_ph_tickets", tNum)
   executeMessage(#updateTicketCount, tNum)
   return 1
@@ -180,6 +177,32 @@ on handle_refresh_catalogue me, tMsg
   me.getComponent().refreshCatalogue()
 end
 
+on handle_recycler_prizes me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tPrizes = [:]
+  tCategoryCount = tConn.GetIntFrom()
+  repeat with i = 1 to tCategoryCount
+    tCategoryData = [:]
+    tCategoryID = tConn.GetIntFrom()
+    tCategoryOdds = tConn.GetIntFrom()
+    tFurniCount = tConn.GetIntFrom()
+    tFurniList = []
+    repeat with j = 1 to tFurniCount
+      tFurniType = tConn.GetStrFrom()
+      tFurniID = tConn.GetIntFrom()
+      tFurniList.add([tFurniType, tFurniID])
+    end repeat
+    tCategoryData.setaProp(#id, tCategoryID)
+    tCategoryData.setaProp(#odds, tCategoryOdds)
+    tCategoryData.setaProp(#furniList, tFurniList)
+    tPrizes.setaProp(tCategoryID, tCategoryData)
+  end repeat
+  executeMessage(#recyclerPrizesReceived, tPrizes)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(6, #handle_purse)
@@ -194,12 +217,14 @@ on regMsgList me, tBool
   tMsgs.setaProp(212, #handle_voucher_redeem_ok)
   tMsgs.setaProp(213, #handle_voucher_redeem_error)
   tMsgs.setaProp(441, #handle_refresh_catalogue)
+  tMsgs.setaProp(506, #handle_recycler_prizes)
   tCmds = [:]
   tCmds.setaProp("PURCHASE_FROM_CATALOG", 100)
   tCmds.setaProp("GET_CATALOG_INDEX", 101)
   tCmds.setaProp("GET_CATALOG_PAGE", 102)
   tCmds.setaProp("REDEEM_VOUCHER", 129)
   tCmds.setaProp("PURCHASE_AND_WEAR", 374)
+  tCmds.setaProp("GET_RECYCLER_PRIZES", 412)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

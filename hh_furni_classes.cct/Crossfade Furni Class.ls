@@ -46,9 +46,9 @@ end
 on setState me, tNewState
   tNewState = integer(tNewState)
   if not integerp(tNewState) then
-    tNewState = 1
+    tNewState = 0
   end if
-  if tNewState = 2 then
+  if tNewState = 1 then
     pCounter = 1
     if voidp(pBlendSpriteList) then
       pBlendSpriteList = []

@@ -39,11 +39,7 @@ on select me
 end
 
 on changeState me, tStateOn
-  tNewState = 1
-  if tStateOn then
-    tNewState = 2
-  end if
-  return getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: string(tNewState)])
+  return getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end
 
 on setState me, tNewState

@@ -50,7 +50,7 @@ on getPicture me, tImg
   if pLayerProps.count < 1 then
     return error(me, "No Properties!!!", #getPicture, #minor)
   end if
-  tCanvas = image(300, 300, 32)
+  tCanvas = image(300, 400, 32)
   tCanvas.fill(tCanvas.rect, rgb(255, 255, 255))
   tFlipFlag = 0
   case pObjectType of
@@ -78,11 +78,11 @@ on getPicture me, tImg
         tInk = tProps[#ink]
         tImage = member(tMemNum).image
         tRegp = member(tMemNum).regPoint
-        tY = 150 - tRegp[2]
+        tY = tCanvas.height / 2 - tRegp[2]
         if tProps[#flipH] then
           tImage = me.flipImage(tImage)
           tNewRegX = tImage.width - tRegp[1]
-          tX = 150 - tNewRegX + 64
+          tX = tCanvas.width / 2 - tNewRegX + 64
           if ilk(tTempLocShifts[j]) = #point then
             tX = tX - tTempLocShifts[j].locH
             tY = tY + tTempLocShifts[j].locV
@@ -93,7 +93,7 @@ on getPicture me, tImg
             end if
           end if
         else
-          tX = 150 - tRegp[1]
+          tX = tCanvas.width / 2 - tRegp[1]
           if ilk(tTempLocShifts[j]) = #point then
             tX = tX + tTempLocShifts[j].locH
             tY = tY + tTempLocShifts[j].locV

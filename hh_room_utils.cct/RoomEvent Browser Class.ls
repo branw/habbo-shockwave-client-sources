@@ -136,6 +136,9 @@ on updateEventList me
   tEventList = getThread(#room).getComponent().getRoomEventList(pSelectedType)
   pEventListObj.setEvents(tEventList)
   tListImage = pEventListObj.renderListImage()
+  if tListImage.ilk <> #image then
+    return 0
+  end if
   tListElem = tWnd.getElement("roomevent.browser.list")
   tListElem.feedImage(tListImage)
 end

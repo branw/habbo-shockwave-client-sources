@@ -21,10 +21,11 @@ on prepareForMove me
 end
 
 on prepare me, tdata
-  if tdata[#stuffdata] = "O" then
-    me.setOn()
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   pScifiDoorTimer = the timer
   pChanges = 1
@@ -32,10 +33,11 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if tValue = "O" then
-    me.setOn()
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   pScifiDoorTimer = the timer
   pStopped = 0
@@ -159,12 +161,7 @@ on select me
       return 0
     end if
     pDoubleClick = 1
-    if pActive then
-      tStr = "C"
-    else
-      tStr = "O"
-    end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   else
     if not pDoubleClick and not pChanges then
       getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY])

@@ -1,4 +1,4 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout, pBadgeDetailsWindowID
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pLastSelectedObj, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout, pBadgeDetailsWindowID
 
 on construct me
   pWindowList = []
@@ -103,6 +103,7 @@ on showObjectInfo me, tObjType, tRefresh
   if tSelectedObj = 0 and not stringp(tSelectedObj) then
     return 0
   end if
+  pLastSelectedObj = tSelectedObj
   tWindowTypes = []
   case tObjType of
     "user":
@@ -532,9 +533,9 @@ on eventProc me, tEvent, tSprID, tParam
       "dance.button":
         tCurrentDance = tOwnUser.getProperty(#dancing)
         if tCurrentDance > 0 then
-          tComponent.getRoomConnection().send("STOP", "Dance")
+          tComponent.getRoomConnection().send("DANCE", [#integer: 0])
         else
-          tComponent.getRoomConnection().send("DANCE")
+          tComponent.getRoomConnection().send("DANCE", [#integer: 1])
         end if
         return 1
       "hcdance.button":
@@ -547,13 +548,13 @@ on eventProc me, tEvent, tSprID, tParam
           tComponent.getRoomConnection().send("DANCE", [#integer: tInteger])
         else
           if tCurrentDance > 0 then
-            tComponent.getRoomConnection().send("STOP", "Dance")
+            tComponent.getRoomConnection().send("DANCE", [#integer: 0])
           end if
         end if
         return 1
       "wave.button":
         if tOwnUser.getProperty(#dancing) then
-          tComponent.getRoomConnection().send("STOP", "Dance")
+          tComponent.getRoomConnection().send("DANCE", [#integer: 0])
           tInterface.dancingStoppedExternally()
         end if
         return tComponent.getRoomConnection().send("WAVE")
@@ -579,17 +580,21 @@ on eventProc me, tEvent, tSprID, tParam
       "move.button":
         return tInterface.startObjectMover(tSelectedObj)
       "rotate.button":
-        return tComponent.getActiveObject(tSelectedObj).rotate()
+        tActiveObj = tComponent.getActiveObject(tSelectedObj)
+        if not tActiveObj then
+          return 0
+        end if
+        return tActiveObj.rotate()
       "pick.button":
         case tSelectedType of
           "active":
-            ttype = "stuff"
+            ttype = 2
           "item":
-            ttype = "item"
+            ttype = 1
         end case
         return me.clearWindowDisplayList()
         me.clearWindowDisplayList()
-        return tComponent.getRoomConnection().send("ADDSTRIPITEM", "new" && ttype && tSelectedObj)
+        return tComponent.getRoomConnection().send("ADDSTRIPITEM", [#integer: ttype, #integer: integer(tSelectedObj)])
       "delete.button":
         pDeleteObjID = tSelectedObj
         pDeleteType = tSelectedType
@@ -651,13 +656,11 @@ on eventProc me, tEvent, tSprID, tParam
         if tList["retval"] = 1 then
           return 1
         end if
-        if tComponent.userObjectExists(tSelectedObj) then
-          tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+        if pLastSelectedObjType <> "user" or not tComponent.userObjectExists(pLastSelectedObj) then
+          me.clearWindowDisplayList()
+          return 0
         end if
-        tInterface.startTrading(tSelectedObj)
-        tInterface.getContainer().open()
+        tInterface.startTrading(pLastSelectedObj)
         return 1
       "ignore.button":
         tIgnoreListObj = tInterface.getIgnoreListObject()

@@ -42,15 +42,18 @@ on open me
   me.setButtonHilites()
   me.updateFilm()
   tWndObj.getElement("cam_savetxt").setProperty(#visible, 0)
-  getConnection(getVariable("connection.room.id")).send("CARRYITEM", "20")
+  getConnection(getVariable("connection.room.id")).send("CARRYOBJECT", [#integer: 20])
   registerMessage(#leaveRoom, me.getID(), #close)
   registerMessage(#changeRoom, me.getID(), #close)
   return receiveUpdate(me.getID())
 end
 
 on close me
-  if connectionExists(getVariable("connection.room.id")) then
-    getConnection(getVariable("connection.room.id")).send("STOP", "CarryItem")
+  if threadExists(#room) then
+    tRoomID = getThread(#room).getComponent().getRoomID()
+  end if
+  if connectionExists(getVariable("connection.room.id")) and tRoomID <> EMPTY then
+    getConnection(getVariable("connection.room.id")).send("CARRYOBJECT", [#integer: 0])
   end if
   pmode = #closed
   if windowExists(pWindowID) then
@@ -144,7 +147,7 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       if pmode <> #live then
         return 
       end if
-      getConnection(getVariable("connection.room.id")).send("USEITEM", "20" & TAB & "1500")
+      getConnection(getVariable("connection.room.id")).send("USEOBJECT", [#integer: 20])
       pZoomLevel = 1
       tWndObj.getElement("cam_display").setProperty(#visible, 0)
       tWndObj.getElement("cam_display_noise_horizontal").setProperty(#visible, 0)

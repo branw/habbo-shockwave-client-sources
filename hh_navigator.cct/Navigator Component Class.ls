@@ -96,11 +96,11 @@ on leaveRoom me
   return me.showNavigator()
 end
 
-on getNodeInfo me, tNodeId, tCategoryId
+on getNodeInfo me, tNodeId, tCategoryID
   if tNodeId = VOID then
     return 0
   end if
-  if tCategoryId = #recom or voidp(tCategoryId) and not voidp(pRecomNodeInfo) then
+  if tCategoryID = #recom or voidp(tCategoryID) and not voidp(pRecomNodeInfo) then
     if voidp(pRecomNodeInfo[#children]) then
       return 0
     end if
@@ -108,30 +108,30 @@ on getNodeInfo me, tNodeId, tCategoryId
     if not voidp(tNodeInfo) then
       return tNodeInfo
     else
-      if tCategoryId = #recom then
+      if tCategoryID = #recom then
         return 0
       end if
     end if
   end if
   tNodeId = string(tNodeId)
   if not (tNodeId contains "/") then
-    tTestInfo = me.getNodeInfo(tNodeId & "/" & me.getCurrentNodeMask(), tCategoryId)
+    tTestInfo = me.getNodeInfo(tNodeId & "/" & me.getCurrentNodeMask(), tCategoryID)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
-    tTestInfo = me.getNodeInfo(tNodeId & "/0", tCategoryId)
+    tTestInfo = me.getNodeInfo(tNodeId & "/0", tCategoryID)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
-    tTestInfo = me.getNodeInfo(tNodeId & "/1", tCategoryId)
+    tTestInfo = me.getNodeInfo(tNodeId & "/1", tCategoryID)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
   end if
-  if tCategoryId <> VOID then
-    if pNodeCache[tCategoryId] <> VOID then
-      if not voidp(pNodeCache[tCategoryId][#children][tNodeId]) then
-        return pNodeCache[tCategoryId][#children][tNodeId]
+  if tCategoryID <> VOID then
+    if pNodeCache[tCategoryID] <> VOID then
+      if not voidp(pNodeCache[tCategoryID][#children][tNodeId]) then
+        return pNodeCache[tCategoryID][#children][tNodeId]
       end if
     end if
   end if
@@ -311,14 +311,14 @@ on expandHistoryItem me, tClickedItem
   end if
 end
 
-on createNaviHistory me, tCategoryId
+on createNaviHistory me, tCategoryID
   pNaviHistory = []
   tText = EMPTY
-  if tCategoryId = VOID then
+  if tCategoryID = VOID then
     return 0
   end if
-  tParentInfo = me.getTreeInfoFor(tCategoryId)
-  if tCategoryId = pRootUnitCatId or tCategoryId = pRootFlatCatId then
+  tParentInfo = me.getTreeInfoFor(tCategoryID)
+  if tCategoryID = pRootUnitCatId or tCategoryID = pRootFlatCatId then
     tParentInfo = 0
   end if
   if listp(tParentInfo) then
@@ -355,7 +355,7 @@ on createNaviHistory me, tCategoryId
       end if
     end if
   end if
-  me.getInterface().renderHistory(tCategoryId, tText, tShowRecoms)
+  me.getInterface().renderHistory(tCategoryID, tText, tShowRecoms)
   return 1
 end
 
@@ -384,7 +384,7 @@ on roomkioskGoingFlat me, tRoomProps
     pNodeCache[#own] = [#children: [:]]
   end if
   pNodeCache[#own][#children].setaProp(tRoomProps[#id], tRoomProps)
-  me.getComponent().executeRoomEntry(tRoomProps[#id])
+  me.prepareRoomEntry(tRoomProps[#id])
   return 1
 end
 
@@ -405,8 +405,7 @@ end
 
 on flatAccessResult me, tMsg
   case tMsg of
-    "flat_letin", "flatpassword_ok":
-    "incorrect flat password", "Password required!":
+    -100001, -100002:
       me.getInterface().flatPasswordIncorrect()
       me.updateState("enterEntry")
   end case
@@ -523,6 +522,7 @@ on updateSingleSubNodeInfo me, tdata
         end if
       end if
     end repeat
+    tStored = me.updateRecomNodeInfo(tdata)
     if not tStored then
       tNewNode = [#id: "tmp_" & tNodeId, #children: [:]]
       tNewNode[#children].setaProp(tNodeId, tdata)
@@ -531,6 +531,23 @@ on updateSingleSubNodeInfo me, tdata
   else
     return error(me, "Flat info parsing failed!", #updateSingleSubNodeInfo, #major)
   end if
+end
+
+on updateRecomNodeInfo me, tdata
+  if ilk(pRecomNodeInfo) <> #propList then
+    return 0
+  end if
+  if voidp(pRecomNodeInfo[#children]) then
+    return 0
+  end if
+  tNodeInfo = pRecomNodeInfo[#children].getaProp(tdata[#id])
+  if voidp(tNodeInfo) then
+    return 0
+  end if
+  repeat with i = 1 to tdata.count()
+    tNodeInfo.setaProp(tdata.getPropAt(i), tdata[i])
+  end repeat
+  return 1
 end
 
 on sendGetUserFlatCats me
@@ -647,7 +664,7 @@ on sendDeleteFlat me, tNodeId
     if tFlatID = VOID then
       return 0
     end if
-    return getConnection(pConnectionId).send("DELETEFLAT", tFlatID)
+    return getConnection(pConnectionId).send("DELETEFLAT", [#integer: integer(tFlatID)])
   else
     return 0
   end if
@@ -665,13 +682,13 @@ on sendGetFlatCategory me, tNodeId
   end if
 end
 
-on sendSetFlatCategory me, tNodeId, tCategoryId
+on sendSetFlatCategory me, tNodeId, tCategoryID
   tFlatID = me.getNodeProperty(tNodeId, #flatId)
   if connectionExists(pConnectionId) then
     if voidp(tFlatID) then
       return error(me, "Flat ID expected!", #sendSetFlatCategory, #major)
     end if
-    getConnection(pConnectionId).send("SETFLATCAT", [#integer: integer(tFlatID), #integer: integer(tCategoryId)])
+    getConnection(pConnectionId).send("SETFLATCAT", [#integer: integer(tFlatID), #integer: integer(tCategoryID)])
   else
     return 0
   end if
@@ -681,20 +698,8 @@ on sendupdateFlatInfo me, tPropList
   if tPropList.ilk <> #propList or voidp(tPropList[#flatId]) then
     return error(me, "Cant send updateFlatInfo", #sendupdateFlatInfo, #major)
   end if
-  tFlatMsg = EMPTY
-  repeat with tProp in [#flatId, #name, #door, #showownername]
-    tFlatMsg = tFlatMsg & tPropList[tProp] & "/"
-  end repeat
-  tFlatMsg = tFlatMsg.char[1..length(tFlatMsg) - 1]
-  getConnection(pConnectionId).send("UPDATEFLAT", tFlatMsg)
-  tFlatMsg = string(tPropList[#flatId]) & "/" & RETURN
-  tFlatMsg = tFlatMsg & "description=" & tPropList[#description] & RETURN
-  if tPropList[#Password] <> EMPTY and tPropList[#Password] <> VOID then
-    tFlatMsg = tFlatMsg & "password=" & tPropList[#Password] & RETURN
-  end if
-  tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture] & RETURN
-  tFlatMsg = tFlatMsg & "maxvisitors=" & tPropList[#maxVisitors]
-  getConnection(pConnectionId).send("SETFLATINFO", tFlatMsg)
+  getConnection(pConnectionId).send("UPDATEFLAT", [#integer: integer(tPropList[#flatId]), #string: tPropList[#name], #string: tPropList[#door], #integer: integer(tPropList[#showownername])])
+  getThread(#roomkiosk).getComponent().sendSetFlatInfo(tPropList[#flatId], tPropList[#description], tPropList[#Password], tPropList[#ableothersmovefurniture], tPropList[#maxVisitors])
   return 1
 end
 

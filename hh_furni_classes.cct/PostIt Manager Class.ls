@@ -41,7 +41,7 @@ on close me
     tStickieText = convertSpecialChars(tStickieText, 1)
     tdata = tColorHex.char[2..length(tColorHex)] && tStickieText
     if pChanged = 1 then
-      getThread(#room).getComponent().getRoomConnection().send("SETITEMDATA", pActivePostItId & "/" & tdata)
+      getThread(#room).getComponent().getRoomConnection().send("SETITEMDATA", [#integer: integer(pActivePostItId), #string: tdata])
     end if
   end if
   if windowExists(pWindowID) then
@@ -53,7 +53,7 @@ on delete me
   if windowExists(pWindowID) then
     removeWindow(pWindowID)
   end if
-  getThread(#room).getComponent().getRoomConnection().send("REMOVEITEM", pActivePostItId)
+  getThread(#room).getComponent().getRoomConnection().send("REMOVEITEM", [#integer: integer(pActivePostItId)])
 end
 
 on setItemData me, tMsg

@@ -32,11 +32,12 @@ on prepareForMove me
 end
 
 on prepare me, tdata
-  if tdata[#stuffdata] = "ON" then
-    me.setOn()
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     me.setOff()
     pChanges = 0
+  else
+    me.setOn()
   end if
   if me.pSprList.count > 1 then
     removeEventBroker(me.pSprList[2].spriteNum)
@@ -130,10 +131,11 @@ on animateSmallSmokes me, tVal
 end
 
 on updateStuffdata me, tValue
-  if tValue = "ON" then
-    me.setOn()
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   return 1
 end
@@ -233,12 +235,7 @@ end
 
 on select me
   if the doubleClick then
-    if pActive then
-      tStr = "OFF"
-    else
-      tStr = "ON"
-    end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

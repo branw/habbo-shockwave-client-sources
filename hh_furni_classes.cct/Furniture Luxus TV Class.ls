@@ -14,19 +14,21 @@ on prepare me, tdata
   end if
   pAnimFrameCounter = pAnimFrameDuration
   pTotalFrameCount = 1
-  if tdata[#stuffdata] = "ON" then
-    me.setOn()
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   return 1
 end
 
 on updateStuffdata me, tValue
-  if tValue = "ON" then
-    me.setOn()
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
 end
 
@@ -109,11 +111,6 @@ end
 
 on select me
   if the doubleClick then
-    if pProgramOn then
-      tOnString = "OFF"
-    else
-      tOnString = "ON"
-    end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tOnString])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
 end

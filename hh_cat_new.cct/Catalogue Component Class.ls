@@ -83,12 +83,11 @@ end
 on prepareFrontPage me
   if not voidp(pCatalogIndex) then
     tNode = me.getFirstNavigateableNode(pCatalogIndex)
-    if voidp(tNode) then
-      return 
-    else
-      me.preparePage(tNode[#pageid])
-      pWaitingForFrontPage = 0
+    if tNode.ilk <> #propList then
+      return 0
     end if
+    me.preparePage(tNode[#pageid])
+    pWaitingForFrontPage = 0
   else
     pWaitingForFrontPage = 1
     me.initCatalogData()

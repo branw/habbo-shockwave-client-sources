@@ -13,14 +13,14 @@ on addCallbackListener me, tObjectId, tHandlerName, tCallbackParams
 end
 
 on purgeCallbacks me, tSuccess
-  tTimeOutName = "dyndownload" & the milliSeconds
+  tTimeoutName = "dyndownload" & the milliSeconds
   tCounter = 1
   repeat with tListener in pListenerList
     tObject = getObject(tListener[#objectID])
     tHandler = tListener[#handlerName]
     tCallbackParams = tListener[#callbackParams]
     if tObject <> 0 and symbolp(tHandler) then
-      createTimeout(tTimeOutName & tCounter, 10, #sendTimeoutCallbacks, me.getID(), [tHandler, tObject, pAssetId, tSuccess, tCallbackParams], 1)
+      createTimeout(tTimeoutName & tCounter, 10, #sendTimeoutCallbacks, me.getID(), [tHandler, tObject, pAssetId, tSuccess, tCallbackParams], 1)
     else
       error(me, "Object or handler invalid:" && tObject && tHandler, #purgeCallbacks, #minor)
     end if

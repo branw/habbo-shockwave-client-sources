@@ -4,7 +4,7 @@ on construct me
   pItemList = [:]
   pTotalCount = 0
   pHandVisID = "Hand_visualizer"
-  pAnimMode = #open
+  pAnimMode = #close
   pAnimLocs = [[-54, 27], [-42, 21], [-36, 18], [-28, 14], [-22, 11], [-18, 9], [-12, 6], [-10, 5], [-8, 4]]
   pAnimFrm = 1
   pAppendFlag = 0
@@ -59,7 +59,7 @@ on open me, tStripInfo
   else
     tConnection = getThread(#room).getComponent().getRoomConnection()
     if tConnection <> 0 then
-      tConnection.send("GETSTRIP", "new")
+      tConnection.send("GETSTRIP", [#integer: 3])
     end if
   end if
   executeMessage(#tutorial_hand_opened)
@@ -82,6 +82,10 @@ on openClose me
   else
     return me.open()
   end if
+end
+
+on isOpen me
+  return pAnimMode = #open
 end
 
 on checkContainerOnRoomForward me
@@ -117,7 +121,7 @@ on appendStripItem me, tdata
     pAppendFlag = 1
     tConnection = getThread(#room).getComponent().getRoomConnection()
     if tConnection <> 0 then
-      tConnection.send("GETSTRIP", "new")
+      tConnection.send("GETSTRIP", [#integer: 3])
     end if
   end if
   return me.createStripItem(tdata)
@@ -337,7 +341,7 @@ on placeItemToRoom me, tID
               executeMessage(#alert, [#Msg: getText("landscape_no_windows")])
             end if
           end if
-          tRoomComp.getRoomConnection().send("FLATPROPBYITEM", tdata[#class] & "/" & tdata[#stripId])
+          tRoomComp.getRoomConnection().send("FLATPROPBYITEM", [#integer: integer(tdata[#stripId])])
           removeStripItem(me, tID)
           return 0
         "Chess":
@@ -518,15 +522,15 @@ on eventProcContainer me, tEvent, tSprID, tParam
   case getThread(#room).getInterface().getProperty(#clickAction) of
     "placeActive", "placeItem":
       getThread(#room).getInterface().stopObjectMover()
-      return getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
+      return getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", [#integer: 4])
     "moveActive", "moveItem":
       if not getObject(#session).GET("room_owner") then
         return 0
       end if
-      ttype = ["active": "stuff", "item": "item"][getThread(#room).getInterface().pSelectedType]
+      ttype = ["active": 2, "item": 1][getThread(#room).getInterface().pSelectedType]
       tObj = getThread(#room).getInterface().pSelectedObj
       getThread(#room).getInterface().stopObjectMover()
-      return getThread(#room).getComponent().getRoomConnection().send("ADDSTRIPITEM", "new" && ttype && tObj)
+      return getThread(#room).getComponent().getRoomConnection().send("ADDSTRIPITEM", [#integer: ttype, #integer: integer(tObj)])
   end case
   if tSprID contains "room_hand_item" then
     tItemNum = integer(tSprID.char[16])
@@ -643,9 +647,9 @@ on eventProcHandButtons me, tEvent, tSprID, tParam
   end if
   case tSprID of
     "habbo_hand_next":
-      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "next")
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", [#integer: 1])
     "habbo_hand_prev":
-      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "prev")
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", [#integer: 2])
     "habbo_hand_close":
       me.close()
   end case

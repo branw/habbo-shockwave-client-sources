@@ -175,7 +175,7 @@ on rotate me, tChange
   if not memberExists(tTryName) then
     return error(me, "Direction for object not found:" && pClass && tDirection[1], #rotate, #minor)
   end if
-  getThread(#room).getComponent().getRoomConnection().send("MOVESTUFF", me.getID() && me.pLocX && me.pLocY && tDirection[1])
+  getThread(#room).getComponent().getRoomConnection().send("MOVESTUFF", [#integer: integer(me.getID()), #integer: me.pLocX, #integer: me.pLocY, #integer: tDirection[1]])
 end
 
 on setSlideTo me, tFromLoc, tToLoc, tTimeNow, tHasCharacter

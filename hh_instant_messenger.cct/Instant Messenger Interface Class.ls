@@ -113,6 +113,9 @@ on addChat me, tChatID, tFriend, tDontPlaySound
 end
 
 on removeChat me, tChatID
+  if pChatRenderers.ilk <> #propList then
+    return 0
+  end if
   tPos = pChatRenderers.findPos(tChatID)
   if voidp(tPos) then
     return 0

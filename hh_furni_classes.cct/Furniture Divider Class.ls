@@ -1,12 +1,13 @@
 property pChanges, pActive
 
 on prepare me, tdata
-  if tdata[#stuffdata] = "O" then
-    me.setOn()
-    pChanges = 1
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     me.setOff()
     pChanges = 0
+  else
+    me.setOn()
+    pChanges = 1
   end if
   repeat with tLayer = 1 to me.pSprList.count
     tLayerName = numToChar(charToNum("a") + tLayer - 1)
@@ -19,10 +20,11 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if tValue = "O" then
-    me.setOn()
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   pChanges = 1
 end
@@ -90,12 +92,7 @@ end
 
 on select me
   if the doubleClick then
-    if pActive then
-      tStr = "C"
-    else
-      tStr = "O"
-    end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

@@ -38,7 +38,8 @@ on setScore me, tScore, tSpriteList
       tLoc4 = tSpriteList[1].loc + [-34, -100]
     end if
   end if
-  if tScore = "x" then
+  tScore = integer(tScore)
+  if tScore < 0 then
     pScore = "x"
     tSpriteList[3].blend = 0
     tSpriteList[4].blend = 0
@@ -75,6 +76,10 @@ on select me
   if me.pSprList.count < 1 then
     return 0
   end if
+  tConnection = getThread(#room).getComponent().getRoomConnection()
+  if tConnection = 0 then
+    return 0
+  end if
   tUpdate = 0
   tScore = pScore
   tloc = point(the mouseH - me.pSprList[1].left, the mouseV - me.pSprList[1].top)
@@ -88,30 +93,19 @@ on select me
   if pScore <> "x" then
     if inside(tloc, tRect1) then
       tUpdate = 1
-      tScore = tScore - 1
-      if tScore < 0 then
-        tScore = 99
-      end if
+      tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 1])
     else
       if inside(tloc, tRect2) then
         tUpdate = 1
-        tScore = tScore + 1
-        if tScore > 99 then
-          tScore = 0
-        end if
+        tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 2])
       end if
     end if
   end if
-  if tUpdate = 0 and the doubleClick then
-    tUpdate = 1
-    if pScore = "x" then
-      tScore = 0
-    else
-      tScore = "x"
-    end if
-  end if
   if tUpdate then
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: string(tScore)])
+    return 1
+  end if
+  if the doubleClick then
+    tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

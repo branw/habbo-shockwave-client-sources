@@ -13,10 +13,11 @@ on prepare me, tdata
   pNoiseSprite = me.pSprList[9]
   pMovedByUser = 0
   me.hideAllEffects()
-  if tdata[#stuffdata] = "ON" then
-    pActive = 1
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     pActive = 0
+  else
+    pActive = 1
   end if
   pChanges = 1
   return 1
@@ -44,7 +45,8 @@ on hideAllEffects me
 end
 
 on updateStuffdata me, tValue
-  if tValue = "OFF" then
+  tValue = integer(tValue)
+  if tValue = 0 then
     pActive = 0
   else
     pActive = 1
@@ -121,14 +123,6 @@ on runEffect me
   return 1
 end
 
-on setOn me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "ON"])
-end
-
-on setOff me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "OFF"])
-end
-
 on select me, tSprID
   tSprNum = the clickOn
   tBottompartList = [3, 4, 5]
@@ -144,10 +138,6 @@ on select me, tSprID
 end
 
 on setOnOff me
-  if pActive then
-    me.setOff()
-  else
-    me.setOn()
-  end if
+  getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   return 1
 end

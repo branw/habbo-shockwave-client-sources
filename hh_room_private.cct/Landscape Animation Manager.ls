@@ -58,7 +58,7 @@ on define me, tdata, tTurnOffsetList
     end repeat
   end if
   pTurnPointList = tTurnOffsetList
-  me.setStopped(1)
+  me.stop()
 end
 
 on requiresUpdate me
@@ -68,7 +68,7 @@ end
 on initAnimation me
   me.resetImage()
   if pAnimMemberCount = 0 then
-    return me.setStopped(1)
+    return me.stop()
   end if
   repeat with i = 1 to pMaxItemAmount
     tProps = [:]
@@ -84,17 +84,18 @@ on initAnimation me
   end repeat
 end
 
-on setStopped me, tStopped
-  pStopped = tStopped
-  if pStopped then
-    removeUpdate(me.getID())
-    pAnimInstanceList = []
-    pAnimImage = image(1, 1, 32)
-    pMember.image = image(1, 1, 32)
-  else
-    me.initAnimation()
-    receiveUpdate(me.getID())
-  end if
+on stop me
+  pStopped = 1
+  removeUpdate(me.getID())
+  pAnimInstanceList = []
+  pAnimImage = image(1, 1, 32)
+  pMember.image = image(1, 1, 32)
+end
+
+on start me
+  pStopped = 0
+  me.initAnimation()
+  receiveUpdate(me.getID())
 end
 
 on update me

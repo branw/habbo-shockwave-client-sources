@@ -196,6 +196,9 @@ on downloadCompleted me, tProps
     return 
   end if
   tItemIndex = tProps[#props][#itemIndex]
+  if voidp(tItemIndex) then
+    return 
+  end if
   if pStripData.count < tItemIndex then
     return 
   end if

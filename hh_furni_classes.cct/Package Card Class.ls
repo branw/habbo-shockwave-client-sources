@@ -68,7 +68,7 @@ on hideCard me
 end
 
 on openPresent me
-  return getThread(#room).getComponent().getRoomConnection().send("PRESENTOPEN", pPackageID)
+  return getThread(#room).getComponent().getRoomConnection().send("PRESENTOPEN", [#integer: integer(pPackageID)])
 end
 
 on showContent me, tdata

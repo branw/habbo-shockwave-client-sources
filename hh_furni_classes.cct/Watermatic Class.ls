@@ -1,10 +1,4 @@
-property pTokenList
-
 on prepare me
-  pTokenList = value(getVariable("obj_" & me.pClass, "water"))
-  if not listp(pTokenList) then
-    pTokenList = [7]
-  end if
   return 1
 end
 
@@ -46,6 +40,9 @@ on select me
 end
 
 on giveDrink me
-  getThread(#room).getComponent().getRoomConnection().send("LOOKTO", me.pLocX && me.pLocY)
-  getThread(#room).getComponent().getRoomConnection().send("CARRYDRINK", pTokenList[random(pTokenList.count)])
+  tConnection = getThread(#room).getComponent().getRoomConnection()
+  if tConnection = 0 then
+    return 0
+  end if
+  tConnection.send("CARRYOBJECT", [#integer: 7])
 end

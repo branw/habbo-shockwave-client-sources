@@ -222,7 +222,7 @@ on enterDoor me, tdata
   if tReConnect then
     return me.roomCastLoaded()
   else
-    return me.getRoomConnection().send("GOVIADOOR", pTrgDoorID & "/" & pSaveData[#teleport])
+    return me.getRoomConnection().send("GOVIADOOR", [#integer: integer(pTrgDoorID), #integer: integer(pSaveData[#teleport])])
   end if
 end
 
@@ -269,6 +269,7 @@ on leaveRoom me, tJumpingToSubUnit
   getObject(#session).Remove("user_index")
   getObject(#session).set("room_owner", 0)
   getObject(#session).set("room_controller", 0)
+  executeMessage(#do_not_listen_song)
   return 1
 end
 
@@ -1059,24 +1060,25 @@ on roomConnected me, tMarker, tstate
   end if
   if not voidp(pTrgDoorID) then
     if tstate = "OPC_OK" then
-      tValue = me.getRoomConnection().send("GOVIADOOR", pTrgDoorID & "/" & pSaveData[#teleport])
+      tValue = me.getRoomConnection().send("GOVIADOOR", [#integer: integer(pTrgDoorID), #integer: integer(pSaveData[#teleport])])
       pTrgDoorID = VOID
       return tValue
     end if
   end if
   if pSaveData[#type] = #private then
     if tstate = "OPC_OK" then
-      tStr = pSaveData[#id]
-      if threadExists(#navigator) then
-        tPassword = getThread(#navigator).getComponent().getFlatPassword(pSaveData[#id])
-        if tPassword <> 0 then
-          tStr = tStr & "/" & tPassword
-        end if
+      if not threadExists(#navigator) then
+        return 0
       end if
-      return me.getRoomConnection().send("TRYFLAT", tStr)
+      tPassword = getThread(#navigator).getComponent().getFlatPassword(pSaveData[#id])
+      if tPassword = 0 then
+        return me.getRoomConnection().send("TRYFLAT", [#integer: integer(pSaveData[#id])])
+      else
+        return me.getRoomConnection().send("TRYFLAT", [#integer: integer(pSaveData[#id]), #string: tPassword])
+      end if
     else
       if tstate = "FLAT_LETIN" then
-        return me.getRoomConnection().send("GOTOFLAT", pSaveData[#id])
+        return me.getRoomConnection().send("GOTOFLAT", [#integer: integer(pSaveData[#id])])
       end if
     end if
   end if
@@ -1112,6 +1114,7 @@ on roomConnected me, tMarker, tstate
   tCache = getObject(#cache).GET(pCacheKey)
   if voidp(tCache[#heightmap]) and not pProcessList[#heightmap] then
     tCache[#heightmap] = EMPTY
+    me.getRoomConnection().send("GET_FLOORMAP")
     me.getRoomConnection().send("G_HMAP")
   else
     me.validateHeightMap(tCache[#heightmap])
@@ -1173,6 +1176,33 @@ on validateHeightMap me, tdata
 end
 
 on updateHeightMap me, tdata
+  if tdata.char[1] = "x" then
+    return me.validateHeightMap(tdata)
+  end if
+  tHeightMapData = pHeightMapData
+  if voidp(tHeightMapData) then
+    return error(me, "Height map update data sent but heightmap data not cached!", #updateHeightMap, #major)
+  else
+    tMapWidth = tHeightMapData.line[1].length
+    if tMapWidth = 0 then
+      return error(me, "Invalid room height map", #updateHeightMap, #major)
+    end if
+    a = 1
+    repeat with i = 1 to tdata.length
+      if tdata.char[i] = "!" then
+        i = i + 1
+        a = a + charToNum(tdata.char[i])
+        next repeat
+      end if
+      tStringPos = a + a / tMapWidth
+      if a mod tMapWidth = 0 then
+        tStringPos = tStringPos - 1
+      end if
+      put tdata.char[i] into (tHeightMapData).char[tStringPos]
+      a = a + 1
+    end repeat
+    return validateHeightMap(me, tHeightMapData)
+  end if
 end
 
 on validateUserObjects me, tdata
@@ -1363,6 +1393,9 @@ on getRoomObject me, tID, tList
   if tID = #list then
     return tList
   end if
+  if tList.ilk <> #propList then
+    return 0
+  end if
   if voidp(tList.getaProp(tID)) then
     return 0
   else
@@ -1371,7 +1404,10 @@ on getRoomObject me, tID, tList
 end
 
 on roomObjectExists me, tID, tList
-  if not (listp(tList) or voidp(tID)) then
+  if tList.ilk <> #propList then
+    return 0
+  end if
+  if voidp(tID) then
     return 0
   end if
   if ilk(tID) = #string then
@@ -1383,7 +1419,7 @@ on roomObjectExists me, tID, tList
       return 0
     end if
   end if
-  return not voidp(tList[tID])
+  return not voidp(tList.getaProp(tID))
 end
 
 on startTeleport me, tTeleId, tFlatID

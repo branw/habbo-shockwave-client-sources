@@ -1,4 +1,4 @@
-property pServiceEnabled, pRecyclerState, pGiveFurniPool, pGetFurniPool, pRewardProps, pREwardItems, pTimeProps, pQuarantineMinutes, pRecyclingMinutes, pIsVisible, pRecyclingTimeoutMinutes, pOpeningRequestPending
+property pServiceEnabled, pRecyclerState, pGiveFurniPool, pGetFurniPool, pRewardProps, pREwardItems, pTimeProps, pQuarantineMinutes, pRecyclingMinutes, pIsVisible, pRecyclingTimeoutMinutes, pOpeningRequestPending, pGivePoolSize, pTimeout, pState
 
 on construct me
   pIsVisible = 0
@@ -11,6 +11,7 @@ on construct me
   pServiceEnabled = 0
   pOpeningRequestPending = 0
   pRecyclingTimeoutMinutes = 0
+  pGivePoolSize = 5
   registerMessage(#userloggedin, me.getID(), #Initialize)
   return 1
 end
@@ -25,8 +26,6 @@ end
 
 on Initialize me
   tConn = getConnection(getVariable("connection.info.id"))
-  tConn.send("GET_FURNI_RECYCLER_CONFIGURATION")
-  me.requestRecyclerState()
 end
 
 on enableService me, tEnabled
@@ -37,9 +36,25 @@ on enableService me, tEnabled
   end if
 end
 
+on setState me, tstate, tTimeout
+  pState = tstate
+  pTimeout = tTimeout
+  me.openRecyclerWithState(tstate)
+end
+
+on recyclingFinished me, tSuccess
+  if not tSuccess then
+    return 1
+  end if
+  if threadExists(#catalogue) then
+    getThread(#catalogue).getInterface().showPurchaseOk()
+  end if
+  me.requestRecyclerState()
+end
+
 on requestRecyclerState me
   tConn = getConnection(getVariable("connection.info.id"))
-  tConn.send("GET_FURNI_RECYCLER_STATUS")
+  tConn.send("GET_RECYCLER_STATUS")
 end
 
 on openRecycler me
@@ -69,6 +84,9 @@ on closeRecycler me
 end
 
 on startRecycling me
+  if not me.isPoolFull() then
+    return 0
+  end if
   tSafeTrader = getThread(#room).getInterface().getSafeTrader()
   if not voidp(tSafeTrader) then
     if tSafeTrader.getState() = #open then
@@ -76,59 +94,15 @@ on startRecycling me
       return 0
     end if
   end if
-  tRoomItemIds = []
-  tWallItemIds = []
-  tTargetItem = me.getRewardItemForCurrentAmount()
-  if voidp(tTargetItem) or ilk(tTargetItem) <> #propList then
-    return 0
-  end if
-  tGiveAmount = tTargetItem[#furniValue]
-  if tGiveAmount > pGiveFurniPool.count then
-    return 0
-  end if
-  repeat with tIndexNo = 1 to tGiveAmount
+  me.setState(#closed)
+  tMessage = [:]
+  tMessage.addProp(#integer, 5)
+  repeat with tIndexNo = 1 to 5
     tItem = pGiveFurniPool[tIndexNo]
-    if tItem[#props][#type] = "active" then
-      tRoomItemIds.add(integer(tItem[#props][#id]))
-      next repeat
-    end if
-    tWallItemIds.add(integer(tItem[#props][#id]))
+    tStripID = tItem[#props][#stripId]
+    tMessage.addProp(#integer, integer(tStripID))
   end repeat
-  tParams = [:]
-  tParams.addProp(#integer, tRoomItemIds.count)
-  repeat with tItem in tRoomItemIds
-    tParams.addProp(#integer, tItem)
-  end repeat
-  tParams.addProp(#integer, tWallItemIds.count)
-  repeat with tItem in tWallItemIds
-    tParams.addProp(#integer, tItem)
-  end repeat
-  getConnection(getVariable("connection.info.id")).send("START_FURNI_RECYCLING", tParams)
-end
-
-on acceptRecycling me
-  tConn = getConnection(getVariable("connection.info.id"))
-  if pRecyclerState = "progress" then
-    tConn.send("APPROVE_RECYCLED_FURNI", [#integer: 1])
-  else
-    tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 1])
-  end if
-end
-
-on cancelRecycling me
-  tConn = getConnection(getVariable("connection.info.id"))
-  if pRecyclerState = "progress" then
-    tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 0])
-  else
-    if pRecyclerState = "ready" then
-      tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 0])
-    else
-      if pRecyclerState = "timeout" then
-        tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 0])
-      end if
-    end if
-  end if
-  me.clearObjectMover()
+  getConnection(getVariable("connection.info.id")).send("RECYCLE_ITEMS", tMessage)
 end
 
 on clearObjectMover me
@@ -141,7 +115,7 @@ on clearObjectMover me
 end
 
 on isRecyclerOpenAndVisible me
-  return pRecyclerState = "open" and pIsVisible
+  return pRecyclerState = #open and pIsVisible
 end
 
 on getGiveFurniPool me
@@ -152,112 +126,34 @@ on getState me
   return pRecyclerState
 end
 
+on getTimeout me
+  return pTimeout
+end
+
 on removeFurniFromGivePool me, tGiveFurniIndex
   if pGiveFurniPool.count >= tGiveFurniIndex then
     pGiveFurniPool.deleteAt(tGiveFurniIndex)
+    me.getInterface().updateRecycleButton()
   end if
-end
-
-on setRewardProps me, tObjectType, tFurniClass, tFurniName
-  pRewardProps[#objectType] = tObjectType
-  pRewardProps[#class] = tFurniClass
-  pRewardProps[#name] = tFurniName
-end
-
-on getRewardProps me, tProp
-  case tProp of
-    #name:
-      return pRewardProps[#name]
-    #type:
-      return pRewardProps[#objectType]
-    #class:
-      return pRewardProps[#class]
-  end case
-  return VOID
-end
-
-on setRewardItems me, tItemList
-  pREwardItems = tItemList
-end
-
-on getRewardItemForCurrentAmount me
-  tAmount = pGiveFurniPool.count
-  tRewardItem = VOID
-  tFurniValue = 0
-  repeat with tNo = 1 to pREwardItems.count
-    tItem = pREwardItems[tNo]
-    if tItem[#furniValue] = tAmount then
-      return tItem
-      next repeat
-    end if
-    if tItem[#furniValue] > tFurniValue and tItem[#furniValue] < tAmount then
-      tFurniValue = tItem[#furniValue]
-      tRewardItem = tItem
-    end if
-  end repeat
-  return tRewardItem
-end
-
-on getNextRewardItemForCurrentAmount me
-  tAmount = pGiveFurniPool.count
-  tNextItem = VOID
-  tDifferenceToNext = 1000000
-  repeat with tNo = 1 to pREwardItems.count
-    tItem = pREwardItems[tNo]
-    if tItem[#furniValue] > tAmount then
-      if tItem[#furniValue] - tAmount < tDifferenceToNext then
-        tNextItem = tItem
-        tDifferenceToNext = tItem[#furniValue] - tAmount
-      end if
-    end if
-  end repeat
-  return tNextItem
-end
-
-on setRecyclingTimes me, tQuarantineMinutes, tRecyclingMinutes
-  pQuarantineMinutes = tQuarantineMinutes
-  pRecyclingMinutes = tRecyclingMinutes
-end
-
-on setRecyclingTimeout me, tMinutesToTimeout
-  pRecyclingTimeoutMinutes = tMinutesToTimeout
-end
-
-on getQuarantineMinutes me
-  return pQuarantineMinutes
-end
-
-on getRecyclingMinutes me
-  return pRecyclingMinutes
-end
-
-on setTimeLeftProps me, tMinutesLeft
-  pTimeProps[#minutesLeft] = tMinutesLeft
-  pTimeProps[#timeStamp] = the milliSeconds
-end
-
-on getMinutesLeftToRecycle me
-  if ilk(pTimeProps) <> #propList then
-    return VOID
-  end if
-  tMillisSinceStarted = the milliSeconds - pTimeProps[#timeStamp]
-  tMinutesSinceStarted = tMillisSinceStarted / 1000 / 60
-  tMinutesLeft = pTimeProps[#minutesLeft] - tMinutesSinceStarted
-  if tMinutesLeft < 0 then
-    tMinutesLeft = 0
-  end if
-  return tMinutesLeft
 end
 
 on addFurnitureToGivePool me, tClass, tID, tProps
   if me.isFurniInRecycler(tID) then
     return 0
   end if
+  if me.isPoolFull() then
+    return 0
+  end if
   pGiveFurniPool.add([#class: tClass, #id: tID, #props: tProps])
+  me.getInterface().updateSlots()
+end
+
+on isPoolFull me
+  return pGiveFurniPool.count >= pGivePoolSize
 end
 
 on isFurniInRecycler me, tStripID
-  if pRecyclerState <> "open" or pGiveFurniPool.count = 0 then
+  if pRecyclerState <> #open or pGiveFurniPool.count = 0 then
     return 0
   end if
   repeat with tNo = 1 to pGiveFurniPool.count
@@ -277,28 +173,17 @@ on setStateTo me, tstate
   tRoomInterface = getThread(#room).getInterface()
   tObjMover = tRoomInterface.getObjectMover()
   case tstate of
-    "open":
-      if not pServiceEnabled then
-        return me.setStateTo("disabled")
-      end if
+    #open:
       pGiveFurniPool = []
-      pGetFurniPool = [:]
       tRoomInterface.cancelObjectMover()
       tRoomInterface.setProperty(#clickAction, "tradeItem")
       if tObjMover <> 0 then
         tObjMover.moveTrade()
       end if
-    "progress":
+    #closed:
       me.clearObjectMover()
-    "ready":
-      me.clearObjectMover()
-    "disabled":
-      me.clearObjectMover()
-    "timeout":
-      me.clearObjectMover()
-    otherwise:
+    #timeout:
       me.clearObjectMover()
   end case
-  executeMessage(#recyclerStateChange)
-  me.getInterface().setViewToState(tstate)
+  me.getInterface().updateView(tstate)
 end

@@ -17,12 +17,13 @@ on setState me, tValue
   if tValue = VOID then
     tValue = pToggleParts.getPropAt(1)
   end if
-  tPartStates = pToggleParts[tValue]
+  tValue = integer(tValue)
+  tPartStates = pToggleParts[string(tValue)]
   if not listp(tPartStates) then
     tPartStates = pToggleParts[1]
-    tValue = pToggleParts.getPropAt(1)
+    tValue = integer(pToggleParts.getPropAt(1))
   end if
-  pState = string(tValue)
+  pState = tValue
   repeat with tPart in tPartStates
     tPartId = tPart.sprite
     tmember = tPart.member
@@ -36,13 +37,7 @@ end
 
 on select me
   if the doubleClick then
-    case pState of
-      "1":
-        pState = "0"
-      otherwise:
-        pState = "1"
-    end case
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: pState])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

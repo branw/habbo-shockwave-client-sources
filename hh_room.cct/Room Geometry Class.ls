@@ -1,4 +1,4 @@
-property pXOffset, pYOffset, pZOffset, pXFactor, pYFactor, pHFactor, pHeightMap, pPlaceMap
+property pXOffset, pYOffset, pZOffset, pXFactor, pYFactor, pHFactor, pHeightMap, pPlaceMap, pFloorMap
 
 on construct me
   pXOffset = 0.0
@@ -9,6 +9,7 @@ on construct me
   pHFactor = 0.0
   pHeightMap = [[]]
   pPlaceMap = [[]]
+  pFloorMap = [[]]
   return 1
 end
 
@@ -22,9 +23,13 @@ on define me, tdata
   return 1
 end
 
-on loadHeightMap me, tdata
-  pHeightMap = []
-  pPlaceMap = []
+on loadHeightMap me, tdata, tUseFloorMap
+  if tUseFloorMap then
+    pFloorMap = []
+  else
+    pHeightMap = []
+    pPlaceMap = []
+  end if
   repeat with i = 1 to tdata.line.count
     l = []
     k = []
@@ -49,6 +54,10 @@ on loadHeightMap me, tdata
         l.add(integer(tLine.char[j]))
         k.add(0)
       end repeat
+      if tUseFloorMap then
+        pFloorMap.add(l)
+        next repeat
+      end if
       pHeightMap.add(l)
       pPlaceMap.add(k)
     end if
@@ -111,6 +120,38 @@ on getWorldCoordinate me, tLocX, tLocY
   return 0
 end
 
+on getFloorCoordinate me, tLocX, tLocY
+  if voidp(pFloorMap) then
+    return VOID
+  end if
+  tX = integer((tLocX - pYFactor - pXOffset) / pXFactor + (tLocY - pYOffset) / pYFactor)
+  tY = integer((tLocY - pYOffset) / pYFactor - (tLocX - pYFactor - pXOffset) / pXFactor)
+  tHeight = -1
+  if tY >= 0 and tY < pFloorMap.count then
+    if tX >= 0 and tX < pFloorMap[tY + 1].count then
+      tHeight = pFloorMap[tY + 1][tX + 1]
+    end if
+  end if
+  if tHeight = 0 then
+    return [tX, tY, 0]
+  else
+    repeat with i = 1 to 9
+      tX = integer((tLocX - pYFactor - pXOffset) / pXFactor + (tLocY + i * pHFactor - pYOffset) / pYFactor)
+      tY = integer((tLocY + i * pHFactor - pYOffset) / pYFactor - (tLocX - pYFactor - pXOffset) / pXFactor)
+      tHeight = -1
+      if tY >= 0 and tY < pFloorMap.count then
+        if tX >= 0 and tX < pFloorMap[tY + 1].count then
+          tHeight = pFloorMap[tY + 1][tX + 1]
+        end if
+      end if
+      if tHeight = i then
+        return [tX, tY, tHeight]
+      end if
+    end repeat
+  end if
+  return 0
+end
+
 on getObjectPlaceMap me
   return pPlaceMap
 end
@@ -128,18 +169,15 @@ on getTileWidth me
 end
 
 on emptyTile me, tX, tY
-  if tY + 1 > 0 and tY + 1 <= count(pPlaceMap) then
-    if tX + 1 > 0 and tX + 1 <= count(pPlaceMap[tY + 1]) then
-      if pPlaceMap[tY + 1][tX + 1] > 1000 then
-        return 0
-      end if
-    else
-      return 0
-    end if
-  else
+  tX = tX + 1
+  tY = tY + 1
+  if tY < 1 or tY > pPlaceMap.count then
     return 0
   end if
-  return 1
+  if tX < 1 or tX > pPlaceMap[tY].count then
+    return 0
+  end if
+  return pPlaceMap[tY][tX] < 100000
 end
 
 on print me
@@ -189,4 +227,24 @@ on print me
   end repeat
   put 
   put "- - - - - - - - - - - - - - -"
+end
+
+on printFloor me
+  put "--- FLOOR MAP ---"
+  repeat with x = 1 to pFloorMap.count
+    tStr = EMPTY
+    repeat with y = 1 to pFloorMap[x].count
+      if pFloorMap[x][y] < 100000 then
+        tStr = tStr & pFloorMap[x][y] & "."
+        next repeat
+      end if
+      if pFloorMap[x][y] < 200000 then
+        tStr = tStr & "x" & "."
+        next repeat
+      end if
+      tStr = tStr & "." & "."
+    end repeat
+    put SPACE & SPACE & tStr & SPACE
+  end repeat
+  put 
 end

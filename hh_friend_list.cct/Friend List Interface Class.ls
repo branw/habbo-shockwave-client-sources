@@ -132,53 +132,53 @@ on addFriend me, tFriendData, tHoldRender
   if tFriendData = 0 then
     return 0
   end if
-  tCategoryId = tFriendData[#categoryId]
-  tViewObj = me.getViewListObject(tCategoryId)
+  tCategoryID = tFriendData[#categoryId]
+  tViewObj = me.getViewListObject(tCategoryID)
   if tViewObj = 0 then
     return 0
   end if
   tViewObj.addFriend(tFriendData)
-  me.setCategoryHighlight(tCategoryId)
-  if not tHoldRender and pCurrentCategoryID = tCategoryId then
+  me.setCategoryHighlight(tCategoryID)
+  if not tHoldRender and pCurrentCategoryID = tCategoryID then
     me.updateOpenCategoryPanel()
   end if
   me.updateCategoryCounts()
 end
 
 on addFriendRequest me, tRequest
-  tCategoryId = -2
-  tViewObj = me.getViewListObject(tCategoryId)
+  tCategoryID = -2
+  tViewObj = me.getViewListObject(tCategoryID)
   if tViewObj = 0 then
     return 0
   end if
   tViewObj.addRequest(tRequest)
-  me.setCategoryHighlight(tCategoryId)
-  if pCurrentCategoryID = tCategoryId then
+  me.setCategoryHighlight(tCategoryID)
+  if pCurrentCategoryID = tCategoryID then
     me.updateOpenCategoryPanel()
   end if
 end
 
-on setCategoryHighlight me, tCategoryId
+on setCategoryHighlight me, tCategoryID
   tAllowedCategories = getVariableValue("fr.category.highlights.allowed", [])
-  if tAllowedCategories.getOne(tCategoryId) and (pCurrentCategoryID <> tCategoryId or pMinimized) then
-    if not pHighlightedCategories.getOne(tCategoryId) then
-      pHighlightedCategories.add(tCategoryId)
+  if tAllowedCategories.getOne(tCategoryID) and (pCurrentCategoryID <> tCategoryID or pMinimized) then
+    if not pHighlightedCategories.getOne(tCategoryID) then
+      pHighlightedCategories.add(tCategoryID)
     end if
-    me.showCategoryTitle(tCategoryId, VOID, VOID, VOID)
-    tTimeoutID = pCategoryHighlBaseID & tCategoryId
+    me.showCategoryTitle(tCategoryID, VOID, VOID, VOID)
+    tTimeoutID = pCategoryHighlBaseID & tCategoryID
     if timeoutExists(tTimeoutID) then
       removeTimeout(tTimeoutID)
     end if
     tTimeoutTime = integer(getVariable("fr.category.highlight.duration"))
-    createTimeout(tTimeoutID, tTimeoutTime, #removeCategoryHighlight, me.getID(), tCategoryId, 1)
+    createTimeout(tTimeoutID, tTimeoutTime, #removeCategoryHighlight, me.getID(), tCategoryID, 1)
   end if
 end
 
-on removeCategoryHighlight me, tCategoryId
-  if pHighlightedCategories.deleteOne(tCategoryId) then
-    me.showCategoryTitle(tCategoryId, VOID, VOID, VOID)
+on removeCategoryHighlight me, tCategoryID
+  if pHighlightedCategories.deleteOne(tCategoryID) then
+    me.showCategoryTitle(tCategoryID, VOID, VOID, VOID)
   end if
-  tTimeoutID = pCategoryHighlBaseID & tCategoryId
+  tTimeoutID = pCategoryHighlBaseID & tCategoryID
   if timeoutExists(tTimeoutID) then
     removeTimeout(tTimeoutID)
   end if
@@ -231,7 +231,7 @@ on removeInputFieldFocus me
   end if
 end
 
-on changeCategory me, tCategoryId
+on changeCategory me, tCategoryID
   if objectExists(pInfoPopupId) then
     removeObject(pInfoPopupId)
   end if
@@ -239,18 +239,18 @@ on changeCategory me, tCategoryId
   if tWndObj = 0 then
     return 0
   end if
-  if voidp(tCategoryId) then
-    tCategoryId = pCurrentCategoryID
+  if voidp(tCategoryID) then
+    tCategoryID = pCurrentCategoryID
   end if
-  me.removeCategoryHighlight(tCategoryId)
-  if tCategoryId <> pCurrentCategoryID then
+  me.removeCategoryHighlight(tCategoryID)
+  if tCategoryID <> pCurrentCategoryID then
     if pCurrentCategoryID = -3 then
       me.removeInputFieldFocus()
     end if
     tWndObj.unmerge()
-    tContentID = getVariable("fr.category.content.id." & tCategoryId)
+    tContentID = getVariable("fr.category.content.id." & tCategoryID)
     if not tWndObj.merge(tContentID & ".window") then
-      return error(me, "Unable to merge content for category" && tCategoryId, #changeCategory, #major)
+      return error(me, "Unable to merge content for category" && tCategoryID, #changeCategory, #major)
     end if
   end if
   repeat with tNo = 1 to pMaxFreeCategories
@@ -274,7 +274,7 @@ on changeCategory me, tCategoryId
     tCount = me.getComponent().getItemCountForcategory(tCategory[#id])
     me.showCategoryTitle(tCategory[#id], tCurrentOffsetV, tCategory[#name], tCount)
     tCurrentOffsetV = tCurrentOffsetV + tCategoryTitleHeight
-    if tCategory[#id] = tCategoryId then
+    if tCategory[#id] = tCategoryID then
       me.moveCategoryContent(tCurrentOffsetV)
       if not pMinimized then
         tCurrentOffsetV = tCurrentOffsetV + tCategoryContentHeight + tActionsPanelHeight + 1
@@ -285,12 +285,12 @@ on changeCategory me, tCategoryId
     tHiddenAmountPx = (pMaxCategories - tCategoryList.count) * tCategoryTitleHeight + tCategoryContentHeight + tActionsPanelHeight + 1
   else
     tHiddenAmountPx = (pMaxCategories - tCategoryList.count) * tCategoryTitleHeight
-    if tCategoryId = -2 then
+    if tCategoryID = -2 then
       executeMessage(#FriendRequestListOpened)
     end if
   end if
   tWndObj.resizeTo(tWndObj.getProperty(#width), pWindowDefaultHeight - tHiddenAmountPx)
-  pCurrentCategoryID = tCategoryId
+  pCurrentCategoryID = tCategoryID
   me.updateOpenCategoryPanel()
   me.updateActionIconsState()
 end
@@ -561,33 +561,33 @@ on updateActionIconsState me
   end if
 end
 
-on getViewListObject me, tCategoryId
-  tCategoryId = string(tCategoryId)
-  if pViewsList.getaProp(tCategoryId) = VOID then
-    tViewObj = me.createListViewObject(tCategoryId)
-    if tCategoryId > -2 then
-      tCategoryContent = me.getComponent().getFriendsInCategory(tCategoryId)
+on getViewListObject me, tCategoryID
+  tCategoryID = string(tCategoryID)
+  if pViewsList.getaProp(tCategoryID) = VOID then
+    tViewObj = me.createListViewObject(tCategoryID)
+    if tCategoryID > -2 then
+      tCategoryContent = me.getComponent().getFriendsInCategory(tCategoryID)
       tViewObj.setListData(tCategoryContent)
     end if
-    pViewsList[tCategoryId] = tViewObj
+    pViewsList[tCategoryID] = tViewObj
   else
-    tViewObj = pViewsList[tCategoryId]
+    tViewObj = pViewsList[tCategoryID]
   end if
   return tViewObj
 end
 
-on createListViewObject me, tCategoryId
-  tObjID = "list_view_object_" & tCategoryId
-  if tCategoryId >= 0 then
+on createListViewObject me, tCategoryID
+  tObjID = "list_view_object_" & tCategoryID
+  if tCategoryID >= 0 then
     createObject(tObjID, ["Friend List View Base", "Friend List Actions Base", "Friend Online List View"])
   else
-    if tCategoryId = "-1" then
+    if tCategoryID = "-1" then
       createObject(tObjID, ["Friend List View Base", "Friend List Actions Base", "Friend Offline List View"])
     else
-      if tCategoryId = "-2" then
+      if tCategoryID = "-2" then
         createObject(tObjID, ["Friend List View Base", "Friend Request List View"])
       else
-        if tCategoryId = "-3" then
+        if tCategoryID = "-3" then
           createObject(tObjID, ["Friend List View Base", "Friend Search Results View"])
         end if
       end if
@@ -916,16 +916,16 @@ on eventProc me, tEvent, tElemID, tParam
     if tElemID contains "category_element_" or tElemID contains "category_title_" then
       tDelim = the itemDelimiter
       the itemDelimiter = "_"
-      tCategoryId = tElemID.item[3]
+      tCategoryID = tElemID.item[3]
       the itemDelimiter = tDelim
       if pMinimized then
         me.minimizedView(0)
-        me.changeCategory(tCategoryId)
+        me.changeCategory(tCategoryID)
       else
-        if tCategoryId = pCurrentCategoryID then
+        if tCategoryID = pCurrentCategoryID then
           me.minimizedView(1)
         else
-          me.changeCategory(tCategoryId)
+          me.changeCategory(tCategoryID)
         end if
       end if
     end if

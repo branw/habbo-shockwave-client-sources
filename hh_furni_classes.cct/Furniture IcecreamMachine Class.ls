@@ -8,8 +8,15 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  pAnimFrame = 1
-  pActive = 1
+  tValue = integer(tValue)
+  if tValue <> 0 then
+    pAnimFrame = 1
+    pActive = 1
+  else
+    me.switchMember("d", "0")
+    pAnimFrame = 0
+    pActive = 0
+  end if
 end
 
 on update me
@@ -39,17 +46,8 @@ on update me
         7:
           me.switchMember("a", "0")
         8:
-          if pUserClicked then
-            me.giveDrink()
-          end if
-          pUserClicked = 0
         9:
           me.switchMember("d", "6")
-        15:
-          me.switchMember("d", "0")
-          pAnimFrame = 0
-          pActive = 0
-          return 1
       end case
       pAnimFrame = pAnimFrame + 1
     end if
@@ -126,23 +124,5 @@ on setAnimation me
   if tConnection = 0 then
     return 0
   end if
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-  tConnection.send("LOOKTO", me.pLocX && me.pLocY)
-end
-
-on giveDrink me
-  tConnection = getThread(#room).getComponent().getRoomConnection()
-  if tConnection = 0 then
-    return 0
-  end if
-  tClass = me.pClass
-  if tClass contains "*" then
-    tClass = tClass.char[1..offset("*", tClass) - 1]
-  end if
-  tToken = value(getVariable("obj_" & tClass))
-  if not listp(tToken) then
-    tToken = [4]
-  end if
-  tToken = tToken[1]
-  tConnection.send("CARRYDRINK", tToken)
+  tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end

@@ -5,7 +5,7 @@ on construct me
     return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   tImageList = getThread(#catalogue).getComponent().getPageDataByLayout("recycler")[#localization][#images]
-  getThread(#recycler).getInterface().setHeaderImage(getmemnum(tImageList[1]))
+  getThread(#recycler).getInterface().setHeaderMemberName(tImageList[1])
   getThread(#recycler).getInterface().setHostWindowObject(tWindowObj)
   getThread(#recycler).getComponent().openRecycler()
   return 1

@@ -1,21 +1,23 @@
 property pChanges, pActive
 
 on prepare me, tdata
-  if tdata[#stuffdata] = "O" then
-    me.setOn()
-    me.pChanges = 1
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     me.setOff()
     me.pChanges = 0
+  else
+    me.setOn()
+    me.pChanges = 1
   end if
   return 1
 end
 
 on updateStuffdata me, tValue
-  if tValue = "O" then
-    me.setOn()
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     me.setOff()
+  else
+    me.setOn()
   end if
   me.pChanges = 1
 end
@@ -57,12 +59,7 @@ end
 
 on select me
   if the doubleClick then
-    if me.pActive then
-      tStr = "C"
-    else
-      tStr = "O"
-    end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

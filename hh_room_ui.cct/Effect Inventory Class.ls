@@ -257,6 +257,12 @@ on updateFxView me
   if not pState then
     return 1
   end if
+  if voidp(pSelectedEffectType) then
+    if pInventoryList.count > 1 then
+      pSelectedEffectType = pInventoryList.getPropAt(1)
+    end if
+  end if
+  me.setCatalogLinkVisibility()
   me.updateListImage()
   me.updatePreview()
   me.updateSlots()

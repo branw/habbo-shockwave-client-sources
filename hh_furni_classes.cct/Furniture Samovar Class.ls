@@ -1,10 +1,4 @@
-property pTokenList
-
 on prepare me
-  pTokenList = value(getVariable("obj_" & me.pClass))
-  if not listp(pTokenList) then
-    pTokenList = [1]
-  end if
   return 1
 end
 
@@ -55,10 +49,5 @@ on giveDrink me
   if tConnection = 0 then
     return 0
   end if
-  tConnection.send("LOOKTO", me.pLocX && me.pLocY)
-  tConnection.send("CARRYDRINK", me.getDrinkname())
-end
-
-on getDrinkname me
-  return pTokenList[random(pTokenList.count)]
+  tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end

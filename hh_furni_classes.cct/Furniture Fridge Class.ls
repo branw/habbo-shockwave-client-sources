@@ -1,27 +1,17 @@
-property pTokenList, pDoorTimer
+property pDoorTimer
 
 on prepare me
-  tClass = me.pClass
-  if tClass contains "*" then
-    tClass = tClass.char[1..offset("*", tClass) - 1]
-  end if
-  if tClass.char[1..2] = "s_" then
-    tClass = tClass.char[3..tClass.length]
-  end if
-  pTokenList = value(getVariable("obj_" & tClass))
-  if not listp(pTokenList) then
-    pTokenList = [3]
-  end if
   return 1
 end
 
 on updateStuffdata me, tValue
-  if tValue = "TRUE" then
-    pDoorTimer = 43
-    me.openCloseDoor(#open)
-  else
+  tValue = integer(tValue)
+  if tValue = 0 then
     pDoorTimer = 0
     me.openCloseDoor(#close)
+  else
+    pDoorTimer = 43
+    me.openCloseDoor(#open)
   end if
 end
 
@@ -72,13 +62,7 @@ on giveDrink me
   if tConnection = 0 then
     return 0
   end if
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-  tConnection.send("LOOKTO", me.pLocX && me.pLocY)
-  tConnection.send("CARRYDRINK", me.getDrinkname())
-end
-
-on getDrinkname me
-  return pTokenList[random(pTokenList.count)]
+  tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end
 
 on openCloseDoor me, tOpen

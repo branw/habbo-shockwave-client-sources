@@ -22,6 +22,7 @@ on deconstruct me
 end
 
 on define me, tdata, tWallDef, tLandscapeDef
+  pRandObj = me.getRandomizer()
   pwidth = tdata[#width]
   pheight = tdata[#height]
   pBgID = tdata[#id]
@@ -318,6 +319,7 @@ on getRandomPropList me, tMemberId
   if tMaxCount > tOffsetList.count then
     tMaxCount = tOffsetList.count
   end if
+  pRandObj = me.getRandomizer()
   if pRandObj = 0 then
     return 0
   end if

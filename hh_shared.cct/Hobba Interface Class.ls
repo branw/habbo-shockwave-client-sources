@@ -370,7 +370,7 @@ on redrawCryWindow me
     tShowRoomID = EMPTY
   end if
   tWndObj = getWindow(pCryWindowID)
-  tNeededElements = ["hobba_header", "hobba_change_cfh_type", "hobba_pickedby", "hobba_cry_text", "page_num"]
+  tNeededElements = ["hobba_header", "hobba_pickedby", "hobba_cry_text", "page_num"]
   repeat with tElem in tNeededElements
     if not tWndObj.elementExists(tElem) then
       return 0
@@ -379,24 +379,16 @@ on redrawCryWindow me
   if tCategory = 1 or tCategory = 2 then
     tWndObj.getElement("hobba_header").setProperty(#color, rgb(0, 0, 0))
     tWndObj.getElement("hobba_header").setText(getText("hobba_emergency_help") && tName)
-    tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_normal"))
   else
     if tCategory = 3 then
       tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
       tWndObj.getElement("hobba_header").setText(getText("hobba_cryforhelp") && tName)
-      tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
     else
       if tCategory = 4 then
         tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
         tWndObj.getElement("hobba_header").setText(getText("hobba_im_cryforhelp") && tName)
-        tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
       end if
     end if
-  end if
-  if tCategory = 3 or tCategory = 4 then
-    tWndObj.getElement("hobba_change_cfh_type").deactivate()
-  else
-    tWndObj.getElement("hobba_change_cfh_type").Activate()
   end if
   tGoButton = tWndObj.getElement("hobba_pickup_go")
   if ttype = #instantMessage then
@@ -406,22 +398,15 @@ on redrawCryWindow me
   end if
   tWndObj.getElement("hobba_cry_text").setText(tPlace && tShowRoomID & RETURN & RETURN & tMsg)
   tWndObj.getElement("page_num").setText(pCurrCryNum & "/" & tCryCount)
+  tPickText = getText("hobba_pickedby")
+  if pCurrCryData.getaProp(#block) = 1 then
+    tPickText = getText("hobba_blockedby")
+  end if
   if pCurrCryData.picker = EMPTY then
     tWndObj.getElement("hobba_pickedby").setText(tTime)
   else
-    tWndObj.getElement("hobba_pickedby").setText(getText("hobba_pickedby") && pCurrCryData.picker)
+    tWndObj.getElement("hobba_pickedby").setText(tPickText && pCurrCryData.picker)
   end if
-  tFont = tWndObj.getElement("hobba_pickedby").getFont()
-  if not voidp(pCurrCryData.getaProp(#block)) then
-    if pCurrCryData.block = 1 then
-      tFont[#color] = rgb("#FF0000")
-    else
-      tFont[#color] = rgb("#000000")
-    end if
-  else
-    tFont[#color] = rgb("#000000")
-  end if
-  tWndObj.getElement("hobba_pickedby").setFont(tFont)
 end
 
 on initAudioAlertCheckBox me
@@ -609,8 +594,6 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
       "hobba_reply_cancel":
         me.hideCryWnd()
         return me.showCryWnd()
-      "hobba_change_cfh_type":
-        return me.getComponent().send_changeCfhType(pCurrCryID, pCurrCryData[#category])
       "hobba_pickblock":
         return me.getComponent().send_blockCfh(pCurrCryID)
     end case

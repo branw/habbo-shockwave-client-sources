@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadges, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pFlipPartList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFx, pFXManager, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadges, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pFlipPartList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFx, pFXManager, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName, pDrinkEatTimeoutList, pDrinkEatParams, pCarryItemCode, pGesture, pSitting, pLayingDown, pPersistedFX
 
 on construct me
   pFrozenAnimFrame = 0
@@ -79,9 +79,16 @@ on construct me
   if ilk(pFlipPartList) <> #propList then
     pFlipPartList = [:]
   end if
+  pDrinkEatParams = [:]
   pPartActionList = VOID
   pLeftHandUp = 0
   pRightHandUp = 0
+  pDrinkEatTimeoutList = []
+  pCarryItemCode = VOID
+  pGesture = 0
+  pSitting = 0
+  pLayingDown = 0
+  pPersistedFX = 0
   return 1
 end
 
@@ -117,6 +124,10 @@ on deconstruct me
   pShadowSpr = VOID
   pMatteSpr = VOID
   pSprite = VOID
+  timeout("wavetimeout" & me.getID()).forget()
+  repeat with tName in pDrinkEatTimeoutList
+    timeout(tName).forget()
+  end repeat
   return 1
 end
 
@@ -283,21 +294,18 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody, tActionList
   end if
   tWasDancing = pDancing
   pMoving = 0
-  pDancing = tActionList.findPos("dance") > 0
-  pTalking = tActionList.findPos("talk") > 0
-  pCarrying = tActionList.findPos("carryd") > 0
-  pWaving = tActionList.findPos("wave") > 0
   pTrading = tActionList.findPos("trd") > 0
   pCtrlType = 0
   pAnimating = pDancing or pFx
   pModState = 0
-  pSleeping = tActionList.findPos("sleep") > 0
   pQueuesWithObj = 0
   if tWasDancing and not pDancing then
     executeMessage(#updateInfoStandButtons)
   end if
   repeat with i = 1 to pExtraObjsActive.count
-    pExtraObjsActive[i] = 0
+    if pExtraObjsActive.getPropAt(i) <> "IG_ICON" then
+      pExtraObjsActive[i] = 0
+    end if
   end repeat
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
@@ -310,9 +318,7 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody, tActionList
   pRestingHeight = 0.0
   pDirection = (tDirBody + me.getEffectDirOffset()) mod 8
   pHeadDir = (tDirHead + me.getEffectDirOffset()) mod 8
-  if not me.pAnimating then
-    me.resetAction()
-  end if
+  me.resetAction()
   if pExtraObjs.count > 0 then
     call(#Refresh, pExtraObjs)
   end if
@@ -327,6 +333,12 @@ on Refresh me, tX, tY, tH
   end if
   call(#defineDir, pPartList, pDirection)
   call(#defineDirMultiple, pPartList, pHeadDir, pPartListSubSet["head"])
+  if pCarrying <> 0 then
+    call("action_" & pDrinkEatParams[#action], [me], pDrinkEatParams[#action] && pDrinkEatParams[#params])
+  end if
+  if pGesture <> 0 then
+    call("action_gest", [me], "gest " && pGesture)
+  end if
   me.arrangeParts()
   i = 1
   repeat while i <= pExtraObjsActive.count
@@ -708,6 +720,12 @@ on prepare me
       me.definePartListAction(pPartListSubSet["speak"], "spk")
     end if
     pChanges = 1
+  else
+    if pMainAction = "lay" then
+      me.definePartListAction(pPartListSubSet["speak"], "lay")
+    else
+      me.definePartListAction(pPartListSubSet["speak"], "std")
+    end if
   end if
   if pMoving then
     tFactor = float(the milliSeconds - pMoveStart) / pMoveTime
@@ -1109,7 +1127,6 @@ on resetAction me
       pPartActionList[i] = pMainAction
     end repeat
   end if
-  call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), "0")
 end
 
 on getPartClass me, tPartSymbol
@@ -1127,7 +1144,27 @@ on releaseShadowSprite me
   end if
 end
 
+on action_std me, tProps
+  if (pLayingDown or pSitting) and pPersistedFX <> 0 then
+    tReactivateFX = 1
+  else
+    tReactivateFX = 0
+  end if
+  pLayingDown = 0
+  pSitting = 0
+  if tReactivateFX then
+    me.action_fx("fx" && pPersistedFX)
+  end if
+end
+
 on action_mv me, tProps
+  if (pLayingDown or pSitting) and pPersistedFX <> 0 then
+    tReactivateFX = 1
+  else
+    tReactivateFX = 0
+  end if
+  pLayingDown = 0
+  pSitting = 0
   pMainAction = "wlk"
   pMoving = 1
   pBaseLocZ = 0
@@ -1142,9 +1179,14 @@ on action_mv me, tProps
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.definePartListAction(pPartListSubSet["walk"], "wlk")
+  if tReactivateFX then
+    me.action_fx("fx" && pPersistedFX)
+  end if
 end
 
 on action_sld me, tProps
+  pLayingDown = 0
+  pSitting = 0
   pMoving = 1
   pBaseLocZ = 0
   tDelim = the itemDelimiter
@@ -1167,15 +1209,31 @@ on action_sld me, tProps
 end
 
 on action_sit me, tProps
+  pLayingDown = 0
+  pSitting = 1
+  if pDancing then
+    me.stop_action_dance()
+  end if
   me.definePartListAction(pPartListSubSet["sit"], "sit")
   pMainAction = "sit"
   pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   tIsInQueue = integer(tProps.word[3])
   pQueuesWithObj = tIsInQueue
+  if pCarrying <> 0 then
+    call("action_" & pDrinkEatParams[#action], [me], pDrinkEatParams[#action] && pDrinkEatParams[#params])
+  end if
 end
 
 on action_lay me, tProps
+  if pDancing then
+    me.stop_action_dance()
+  end if
+  if pCarrying <> 0 then
+    me.stop_action_carry()
+  end if
+  pLayingDown = 1
+  pSitting = 0
   pMainAction = "lay"
   pCarrying = 0
   tRestingHeight = getLocalFloat(tProps.word[2])
@@ -1230,9 +1288,7 @@ on carryObject me, tProps, tDefaultItem, tDefaultItemPublic
     end if
     me.definePartListAction(pPartListSubSet["handRight"], "crr")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
-    if textExists("handitem" & tCarrying) then
-      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
-    end if
+    pCarrying = getText("handitem" & tCarrying)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
@@ -1255,6 +1311,34 @@ on action_cri me, tProps
   me.carryObject(tProps, "75", "1")
 end
 
+on stop_action_carry me, tProps
+  pCarrying = 0
+  repeat with tName in pDrinkEatTimeoutList
+    timeout(tName).forget()
+  end repeat
+  pDrinkEatTimeoutList = []
+  if not me.pFx then
+    me.resetAction()
+  end if
+  me.definePartListAction(pPartListSubSet["handRight"], "std")
+  call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), "std")
+  me.arrangeParts()
+  pChanges = 1
+  me.render(1)
+end
+
+on stop_action_carryd me, tProps
+  me.stop_action_carry(tProps)
+end
+
+on stop_action_carryf me, tProps
+  me.stop_action_carry(tProps)
+end
+
+on stop_action_cri me, tProps
+  me.stop_action_carry(tProps)
+end
+
 on useObject me, tProps, tDefaultItem, tDefaultItemPublic
   tItem = tProps.word[2]
   tItemInt = integer(tItem)
@@ -1274,6 +1358,7 @@ on useObject me, tProps, tDefaultItem, tDefaultItemPublic
     me.definePartListAction(pPartListSubSet["handRight"], "drk")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     pRightHandUp = 1
+    me.arrangeParts()
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
@@ -1281,6 +1366,7 @@ on useObject me, tProps, tDefaultItem, tDefaultItemPublic
       me.definePartListAction(pPartListSubSet["handRight"], "drk")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
       pRightHandUp = 1
+      me.arrangeParts()
     end if
   end if
 end
@@ -1289,6 +1375,14 @@ on action_usei me, tProps
   if not me.pFx then
     me.useObject(tProps, "1", "1")
   end if
+end
+
+on stop_action_usei me, tProps
+  if not me.pFx then
+    me.resetAction()
+  end if
+  pChanges = 1
+  me.render(1)
 end
 
 on action_drink me, tProps
@@ -1313,6 +1407,17 @@ on action_talk me, tProps
   pTalking = 1
 end
 
+on stop_action_talk me, tProps
+  pTalking = 0
+  if pMainAction = "lay" then
+    me.definePartListAction(pPartListSubSet["head"], "lay")
+  else
+    me.definePartListAction(pPartListSubSet["head"], "std")
+  end if
+  pChanges = 1
+  me.render(1)
+end
+
 on action_gest me, tProps
   if pPeopleSize = "sh" then
     return 0
@@ -1330,14 +1435,37 @@ on action_gest me, tProps
       me.definePartListAction(pPartListSubSet["head"], "ohd")
     end if
   end if
+  pGesture = tGesture
+  pChanges = 1
+  me.render(1)
+end
+
+on stop_action_gest me, tProps
+  me.action_gest("gest std")
+  pGesture = 0
 end
 
 on action_wave me, tProps
   pWaving = 1
   pLeftHandUp = 1
+  timeout("wavetimeout" & me.getID()).new(2000, #stop_action_wave, me)
+  me.stopAnimation()
+end
+
+on stop_action_wave me
+  timeout("wavetimeout" & me.getID()).forget()
+  pWaving = 0
+  pLeftHandUp = 0
+  if not me.pAnimating then
+    me.definePartListAction(pPartListSubSet["handLeft"], pMainAction)
+  end if
+  pChanges = 1
 end
 
 on action_dance me, tProps
+  if not me.allowDancing() then
+    return 1
+  end if
   me.clearEffects()
   tStyleNum = tProps.word[2]
   pDancing = integer(tStyleNum)
@@ -1345,8 +1473,34 @@ on action_dance me, tProps
     pDancing = 1
   end if
   tStyle = "dance." & pDancing
-  me.startAnimation(tStyle)
+  if tStyleNum <> "0" then
+    me.stop_action_carry(EMPTY)
+    me.stop_action_wave()
+    me.startAnimation(tStyle)
+  else
+    me.stopAnimation()
+    pDancing = 0
+    me.resetAction()
+    pChanges = 1
+    me.render(1)
+  end if
   executeMessage(#updateInfostandAvatar)
+end
+
+on allowDancing me
+  if pMainAction = "lay" then
+    return 0
+  end if
+  if pMainAction = "sit" then
+    return 0
+  end if
+  return 1
+end
+
+on stop_action_dance me, tProps
+  me.action_dance("dance 0")
+  me.resetAction()
+  pChanges = 1
 end
 
 on action_ohd me
@@ -1360,8 +1514,8 @@ on action_trd me
   pTrading = 1
 end
 
-on action_sleep me
-  pSleeping = 1
+on action_sleep me, tSleep
+  pSleeping = tSleep
 end
 
 on action_flatctrl me, tProps
@@ -1395,6 +1549,10 @@ on action_joingame me, tProps
   end if
   tSignObjID = "IG_ICON"
   pExtraObjsActive.setaProp(tSignObjID, 1)
+  if tProps.length = string("joingame").length then
+    pExtraObjsActive.setaProp(tSignObjID, 0)
+    return 
+  end if
   if pExtraObjs.findPos(tSignObjID) = 0 then
     tObject = createObject(#temp, "IG HumanIcon Class")
     if tObject = 0 then
@@ -1406,6 +1564,7 @@ on action_joingame me, tProps
 end
 
 on action_fx me, tProps
+  me.pPersistedFX = 0
   if tProps = VOID then
     return 0
   end if
@@ -1416,6 +1575,13 @@ on action_fx me, tProps
   tManager = me.getEffectManager()
   if tManager = 0 then
     return 0
+  end if
+  if tID = 0 then
+    me.clearEffects()
+    me.pFx = tID
+    me.pPersistedFX = 0
+    executeMessage(#updateInfostandAvatar)
+    return 1
   end if
   if tManager.effectExists(tID) then
     return 1
@@ -1429,6 +1595,83 @@ on action_fx me, tProps
   return 1
 end
 
+on persist_fx me, ttype
+  me.pPersistedFX = ttype
+end
+
+on handle_user_carry_object me, tItemType, tItemName
+  tAction = "carryd"
+  if tItemType = 20 then
+    tAction = "cri"
+  end if
+  if tItemType = 101 then
+    tAction = "carryf"
+  end if
+  tParams = string(tItemType)
+  if tItemType = 100 or tItemType = 101 then
+    tParams = tItemName
+  end if
+  call("action_" & tAction, [me], tAction && tParams)
+  pChanges = 1
+  me.render(1)
+  pCarryItemCode = tItemType
+  if tItemType = 0 or tItemType = 20 then
+    pDrinkEatParams = [:]
+    return 
+  end if
+  tHandler = #execute_drink
+  if tItemType = 101 then
+    tHandler = #execute_eat
+  end if
+  pDrinkEatParams = [#params: tParams, #action: tAction]
+  repeat with i = 1 to 10
+    tID = getUniqueID()
+    timeout(tID).new(i * 10 * 1000, tHandler, me)
+    pDrinkEatTimeoutList.add(tID)
+  end repeat
+  tID = getUniqueID()
+  timeout(tID).new(10 * 10 * 1000 + 1000, #stop_action_carry, me)
+  pDrinkEatTimeoutList.add(tID)
+end
+
+on execute_eat me, tTimeout
+  pDrinkEatTimeoutList.deleteOne(tTimeout.name)
+  timeout(tTimeout.name).forget()
+  me.action_eat("eat " & pDrinkEatParams[#params])
+  pChanges = 1
+  me.render(1)
+  tID = getUniqueID()
+  timeout(tID).new(500, #execute_continue_carry, me)
+  pDrinkEatTimeoutList.add(tID)
+end
+
+on execute_drink me, tTimeout
+  pDrinkEatTimeoutList.deleteOne(tTimeout.name)
+  timeout(tTimeout.name).forget()
+  me.action_drink("drink " & pDrinkEatParams[#params])
+  pChanges = 1
+  me.render(1)
+  tID = getUniqueID()
+  timeout(tID).new(500, #execute_continue_carry, me)
+  pDrinkEatTimeoutList.add(tID)
+end
+
+on execute_continue_carry me, tTimeout
+  pDrinkEatTimeoutList.deleteOne(tTimeout.name)
+  timeout(tTimeout.name).forget()
+  call("action_" & pDrinkEatParams[#action], [me], pDrinkEatParams[#action] && pDrinkEatParams[#params])
+  pChanges = 1
+  me.render(1)
+end
+
+on handle_user_use_object me, tItemType
+  if tItemType <> 0 then
+    me.action_usei("usei " & tItemType)
+  else
+    me.stop_action_usei(EMPTY)
+  end if
+end
+
 on validateFxForActionList me, tActionDefs, tActionIndex
   if ilk(tActionDefs) <> #list then
     return 0
@@ -1437,6 +1680,9 @@ on validateFxForActionList me, tActionDefs, tActionIndex
     return 0
   end if
   tEffectID = VOID
+  if pFx <> 0 then
+    tEffectID = pFx
+  end if
   tActions = []
   repeat with tAction in tActionDefs
     if ilk(tAction) = #propList then
@@ -1447,6 +1693,20 @@ on validateFxForActionList me, tActionDefs, tActionIndex
       tActions.add(tAction.getaProp(#name))
     end if
   end repeat
+  if pDrinkEatParams.ilk = #propList then
+    if pCarrying <> 0 then
+      tActions.add(pDrinkEatParams[#action])
+    end if
+  end if
+  if pSitting <> 0 then
+    tActions.add("sit")
+  end if
+  if pLayingDown <> 0 then
+    tActions.add("lay")
+  end if
+  if pDancing <> 0 then
+    tActions.add("dance")
+  end if
   if tEffectID = VOID then
     if pFx then
       me.clearEffects()
@@ -1473,10 +1733,11 @@ on validateFxForActionList me, tActionDefs, tActionIndex
     if tBlackList.getOne(tAction) then
       if tWhiteList.getOne(tAction) then
         tRemovedActions.add(tAction)
+        call("stop_action_" & tAction, [me], EMPTY)
         next repeat
       end if
       if pFx then
-        me.clearEffects()
+        me.clearEffects(1)
       end if
       tAllow = 0
     end if
@@ -1494,7 +1755,41 @@ on validateFxForActionList me, tActionDefs, tActionIndex
       end if
     end if
   end repeat
+  if pCarrying <> 0 then
+    tActions.deleteOne(pDrinkEatParams[#action])
+  end if
+  if pSitting <> 0 then
+    tActions.deleteOne("sit")
+  end if
+  if pLayingDown <> 0 then
+    tActions.deleteOne("lay")
+  end if
+  if pDancing <> 0 then
+    tActions.deleteOne("dance")
+  end if
   return tAllow
+end
+
+on validateCarryForCurrentState me
+  tEffectID = VOID
+  if pFx <> 0 then
+    tEffectID = pFx
+  else
+    return 1
+  end if
+  tVarName = "fx.blacklist." & tEffectID
+  if not variableExists(tVarName) then
+    return 1
+  end if
+  tBlackList = getVariableValue(tVarName)
+  if ilk(tBlackList) <> #list then
+    return 1
+  end if
+  if tBlackList.getPos("carryd") or tBlackList.getPos("carryf") or tBlackList.getPos("cri") then
+    return 0
+  else
+    return 1
+  end if
 end
 
 on getEffectDirOffset me
@@ -1539,11 +1834,15 @@ on updateEffects me
   pFXManager.updateEffects(me)
 end
 
-on clearEffects me
+on clearEffects me, tTemp
+  if tTemp <> 0 then
+    me.pPersistedFX = me.pFx
+  end if
   if pFXManager <> 0 then
     pFXManager.clearEffects(me)
   end if
   me.pFx = 0
+  me.pChanges = 1
   return 1
 end
 

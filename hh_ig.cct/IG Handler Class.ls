@@ -431,6 +431,7 @@ on handle_enter_arena me, tMsg
   getObject(#session).set("lastroom", EMPTY)
   executeMessage(#hide_navigator)
   executeMessage(#ig_clear_game_info)
+  executeMessage(#ig_store_game_info, tdata)
   me.getComponent().setSystemState(#pre_game)
   me.getComponent().displayIGComponentEvent("PreGame", #pre_game, tdata, 1)
   tService = me.getComponent().getIGComponent("BottomBar")

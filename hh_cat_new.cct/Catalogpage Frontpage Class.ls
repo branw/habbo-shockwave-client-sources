@@ -59,10 +59,22 @@ on mergeWindow me, tParentWndObj
     end if
   end if
   pWndObj.getElement("redeem").deactivate()
-  if me.pPageData[#localization][#texts][8] <> #empty then
-    tFont = pWndObj.getElement("ctlg_txt3").getFont()
-    tFont[#color] = rgb(me.pPageData[#localization][#texts][8])
-    pWndObj.getElement("ctlg_txt3").setFont(tFont)
+  if me.pPageData[#localization][#texts].count >= 8 then
+    if me.pPageData[#localization][#texts][8] <> #empty then
+      tFont = pWndObj.getElement("ctlg_txt3").getFont()
+      tFont[#color] = rgb(me.pPageData[#localization][#texts][8])
+      pWndObj.getElement("ctlg_txt3").setFont(tFont)
+    end if
+  end if
+  if me.pPageData[#localization][#texts].count >= 9 then
+    if me.pPageData[#localization][#texts][9] <> #empty then
+      tFont = pWndObj.getElement("ctlg_txt1").getFont()
+      tFont[#color] = rgb(me.pPageData[#localization][#texts][9])
+      pWndObj.getElement("ctlg_txt1").setFont(tFont)
+      tFont = pWndObj.getElement("ctlg_txt2").getFont()
+      tFont[#color] = rgb(me.pPageData[#localization][#texts][9])
+      pWndObj.getElement("ctlg_txt2").setFont(tFont)
+    end if
   end if
 end
 

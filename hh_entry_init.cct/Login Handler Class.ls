@@ -217,10 +217,10 @@ on handleEPSnotify me, tMsg
 end
 
 on handleSystemBroadcast me, tMsg
-  tMsg = tMsg[#content]
-  tMsg = replaceChunks(tMsg, "\r", RETURN)
-  tMsg = replaceChunks(tMsg, "<br>", RETURN)
-  executeMessage(#alert, [#Msg: tMsg])
+  tStr = tMsg.connection.GetStrFrom()
+  tStr = replaceChunks(tStr, "\r", RETURN)
+  tStr = replaceChunks(tStr, "<br>", RETURN)
+  executeMessage(#alert, [#Msg: tStr])
   the keyboardFocusSprite = 0
 end
 
@@ -271,10 +271,11 @@ on handleRights me, tMsg
   return 1
 end
 
-on handleErr me, tMsg
-  error(me, "Error from server:" && tMsg.content, #handleErr, #dummy)
-  case 1 of
-    tMsg.content contains "login incorrect":
+on handleError me, tMsg
+  tConn = tMsg.connection
+  tErrorCode = tConn.GetIntFrom()
+  case tErrorCode of
+    -3:
       removeConnection(tMsg.connection.getID())
       me.getComponent().setaProp(#pOkToLogin, 0)
       if getObject(#session).exists("failed_password") then
@@ -287,19 +288,8 @@ on handleErr me, tMsg
         me.getInterface().showLogin()
         executeMessage(#alert, [#Msg: "Alert_WrongNameOrPassword"])
       end if
-    tMsg.content contains "mod_warn":
-      tDelim = the itemDelimiter
-      the itemDelimiter = "/"
-      tTextStr = tMsg.content.item[2..tMsg.content.item.count]
-      the itemDelimiter = tDelim
-      executeMessage(#alert, [#title: "alert_warning", #Msg: tTextStr, #modal: 1])
-    tMsg.content contains "Version not correct":
+    -400:
       executeMessage(#alert, [#Msg: "alert_old_client"])
-    tMsg.content contains "Duplicate session":
-      removeConnection(tMsg.connection.getID())
-      me.getComponent().setaProp(#pOkToLogin, 0)
-      me.getInterface().showLogin()
-      executeMessage(#alert, [#Msg: "alert_duplicatesession"])
   end case
   return 1
 end
@@ -475,10 +465,14 @@ on handlePossibleAchievements me, tMsg
     return error(me, "Session object not found.", #handlePossibleUserAchievements, #major)
   end if
   getObject(#session).set("possible_achievements", tAchievements)
+  executeMessage(#achievementsUpdated)
 end
 
 on handleAchievementNotification me, tMsg
   tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
   ttype = tConn.GetIntFrom()
   tLevel = tConn.GetIntFrom()
   tBadgeID = tConn.GetStrFrom()
@@ -487,24 +481,7 @@ on handleAchievementNotification me, tMsg
     return error(me, "Session object not found.", #handleAchievementNotification, #major)
   end if
   tSession = getObject(#session)
-  tAchievements = tSession.GET("possible_achievements")
-  tNotify = 0
-  if ilk(tAchievements) = #propList then
-    repeat with i = 1 to tAchievements.count
-      tAchievement = tAchievements[i]
-      if tAchievement.ilk <> #propList then
-        next repeat
-      end if
-      if tAchievement.type = ttype and tAchievement.level <= tLevel then
-        tAchievements.deleteAt(i)
-        i = i - 1
-        tNotify = 1
-      end if
-    end repeat
-  end if
-  if tNotify then
-    executeMessage(#achievementsUpdated)
-  end if
+  tConn.send("GET_POSSIBLE_ACHIEVEMENTS")
   tBadges = tSession.GET("available_badges")
   if listp(tBadges) then
     tBadges.add(tBadgeID)
@@ -595,7 +572,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(2, #handleRights)
   tMsgs.setaProp(3, #handleLoginOK)
   tMsgs.setaProp(5, #handleUserObj)
-  tMsgs.setaProp(33, #handleErr)
+  tMsgs.setaProp(33, #handleError)
   tMsgs.setaProp(35, #handleUserBanned)
   tMsgs.setaProp(50, #handlePing)
   tMsgs.setaProp(52, #handleEPSnotify)

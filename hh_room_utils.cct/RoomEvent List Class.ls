@@ -16,6 +16,9 @@ on deconstruct me
 end
 
 on setEvents me, tEventData
+  if not listp(tEventData) then
+    return 0
+  end if
   pEventData = tEventData
 end
 
@@ -76,6 +79,9 @@ on getEventAt me, tpoint
   end if
   tLine = tpoint[2] / pLineHeight + 1
   if tLine > pEventData.count then
+    return 0
+  end if
+  if tLine < 1 then
     return 0
   end if
   return pEventData[tLine]

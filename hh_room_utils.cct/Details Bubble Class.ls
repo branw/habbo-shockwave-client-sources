@@ -1,4 +1,4 @@
-property pWndObj
+property pWndObj, pTargetRect, pPreferSide
 
 on construct me
   pWndObj = VOID
@@ -10,26 +10,32 @@ on deconstruct me
   return 1
 end
 
-on createWithContent me, aWindow, atargetRect, aPreferSide
-  if not stringp(aWindow) then
+on createWithContent me, tWindow, tTargetRect, tPreferSide
+  if not stringp(tWindow) then
     return error(me, "Invalid window content!", #createWithContent, #minor)
   end if
-  if not (ilk(atargetRect) = #rect) then
+  if not (ilk(tTargetRect) = #rect) then
     return error(me, "Invalid target rect!", #createWithContent, #minor)
   end if
-  if voidp(aPreferSide) then
-    aPreferSide = #right
+  if voidp(tPreferSide) then
+    tPreferSide = #right
   end if
-  if not (aPreferSide = #right or aPreferSide = #left) then
+  if not (tPreferSide = #right or tPreferSide = #left) then
     error(me, "Invalid side, must be #left or #right", #createWithContent, #minor)
   end if
+  pTargetRect = tTargetRect
+  pPreferSide = tPreferSide
   tWindowName = "Details bubble" && getUniqueID()
   if not createWindow(tWindowName, "details_generic.window") then
     return error(me, "Could not create window", #createWithContent, #minor)
   end if
   pWndObj = getWindow(tWindowName)
-  pWndObj.merge(aWindow)
-  me.shapeAndPosition(atargetRect, aPreferSide)
+  pWndObj.merge(tWindow)
+  me.shapeAndPosition(tTargetRect, tPreferSide)
+end
+
+on updateBubble me
+  me.shapeAndPosition(pTargetRect, pPreferSide)
 end
 
 on destroy me

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pDoorBellID, pPreviewObjID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pIgnoreListID, pRespectMgrID, pWideScreenOffset, pWIndowText
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pDoorBellID, pPreviewObjID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pIgnoreListID, pRespectMgrID, pSongSelectorID, pJudgeToolID, pWideScreenOffset, pWIndowText
 
 on construct me
   pInfoConnID = getVariable("connection.info.id", #Info)
@@ -14,6 +14,8 @@ on construct me
   pIgnoreListID = "Room_ignore_list"
   pRoomGuiID = "Room_gui_program"
   pRespectMgrID = "Room_respect_manager"
+  pSongSelectorID = "Performer_song_selector"
+  pJudgeToolID = "Judge_tool"
   pRoomSpaceId = "Room_visualizer"
   pInterfaceId = "Room_interface"
   pDelConfirmID = getText("win_delete_item", "Delete item?")
@@ -180,7 +182,7 @@ end
 
 on showArrowHiliter me, tUserID
   if objectExists(pArrowObjID) then
-    return me.getArrowHiliter().show(tUserID)
+    return me.getArrowHiliter().show(tUserID, 1)
   end if
 end
 
@@ -247,6 +249,9 @@ on showDoorBellDialog me, tName
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 then
     return error(me, "Own user not found!", #showDoorBell, #major)
+  end if
+  if tOwnUser.pClass = "pet" then
+    return error(me, "Wrong type of user found as own user", #showDoorBell, #major)
   end if
   if tOwnUser.getInfo().ctrl = 0 then
     return 1
@@ -593,6 +598,20 @@ on dancingStoppedExternally me
   return 1
 end
 
+on openSongSelector me, tSongList
+  if not objectExists(pSongSelectorID) then
+    createObject(pSongSelectorID, "Performer Song Selector Class")
+  end if
+  call(#open, [getObject(pSongSelectorID)], tSongList)
+end
+
+on setJudgeToolState me, tstate, tPerformerID
+  if not objectExists(pJudgeToolID) then
+    createObject(pJudgeToolID, "Judge Tool Class")
+  end if
+  call(#setState, [getObject(pJudgeToolID)], tstate, tPerformerID)
+end
+
 on getKeywords me
   return [deobfuscate("$cMgMXLrlJM|OI-9"), deobfuscate("%bl&-ym3Lj-|.I-)"), deobfuscate("EBLFM9M2,KM|oH/h")]
 end
@@ -671,20 +690,19 @@ on stopObjectMover me
   end if
   getObject(pObjMoverID).clear()
   pClickAction = "moveHuman"
-  pSelectedObj = EMPTY
   pSelectedType = EMPTY
-  executeMessage(#hideObjectInfo)
   return 1
 end
 
-on startTrading me, tTargetUser
-  if pSelectedType <> "user" then
+on startTrading me, tuser
+  if tuser = getObject(#session).GET("user_index") then
     return 0
   end if
-  if tTargetUser = getObject(#session).GET("user_name") then
+  if not me.getComponent().userObjectExists(tuser) then
     return 0
   end if
-  me.getComponent().getRoomConnection().send("TRADE_OPEN", [#integer: integer(tTargetUser)])
+  me.getComponent().getRoomConnection().send("TRADE_OPEN", [#integer: integer(tuser)])
+  me.getContainer().open()
   if objectExists(pObjMoverID) then
     getObject(pObjMoverID).moveTrade()
   end if
@@ -759,17 +777,17 @@ on placeFurniture me, tObjID, tObjType
     "active":
       tloc = getObject(pObjMoverID).getProperty(#loc)
       if not tloc then
-        me.getComponent().getRoomConnection().send("GETSTRIP", "update")
+        me.getComponent().getRoomConnection().send("GETSTRIP", [#integer: 4])
         return 0
       end if
       tObj = me.getComponent().getActiveObject(tObjID)
       if tObj = 0 then
         return error(me, "Invalid active object:" && tObjID, #placeFurniture, #major)
       end if
-      tStripID = tObj.getaProp(#stripId)
-      tStr = tStripID && tloc[1] && tloc[2] && tObj.pDirection[1]
+      tStripID = integer(tObj.getaProp(#stripId))
+      tMsg = tStripID && tloc[1] && tloc[2] && tObj.pDirection[1]
       me.getComponent().removeActiveObject(tObj[#id])
-      me.getComponent().getRoomConnection().send("PLACESTUFF", tStr)
+      me.getComponent().getRoomConnection().send("PLACESTUFF", tMsg)
       return 1
     "item":
       tloc = getObject(pObjMoverID).getProperty(#itemLocStr)
@@ -780,10 +798,10 @@ on placeFurniture me, tObjID, tObjType
       if tObj = 0 then
         return error(me, "Invalid item object:" && tObjID, #placeFurniture, #major)
       end if
-      tStripID = tObj.getaProp(#stripId)
-      tStr = tStripID && tloc
+      tStripID = integer(tObj.getaProp(#stripId))
+      tMsg = tStripID && tloc
       me.getComponent().removeItemObject(tObj[#id])
-      me.getComponent().getRoomConnection().send("PLACESTUFF", tStr)
+      me.getComponent().getRoomConnection().send("PLACESTUFF", tMsg)
       return 1
   end case
   return 0
@@ -956,7 +974,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
           executeMessage(#hideObjectInfo)
           me.hideArrowHiliter()
         end if
-        tloc = me.getGeometry().getWorldCoordinate(the mouseH, the mouseV)
+        tloc = me.getGeometry().getFloorCoordinate(the mouseH, the mouseV)
         if listp(tloc) then
           return me.getComponent().getRoomConnection().send("MOVE", [#short: tloc[1], #short: tloc[2]])
         end if
@@ -969,7 +987,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         if tObj = 0 then
           return error(me, "Invalid active object:" && pSelectedObj, #eventProcRoom, #major)
         end if
-        me.getComponent().getRoomConnection().send("MOVESTUFF", pSelectedObj && tloc[1] && tloc[2] && tObj.pDirection[1])
+        me.getComponent().getRoomConnection().send("MOVESTUFF", [#integer: integer(pSelectedObj), #integer: tloc[1], #integer: tloc[2], #integer: tObj.pDirection[1]])
         me.stopObjectMover()
       "placeActive":
         if getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
@@ -1184,9 +1202,9 @@ on eventProcDelConfirm me, tEvent, tSprID, tParam
       me.hideConfirmDelete()
       case pDeleteType of
         "active":
-          me.getComponent().getRoomConnection().send("REMOVESTUFF", pDeleteObjID)
+          me.getComponent().getRoomConnection().send("REMOVESTUFF", [#integer: integer(pDeleteObjID)])
         "item":
-          me.getComponent().getRoomConnection().send("REMOVEITEM", pDeleteObjID)
+          me.getComponent().getRoomConnection().send("REMOVEITEM", [#integer: integer(pDeleteObjID)])
       end case
       executeMessage(#hideObjectInfo)
       pDeleteObjID = EMPTY
@@ -1227,6 +1245,7 @@ on eventProcBanner me, tEvent, tSprID, tParam
       me.getComponent().getRoomConnection().send("QUIT")
       me.getComponent().removeEnterRoomAlert()
       executeMessage(#leaveRoom)
+      me.hideLoaderBar()
     "queue_change":
       if connectionExists(pInfoConnID) then
         tSelected = 2

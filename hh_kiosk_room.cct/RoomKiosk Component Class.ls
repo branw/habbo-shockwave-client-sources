@@ -14,31 +14,45 @@ on showHideRoomKiosk me
   return me.getInterface().showHideRoomKiosk()
 end
 
-on sendNewRoomData me, tFlatData
+on sendNewRoomData me, tName, tMarker, tDoorinfo, tShowOwnerName
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send("CREATEFLAT", tFlatData)
+    if not integerp(integer(tShowOwnerName)) then
+      return error(me, #sendNewRoomData, "Illegal type for showOwnerName, must be number", #major)
+    end if
+    return getConnection(getVariable("connection.info.id")).send("CREATEFLAT", [#string: tName, #string: tMarker, #string: tDoorinfo, #integer: integer(tShowOwnerName)])
   else
     return 0
   end if
 end
 
-on sendSetFlatInfo me, tFlatMsg
+on sendSetFlatInfo me, tFlatID, tDesc, tPassword, tAbleToMoveFurniture, tMaxVisitors
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("SETFLATINFO", tFlatMsg)
+    if voidp(tPassword) then
+      tPassword = EMPTY
+    end if
+    tMsg = [:]
+    tMsg.addProp(#integer, integer(tFlatID))
+    tMsg.addProp(#string, tDesc)
+    tMsg.addProp(#string, tPassword)
+    tMsg.addProp(#integer, integer(tAbleToMoveFurniture))
+    if not voidp(tMaxVisitors) then
+      tMsg.addProp(#integer, integer(tMaxVisitors))
+    end if
+    getConnection(getVariable("connection.info.id")).send("SETFLATINFO", tMsg)
   else
     return 0
   end if
 end
 
-on sendFlatCategory me, tNodeId, tCategoryId
+on sendFlatCategory me, tNodeId, tCategoryID
   if voidp(tNodeId) then
     return error(me, "Node ID expected!", #sendFlatCategory, #major)
   end if
-  if voidp(tCategoryId) then
+  if voidp(tCategoryID) then
     return error(me, "Category ID expected!", #sendFlatCategory, #major)
   end if
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryId)])
+    return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryID)])
   else
     return 0
   end if

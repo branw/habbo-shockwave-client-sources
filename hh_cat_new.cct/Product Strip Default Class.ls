@@ -121,6 +121,9 @@ on downloadCompleted me, tProps
   end if
   callAncestor(#downloadCompleted, [me], tProps)
   tItemIndex = tProps[#props][#itemIndex]
+  if not tItemIndex then
+    return 
+  end if
   me.renderStripItem(tItemIndex)
   me.pushImage()
 end

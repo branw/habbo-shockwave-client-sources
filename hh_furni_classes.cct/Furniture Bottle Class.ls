@@ -76,7 +76,7 @@ end
 
 on select me
   if the doubleClick and pRolling = 0 then
-    getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+    getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", [#integer: integer(me.getID())])
   end if
   return 1
 end

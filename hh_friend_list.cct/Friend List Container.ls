@@ -101,12 +101,12 @@ on getFriendByName me, tName
   return 0
 end
 
-on getFriendsInCategory me, tCategoryId
+on getFriendsInCategory me, tCategoryID
   tList = [:]
   tList.sort()
   repeat with tNo = 1 to pFriendList.count
     tFriend = pFriendList[tNo]
-    if tFriend[#categoryId] = tCategoryId then
+    if tFriend[#categoryId] = tCategoryID then
       tList.setaProp(tFriend.getaProp(#name), tFriend)
     end if
   end repeat

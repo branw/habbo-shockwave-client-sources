@@ -1,18 +1,15 @@
-property pDoorTimer, pTokenList
+property pDoorTimer
 
 on prepare me
-  pTokenList = value(getVariable("obj_" & me.pClass))
-  if not listp(pTokenList) then
-    pTokenList = [18]
-  end if
   return 1
 end
 
 on updateStuffdata me, tValue
-  if tValue = "TRUE" then
-    pDoorTimer = 80
+  tValue = integer(tValue)
+  if tValue = 0 then
+    pDoorTimer = 1
   else
-    pDoorTimer = 0
+    pDoorTimer = 80
   end if
 end
 
@@ -63,13 +60,7 @@ on giveDrink me
   if tConnection = 0 then
     return 0
   end if
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-  tConnection.send("LOOKTO", me.pLocX && me.pLocY)
-  tConnection.send("CARRYDRINK", me.getDrinkname())
-end
-
-on getDrinkname me
-  return pTokenList[random(pTokenList.count)]
+  tConnection.send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
 end
 
 on update me

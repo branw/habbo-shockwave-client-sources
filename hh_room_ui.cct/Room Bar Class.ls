@@ -85,6 +85,9 @@ on showRoomBar me, tLayout
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUpOutSide)
   me.updateSoundButton()
   me.hideHiliters()
+  if tWndObj.elementExists("int_drop_vote") then
+    tWndObj.getElement("int_drop_vote").hide()
+  end if
   return 1
 end
 
@@ -246,6 +249,7 @@ on showVote me
   tWndObj.getElement("chat_field").resizeBy(tWidthShort - tWidthLong, 0, 1)
   tWndObj.getElement("chat_field_bg_long").hide()
   if tWndObj.elementExists("int_drop_vote") then
+    tWndObj.getElement("int_drop_vote").show()
     tWndObj.getElement("int_drop_vote").feedImage(member(getmemnum("pelle_kyltti1")).image)
     pSignState = VOID
     pOldPosH = -1

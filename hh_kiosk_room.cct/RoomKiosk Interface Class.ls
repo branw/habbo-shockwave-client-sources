@@ -44,12 +44,7 @@ on createRoom me
   pRoomProps[#name] = getStringServices().convertSpecialChars(pRoomProps[#name], 1)
   pRoomProps[#description] = getStringServices().convertSpecialChars(pRoomProps[#description], 1)
   pRoomProps[#marker] = "model_" & pRoomProps["model"]
-  tFlatData = "/first floor/"
-  repeat with f in [#name, #marker, #door, #showownername]
-    tFlatData = tFlatData & replaceChars(pRoomProps[f], "/", SPACE) & "/"
-  end repeat
-  tFlatData = tFlatData.char[1..length(tFlatData) - 1]
-  me.getComponent().sendNewRoomData(tFlatData)
+  me.getComponent().sendNewRoomData(pRoomProps[#name], pRoomProps[#marker], pRoomProps[#door], pRoomProps[#showownername])
 end
 
 on flatcreated me, tFlatName, tFlatID
@@ -75,11 +70,7 @@ on flatcreated me, tFlatName, tFlatID
 end
 
 on sendFlatInfo me
-  tFlatMsg = "/" & replaceChars(string(pRoomProps[#id]), "/", SPACE) & "/" & RETURN
-  tFlatMsg = tFlatMsg & "description=" & replaceChars(pRoomProps[#description], "/", SPACE) & RETURN
-  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#Password] & RETURN
-  tFlatMsg = tFlatMsg & "allsuperuser=" & pRoomProps[#ableothersmovefurniture]
-  me.getComponent().sendSetFlatInfo(tFlatMsg)
+  me.getComponent().sendSetFlatInfo(pRoomProps[#id], pRoomProps[#description], pRoomProps[#Password], pRoomProps[#ableothersmovefurniture])
 end
 
 on updateRadioButton me, tElement, tListOfOtherElements

@@ -20,20 +20,77 @@ on define me, tdata
     return error(me, "Unable to find planet system configuration", #define, #major)
   end if
   tArcRandom = random(360)
-  tObjectCount = readValueFromField(tFieldName, RETURN, "object.count")
+  if not variableExists(me.pClass & ".planetsystem.props.confdumped") then
+    me.dumpVariableField(me.pClass & ".planetsystem.props", VOID, VOID, me.pClass & ".")
+    setVariable(me.pClass & ".planetsystem.props.confdumped", 1)
+  end if
+  tObjectCount = getIntVariable(me.pClass & "." & "object.count")
   repeat with i = 1 to tObjectCount
     tProps = [:]
-    tProps[#name] = readValueFromField(tFieldName, RETURN, "object." & i & ".name")
-    tProps[#parent] = readValueFromField(tFieldName, RETURN, "object." & i & ".parent")
-    tProps[#radius] = readValueFromField(tFieldName, RETURN, "object." & i & ".radius")
-    tProps[#arcspeed] = readValueFromField(tFieldName, RETURN, "object." & i & ".arcspeed")
-    tProps[#arcoffset] = readValueFromField(tFieldName, RETURN, "object." & i & ".arcoffset") + tArcRandom
-    tProps[#sprites] = readValueFromField(tFieldName, RETURN, "object." & i & ".sprites")
-    tProps[#frameList] = readValueFromField(tFieldName, RETURN, "object." & i & ".framelist")
-    tProps[#ink] = readValueFromField(tFieldName, RETURN, "object." & i & ".ink")
-    tProps[#blend] = readValueFromField(tFieldName, RETURN, "object." & i & ".blend")
-    tProps[#zshift] = readValueFromField(tFieldName, RETURN, "object." & i & ".zshift")
-    tProps[#height] = readValueFromField(tFieldName, RETURN, "object." & i & ".height")
+    tProps[#name] = getStringVariable(me.pClass & "." & "object." & i & ".name")
+    if variableExists(me.pClass & "." & "object." & i & ".parent") then
+      tProps[#parent] = getStringVariable(me.pClass & "." & "object." & i & ".parent")
+    else
+      tProps[#parent] = EMPTY
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".radius") then
+      tProps[#radius] = float(getStringVariable(me.pClass & "." & "object." & i & ".radius"))
+    else
+      tProps[#radius] = EMPTY
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".arcspeed") then
+      tProps[#arcspeed] = float(getStringVariable(me.pClass & "." & "object." & i & ".arcspeed"))
+    else
+      tProps[#arcspeed] = EMPTY
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".arcoffset") then
+      tProps[#arcoffset] = float(getStringVariable(me.pClass & "." & "object." & i & ".arcoffset"))
+    else
+      tProps[#arcoffset] = EMPTY
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".sprites") then
+      tProps[#sprites] = getStructVariable(me.pClass & "." & "object." & i & ".sprites")
+    else
+      tProps[#sprites] = [:]
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".framelist") then
+      tProps[#frameList] = getStructVariable(me.pClass & "." & "object." & i & ".framelist")
+    else
+      tProps[#frameList] = []
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".ink") then
+      tProps[#ink] = integer(getStringVariable(me.pClass & "." & "object." & i & ".ink"))
+    else
+      tProps[#ink] = 36
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".blend") then
+      tProps[#blend] = integer(getStringVariable(me.pClass & "." & "object." & i & ".blend"))
+    else
+      tProps[#blend] = 0
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".zshift") then
+      tProps[#zshift] = integer(getStringVariable(me.pClass & "." & "object." & i & ".zshift"))
+    else
+      tProps[#zshift] = 0
+    end if
+    if variableExists(me.pClass & "." & "object." & i & ".height") then
+      tProps[#height] = float(getStringVariable(me.pClass & "." & "object." & i & ".height"))
+    else
+      tProps[#height] = EMPTY
+    end if
+    if tProps[#radius] = EMPTY then
+      tProps[#radius] = 0.0
+    end if
+    if tProps[#arcspeed] = EMPTY then
+      tProps[#arcspeed] = 0.0
+    end if
+    if tProps[#arcoffset] = EMPTY then
+      tProps[#arcoffset] = 0.0
+    end if
+    if tProps[#height] = EMPTY then
+      tProps[#height] = 0.0
+    end if
+    tProps[#arcoffset] = tProps[#arcoffset] + tArcRandom
     me.addPlanet(tProps[#name], tProps[#parent], tProps)
   end repeat
   if not voidp(pObjectMoverSprite) then
@@ -44,7 +101,7 @@ on define me, tdata
 end
 
 on addPlanet me, tName, tParentName, tProps
-  if not (tParentName = 0) then
+  if not (tParentName = EMPTY) then
     tParent = me.getPlanetByName(tParentName, pScene)
     if voidp(tParent) then
       return error(me, "Unable to find parent planet!", #addPlanet, #major)
@@ -165,4 +222,44 @@ on getSprites me
     pObjectMoverSprite.ink = 36
   end if
   return [pObjectMoverSprite]
+end
+
+on dumpVariableField me, tField, tDelimiter, tOverride, tPrefix
+  tStr = field(tField)
+  tDelim = the itemDelimiter
+  if voidp(tDelimiter) then
+    tDelimiter = RETURN
+  end if
+  the itemDelimiter = tDelimiter
+  if voidp(tOverride) then
+    tOverride = 1
+  end if
+  repeat with i = 1 to tStr.item.count
+    tPair = tStr.item[i]
+    if tPair.word[1].char[1] <> "#" and tPair <> EMPTY then
+      the itemDelimiter = "="
+      tProp = tPair.item[1].word[1..tPair.item[1].word.count]
+      tValue = tPair.item[2..tPair.item.count]
+      tValue = tValue.word[1..tValue.word.count]
+      if not voidp(tPrefix) then
+        tProp = tPrefix & tProp
+      end if
+      if not (tValue contains SPACE) then
+        if tValue.char[1] = "#" then
+          tValue = symbol(chars(tValue, 2, length(tValue)))
+        end if
+      end if
+      if stringp(tValue) then
+        repeat with j = 1 to length(tValue)
+        end repeat
+      end if
+      tExists = variableExists(tProp)
+      if tOverride or not tExists then
+        setVariable(tProp, tValue)
+      end if
+      the itemDelimiter = tDelimiter
+    end if
+  end repeat
+  the itemDelimiter = tDelim
+  return 1
 end

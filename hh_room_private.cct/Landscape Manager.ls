@@ -75,10 +75,10 @@ on setActivate me, tActive
       end if
     end if
     if pHasAnimation then
-      pLandscapeAnimMngr.setStopped(0)
+      pLandscapeAnimMngr.start()
     end if
   else
-    pLandscapeAnimMngr.setStopped(1)
+    pLandscapeAnimMngr.stop()
   end if
 end
 
@@ -111,6 +111,7 @@ on setLandscape me, tLandscapeType, tRoomType
       me.setLandscapeAnimation(1, tRoomType, tdata[#type])
     else
       pHasAnimation = 0
+      me.setLandscapeAnimation(0)
     end if
   end if
   me.updateLandscape()
@@ -118,6 +119,13 @@ on setLandscape me, tLandscapeType, tRoomType
 end
 
 on setLandscapeAnimation me, tAnimationID, tRoomType, tLandscapeType
+  if pLandscapeAnimMngr = 0 then
+    return error(me, "Landscape animation manager not available!", #setLandscapeAnimation, #major)
+  end if
+  if tAnimationID = 0 then
+    pLandscapeAnimMngr.stop()
+    return 
+  end if
   tDelim = the itemDelimiter
   the itemDelimiter = "_"
   tRoomTypeID = tRoomType.item[2]

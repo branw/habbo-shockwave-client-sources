@@ -128,8 +128,8 @@ on handle_navnodeinfo me, tMsg
     return 0
   end if
   tNodeInfo.addProp(#nodeMask, tNodeMask)
-  tCategoryId = tNodeInfo[#id]
-  tCategoryIndex.setaProp(tCategoryId, [#name: tNodeInfo[#name], #parentid: tNodeInfo[#parentid], #children: []])
+  tCategoryID = tNodeInfo[#id]
+  tCategoryIndex.setaProp(tCategoryID, [#name: tNodeInfo[#name], #parentid: tNodeInfo[#parentid], #children: []])
   repeat while tConn <> VOID
     tNode = me.parseNode(tMsg)
     if tNode = 0 then
@@ -137,7 +137,7 @@ on handle_navnodeinfo me, tMsg
     end if
     tNodeId = tNode[#id]
     tParentId = tNode[#parentid]
-    if tParentId = tCategoryId then
+    if tParentId = tCategoryID then
       tNodeInfo[#children].setaProp(tNodeId, tNode)
     end if
     if tCategoryIndex[tParentId] <> 0 then
@@ -154,11 +154,15 @@ on handle_navnodeinfo me, tMsg
 end
 
 on handle_error me, tMsg
-  tErr = tMsg.content
-  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error, #dummy)
-  case tErr of
-    "Only 10 favorite rooms allowed!", "nav_error_toomanyfavrooms":
+  tConn = tMsg.connection
+  tErrorCode = tConn.GetIntFrom()
+  case tErrorCode of
+    -1:
       executeMessage(#alert, [#Msg: getText("nav_error_toomanyfavrooms")])
+    -100002:
+      me.getComponent().flatAccessResult(tErrorCode)
+    -100001:
+      me.getComponent().flatAccessResult(tErrorCode)
   end case
   return 1
 end
@@ -233,9 +237,9 @@ end
 on handle_flatcat me, tMsg
   tConn = tMsg.getaProp(#connection)
   tFlatID = tConn.GetIntFrom()
-  tCategoryId = tConn.GetIntFrom()
-  me.getComponent().setNodeProperty("f_" & tFlatID, #parentid, tCategoryId)
-  executeMessage(#flatcat_received, [#flatId: tFlatID, #id: "f_" & tFlatID, #parentid: tCategoryId])
+  tCategoryID = tConn.GetIntFrom()
+  me.getComponent().setNodeProperty("f_" & tFlatID, #parentid, tCategoryID)
+  executeMessage(#flatcat_received, [#flatId: tFlatID, #id: "f_" & tFlatID, #parentid: tCategoryID])
   return 1
 end
 
@@ -350,6 +354,10 @@ on handle_recommended_room_list me, tMsg
   return 1
 end
 
+on handle_navigatorsettings me, tMsg
+  return 1
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(16, #handle_flat_results)
@@ -370,6 +378,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(227, #handle_parentchain)
   tMsgs.setaProp(286, #handle_roomforward)
   tMsgs.setaProp(351, #handle_recommended_room_list)
+  tMsgs.setaProp(455, #handle_navigatorsettings)
   tCmds = [:]
   tCmds.setaProp("SBUSYF", 13)
   tCmds.setaProp("SUSERF", 16)

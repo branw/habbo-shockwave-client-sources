@@ -412,7 +412,7 @@ on updateLocation me
         if not tWallObjFound and getObject(#session).GET(#room_owner) then
           tComponent = getThread(#room).getComponent()
           if not (tComponent = 0) then
-            tComponent.getRoomConnection().send("ADDSTRIPITEM", "new item" && me.getID())
+            tComponent.getRoomConnection().send("ADDSTRIPITEM", [#integer: 1, #integer: integer(me.getID())])
           end if
         end if
       end if

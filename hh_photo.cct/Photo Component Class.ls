@@ -180,7 +180,7 @@ on eventProcPhotoMouseDown me, tEvent, tElemID, tParam
     "photo_close":
       removeWindow(pWindowID)
     "photo_remove":
-      if getThread("room").getComponent().getRoomConnection().send("REMOVEITEM", pItemId) then
+      if getThread("room").getComponent().getRoomConnection().send("REMOVEITEM", [#integer: integer(pItemId)]) then
         removeWindow(pWindowID)
       end if
   end case

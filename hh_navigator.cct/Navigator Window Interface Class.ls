@@ -56,7 +56,7 @@ on getNaviView me
       return #src
     "nav_gr_fav":
       return #fav
-    "nav_gr_mod", "nav_gr_mod_b", "nav_gr_modify_delete1", "nav_gr_modify_delete2", "nav_gr_modify_delete3", "nav_modify_removerights":
+    "nav_gr_mod", "nav_gr_mod2", "nav_gr_mod_b", "nav_gr_modify_delete1", "nav_gr_modify_delete2", "nav_gr_modify_delete3", "nav_modify_removerights":
       return #mod
   end case
   return #none
@@ -186,7 +186,7 @@ on ChangeWindowView me, tWindowName
   if tWndObj.elementExists("nav_roomlist") then
     tWndObj.getElement("nav_roomlist").clearImage()
   end if
-  tCategoryId = me.getProperty(#categoryId)
+  tCategoryID = me.getProperty(#categoryId)
   tRoomInfoState = me.getProperty(#roomInfoState)
   if tPassword then
     tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #mouseDown)
@@ -200,13 +200,13 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcNavigatorPublic, me.getID(), #mouseDown)
       tWndObj.registerProcedure(#eventProcNavigatorPublic, me.getID(), #mouseUp)
       tWndObj.registerProcedure(#eventProcNavigatorPublic, me.getID(), #keyDown)
-      me.getComponent().createNaviHistory(tCategoryId)
-      me.updateRoomList(tCategoryId, VOID)
+      me.getComponent().createNaviHistory(tCategoryID)
+      me.updateRoomList(tCategoryID, VOID)
       if tRoomInfoState = #hide then
         me.setProperty(#roomInfoState, #show)
         me.setRoomInfoArea(#hide)
       else
-        me.showNodeInfo(me.getProperty(#viewedNodeId), tCategoryId)
+        me.showNodeInfo(me.getProperty(#viewedNodeId), tCategoryID)
       end if
       return 1
     #flat, #src, #own, #fav:
@@ -214,16 +214,16 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #mouseUp)
       tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #keyDown)
       if tNaviView = #flat then
-        me.getComponent().createNaviHistory(tCategoryId)
-        me.updateRoomList(tCategoryId, VOID)
+        me.getComponent().createNaviHistory(tCategoryID)
+        me.updateRoomList(tCategoryID, VOID)
       else
-        me.getComponent().updateInterface(tCategoryId)
+        me.getComponent().updateInterface(tCategoryID)
       end if
       if tRoomInfoState = #hide then
         me.setProperty(#roomInfoState, #show)
         me.setRoomInfoArea(#hide)
       else
-        me.showNodeInfo(me.getProperty(#viewedNodeId), tCategoryId)
+        me.showNodeInfo(me.getProperty(#viewedNodeId), tCategoryID)
       end if
       return 1
     #mod:
@@ -482,7 +482,7 @@ on renderHistory me, tNodeId, tHistoryTxt, tShowRecoms
   end if
 end
 
-on showNodeInfo me, tNodeId, tCategoryId
+on showNodeInfo me, tNodeId, tCategoryID
   me.setLoadingCursor(0)
   if not windowExists(pWindowTitle) then
     return 0
@@ -493,7 +493,7 @@ on showNodeInfo me, tNodeId, tCategoryId
     return 0
   end if
   if not voidp(tNodeId) then
-    tNodeInfo = me.getComponent().getNodeInfo(tNodeId, tCategoryId)
+    tNodeInfo = me.getComponent().getNodeInfo(tNodeId, tCategoryID)
   end if
   if not listp(tNodeInfo) then
     tNodeInfo = 0

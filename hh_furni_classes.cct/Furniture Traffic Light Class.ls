@@ -10,16 +10,16 @@ on updateStuffdata me, tValue
 end
 
 on setState me, tValue
-  tValue = string(tValue)
+  tValue = integer(tValue)
   if me.pSprList.count < 3 then
     return 0
   end if
   pState = tValue
   case tValue of
-    "1":
+    0:
       me.switchMember("c", "0")
       me.pSprList[3].visible = 1
-    "2":
+    1:
       me.switchMember("c", "1")
       me.pSprList[3].visible = 1
     otherwise:
@@ -53,15 +53,7 @@ on select me
     if abs(tUserObj.pLocX - me.pLocX) > 1 or abs(tUserObj.pLocY - me.pLocY) > 1 then
       return 1
     end if
-    case pState of
-      "0":
-        pState = "1"
-      "1":
-        pState = "2"
-      otherwise:
-        pState = "0"
-    end case
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: pState])
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

@@ -22,14 +22,13 @@ on parseActiveObject me, tConn
   tObj[#dimensions] = [tWidth, tHeight]
   tObj[#altitude] = getLocalFloat(tConn.GetStrFrom())
   tObj[#colors] = tConn.GetStrFrom()
-  tRuntimeData = tConn.GetStrFrom()
   tExtra = tConn.GetIntFrom()
   tStuffData = tConn.GetStrFrom()
   tExpireTime = tConn.GetIntFrom()
   if tObj[#colors] = EMPTY then
     tObj[#colors] = "0"
   end if
-  tObj[#props] = [#runtimedata: tRuntimeData, #extra: tExtra, #stuffdata: tStuffData]
+  tObj[#props] = [#runtimedata: EMPTY, #extra: tExtra, #stuffdata: tStuffData]
   return tObj
 end
 

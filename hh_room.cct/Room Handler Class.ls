@@ -27,6 +27,9 @@ end
 
 on handle_flat_letin me, tMsg
   tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tName = tConn.GetStrFrom()
   me.getInterface().showDoorBellAccepted(tName)
   if tName <> EMPTY then
@@ -36,11 +39,21 @@ on handle_flat_letin me, tMsg
 end
 
 on handle_room_ready me, tMsg
-  me.getComponent().roomConnected(tMsg.content.word[1], "ROOM_READY")
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tWorldType = tConn.GetStrFrom()
+  tUnitId = tConn.GetIntFrom()
+  me.getComponent().roomConnected(tWorldType, "ROOM_READY")
 end
 
 on handle_logout me, tMsg
-  tuser = tMsg.content.word[1]
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tuser = tConn.GetStrFrom()
   if tuser <> getObject(#session).GET("user_index") then
     me.getComponent().removeUserObject(tuser)
   end if
@@ -51,71 +64,69 @@ on handle_disconnect me
 end
 
 on handle_error me, tMsg
-  tErr = tMsg.content
-  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error, #dummy)
-  case tErr of
-    "info: No place for stuff":
+  tConn = tMsg.connection
+  tErrorCode = tConn.GetIntFrom()
+  case tErrorCode of
+    -13000:
       me.getInterface().stopObjectMover()
-    "Incorrect flat password":
-      if threadExists(#navigator) then
-        getThread(#navigator).getComponent().flatAccessResult(tErr)
-      end if
-    "Password required":
-      if threadExists(#navigator) then
-        getThread(#navigator).getComponent().flatAccessResult(tErr)
-      end if
-    "weird error":
-      executeMessage(#leaveRoom)
-    "Not owner":
+    -32000:
       getObject(#session).set("room_controller", 0)
   end case
 end
 
 on handle_doorbell_ringing me, tMsg
-  if tMsg.content = EMPTY then
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tName = tConn.GetStrFrom()
+  if tName = EMPTY then
     return me.getInterface().showDoorBellWaiting()
   else
-    return me.getInterface().showDoorBellDialog(tMsg.content)
+    return me.getInterface().showDoorBellDialog(tName)
   end if
 end
 
 on handle_flatnotallowedtoenter me, tMsg
   tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tName = tConn.GetStrFrom()
   return me.getInterface().showDoorBellRejected(tName)
 end
 
 on handle_status me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tList = []
-  tCount = tMsg.content.line.count
   tDelim = the itemDelimiter
   the itemDelimiter = "/"
+  tCount = tConn.GetIntFrom()
   repeat with i = 1 to tCount
-    tLine = tMsg.content.line[i]
-    if length(tLine) > 5 then
-      tuser = [:]
-      tuser[#id] = tLine.item[1].word[1]
-      tloc = tLine.item[1].word[2]
-      the itemDelimiter = ","
-      tuser[#x] = integer(tloc.item[1])
-      tuser[#y] = integer(tloc.item[2])
-      tuser[#h] = getLocalFloat(tloc.item[3])
-      tuser[#dirHead] = integer(tloc.item[4]) mod 8
-      tuser[#dirBody] = integer(tloc.item[5]) mod 8
-      tActions = []
-      tActionIndex = []
-      the itemDelimiter = "/"
-      repeat with j = 2 to tLine.item.count
-        if length(tLine.item[j]) > 1 then
-          tActionName = tLine.item[j].word[1]
-          tActions.add([#name: tActionName, #params: tLine.item[j]])
-          tActionIndex.add(tActionName)
-        end if
-      end repeat
-      tuser[#actionIndex] = tActionIndex
-      tuser[#actions] = tActions
-      tList.add(tuser)
-    end if
+    tuser = [:]
+    tuser[#id] = tConn.GetIntFrom()
+    tuser[#x] = tConn.GetIntFrom()
+    tuser[#y] = tConn.GetIntFrom()
+    tuser[#h] = getLocalFloat(tConn.GetStrFrom())
+    tuser[#dirHead] = tConn.GetIntFrom() mod 8
+    tuser[#dirBody] = tConn.GetIntFrom() mod 8
+    tActionString = tConn.GetStrFrom()
+    tActions = []
+    tActionIndex = []
+    the itemDelimiter = "/"
+    repeat with j = 1 to tActionString.item.count
+      if length(tActionString.item[j]) > 1 then
+        tActionName = tActionString.item[j].word[1]
+        tActions.add([#name: tActionName, #params: tActionString.item[j]])
+        tActionIndex.add(tActionName)
+      end if
+    end repeat
+    tuser[#actionIndex] = tActionIndex
+    tuser[#actions] = tActions
+    tList.add(tuser)
   end repeat
   the itemDelimiter = tDelim
   repeat with tuser in tList
@@ -132,17 +143,22 @@ on handle_status me, tMsg
         tPrimaryActions = ["mv", "sit", "lay"]
         tActionList = []
         tUserActions = tuser.getaProp(#actions)
+        tHasPrimaryAction = 0
         repeat with i = tUserActions.count down to 1
           tAction = tUserActions[i]
           tName = tAction.getaProp(#name)
           if tPrimaryActions.findPos(tName) then
             tActionList.add(tAction)
             tUserActions.deleteAt(i)
+            tHasPrimaryAction = 1
           end if
           if tName = "fx" and not tAllowFX then
             tUserActions.deleteAt(i)
           end if
         end repeat
+        if not tHasPrimaryAction then
+          tActionList.add([#name: "std"])
+        end if
         tEffect = VOID
         repeat with tAction in tUserActions
           if tAction.getaProp(#name) = "fx" then
@@ -164,49 +180,55 @@ on handle_status me, tMsg
 end
 
 on handle_users me, tMsg
-  tCount = tMsg.content.line.count
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tDelim = the itemDelimiter
-  tList = [:]
-  tuser = EMPTY
+  tList = []
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found!", #handle_users, #major)
   end if
-  repeat with f = 1 to tCount
-    tLine = tMsg.content.line[f]
-    tProp = tLine.char[1]
-    tdata = tLine.char[3..length(tLine)]
-    case tProp of
-      "i":
-        tuser = tdata
-        tList[tuser] = [:]
-        tList[tuser][#direction] = [0, 0]
-        tList[tuser][#id] = tdata
-      "n":
-        tList[tuser][#name] = tdata
-        if tdata contains numToChar(4) then
-          tList[tuser][#class] = "pet"
-        else
-          tList[tuser][#class] = "user"
+  tCount = tConn.GetIntFrom()
+  repeat with i = 1 to tCount
+    tUserID = tConn.GetIntFrom()
+    tuser = string(tUserID)
+    tListItem = [:]
+    tListItem[#webID] = tuser
+    tListItem[#name] = tConn.GetStrFrom()
+    tListItem[#custom] = tConn.GetStrFrom()
+    tListItem[#figure] = tConn.GetStrFrom()
+    tListItem[#id] = string(tConn.GetIntFrom())
+    tListItem[#x] = tConn.GetIntFrom()
+    tListItem[#y] = tConn.GetIntFrom()
+    tListItem[#h] = getLocalFloat(tConn.GetStrFrom())
+    tdir = tConn.GetIntFrom()
+    ttype = tConn.GetIntFrom()
+    tListItem[#direction] = [tdir, tdir]
+    case ttype of
+      1:
+        tListItem[#class] = "user"
+        tListItem[#sex] = tConn.GetStrFrom()
+        tXP = tConn.GetIntFrom()
+        if tXP <> -1 then
+          tListItem[#xp] = tXP
         end if
-      "f":
-        tList[tuser][#figure] = tdata
-      "l":
-        tList[tuser][#x] = integer(tdata.word[1])
-        tList[tuser][#y] = integer(tdata.word[2])
-        tList[tuser][#h] = getLocalFloat(tdata.word[3])
-      "c":
-        tList[tuser][#custom] = tdata
-      "s":
-        if tdata.char[1] = "F" or tdata.char[1] = "f" then
-          tList[tuser][#sex] = "F"
-        else
-          tList[tuser][#sex] = "M"
-        end if
-      "p":
-        if tdata contains "ch=s" then
+        tListItem[#groupID] = string(tConn.GetIntFrom())
+        tGroupStatus = tConn.GetIntFrom()
+        tListItem[#groupstatus] = ([1: "owner", 2: "admin", 3: "member"]).getaProp(tGroupStatus)
+        tBadges = [:]
+        tBadgeCount = tConn.GetIntFrom()
+        repeat with j = 1 to tBadgeCount
+          tBadgeIndex = tConn.GetIntFrom()
+          tBadgeCode = tConn.GetStrFrom()
+          tBadges.setaProp(tBadgeIndex, tBadgeCode)
+        end repeat
+        tListItem[#badge] = tBadges
+        tPoolFigure = tConn.GetStrFrom()
+        if tPoolFigure <> EMPTY then
           the itemDelimiter = "/"
-          tmodel = tdata.char[4..6]
-          tColor = tdata.item[2]
+          tmodel = tPoolFigure.char[1..3]
+          tColor = tPoolFigure.item[2]
           the itemDelimiter = ","
           tisColorValid = 0
           if tColor.item.count = 3 then
@@ -214,36 +236,15 @@ on handle_users me, tMsg
           else
             tColor = rgb("#EEEEEE")
           end if
-          tList[tuser][#phfigure] = ["model": tmodel, "color": tColor]
-          tList[tuser][#class] = "pelle"
+          tListItem[#phfigure] = ["model": tmodel, "color": tColor]
+          tListItem[#class] = "pelle"
         end if
-      "b":
-        tBadges = [:]
-        tDataPairs = explode(tdata, ",")
-        repeat with tPairNum = 1 to tDataPairs.count
-          tPair = explode(tDataPairs[tPairNum], ":")
-          if tPair.count < 2 then
-            next repeat
-          end if
-          tBadges.setaProp(integer(tPair[1]), tPair[2])
-        end repeat
-        tList[tuser][#badge] = tBadges
-      "a":
-        tList[tuser][#webID] = tdata
-      "g":
-        tList[tuser][#groupID] = tdata
-      "t":
-        tList[tuser][#groupstatus] = tdata
-      "x":
-        tList[tuser][#xp] = integer(tdata)
-      "d":
-        tdir = integer(tdata)
-        tList[tuser][#direction] = [tdir, tdir]
-      otherwise:
-        if tLine.word[1] = "[bot]" then
-          tList[tuser][#class] = "bot"
-        end if
+      2:
+        tListItem[#class] = "pet"
+      3:
+        tListItem[#class] = "bot"
     end case
+    tList.add(tListItem)
   end repeat
   tFigureParser = getObject("Figure_System")
   repeat with tObject in tList
@@ -296,37 +297,41 @@ on handle_heightmap me, tMsg
   me.getComponent().validateHeightMap(tMsg.content)
 end
 
+on handle_floor_map me, tMsg
+  me.getInterface().getGeometry().loadHeightMap(tMsg.content, 1)
+end
+
 on handle_heightmapupdate me, tMsg
   me.getComponent().updateHeightMap(tMsg.content)
 end
 
 on handle_OBJECTS me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tList = []
-  tCount = tMsg.content.line.count
+  tCount = tConn.GetIntFrom()
   repeat with i = 1 to tCount
-    tLine = tMsg.content.line[i]
-    if length(tLine) > 5 then
-      tObj = [:]
-      tObj[#id] = tLine.word[1]
-      tObj[#class] = tLine.word[2]
-      tObj[#x] = integer(tLine.word[3])
-      tObj[#y] = integer(tLine.word[4])
-      tObj[#h] = integer(tLine.word[5])
-      if tLine.word.count = 6 then
-        tdir = integer(tLine.word[6]) mod 8
-        tObj[#direction] = [tdir, tdir, tdir]
-        tObj[#dimensions] = 0
-      else
-        tWidth = integer(tLine.word[6])
-        tHeight = integer(tLine.word[7])
-        tObj[#dimensions] = [tWidth, tHeight]
-        tObj[#x] = tObj[#x] + tObj[#width] - 1
-        tObj[#y] = tObj[#y] + tObj[#height] - 1
-      end if
-      if tObj[#id] <> EMPTY then
-        tList.add(tObj)
-      end if
+    tHasDimensions = tConn.GetIntFrom()
+    tObj = [:]
+    tObj[#id] = tConn.GetStrFrom()
+    tObj[#class] = tConn.GetStrFrom()
+    tObj[#x] = tConn.GetIntFrom()
+    tObj[#y] = tConn.GetIntFrom()
+    tObj[#h] = tConn.GetIntFrom()
+    if tHasDimensions then
+      tWidth = tConn.GetIntFrom()
+      tHeight = tConn.GetIntFrom()
+      tObj[#dimensions] = [tWidth, tHeight]
+      tObj[#x] = tObj[#x] + tObj[#width] - 1
+      tObj[#y] = tObj[#y] + tObj[#height] - 1
+    else
+      tdir = tConn.GetIntFrom() mod 8
+      tObj[#direction] = [tdir, tdir, tdir]
+      tObj[#dimensions] = 0
     end if
+    tList.add(tObj)
   end repeat
   if count(tList) > 0 then
     repeat with tObj in tList
@@ -345,7 +350,7 @@ on parseActiveObject me, tConn
     return 0
   end if
   tObj = [:]
-  tObj[#id] = tConn.GetStrFrom()
+  tObj[#id] = string(tConn.GetIntFrom())
   tClassID = tConn.GetIntFrom()
   if tClassID > -1 then
     tError = 0
@@ -369,7 +374,6 @@ on parseActiveObject me, tConn
   tDirection = tConn.GetIntFrom() mod 8
   tObj[#direction] = [tDirection, tDirection, tDirection]
   tObj[#altitude] = getLocalFloat(tConn.GetStrFrom())
-  tRuntimeData = tConn.GetStrFrom()
   tExtra = tConn.GetIntFrom()
   tStuffData = tConn.GetStrFrom()
   tExpireTime = tConn.GetIntFrom()
@@ -382,7 +386,7 @@ on parseActiveObject me, tConn
     tObj[#colors] = "0"
     tObj[#dimensions] = [1, 1]
   end if
-  tObj[#props] = [#runtimedata: tRuntimeData, #extra: tExtra, #stuffdata: tStuffData]
+  tObj[#props] = [#runtimedata: EMPTY, #extra: tExtra, #stuffdata: tStuffData]
   if tError then
     return 0
   else
@@ -463,68 +467,87 @@ on handle_activeobject_update me, tMsg
   end if
 end
 
-on handle_items me, tMsg
+on parse_itemlistitem me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return [:]
+  end if
   if voidp(pPersistentFurniData) then
     pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
   end if
-  tList = []
-  tDelim = the itemDelimiter
-  repeat with i = 1 to tMsg.content.line.count
-    the itemDelimiter = TAB
-    tLine = tMsg.content.line[i]
-    if tLine <> EMPTY then
-      tObj = [:]
-      tObj[#id] = tLine.item[1]
-      tClassID = integer(tLine.item[2])
-      tFurniData = pPersistentFurniData.getProps("i", tClassID)
-      if voidp(tFurniData) then
-        error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
-        tObj[#class] = EMPTY
-      else
-        tObj[#class] = tFurniData[#class]
-        tObj[#owner] = tLine.item[3]
-        tObj[#type] = tLine.item[5]
-        if not (tLine.item[4].char[1] = ":") then
-          tObj[#direction] = tLine.item[4].word[1]
-          if tObj[#direction] = "frontwall" then
-            tObj[#direction] = "rightwall"
-          end if
-          tlocation = tLine.item[4].word[2..tLine.item[4].word.count]
-          the itemDelimiter = ","
-          tObj[#x] = 0
-          tObj[#y] = tlocation.item[1]
-          tObj[#h] = getLocalFloat(tlocation.item[2])
-          tObj[#z] = integer(tlocation.item[3])
-          tObj[#formatVersion] = #old
-          tObj[#expire] = -1
-        else
-          tLocString = tLine.item[4]
-          tWallLoc = tLocString.word[1].char[4..length(tLocString.word[1])]
-          the itemDelimiter = ","
-          tObj[#wall_x] = integer(tWallLoc.item[1])
-          tObj[#wall_y] = integer(tWallLoc.item[2])
-          tLocalLoc = tLocString.word[2].char[3..length(tLocString.word[2])]
-          tObj[#local_x] = integer(tLocalLoc.item[1])
-          tObj[#local_y] = integer(tLocalLoc.item[2])
-          tDirChar = tLocString.word[3]
-          case tDirChar of
-            "r":
-              tObj[#direction] = "rightwall"
-            "l":
-              tObj[#direction] = "leftwall"
-          end case
-          tObj[#formatVersion] = #new
-          tObj[#expire] = -1
-        end if
+  tObj = [:]
+  tObj[#id] = tConn.GetStrFrom()
+  tClassID = tConn.GetIntFrom()
+  tFurniData = pPersistentFurniData.getProps("i", tClassID)
+  if voidp(tFurniData) then
+    error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
+    tObj[#class] = EMPTY
+  else
+    tObj[#class] = tFurniData[#class]
+    tObj[#owner] = EMPTY
+    tLocLine = tConn.GetStrFrom()
+    tObj[#type] = tConn.GetStrFrom()
+    if not (tLocLine.char[1] = ":") then
+      tObj[#direction] = tLocLine.word[1]
+      if tObj[#direction] = "frontwall" then
+        tObj[#direction] = "rightwall"
       end if
-      tList.add(tObj)
+      tlocation = tLocLine.word[2..tLocLine.word.count]
+      the itemDelimiter = ","
+      tObj[#x] = 0
+      tObj[#y] = tlocation.item[1]
+      tObj[#h] = getLocalFloat(tlocation.item[2])
+      tObj[#z] = integer(tlocation.item[3])
+      tObj[#formatVersion] = #old
+      tObj[#expire] = -1
+    else
+      tLocString = tLocLine
+      tWallLoc = tLocString.word[1].char[4..length(tLocString.word[1])]
+      the itemDelimiter = ","
+      tObj[#wall_x] = integer(tWallLoc.item[1])
+      tObj[#wall_y] = integer(tWallLoc.item[2])
+      tLocalLoc = tLocString.word[2].char[3..length(tLocString.word[2])]
+      tObj[#local_x] = integer(tLocalLoc.item[1])
+      tObj[#local_y] = integer(tLocalLoc.item[2])
+      tDirChar = tLocString.word[3]
+      case tDirChar of
+        "r":
+          tObj[#direction] = "rightwall"
+        "l":
+          tObj[#direction] = "leftwall"
+      end case
+      tObj[#formatVersion] = #new
+      tObj[#expire] = -1
     end if
+  end if
+  return tObj
+end
+
+on handle_itemlist me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tCount = tConn.GetIntFrom()
+  repeat with i = 1 to tCount
+    tObj = me.parse_itemlistitem(tMsg)
+    me.getComponent().validateItemObjects(tObj)
   end repeat
-  the itemDelimiter = tDelim
-  if count(tList) > 0 then
-    repeat with tItem in tList
-      me.getComponent().validateItemObjects(tItem)
-    end repeat
+  if tCount > 0 then
+    executeMessage(#itemObjectsUpdated)
+  else
+    me.getComponent().validateItemObjects(0)
+  end if
+end
+
+on handle_additem me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tObj = me.parse_itemlistitem(tMsg)
+  if tObj.count > 0 then
+    me.getComponent().validateItemObjects(tObj)
     executeMessage(#itemObjectsUpdated)
   else
     me.getComponent().validateItemObjects(0)
@@ -532,15 +555,26 @@ on handle_items me, tMsg
 end
 
 on handle_removeitem me, tMsg
-  me.getComponent().removeItemObject(tMsg.content)
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  me.getComponent().removeItemObject(tConn.GetStrFrom())
   executeMessage(#itemObjectRemoved)
   me.getInterface().stopObjectMover()
 end
 
 on handle_updateitem me, tMsg
-  tItem = me.getComponent().getItemObject(tMsg.content.word[1])
-  if objectp(tItem) then
-    tItem.setState(the last word in the content of tMsg)
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tObj = me.parse_itemlistitem(tMsg)
+  if tObj.count > 0 then
+    tItem = me.getComponent().getItemObject(tObj[#id])
+    if objectp(tItem) then
+      tItem.setState(the last word in tObj[#type])
+    end if
   end if
 end
 
@@ -559,24 +593,35 @@ on handle_stuffdataupdate me, tMsg
 end
 
 on handle_presentopen me, tMsg
-  ttype = tMsg.content.line[1]
-  tCode = tMsg.content.line[2]
-  tColors = tMsg.content.line[3]
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  ttype = tConn.GetStrFrom()
+  tClassID = tConn.GetIntFrom()
+  tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+  if voidp(tFurniProps) then
+    error(me, "Persistent properties missing for item classid " & tClassID, #handle_presentopen, #major)
+    tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
+  end if
+  tClass = tFurniProps[#class]
+  tColor = tFurniProps[#partColors]
+  tName = tFurniProps[#localizedName]
   tCard = "PackageCardObj"
   if objectExists(tCard) then
-    getObject(tCard).showContent([#type: ttype, #code: tCode, #color: tColors])
+    getObject(tCard).showContent([#type: tClass, #code: tClass, #color: tColor, #name: tName])
   else
     error(me, "Package card obj not found!", #handle_presentopen, #major)
   end if
 end
 
 on handle_flatproperty me, tMsg
-  tDelim = the itemDelimiter
-  the itemDelimiter = "/"
-  tLine = tMsg.content
-  tdata = [#key: tLine.item[1], #value: tLine.item[2]]
-  the itemDelimiter = tDelim
-  me.getComponent().setRoomProperty(tdata[#key], tdata[#value])
+  tKey = tMsg.connection.GetStrFrom()
+  tVal = tMsg.connection.GetStrFrom()
+  me.getComponent().setRoomProperty(tKey, tVal)
 end
 
 on handle_room_rights me, tMsg
@@ -590,104 +635,107 @@ on handle_room_rights me, tMsg
   end case
 end
 
+on parse_stripinfoitem me, tConn
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  tObj = [:]
+  tObj[#stripId] = string(tConn.GetIntFrom())
+  tObj[#objectPos] = tConn.GetIntFrom()
+  tObj[#striptype] = tConn.GetStrFrom()
+  tObj[#id] = string(tConn.GetIntFrom())
+  tClassID = tConn.GetIntFrom()
+  case tObj[#striptype] of
+    "S":
+      tFurniProps = pPersistentFurniData.getProps("s", tClassID)
+      if voidp(tFurniProps) then
+        error(me, "Persistent properties missing for furni classid " & tClassID, #handle_stripinfo, #major)
+        tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
+      end if
+      tObj[#class] = tFurniProps[#class]
+      tObj[#name] = tFurniProps[#localizedName]
+      tObj[#custom] = tFurniProps[#localizedDesc]
+      tObj[#dimensions] = [tFurniProps[#xdim], tFurniProps[#ydim]]
+      tObj[#colors] = tFurniProps[#partColors]
+      tObj[#striptype] = "active"
+      tObj[#stuffdata] = tConn.GetStrFrom()
+      tObj[#isRecyclable] = tConn.GetIntFrom()
+      tObj[#isTradeable] = tConn.GetIntFrom()
+      tExp = tConn.GetIntFrom()
+      if tExp <> -1 then
+        tObj[#expire] = tExp
+      end if
+      tSlotID = tConn.GetStrFrom()
+      if tSlotID <> EMPTY then
+        tObj[#slotID] = tSlotID
+      end if
+      tSongID = tConn.GetIntFrom()
+      if tSongID <> -1 then
+        tObj[#songID] = tSongID
+      end if
+      the itemDelimiter = ","
+      if tObj[#colors].char[1] = "#" then
+        if tObj[#colors].item.count > 1 then
+          tObj[#stripColor] = rgb(tObj[#colors].item[tObj[#colors].item.count])
+        else
+          tObj[#stripColor] = rgb(tObj[#colors])
+        end if
+      else
+        tObj[#stripColor] = 0
+      end if
+    "I":
+      tFurniProps = pPersistentFurniData.getProps("i", tClassID)
+      if voidp(tFurniProps) then
+        error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
+        tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
+      end if
+      tObj[#class] = tFurniProps[#class]
+      tObj[#striptype] = "item"
+      tObj[#props] = tConn.GetStrFrom()
+      tObj[#isRecyclable] = tConn.GetIntFrom()
+      tObj[#isTradeable] = tConn.GetIntFrom()
+      tExp = tConn.GetIntFrom()
+      if tExp <> -1 then
+        tObj[#expire] = tExp
+      end if
+      case tObj[#class] of
+        "poster":
+          tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")
+        otherwise:
+          tObj[#name] = tFurniProps[#localizedName]
+      end case
+  end case
+  return tObj
+end
+
 on handle_stripinfo me, tMsg, tItemDeLim
-  if voidp(tItemDeLim) then
-    tItemDeLim = numToChar(30)
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
   end if
   if voidp(pPersistentFurniData) then
     pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
   end if
-  tProps = [#objects: [], #count: 0]
-  tDelim = the itemDelimiter
-  tProps[#count] = integer(tMsg.content.line[tMsg.content.line.count])
-  the itemDelimiter = "/"
-  tCount = tMsg.content.item.count
+  if tMsg.subject = 98 then
+    tCount = 1
+  else
+    tCount = tConn.GetIntFrom()
+  end if
   tStripMax = 0
   tTotalItemCount = 0
+  tProps = [#objects: [], #count: tCount]
   repeat with i = 1 to tCount
-    the itemDelimiter = "/"
-    tItem = tMsg.content.item[i]
-    if tItem = EMPTY then
-      exit repeat
-    end if
-    the itemDelimiter = tItemDeLim
-    if tItem.item.count < 2 then
-      tTotalItemCount = integer(tItem - 1)
-      exit repeat
-    end if
-    tObj = [:]
-    tObj[#stripId] = tItem.item[2]
-    tObjectPos = integer(tItem.item[3])
-    tObj[#striptype] = tItem.item[4]
-    tObj[#id] = tItem.item[5]
-    tClassID = integer(tItem.item[6])
-    if not integerp(tClassID) then
-      tClassID = tItem.item[6]
-    end if
-    case tObj[#striptype] of
-      "S":
-        tFurniProps = pPersistentFurniData.getProps("s", tClassID)
-        if voidp(tFurniProps) then
-          error(me, "Persistent properties missing for furni classid " & tClassID, #handle_stripinfo, #major)
-          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
-        end if
-        tObj[#class] = tFurniProps[#class]
-        tObj[#name] = tFurniProps[#localizedName]
-        tObj[#custom] = tFurniProps[#localizedDesc]
-        tObj[#dimensions] = [tFurniProps[#xdim], tFurniProps[#ydim]]
-        tObj[#colors] = tFurniProps[#partColors]
-        tObj[#striptype] = "active"
-        tObj[#stuffdata] = tItem.item[7]
-        tObj[#isRecyclable] = tItem.item[8]
-        tObj[#isTradeable] = tItem.item[9]
-        if tItem.item.count >= 10 then
-          tObj[#expire] = tItem.item[10]
-        end if
-        if tItem.item[11] <> EMPTY and tItem.item.count >= 11 then
-          tObj[#slotID] = tItem.item[11]
-        end if
-        if tItem.item[12] <> EMPTY and tItem.item.count >= 12 then
-          tObj[#songID] = tItem.item[12]
-        end if
-        the itemDelimiter = ","
-        if tObj[#colors].char[1] = "#" then
-          if tObj[#colors].item.count > 1 then
-            tObj[#stripColor] = rgb(tObj[#colors].item[tObj[#colors].item.count])
-          else
-            tObj[#stripColor] = rgb(tObj[#colors])
-          end if
-        else
-          tObj[#stripColor] = 0
-        end if
-      "I":
-        tFurniProps = pPersistentFurniData.getProps("i", tClassID)
-        if voidp(tFurniProps) then
-          error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
-          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
-        end if
-        tObj[#class] = tFurniProps[#class]
-        tObj[#striptype] = "item"
-        tObj[#props] = tItem.item[7]
-        tObj[#isRecyclable] = tItem.item[8]
-        tObj[#isTradeable] = tItem.item[9]
-        if tItem.item.count >= 10 then
-          tObj[#expire] = tItem.item[10]
-        end if
-        case tObj[#class] of
-          "poster":
-            tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")
-          otherwise:
-            tObj[#name] = tFurniProps[#localizedName]
-        end case
-    end case
+    tObj = me.parse_stripinfoitem(tConn)
+    tObjectPos = tObj[#objectPos]
+    tObj.deleteProp(#objectPos)
     tProps[#objects].add(tObj)
     if tObjectPos > tStripMax then
       tStripMax = tObjectPos
     end if
   end repeat
-  the itemDelimiter = tDelim
+  tTotalItemCount = tConn.GetIntFrom()
   tInventory = me.getInterface().getContainer()
-  tInventory.setHandButton("next", tTotalItemCount > integer(tStripMax))
+  tInventory.setHandButton("next", tTotalItemCount - 1 > integer(tStripMax))
   tInventory.setHandButton("prev", integer(tStripMax) > 8)
   case tMsg.subject of
     140:
@@ -696,20 +744,20 @@ on handle_stripinfo me, tMsg, tItemDeLim
       tInventory.open(1)
       tInventory.Refresh()
     98:
-      tInventory.appendStripItem(tProps[#objects][1])
-      tInventory.open(1)
-      tInventory.Refresh()
-    108:
-      return tProps
+      tConn.send("GETSTRIP", [#integer: 3])
   end case
 end
 
 on handle_stripupdated me, tMsg
-  tMsg.connection.send("GETSTRIP", "new")
+  tMsg.connection.send("GETSTRIP", [#integer: 3])
 end
 
 on handle_removestripitem me, tMsg
-  me.getInterface().getContainer().removeStripItem(tMsg.content.word[1])
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  me.getInterface().getContainer().removeStripItem(string(tConn.GetIntFrom()))
   me.getInterface().getContainer().Refresh()
 end
 
@@ -722,11 +770,16 @@ on handle_othernotallowed me
 end
 
 on handle_idata me, tMsg
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
   tDelim = the itemDelimiter
   the itemDelimiter = TAB
-  tID = integer(tMsg.content.line[1].item[1])
-  ttype = tMsg.content.line[1].item[2]
-  tText = tMsg.content.line[1].item[2] & RETURN & tMsg.content.line[2..tMsg.content.line.count]
+  tID = integer(tConn.GetStrFrom())
+  tdata = tConn.GetStrFrom()
+  ttype = tdata.line[1].item[1]
+  tText = ttype & RETURN & tdata.line[2..tdata.line.count]
   the itemDelimiter = tDelim
   executeMessage(symbol("itemdata_received" & tID), [#id: tID, #text: tText, #type: ttype])
 end
@@ -736,36 +789,80 @@ on handle_trade_items me, tMsg
   if not tConn then
     return 0
   end if
-  tMsgParts = []
-  tMsgParts.add(tConn.GetStrFrom())
-  tMsgParts.add(tConn.GetStrFrom())
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   tMessage = [:]
-  repeat with i = 1 to tMsgParts.count
-    tLine = tMsgParts[i]
-    tdata = [:]
-    tDelim = the itemDelimiter
-    the itemDelimiter = ";"
-    tdata[#accept] = tLine.item[2]
-    tItemStr = "foo" & RETURN & tLine.item[3..tLine.item.count] & RETURN & 1
-    tdata[#items] = me.handle_stripinfo([#subject: 108, #content: tItemStr], ";").getaProp(#objects)
-    if not listp(tdata[#items]) then
-      return error(me, "Invalid itemdata from server!", #handle_trade_items, #major)
-    end if
-    tUserName = tLine.item[1]
-    if tUserName = EMPTY then
-      return error(me, "No username from server", #handle_trade_items, #major)
-    end if
-    if me.getInterface().getIgnoreStatus(VOID, tUserName) then
-      return me.getComponent().getRoomConnection().send("TRADE_CLOSE")
-    end if
-    tMessage[tUserName] = tdata
+  repeat with i = 1 to 2
+    tUserID = tConn.GetIntFrom()
+    tFurniList = []
+    tFurniCount = tConn.GetIntFrom()
+    repeat with j = 1 to tFurniCount
+      tFurniInfo = [:]
+      tFurniInfo.setaProp(#stripId, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#striptype, tConn.GetStrFrom())
+      tFurniInfo.setaProp(#id, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#classID, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#data, tConn.GetStrFrom())
+      tFurniInfo.setaProp(#day, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#month, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#year, tConn.GetIntFrom())
+      if tFurniInfo[#striptype] = "s" then
+        tFurniInfo.setaProp(#songID, tConn.GetIntFrom())
+      end if
+      tFurniProps = pPersistentFurniData.getProps(tFurniInfo[#striptype], tFurniInfo[#classID])
+      if voidp(tFurniProps) then
+        error(me, "Persistent properties missing for item classid " & tFurniInfo[#classID], #handle_items, #major)
+        tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
+      end if
+      tFurniInfo.setaProp(#class, tFurniProps[#class])
+      if tFurniInfo[#class] = "poster" then
+        tFurniInfo.setaProp(#name, getText("poster_" & tFurniInfo[#data] & "_name"))
+      else
+        tFurniInfo.setaProp(#name, tFurniProps[#localizedName])
+      end if
+      tFurniInfo.setaProp(#colors, tFurniProps[#partColors])
+      tFurniInfo.setaProp(#dimensions, [tFurniProps[#xdim], tFurniProps[#ydim]])
+      tFurniList.add(tFurniInfo)
+    end repeat
+    tMessage.setaProp(tUserID, tFurniList)
   end repeat
-  return me.getInterface().getSafeTrader().Refresh(tMessage)
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  return tTrader.Refresh(tMessage)
 end
 
 on handle_trade_close me, tMsg
-  me.getInterface().getSafeTrader().close()
-  tMsg.connection.send("GETSTRIP", "new")
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  if tUserID <> getObject(#session).GET("user_user_id") then
+    executeMessage(#alert, [#id: #trade_cancelled, #Msg: getText("trading_closed")])
+  end if
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  tTrader.close()
+  tHand = me.getInterface().getContainer()
+  if not tHand then
+    return 0
+  end if
+  if tHand.isOpen() then
+    tConn.send("GETSTRIP", [#integer: 4])
+  end if
+end
+
+on handle_trade_confirm me, tMsg
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  tTrader.showConfirmationView()
 end
 
 on handle_trade_accept me, tMsg
@@ -773,35 +870,56 @@ on handle_trade_accept me, tMsg
   if not tConn then
     return 0
   end if
-  tUserName = tConn.GetStrFrom()
-  tStatus = tConn.GetIntFrom() = 1
-  me.getInterface().getSafeTrader().accept(tUserName, tStatus)
+  tUserID = tConn.GetIntFrom()
+  tStatus = tConn.GetIntFrom() > 0
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  tTrader.accept(tUserID, tStatus)
+end
+
+on handle_trade_open me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  tTrader.startTrade(tConn.GetIntFrom(), tConn.GetIntFrom(), tConn.GetIntFrom(), tConn.GetIntFrom())
+end
+
+on handle_trade_already_open me
+  executeMessage(#alert, [#id: #trade_already_open, #Msg: getText("trading_already_open")])
 end
 
 on handle_trade_completed me, tMsg
-  me.getInterface().getSafeTrader().complete()
+  tTrader = me.getInterface().getSafeTrader()
+  if not tTrader then
+    return 0
+  end if
+  tTrader.complete()
 end
 
 on handle_door_in me, tMsg
-  tDelim = the itemDelimiter
-  the itemDelimiter = "/"
-  tDoor = tMsg.content.item[1]
-  tuser = tMsg.content.item[2]
-  the itemDelimiter = tDelim
+  tConn = tMsg.connection
+  if not tConn then
+    return 0
+  end if
+  tDoor = tConn.GetIntFrom()
+  tuser = tConn.GetStrFrom()
   tDoorObj = me.getComponent().getActiveObject(tDoor)
   if tDoorObj <> 0 then
     call(#animate, [tDoorObj], 18)
-    if getObject(#session).GET("user_name") = tuser then
-      call(#prepareToKick, [tDoorObj], tuser)
-    end if
+    call(#prepareToKick, [tDoorObj], tuser)
   end if
 end
 
 on handle_door_out me, tMsg
-  tDelim = the itemDelimiter
-  the itemDelimiter = "/"
-  tDoor = me.getComponent().getActiveObject(tMsg.content.item[1])
-  the itemDelimiter = tDelim
+  tConn = tMsg.connection
+  tDoor = me.getComponent().getActiveObject(string(tConn.GetIntFrom()))
   if tDoor <> 0 then
     call(#animate, [tDoor])
   end if
@@ -828,27 +946,19 @@ on handle_doordeleted me, tMsg
 end
 
 on handle_dice_value me, tMsg
-  tID = tMsg.content.word[1]
-  if tMsg.content.word.count = 1 then
-    tValue = -1
-  else
-    tValue = integer(tMsg.content.word[2] - tID * 38)
-    if tValue > 6 then
-      tValue = 0
-    end if
-  end if
+  tConn = tMsg.connection
+  tID = string(tConn.GetIntFrom())
+  tValue = tConn.GetIntFrom()
   if me.getComponent().activeObjectExists(tID) then
     call(#diceThrown, [me.getComponent().getActiveObject(tID)], tValue)
   end if
 end
 
 on handle_roomad me, tMsg
-  if tMsg.content.length > 1 then
-    tDelim = the itemDelimiter
-    the itemDelimiter = TAB
-    tSourceURL = tMsg.content.item[1]
-    tTargetURL = tMsg.content.item[2]
-    the itemDelimiter = tDelim
+  tConn = tMsg.connection
+  tSourceURL = tConn.GetStrFrom()
+  if tSourceURL.length > 1 then
+    tTargetURL = tConn.GetStrFrom()
     tLayoutID = me.getInterface().getRoomVisualizer().pLayout
     me.getComponent().getAd().Init(tSourceURL, tTargetURL, tLayoutID)
   else
@@ -967,12 +1077,10 @@ on handle_slideobjectbundle me, tMsg
 end
 
 on handle_interstitialdata me, tMsg
-  if tMsg.content.length > 1 then
-    tDelim = the itemDelimiter
-    the itemDelimiter = TAB
-    tSourceURL = tMsg.content.item[1]
-    tTargetURL = tMsg.content.item[2]
-    the itemDelimiter = tDelim
+  tConn = tMsg.connection
+  tSourceURL = tConn.GetStrFrom()
+  if tSourceURL.length > 0 then
+    tTargetURL = tConn.GetStrFrom()
     me.getComponent().getInterstitial().Init(tSourceURL, tTargetURL)
   else
     me.getComponent().getInterstitial().Init(0)
@@ -1167,6 +1275,157 @@ on handle_ignore_list me, tMsg
   return executeMessage(#save_ignore_list, tList)
 end
 
+on handle_user_dance me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tDanceStyle = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    call(symbol("action_dance"), [tUserObj], "dance " & tDanceStyle)
+  end if
+end
+
+on handle_user_wave me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    call(symbol("action_wave"), [tUserObj], "wave")
+  end if
+end
+
+on handle_user_carry_object me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tItemType = tConn.GetIntFrom()
+  tItemName = tConn.GetStrFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    if tUserObj.validateCarryForCurrentState() then
+      tUserObj.handle_user_carry_object(tItemType, tItemName)
+    end if
+  end if
+end
+
+on handle_user_joining_game me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tGameId = tConn.GetIntFrom()
+  tGameType = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    call(symbol("action_joingame"), [tUserObj], "joingame" && tGameId && tGameType)
+  end if
+end
+
+on handle_user_not_joining_game me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    call(symbol("action_joingame"), [tUserObj], "joingame")
+  end if
+end
+
+on handle_user_avatar_effect me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tFxType = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    if tUserObj.validateFxForActionList([[#params: "fx " & tFxType, #name: "fx"]], ["fx"]) then
+      call(#action_fx, [tUserObj], "fx " & tFxType)
+    else
+      call(#persist_fx, [tUserObj], tFxType)
+    end if
+  end if
+end
+
+on handle_user_sleep me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  tSleep = tConn.GetBoolFrom()
+  if tUserObj <> 0 then
+    call(symbol("action_sleep"), [tUserObj], tSleep)
+  end if
+end
+
+on handle_user_use_object me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserID = tConn.GetIntFrom()
+  tItemType = tConn.GetIntFrom()
+  tUserObj = me.getComponent().getUserObject(tUserID)
+  if tUserObj <> 0 then
+    tUserObj.handle_user_use_object(tItemType)
+  end if
+end
+
+on handle_judge_gui_status me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tstate = tConn.GetIntFrom()
+  if tstate = 2 then
+    tPerformerID = tConn.GetIntFrom()
+  end if
+  me.getInterface().setJudgeToolState(tstate, tPerformerID)
+end
+
+on handle_open_performer_gui me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tNumOfSongs = tConn.GetIntFrom()
+  tSongList = [:]
+  repeat with i = 1 to tNumOfSongs
+    tSongList.setaProp(tConn.GetIntFrom(), tConn.GetStrFrom())
+  end repeat
+  me.getInterface().openSongSelector(tSongList)
+end
+
+on handle_close_performer_gui me, tMsg
+  return executeMessage(#close_performer_song_selector)
+end
+
+on handle_start_playing_song me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  executeMessage(#listen_song, tConn.GetIntFrom())
+end
+
+on handle_stop_playing_song me, tMsg
+  executeMessage(#do_not_listen_song)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -1182,7 +1441,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(41, #handle_flat_letin)
   tMsgs.setaProp(42, #handle_room_rights)
   tMsgs.setaProp(43, #handle_room_rights)
-  tMsgs.setaProp(45, #handle_items)
+  tMsgs.setaProp(45, #handle_itemlist)
   tMsgs.setaProp(46, #handle_flatproperty)
   tMsgs.setaProp(47, #handle_room_rights)
   tMsgs.setaProp(48, #handle_idata)
@@ -1193,7 +1452,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(70, #handle_youaremod)
   tMsgs.setaProp(71, #handle_showprogram)
   tMsgs.setaProp(76, #handle_no_user_for_gift)
-  tMsgs.setaProp(83, #handle_items)
+  tMsgs.setaProp(83, #handle_additem)
   tMsgs.setaProp(84, #handle_removeitem)
   tMsgs.setaProp(85, #handle_updateitem)
   tMsgs.setaProp(88, #handle_stuffdataupdate)
@@ -1209,10 +1468,12 @@ on regMsgList me, tBool
   tMsgs.setaProp(101, #handle_stripupdated)
   tMsgs.setaProp(102, #handle_youarenotallowed)
   tMsgs.setaProp(103, #handle_othernotallowed)
-  tMsgs.setaProp(105, #handle_trade_completed)
+  tMsgs.setaProp(104, #handle_trade_open)
+  tMsgs.setaProp(105, #handle_trade_already_open)
   tMsgs.setaProp(108, #handle_trade_items)
   tMsgs.setaProp(109, #handle_trade_accept)
   tMsgs.setaProp(110, #handle_trade_close)
+  tMsgs.setaProp(111, #handle_trade_confirm)
   tMsgs.setaProp(112, #handle_trade_completed)
   tMsgs.setaProp(129, #handle_presentopen)
   tMsgs.setaProp(131, #handle_flatnotallowedtoenter)
@@ -1241,6 +1502,20 @@ on regMsgList me, tBool
   tMsgs.setaProp(370, #handle_roomevent_info)
   tMsgs.setaProp(419, #handle_ignore_user_result)
   tMsgs.setaProp(420, #handle_ignore_list)
+  tMsgs.setaProp(470, #handle_floor_map)
+  tMsgs.setaProp(480, #handle_user_dance)
+  tMsgs.setaProp(481, #handle_user_wave)
+  tMsgs.setaProp(482, #handle_user_carry_object)
+  tMsgs.setaProp(483, #handle_user_joining_game)
+  tMsgs.setaProp(484, #handle_user_not_joining_game)
+  tMsgs.setaProp(485, #handle_user_avatar_effect)
+  tMsgs.setaProp(486, #handle_user_sleep)
+  tMsgs.setaProp(488, #handle_user_use_object)
+  tMsgs.setaProp(490, #handle_judge_gui_status)
+  tMsgs.setaProp(491, #handle_open_performer_gui)
+  tMsgs.setaProp(492, #handle_close_performer_gui)
+  tMsgs.setaProp(493, #handle_start_playing_song)
+  tMsgs.setaProp(494, #handle_stop_playing_song)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1271,15 +1546,13 @@ on regMsgList me, tBool
   tCmds.setaProp("DICE_OFF", 77)
   tCmds.setaProp("PRESENTOPEN", 78)
   tCmds.setaProp("LOOKTO", 79)
-  tCmds.setaProp("CARRYDRINK", 80)
+  tCmds.setaProp("CARRYOBJECT", 80)
   tCmds.setaProp("INTODOOR", 81)
   tCmds.setaProp("DOORGOIN", 82)
   tCmds.setaProp("G_IDATA", 83)
   tCmds.setaProp("SETITEMDATA", 84)
   tCmds.setaProp("REMOVEITEM", 85)
-  tCmds.setaProp("CARRYITEM", 87)
-  tCmds.setaProp("STOP", 88)
-  tCmds.setaProp("USEITEM", 89)
+  tCmds.setaProp("USEOBJECT", 89)
   tCmds.setaProp("PLACESTUFF", 90)
   tCmds.setaProp("DANCE", 93)
   tCmds.setaProp("WAVE", 94)
@@ -1316,6 +1589,14 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_ROOMEVENT_TYPE_COUNT", 349)
   tCmds.setaProp("GET_ROOMEVENTS_BY_TYPE", 350)
   tCmds.setaProp("SET_AVATAR_EFFECT", 372)
+  tCmds.setaProp("USEFURNITURE", 392)
+  tCmds.setaProp("USEWALLITEM", 393)
+  tCmds.setaProp("GET_FLOORMAP", 394)
+  tCmds.setaProp("TRADE_CONFIRM_ACCEPT", 402)
+  tCmds.setaProp("TRADE_CONFIRM_DECLINE", 403)
+  tCmds.setaProp("TRADE_REMOVE_ITEM", 405)
+  tCmds.setaProp("START_PERFORMANCE", 410)
+  tCmds.setaProp("VOTE_PERFORMANCE", 411)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)
@@ -1324,4 +1605,118 @@ on regMsgList me, tBool
     unregisterCommands(getVariable("connection.room.id"), me.getID(), tCmds)
   end if
   return 1
+end
+
+on handle_old_stripinfo me, tMsg, tItemDeLim
+  if voidp(tItemDeLim) then
+    tItemDeLim = numToChar(30)
+  end if
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  tProps = [#objects: [], #count: 0]
+  tDelim = the itemDelimiter
+  tProps[#count] = integer(tMsg.content.line[tMsg.content.line.count])
+  the itemDelimiter = "/"
+  tCount = tMsg.content.item.count
+  tStripMax = 0
+  tTotalItemCount = 0
+  repeat with i = 1 to tCount
+    the itemDelimiter = "/"
+    tItem = tMsg.content.item[i]
+    if tItem = EMPTY then
+      exit repeat
+    end if
+    the itemDelimiter = tItemDeLim
+    if tItem.item.count < 2 then
+      tTotalItemCount = integer(tItem - 1)
+      exit repeat
+    end if
+    tObj = [:]
+    tObj[#stripId] = tItem.item[2]
+    tObjectPos = integer(tItem.item[3])
+    tObj[#striptype] = tItem.item[4]
+    tObj[#id] = tItem.item[5]
+    tClassID = integer(tItem.item[6])
+    if not integerp(tClassID) then
+      tClassID = tItem.item[6]
+    end if
+    case tObj[#striptype] of
+      "S":
+        tFurniProps = pPersistentFurniData.getProps("s", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for furni classid " & tClassID, #handle_stripinfo, #major)
+          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
+        end if
+        tObj[#class] = tFurniProps[#class]
+        tObj[#name] = tFurniProps[#localizedName]
+        tObj[#custom] = tFurniProps[#localizedDesc]
+        tObj[#dimensions] = [tFurniProps[#xdim], tFurniProps[#ydim]]
+        tObj[#colors] = tFurniProps[#partColors]
+        tObj[#striptype] = "active"
+        tObj[#stuffdata] = tItem.item[7]
+        tObj[#isRecyclable] = tItem.item[8]
+        tObj[#isTradeable] = tItem.item[9]
+        if tItem.item.count >= 10 then
+          tObj[#expire] = tItem.item[10]
+        end if
+        if tItem.item[11] <> EMPTY and tItem.item.count >= 11 then
+          tObj[#slotID] = tItem.item[11]
+        end if
+        if tItem.item[12] <> EMPTY and tItem.item.count >= 12 then
+          tObj[#songID] = tItem.item[12]
+        end if
+        the itemDelimiter = ","
+        if tObj[#colors].char[1] = "#" then
+          if tObj[#colors].item.count > 1 then
+            tObj[#stripColor] = rgb(tObj[#colors].item[tObj[#colors].item.count])
+          else
+            tObj[#stripColor] = rgb(tObj[#colors])
+          end if
+        else
+          tObj[#stripColor] = 0
+        end if
+      "I":
+        tFurniProps = pPersistentFurniData.getProps("i", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
+          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
+        end if
+        tObj[#class] = tFurniProps[#class]
+        tObj[#striptype] = "item"
+        tObj[#props] = tItem.item[7]
+        tObj[#isRecyclable] = tItem.item[8]
+        tObj[#isTradeable] = tItem.item[9]
+        if tItem.item.count >= 10 then
+          tObj[#expire] = tItem.item[10]
+        end if
+        case tObj[#class] of
+          "poster":
+            tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")
+          otherwise:
+            tObj[#name] = tFurniProps[#localizedName]
+        end case
+    end case
+    tProps[#objects].add(tObj)
+    if tObjectPos > tStripMax then
+      tStripMax = tObjectPos
+    end if
+  end repeat
+  the itemDelimiter = tDelim
+  tInventory = me.getInterface().getContainer()
+  tInventory.setHandButton("next", tTotalItemCount > integer(tStripMax))
+  tInventory.setHandButton("prev", integer(tStripMax) > 8)
+  case tMsg.subject of
+    140:
+      tInventory.updateStripItems(tProps[#objects])
+      tInventory.setStripItemCount(tProps[#count])
+      tInventory.open(1)
+      tInventory.Refresh()
+    98:
+      tInventory.appendStripItem(tProps[#objects][1])
+      tInventory.open(1)
+      tInventory.Refresh()
+    108:
+      return tProps
+  end case
 end

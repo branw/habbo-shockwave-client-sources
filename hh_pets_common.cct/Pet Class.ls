@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pIDPrefix, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix, pPetDefinitions, pRace
+property pName, pClass, pCustom, pIDPrefix, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix, pPetDefinitions, pRace, pWebID
 
 on construct me
   pName = EMPTY
@@ -27,6 +27,7 @@ on construct me
   pSync = 1
   pDefShadowMem = member(0)
   pInfoStruct = [:]
+  pWebID = "-1"
   pGeometry = getThread(#room).getInterface().getGeometry()
   pXFactor = pGeometry.pXFactor
   pYFactor = pGeometry.pYFactor
@@ -121,6 +122,9 @@ on setup me, tdata
   pLocX = tdata[#x]
   pLocY = tdata[#y]
   pLocH = tdata[#h]
+  if not voidp(tdata.getaProp(#webID)) then
+    pWebID = tdata[#webID]
+  end if
   pRace = tdata[#figure].word[1]
   pOffsetList = me.getOffsetList()
   pOffsetListSmall = me.getOffsetList(#small)
@@ -158,7 +162,6 @@ end
 on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pWaving = 0
   pMoving = 0
-  pTalking = 0
   pSniffing = 0
   call(#reset, pPartList)
   if pCorrectLocZ then
@@ -198,7 +201,7 @@ end
 on select me
   if the doubleClick then
     if connectionExists(getVariable("connection.info.id", #Info)) then
-      getConnection(getVariable("connection.info.id", #Info)).send("GETPETSTAT", [#string: pIDPrefix & pName])
+      getConnection(getVariable("connection.info.id", #Info)).send("GETPETSTAT", [#integer: integer(pWebID), #string: pName])
     end if
   end if
   return 1
@@ -666,6 +669,10 @@ end
 
 on action_talk me, tProps
   pTalking = 1
+end
+
+on stop_action_talk me, tProps
+  pTalking = 0
 end
 
 on action_wav me, tProps

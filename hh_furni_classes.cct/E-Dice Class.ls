@@ -38,13 +38,13 @@ on select me
         end repeat
       else
         if pActive = 0 then
-          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", [#integer: integer(me.getID())])
         end if
       end if
     end if
   else
     if rollover(me.pSprList[1]) and the doubleClick and pActive = 0 then
-      getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
+      getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", [#integer: integer(me.getID())])
       return 1
     end if
   end if
@@ -53,8 +53,8 @@ end
 
 on diceThrown me, tValue
   pActive = 1
-  if tValue > 0 then
-    pValue = tValue
+  if tValue > 6 then
+    pValue = 0
   else
     pValue = tValue
   end if

@@ -45,11 +45,8 @@ end
 
 on openBadgeWindow me
   me.closeBadgeWindow()
-  tSelectedObjID = getThread(#room).getInterface().getSelectedObject()
-  if tSelectedObjID <> getObject(#session).GET("user_index") then
-    return 0
-  end if
-  tSelectedObj = getThread(#room).getComponent().getUserObject(tSelectedObjID)
+  tOwnUser = getObject(#session).GET("user_index")
+  tSelectedObj = getThread(#room).getComponent().getUserObject(tOwnUser)
   if not tSelectedObj then
     return 0
   end if

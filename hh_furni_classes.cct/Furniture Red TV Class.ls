@@ -1,10 +1,11 @@
 property pChanges, pActive, pTimer, pNextChange
 
 on prepare me, tdata
-  if tdata[#stuffdata] = "ON" then
-    pActive = 1
-  else
+  tValue = integer(tdata[#stuffdata])
+  if tValue = 0 then
     pActive = 0
+  else
+    pActive = 1
   end if
   pChanges = 1
   pTimer = 0
@@ -13,7 +14,8 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if tValue = "OFF" then
+  tValue = integer(tValue)
+  if tValue = 0 then
     pActive = 0
   else
     pActive = 1
@@ -58,21 +60,9 @@ on update me
   end if
 end
 
-on setOn me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "ON"])
-end
-
-on setOff me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "OFF"])
-end
-
 on select me
   if the doubleClick then
-    if pActive then
-      me.setOff()
-    else
-      me.setOn()
-    end if
+    getThread(#room).getComponent().getRoomConnection().send("USEFURNITURE", [#integer: integer(me.getID()), #integer: 0])
   end if
   return 1
 end

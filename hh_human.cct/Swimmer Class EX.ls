@@ -331,3 +331,7 @@ end
 on action_fx me, tProps
   return 1
 end
+
+on persist_fx me, ttype
+  return 1
+end

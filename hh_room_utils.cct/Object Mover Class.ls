@@ -94,7 +94,7 @@ on define me, tClientID, tStripID, tObjType, tProps
     pClientObj = EMPTY
     tConnection = getThread(#room).getComponent().getRoomConnection()
     if tConnection <> 0 then
-      tConnection.send("GETSTRIP", "new")
+      tConnection.send("GETSTRIP", [#integer: 3])
     end if
     return error(me, "No sprites found for drawing object for moving.", #define, #major)
   end if
@@ -226,9 +226,9 @@ on getProperty me, tProp
       return deobfuscate(pItemLocStr)
     #loc:
       if pPause then
-        return pGeometry.getWorldCoordinate(pLastLoc[1], pLastLoc[2])
+        return pGeometry.getFloorCoordinate(pLastLoc[1], pLastLoc[2])
       else
-        return pGeometry.getWorldCoordinate(the mouseH, the mouseV)
+        return pGeometry.getFloorCoordinate(the mouseH, the mouseV)
       end if
   end case
   return 0
@@ -253,46 +253,45 @@ on moveActive me
     return 
   end if
   pLastLoc = the mouseLoc
-  pClientObj.ghostObject()
-  pClientObj.updateLocation()
-  call(#prepareForMove, [pClientObj])
-  tloc = pGeometry.getWorldCoordinate(the mouseH, the mouseV)
-  if listp(tloc) then
-    if listp(pSavedDim[1]) then
-      tDX = pSavedDim[1]
-    else
-      tDX = 1
-    end if
-    if listp(pSavedDim[2]) then
-      tDY = pSavedDim[2]
-    else
-      tDY = 1
-    end if
-    tPlaceMap = pGeometry.getObjectPlaceMap()
-    repeat with tY = tloc[2] to tloc[2] + tDY - 1
-      repeat with tX = tloc[1] to tloc[1] + tDX - 1
-        if tY + 1 > 0 and tY + 1 <= tPlaceMap.count() then
-          if tX + 1 > 0 and tX + 1 <= tPlaceMap[tY + 1].count() then
-            if tPlaceMap[tY + 1][tX + 1] > 1000 then
-              tOccupied = 1
-              return 
-            end if
-          end if
-        end if
-      end repeat
-    end repeat
-  end if
   tRecyclerThread = getThread(#recycler)
   if not (tRecyclerThread = 0) then
     if tRecyclerThread.getComponent().isRecyclerOpenAndVisible() then
       return me.showSmallPic()
     end if
   end if
-  if not tloc or tOccupied then
-    me.showSmallPic()
-  else
-    me.showActualPic(tloc)
+  pClientObj.ghostObject()
+  pClientObj.updateLocation()
+  call(#prepareForMove, [pClientObj])
+  tloc = pGeometry.getFloorCoordinate(the mouseH, the mouseV)
+  if not tloc then
+    return me.showSmallPic()
   end if
+  case pSavedDir of
+    0, 4:
+      tOffsetX = pSavedDim[1] - 1
+      tOffsetY = pSavedDim[2] - 1
+    2, 6:
+      tOffsetX = pSavedDim[2] - 1
+      tOffsetY = pSavedDim[1] - 1
+  end case
+  tHeightMax = 0
+  repeat with x = tloc[1] to tloc[1] + tOffsetX
+    repeat with y = tloc[2] to tloc[2] + tOffsetY
+      if not pGeometry.emptyTile(x, y) then
+        me.showSmallPic()
+        return 1
+      end if
+      tHeight = pGeometry.getCoordinateHeight(x, y)
+      if tHeight > tHeightMax then
+        tHeightMax = tHeight
+      end if
+    end repeat
+  end repeat
+  tloc[3] = tHeightMax
+  if tloc[1] = pOrigCoord[1] and tloc[2] = pOrigCoord[2] then
+    tloc = pOrigCoord
+  end if
+  me.showActualPic(tloc)
 end
 
 on moveItem me
@@ -300,6 +299,12 @@ on moveItem me
     return 
   end if
   pLastLoc = the mouseLoc
+  tRecyclerThread = getThread(#recycler)
+  if not (tRecyclerThread = 0) then
+    if tRecyclerThread.getComponent().isRecyclerOpenAndVisible() then
+      return me.showSmallPic()
+    end if
+  end if
   pItemLocStr = 0
   if pSprList.count < 1 then
     return 0
@@ -430,7 +435,7 @@ on cancelMove me
           end if
         end if
       end if
-      tComponent.getRoomConnection().send("GETSTRIP", "update")
+      tComponent.getRoomConnection().send("GETSTRIP", [#integer: 4])
   end case
 end
 
