@@ -321,7 +321,7 @@ on NewFigureInformation me
   pPropsToServer["has_read_agreement"] = "0"
   pPropsToServer["parentagree"] = 1
   if getObject(#session).exists("conf_allow_direct_mail") then
-    pPropsToServer["directMail"] = string(getObject(#session).get("conf_allow_direct_mail"))
+    pPropsToServer["directMail"] = string(getObject(#session).GET("conf_allow_direct_mail"))
   else
     pPropsToServer["directMail"] = "0"
   end if
@@ -359,7 +359,7 @@ on getMyInformation me
   tTempProps = ["name", "password", "figure", "sex", "customData", "email", "birthday", "directMail"]
   repeat with tProp in tTempProps
     if getObject(#session).exists("user_" & tProp) then
-      tdata = getObject(#session).get("user_" & tProp)
+      tdata = getObject(#session).GET("user_" & tProp)
       if tdata.ilk = #list or tdata.ilk = #propList then
         pPropsToServer[tProp] = tdata.duplicate()
       else
@@ -989,7 +989,7 @@ on validateBirthday me, tYear, tMonth, tDay
     tBirthOK = 0
   end if
   if tBirthOK = 1 and getObject(#session).exists("server_date") then
-    tServerDate = getObject(#session).get("server_date")
+    tServerDate = getObject(#session).GET("server_date")
     tDelim = the itemDelimiter
     the itemDelimiter = "."
     tServerDay = integer(tServerDate.item[1])
@@ -1255,7 +1255,7 @@ on leavePage me, tCurrentWindow
         end if
       end if
     "reg_confirm.window":
-      if getObject(#session).get("conf_coppa") then
+      if getObject(#session).GET("conf_coppa") then
         tItemD = the itemDelimiter
         the itemDelimiter = "."
         tdata = pPropsToServer["birthday"].item[3] & "." & pPropsToServer["birthday"].item[2] & "." & pPropsToServer["birthday"].item[1]
@@ -1492,7 +1492,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
         me.getComponent().closeFigureCreator()
         me.getComponent().updateState("start")
         if objectExists(#session) then
-          if getObject(#session).get("userLoggedIn") = 0 then
+          if getObject(#session).GET("userLoggedIn") = 0 then
             if threadExists(#login) then
               getThread(#login).getInterface().showLogin()
             end if
@@ -1502,7 +1502,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
           end if
         end if
       "reg_underage_button":
-        if getObject(#session).get("conf_coppa") and pmode <> "forced" then
+        if getObject(#session).GET("conf_coppa") and pmode <> "forced" then
           me.getComponent().getRealtime()
         else
           pPropsToServer["parentagree"] = 1
@@ -1573,7 +1573,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
       "update_change_email":
         me.openPwdEmailUpdate(#email)
       "reg_tutorial_link":
-        openNetPage("reg_tutorial_url", "_new")
+        openNetPage("reg_tutorial_url")
       otherwise:
         if tSprID contains "change" and tSprID contains "button" then
           tTempDelim = the itemDelimiter

@@ -170,7 +170,7 @@ on sendFigureUpdateToServer me, tPropList
   repeat with tProp in ["figure", "sex", "customData", "directMail", "has_read_agreement", "parentagree"]
     tValue = tPropList[tProp]
     if getObject(#session).exists("user_" & tProp) then
-      tStoredValue = getObject(#session).get("user_" & tProp)
+      tStoredValue = getObject(#session).GET("user_" & tProp)
     end if
     if not ([tValue]).getPos(tStoredValue) and not voidp(tValue) then
       if not voidp(pRegMsgStruct[tProp]) then
@@ -208,7 +208,7 @@ on figureUpdateReady me
     error(me, "Connection not found:" && getVariable("connection.info.id"), #figureUpdateReady)
   end if
   if getObject(#session).exists("conf_parent_email_request_reregistration") then
-    if getObject(#session).get("conf_parent_email_request_reregistration") then
+    if getObject(#session).GET("conf_parent_email_request_reregistration") then
       me.sendParentEmail()
     end if
   end if
@@ -351,7 +351,7 @@ on sendValidatePassword me, tPassword
   if voidp(tPassword) or ilk(tPassword) <> #string then
     tPassword = EMPTY
   end if
-  tUserName = getObject(#session).get(#userName)
+  tUserName = getObject(#session).GET(#userName)
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("APPROVE_PASSWORD", [#string: tUserName, #string: tPassword])
   end if
@@ -415,16 +415,16 @@ on updateState me, tstate, tProps
         end if
         tRegistrationProcessMode = "registration"
         if getObject(#session).exists("conf_parent_email_request") then
-          if getObject(#session).get("conf_parent_email_request") then
+          if getObject(#session).GET("conf_parent_email_request") then
             tRegistrationProcessMode = "parent_email"
           end if
         end if
         if getObject(#session).exists("conf_strong_coppa_required") then
-          if getObject(#session).get("conf_strong_coppa_required") then
+          if getObject(#session).GET("conf_strong_coppa_required") then
             tRegistrationProcessMode = "parent_email_strong_coppa"
           end if
         end if
-        if getObject(#session).get("conf_coppa") and getPref("Blocktime") > 0 then
+        if getObject(#session).GET("conf_coppa") and getPref("Blocktime") > 0 then
           return me.checkBlockTime()
         end if
         if not getObject("Figure_System").isFigureSystemReady() then
@@ -444,7 +444,7 @@ on updateState me, tstate, tProps
         me.getInterface().showLoadingWindow("update")
         return 
       end if
-      tFigure = getObject("Figure_System").validateFigure(getObject(#session).get("user_figure"), getObject(#session).get("user_sex"))
+      tFigure = getObject("Figure_System").validateFigure(getObject(#session).GET("user_figure"), getObject(#session).GET("user_sex"))
       getObject(#session).set("user_figure", tFigure)
       me.getInterface().showHideFigureCreator("update")
       return 1
@@ -457,10 +457,10 @@ on updateState me, tstate, tProps
         me.getInterface().showLoadingWindow("forced")
         return 
       end if
-      tFigure = getObject("Figure_System").validateFigure(getObject(#session).get("user_figure"), getObject(#session).get("user_sex"))
+      tFigure = getObject("Figure_System").validateFigure(getObject(#session).GET("user_figure"), getObject(#session).GET("user_sex"))
       getObject(#session).set("user_figure", tFigure)
-      tCoppaFlag = getObject(#session).get("conf_coppa")
-      tParentEmailFlag = getObject(#session).get("conf_parent_email_request_reregistration")
+      tCoppaFlag = getObject(#session).GET("conf_coppa")
+      tParentEmailFlag = getObject(#session).GET("conf_parent_email_request_reregistration")
       if tCoppaFlag = 1 and tParentEmailFlag = 0 then
         me.getInterface().showHideFigureCreator("coppa_forced", 1)
       else
@@ -474,8 +474,8 @@ on updateState me, tstate, tProps
           end if
         end if
       end if
-      if getObject(#session).get("conf_parent_email_request_reregistration") then
-        tTempBirthday = getObject(#session).get("user_birthday")
+      if getObject(#session).GET("conf_parent_email_request_reregistration") then
+        tTempBirthday = getObject(#session).GET("user_birthday")
         tBirthday = EMPTY
         if stringp(tTempBirthday) then
           tDelim = the itemDelimiter
@@ -485,7 +485,7 @@ on updateState me, tstate, tProps
           end if
           the itemDelimiter = tDelim
         end if
-        tHabboID = getObject(#session).get("user_name")
+        tHabboID = getObject(#session).GET("user_name")
         me.parentEmailNeedQuery(tBirthday, tHabboID)
       end if
       return 1

@@ -14,7 +14,7 @@ end
 
 on handle_login_ok me, tMsg
   if getObject(#session).exists("conf_parent_email_request") then
-    if getObject(#session).get("conf_parent_email_request") then
+    if getObject(#session).GET("conf_parent_email_request") then
       me.getComponent().sendParentEmail()
     end if
   end if

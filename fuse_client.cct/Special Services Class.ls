@@ -117,14 +117,38 @@ on openNetPage me, tURL_key, tTarget
       return error(me, "URL prefix not defined, invalid link.", #openNetPage)
     end if
   end if
+  tResolvedTarget = VOID
+  tTargetIsPArent = 0
   if voidp(tTarget) then
-    tTarget = "_new"
+    if variableExists("default.url.open.target") then
+      tResolvedTarget = getVariable("default.url.open.target")
+      tTargetIsPArent = 1
+    else
+      tResolvedTarget = "_new"
+    end if
+  else
+    if tTarget = "self" or tTarget = "_self" then
+      tResolvedTarget = VOID
+    else
+      if tTarget = "_new" or tTarget = "new" then
+        tResolvedTarget = "_new"
+      else
+        tResolvedTarget = tTarget
+      end if
+    end if
   end if
-  if tTarget = "self" then
-    tTarget = VOID
+  if variableExists("client.http.request.sourceid") and tTargetIsPArent then
+    tSourceParamTxt = getVariable("client.http.request.sourceid") & "=1"
+    if not (tURL contains tSourceParamTxt) then
+      if tURL contains "?" then
+        tURL = tURL & "&" & tSourceParamTxt
+      else
+        tURL = tURL & "?" & tSourceParamTxt
+      end if
+    end if
   end if
-  gotoNetPage(tURL, tTarget)
-  put "Open page:" && tURL
+  gotoNetPage(tURL, tResolvedTarget)
+  put "Open page:" && tURL && "target:" && tResolvedTarget
   return 1
 end
 

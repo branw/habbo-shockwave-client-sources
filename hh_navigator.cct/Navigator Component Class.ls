@@ -187,7 +187,7 @@ end
 
 on executeRoomEntry me, tNodeId
   me.getInterface().hideNavigator()
-  if getObject(#session).get("lastroom") = "Entry" then
+  if getObject(#session).GET("lastroom") = "Entry" then
     if threadExists(#entry) then
       getThread(#entry).getComponent().leaveEntry()
     end if
@@ -198,7 +198,7 @@ on executeRoomEntry me, tNodeId
     tRoomInfo = me.getNodeInfo(tNodeId)
     tRoomDataStruct = me.convertNodeInfoToEntryStruct(tRoomInfo)
     getObject(#session).set("lastroom", tRoomDataStruct)
-    if not (getObject(#session).get("lastroom").ilk = #propList) then
+    if not (getObject(#session).GET("lastroom").ilk = #propList) then
       error(me, "Target room data unavailable!", #executeRoomEntry)
       return me.updateState("enterEntry")
     end if
@@ -260,7 +260,7 @@ on createNaviHistory me, tCategoryId
     tParentId = tParentInfo[#parentid]
     tParentInfo = me.getTreeInfoFor(tParentId)
   end repeat
-  if getObject(#session).get("lastroom") <> "Entry" then
+  if getObject(#session).GET("lastroom") <> "Entry" then
     pNaviHistory.addAt(1, #entry)
     tText = getText("nav_hotelview") & RETURN & tText
   end if
@@ -447,7 +447,7 @@ end
 
 on sendGetOwnFlats me
   if connectionExists(pConnectionId) then
-    return getConnection(pConnectionId).send("SUSERF", getObject(#session).get("user_name"))
+    return getConnection(pConnectionId).send("SUSERF", getObject(#session).GET("user_name"))
   else
     return 0
   end if

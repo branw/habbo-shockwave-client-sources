@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pInfoStandName, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pInfoStandName, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations, pTradeTimeout
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -31,6 +31,7 @@ on construct me
   pInfoStandName = VOID
   pLoadingBarID = 0
   pQueueCollection = []
+  pTradeTimeout = 0
   pModBadgeList = getVariableValue("moderator.badgelist")
   createObject(pGeometryId, "Room Geometry Class")
   createObject(pContainerID, "Container Hand Class")
@@ -368,7 +369,9 @@ on showInterface me, tObjType
       end if
     end if
     if tButtonList.getPos("trade") > 0 then
-      if me.getComponent().getRoomID() <> "private" or me.getComponent().getRoomData()[#trading] = 0 then
+      tNotPrivateRoom = me.getComponent().getRoomID() <> "private"
+      tNoTrading = me.getComponent().getRoomData()[#trading] = 0
+      if pTradeTimeout or tNotPrivateRoom or tNoTrading then
         tWndObj.getElement("trade.button").deactivate()
       end if
       if not tUserRights.getOne("fuse_trade") then
@@ -377,6 +380,28 @@ on showInterface me, tObjType
     end if
   end if
   return 1
+end
+
+on startTradeButtonTimeout me
+  pTradeTimeout = 1
+  tWndObj = getWindow(pInterfaceId)
+  if tWndObj <> 0 then
+    if tWndObj.elementExists("trade.button") then
+      tWndObj.getElement("trade.button").deactivate()
+    end if
+  end if
+  tTimeout = getVariable("room.request.timeout", 10000)
+  createTimeout(#activeTradeButton, tTimeout, #endTradeButtonTimeout, me.getID(), VOID, 1)
+end
+
+on endTradeButtonTimeout me
+  pTradeTimeout = 0
+  tWndObj = getWindow(pInterfaceId)
+  if tWndObj <> 0 then
+    if tWndObj.elementExists("trade.button") then
+      tWndObj.getElement("trade.button").Activate()
+    end if
+  end if
 end
 
 on hideInterface me, tHideOrRemove
@@ -1476,6 +1501,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       me.startTrading(pSelectedObj)
       me.getContainer().open()
+      me.startTradeButtonTimeout()
       return 1
     "ignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
