@@ -298,7 +298,7 @@ on send_Message me, tReceivers, tMsg
   if not listp(tReceivers) then
     return 0
   end if
-  puppetSound(3, getmemnum("con_message_sent"))
+  playSound("con_message_sent", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   tMsg = getStringServices().convertSpecialChars(tMsg, 1)
   tdata = [#integer: tReceivers.count]
   repeat with tReceiver in tReceivers

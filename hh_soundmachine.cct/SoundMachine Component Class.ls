@@ -1,4 +1,4 @@
-property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pExternalSongTimer, pMusicIndexRoom, pMusicIndexEditor, pMusicIndexTop, pTimelineInstanceExternal, pExternalSongID, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId
+property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetCount, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pExternalSongTimer, pMusicIndexRoom, pMusicIndexEditor, pMusicIndexTop, pTimelineInstanceExternal, pExternalSongID, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId
 
 on construct me
   pSoundMachineInstanceList = [:]
@@ -73,6 +73,7 @@ end
 on reset me, tInitialReset
   pEditFailure = 0
   pExternalSongID = VOID
+  pSoundSetCount = VOID
   me.closeEdit(tInitialReset)
 end
 
@@ -86,6 +87,7 @@ on initializeEdit me
   me.clearTimeLine()
   me.roomActivityUpdate(1)
   pEditorOpen = 1
+  pSoundSetCount = VOID
   tSongController = getObject(pSongControllerID)
   if tSongController <> 0 then
     tSongData = pTimelineInstance.getSilentSongData()
@@ -961,6 +963,14 @@ on updateSetList me, tList
   end repeat
   me.changeSetListPage(0)
   me.getInterface().updateSoundSetList()
+  if not voidp(pSoundSetCount) then
+    pSoundSetCount = pSoundSetCount + tList.count
+    if pSoundSetCount = 0 then
+      me.getInterface().ShowAlert("no_sound_sets")
+    end if
+  else
+    pSoundSetCount = tList.count
+  end if
 end
 
 on changeSetListPage me, tChange
@@ -1050,6 +1060,17 @@ on clearSoundSets me
   me.getInterface().updateSoundSetSlots()
 end
 
+on setSoundSetCount me, tCount
+  if not voidp(pSoundSetCount) then
+    pSoundSetCount = pSoundSetCount + tCount
+    if pSoundSetCount = 0 then
+      me.getInterface().ShowAlert("no_sound_sets")
+    end if
+  else
+    pSoundSetCount = tCount
+  end if
+end
+
 on getFreeSoundSetCount me
   tCount = 0
   repeat with i = 1 to pSoundSetList.count
@@ -1120,8 +1141,15 @@ on clearTimeLine me
 end
 
 on updateEditorSong me, tID, tName
-  pTimelineInstance.updateSongID(tID)
-  pTimelineInstance.updateSongName(tName)
+  if not voidp(tID) then
+    pTimelineInstance.updateSongID(tID)
+  end if
+  if not voidp(tName) then
+    pTimelineInstance.updateSongName(tName)
+  end if
+  tName = pTimelineInstance.getSongName()
+  pTimelineInstance.resetChanged()
+  me.getInterface().showSongSaved(tName)
 end
 
 on playSample me, tSampleIndex, tSoundSet
@@ -1322,7 +1350,6 @@ on saveEditorSong me, tNewName
     if getConnection(pConnectionId) <> 0 then
       tID = pTimelineInstance.getSongID()
       tName = tNewName
-      pTimelineInstance.resetChanged()
       tName = convertSpecialChars(tName, 1)
       if tID = 0 then
         return getConnection(pConnectionId).send("SAVE_SONG_NEW", [#string: tName, #string: tNewSong])

@@ -122,6 +122,10 @@ on adReady me
   if tVisObj = 0 then
     return 0
   end if
+  if member(pAdMemNum).type = #empty then
+    unregisterMember(pMemberID)
+    return 0
+  end if
   if tVisObj.spriteExists("billboard_img") then
     if tVisObj.pLayout <> pRegisteredLayout then
       return 0

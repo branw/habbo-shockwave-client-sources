@@ -358,6 +358,9 @@ on initializePlaying me
   end if
   tPlaylistLength = me.getPlaylistLength(tStackIndex) / 100
   tPlayTime = me.getPlayTime(tStackIndex)
+  tSyncDelta = 2000 / 100
+  tExtraOffset = (tSyncDelta - tPlayTime mod tSyncDelta) mod tSyncDelta * 100
+  tPlayTime = tPlayTime + tExtraOffset / 100
   tPlaylistInstance[#playOffset] = 0
   tPlaylistInstance[#listIndex] = 1
   if tPlaylistLength >= 1 then
@@ -379,7 +382,7 @@ on initializePlaying me
   if me.getSongData(tStackIndex) <> 0 then
     me.solveSongChannels(tStackIndex)
     me.reserveSongChannels()
-    createTimeout(pQueueTimeout, 50, #queueChannels, me.getID(), VOID, 1)
+    createTimeout(pQueueTimeout, 50 + tExtraOffset, #queueChannels, me.getID(), VOID, 1)
   end if
   return 1
 end

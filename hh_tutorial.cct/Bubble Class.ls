@@ -25,7 +25,7 @@ on Init me
   tElem = me.pWindow.getElement("bubble_text")
   me.pWindow.resizeBy(pTextWidth - tElem.getProperty(#width), 0)
   me.pTextHeight = tElem.getProperty(#height)
-  tPlain = getStructVariable("struct.font.plain")
+  tPlain = getStructVariable("struct.font.bold")
   tWriterID = getUniqueID()
   createWriter(tWriterID, tPlain)
   me.pWriter = getWriter(tWriterID)

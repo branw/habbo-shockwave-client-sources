@@ -58,6 +58,7 @@ on handle_machine_sound_packages me, tMsg
     end repeat
     me.getComponent().updateSoundSet(tSlotIndex, tID, tSampleList)
   end repeat
+  me.getComponent().setSoundSetCount(tFilledSlots)
   me.getComponent().removeSoundSetInsertLock()
   return 1
 end
@@ -144,6 +145,10 @@ on handle_invalid_song_length me, tMsg
   return me.getComponent().handleInvalidSongLength()
 end
 
+on handle_song_saved me, tMsg
+  return me.getComponent().updateEditorSong(VOID, VOID)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(300, #handle_song_info)
@@ -162,6 +167,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(336, #handle_song_locked)
   tMsgs.setaProp(337, #handle_jukebox_playlist_full)
   tMsgs.setaProp(338, #handle_invalid_song_length)
+  tMsgs.setaProp(339, #handle_song_saved)
   tCmds = [:]
   tCmds.setaProp("INSERT_SOUND_PACKAGE", 219)
   tCmds.setaProp("EJECT_SOUND_PACKAGE", 220)

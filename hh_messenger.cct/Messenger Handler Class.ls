@@ -176,7 +176,7 @@ on handle_messenger_message me, tMsg
   if tdata <> 0 then
     me.getComponent().receive_Message(tdata)
   end if
-  puppetSound(3, getmemnum("con_new_message"))
+  playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   return 1
 end
 
@@ -193,7 +193,7 @@ on handle_messenger_messages me, tMsg
     end if
   end repeat
   if tMessageCount > 1 then
-    puppetSound(3, getmemnum("con_new_message"))
+    playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   end if
   return 1
 end

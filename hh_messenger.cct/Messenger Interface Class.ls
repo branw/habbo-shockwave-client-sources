@@ -911,6 +911,7 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           me.getComponent().send_FindUser(tQuery)
           getWindow(pWindowTitle).getElement("console_search_key_field").setText(EMPTY)
         "console_search_friendrequest_button":
+          executeMessage(#tutorial_console_friendrequest_button_clicked)
           tListLimits = getBuddyListLimits()
           tLimit = tListLimits[#own]
           tBuddyData = me.getComponent().getBuddyData()

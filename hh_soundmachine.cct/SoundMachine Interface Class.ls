@@ -408,6 +408,12 @@ on showAlertWithCount me, ttype, tCount
   executeMessage(#alert, [#Msg: tText, #modal: 1])
 end
 
+on showSongSaved me, tName
+  tText = getText("sound_machine_alert_song_saved")
+  tText = replaceChunks(tText, "%name%", tName)
+  executeMessage(#alert, [#Msg: tText, #modal: 1])
+end
+
 on renderSoundSets me
   tWndObj = getWindow(pSoundMachineWindowID)
   if tWndObj = 0 then

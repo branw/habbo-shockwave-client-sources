@@ -7,7 +7,6 @@ on construct me
   me.pDefaultTutorial = "NUF"
   registerMessage(#userlogin, me.getID(), #getUserProperties)
   registerMessage(#restart_tutorial, me.getID(), #restartTutorial)
-  registerMessage(#updateAvailableFlatCategories, me.getID(), #startDefaultTutorial)
   registerMessage(#tutorial_send_console_message, me.getID(), #sendConsoleMessage)
   return 1
 end
@@ -72,6 +71,10 @@ on setTutorialConfig me, tConfigList
   me.pTutorialID = tConfigList[#id]
   me.pTutorialName = tConfigList[#name]
   me.pTopics = tConfigList.getaProp(#topics)
+  repeat with tTopicNum = 1 to me.pTopics.count
+    tTextKey = me.pTutorialName & "_" & me.pTopics[tTopicNum]
+    me.pTopics[tTopicNum] = tTextKey
+  end repeat
   me.pTopicStatuses = tConfigList.getaProp(#statuses)
   me.getInterface().showMenu(#welcome)
 end
@@ -79,6 +82,17 @@ end
 on setTopicConfig me, tTopicConfig
   me.pTopicID = tTopicConfig[#id]
   me.pSteps = tTopicConfig[#steps]
+  tTopicName = me.pTopics.getaProp(me.pTopicID)
+  repeat with tStepNum = 1 to me.pSteps.count
+    tStepName = me.pSteps[tStepNum][#name]
+    tContentList = me.pSteps[tStepNum][#content]
+    repeat with tContentNum = 1 to tContentList.count
+      tContentName = tContentList[tContentNum][#textKey]
+      tTextKey = tTopicName & "_" & tStepName & "_" & tContentName
+      tContentList[tContentNum][#textKey] = tTextKey
+    end repeat
+    me.pSteps[tStepNum][#tutor][#textKey] = tTopicName & "_" & tStepName & "_tutor"
+  end repeat
   me.pCurrentStepNumber = 0
   me.nextStep()
   return 1

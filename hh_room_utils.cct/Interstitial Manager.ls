@@ -107,6 +107,9 @@ on adLoaded me
   if pAdError = 1 then
     return 0
   end if
+  if member(pMemberID).type = #empty then
+    return me.adImportError()
+  end if
   pAdLoaded = 1
   tThread = getThread(#room)
   if tThread = 0 then
@@ -119,6 +122,14 @@ on adLoaded me
   tRoomInt.resizeInterstitialWindow()
   createTimeout(pShowTimeOutID, pShowAdTime, #adFinished, me.getID(), VOID, 1)
   pShowCounter = pShowCounter + 1
+end
+
+on adImportError me
+  error(me, "Interstitial resource error", #adImportError, #minor)
+  unregisterMember(pMemberID)
+  pAdError = 1
+  me.adFinished()
+  return 0
 end
 
 on adDownloadError me

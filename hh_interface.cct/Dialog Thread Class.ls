@@ -430,7 +430,7 @@ on showHelpWindow me
       tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
     end if
   end if
-  tTutorialEnabled = getObject(#session).GET("tutorial_enabled", 0)
+  tTutorialEnabled = getObject(#session).GET("tutorial_enabled", 1)
   if not tTutorialEnabled then
     tWndObj.getElement("help_restart_tutorial").hide()
   end if
