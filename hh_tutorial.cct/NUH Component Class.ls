@@ -49,8 +49,8 @@ on setHelpItemClosed me, tHelpItemId
   if pPostponedHelps.count > 0 then
     tHelpId = pPostponedHelps[1]
     pPostponedHelps.deleteAt(1)
-    tTimeOutId = "NUH_help_" & tHelpId & "_postponed"
-    createTimeout(tTimeOutId, 3000, #tryToShowHelp, me.getID(), tHelpId, 1)
+    tTimeoutID = "NUH_help_" & tHelpId & "_postponed"
+    createTimeout(tTimeoutID, 3000, #tryToShowHelp, me.getID(), tHelpId, 1)
   end if
 end
 
@@ -73,9 +73,9 @@ on removeHelp me
   repeat with tItemNo = 1 to pHelpStatusData.count
     tItem = pHelpStatusData.getPropAt(tItemNo)
     tItemOn = pHelpStatusData[tItemNo]
-    tTimeOutId = "NUH_help_" & tItem
-    if timeoutExists(tTimeOutId) then
-      removeTimeout(tTimeOutId)
+    tTimeoutID = "NUH_help_" & tItem
+    if timeoutExists(tTimeoutID) then
+      removeTimeout(tTimeoutID)
     end if
   end repeat
   me.getInterface().removeAll()
@@ -98,8 +98,8 @@ on showNewUserHelpItems me
       if not integerp(value(tTimeout)) then
         tTimeout = 0
       end if
-      tTimeOutId = "NUH_help_" & tItem
-      createTimeout(tTimeOutId, tTimeout, #tryToShowHelp, me.getID(), tItem, 1)
+      tTimeoutID = "NUH_help_" & tItem
+      createTimeout(tTimeoutID, tTimeout, #tryToShowHelp, me.getID(), tItem, 1)
     end if
   end repeat
 end

@@ -12,7 +12,7 @@ on deconstruct me
 end
 
 on setInstanceListUpdates me, tBoolean
-  tTimeOutId = #gamesystem_update
+  tTimeoutID = #gamesystem_update
   tVarMgrObj = me.getVariableManager()
   if not tVarMgrObj.exists(#instancelist_timestamp) then
     tVarMgrObj.set(#instancelist_timestamp, 0)
@@ -21,14 +21,14 @@ on setInstanceListUpdates me, tBoolean
     if abs(the milliSeconds - tVarMgrObj.GET(#instancelist_timestamp)) > pUpdateInterval then
       me.getMessageSender().sendGetInstanceList()
     end if
-    if timeoutExists(tTimeOutId) then
+    if timeoutExists(tTimeoutID) then
       return 1
     end if
-    return createTimeout(tTimeOutId, pUpdateInterval, #sendGetInstanceList, me.getID())
+    return createTimeout(tTimeoutID, pUpdateInterval, #sendGetInstanceList, me.getID())
   else
     tVarMgrObj.set(#instancelist_timestamp, 0)
-    if timeoutExists(tTimeOutId) then
-      removeTimeout(tTimeOutId)
+    if timeoutExists(tTimeoutID) then
+      removeTimeout(tTimeoutID)
     end if
     return 1
   end if

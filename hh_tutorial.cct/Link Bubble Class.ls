@@ -11,9 +11,9 @@ on construct me
   tLinkFont = getStructVariable("struct.font.link")
   me.pLinkLineHeight = 16
   tLinkFont.setaProp(#lineHeight, me.pLinkLineHeight)
-  tWriterID = getUniqueID()
-  createWriter(tWriterID, tLinkFont)
-  me.pLinkWriter = getWriter(tWriterID)
+  tWriterId = getUniqueID()
+  createWriter(tWriterId, tLinkFont)
+  me.pLinkWriter = getWriter(tWriterId)
   me.pLinkWriter.define([#bgColor: rgb("#F0F0F0")])
   me.pResizeOffset = 0
   me.pLinkPosOrigX = me.pWindow.getElement("bubble_links").getProperty(#locH)

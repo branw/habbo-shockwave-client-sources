@@ -184,12 +184,12 @@ on randomColor me, tX, tY, tOrCols, tMultiplier, tSpeed, tRange
   repeat with k = 1 to 3
     tMax = tRange[k + 3]
     tMin = tRange[k]
-    tdiff = tMax - tMin
-    if tdiff < 1 then
+    tDiff = tMax - tMin
+    if tDiff < 1 then
       tCols[k] = tMin
       next repeat
     end if
-    tCols[k] = tMin + random(tdiff)
+    tCols[k] = tMin + random(tDiff)
   end repeat
   return tCols
 end

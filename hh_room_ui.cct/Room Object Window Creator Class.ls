@@ -7,11 +7,11 @@ on construct me
   tScrollerID = #name_scroller
   createObject(tScrollerID, "Infostand Text Scroller Class")
   pScroller = getObject(tScrollerID)
-  tWriterID = #infostand_name_writer
+  tWriterId = #infostand_name_writer
   tBold = getStructVariable("struct.font.bold")
   tBold.setaProp(#color, rgb("#EEEEEE"))
-  createWriter(tWriterID, tBold)
-  pWriterBold = getWriter(tWriterID)
+  createWriter(tWriterId, tBold)
+  pWriterBold = getWriter(tWriterId)
   return 1
 end
 

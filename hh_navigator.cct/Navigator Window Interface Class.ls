@@ -307,17 +307,17 @@ on updateRoomList me, tNodeId, tRoomList
 end
 
 on setRecomUpdates me, tBool
-  tTimeOutId = #recom_update
+  tTimeoutID = #recom_update
   if tBool then
     me.getComponent().updateRecomRooms()
-    if timeoutExists(tTimeOutId) then
+    if timeoutExists(tTimeoutID) then
       return 1
     end if
     tInterval = me.getComponent().getRecomUpdateInterval()
-    return createTimeout(tTimeOutId, tInterval, #setRecomUpdates, me.getID(), 1, 0)
+    return createTimeout(tTimeoutID, tInterval, #setRecomUpdates, me.getID(), 1, 0)
   else
-    if timeoutExists(tTimeOutId) then
-      return removeTimeout(tTimeOutId)
+    if timeoutExists(tTimeoutID) then
+      return removeTimeout(tTimeoutID)
     end if
   end if
 end

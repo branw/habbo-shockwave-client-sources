@@ -1,4 +1,4 @@
-property pPaletteList, pColorlist, pSetList, pSetTypeList
+property pPaletteList, pColorList, pSetList, pSetTypeList
 
 on construct me
   me.reset()
@@ -12,7 +12,7 @@ end
 
 on reset me
   pPaletteList = [:]
-  pColorlist = [:]
+  pColorList = [:]
   pSetList = [:]
   pSetTypeList = [:]
 end
@@ -52,7 +52,7 @@ on parseData me, tXMLData
 end
 
 on getColor me, tColorId
-  tColor = pColorlist[string(tColorId)]
+  tColor = pColorList[string(tColorId)]
   if voidp(tColor) then
     return 0
   end if
@@ -232,10 +232,10 @@ on parseColors me, tElementColors
             return error(me, "missing color data for color element with id" && tColorId && "in palette element with id" && tID && "in figure XML!", #parseColors, #major)
           end if
           tColorList.addProp(tColorId, tColorValue)
-          if pColorlist.findPos(tColorId) then
+          if pColorList.findPos(tColorId) then
             return error(me, "multiple color elements with id" && tColorId && "in figure XML!", #parseColors, #major)
           end if
-          pColorlist.addProp(tColorId, tColorValue)
+          pColorList.addProp(tColorId, tColorValue)
         end if
       end repeat
       if pPaletteList.findPos(tID) then

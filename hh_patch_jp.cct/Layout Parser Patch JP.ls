@@ -163,6 +163,12 @@ on parse_window me, tFieldName
         #moveVstrechH:
           tElem[#scaleH] = #scale
           tElem[#scaleV] = #move
+        #moveHcenterV:
+          tElem[#scaleH] = #move
+          tElem[#scaleV] = #center
+        #moveVcenterH:
+          tElem[#scaleH] = #center
+          tElem[#scaleV] = #move
       end case
       tElem.deleteProp(#strech)
     end if

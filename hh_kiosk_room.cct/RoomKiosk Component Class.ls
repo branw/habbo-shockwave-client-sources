@@ -68,9 +68,9 @@ on checkWebShortcuts me, tChecked
   if variableExists("shortcut.id") then
     tShortcutID = getIntVariable("shortcut.id")
     if tShortcutID = 1 then
-      tTimeOutId = #roommatic_opening_timeout
-      if not timeoutExists(tTimeOutId) then
-        createTimeout(#tTimeOutId, 2500, #checkWebShortcuts, me.getID(), 1, 1)
+      tTimeoutID = #roommatic_opening_timeout
+      if not timeoutExists(tTimeoutID) then
+        createTimeout(#tTimeoutID, 2500, #checkWebShortcuts, me.getID(), 1, 1)
       end if
     end if
   end if

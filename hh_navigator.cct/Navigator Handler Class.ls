@@ -262,6 +262,8 @@ on handle_cantconnect me, tMsg
       tError = "nav_error_room_closed"
     3:
       tError = "queue_set." & tConn.GetStrFrom() & ".alert"
+    4:
+      tError = "nav_room_banned"
   end case
   return executeMessage(#alert, [#id: "nav_error", #Msg: tError])
 end

@@ -28,9 +28,9 @@ on Init me
   me.pWindow.resizeBy(pTextWidth - tElem.getProperty(#width), 0)
   me.pTextHeight = tElem.getProperty(#height)
   tPlainFont = getStructVariable("struct.font.plain")
-  tWriterID = getUniqueID()
-  createWriter(tWriterID, tPlainFont)
-  me.pWriter = getWriter(tWriterID)
+  tWriterId = getUniqueID()
+  createWriter(tWriterId, tPlainFont)
+  me.pWriter = getWriter(tWriterId)
   tMetrics = [#wordWrap: 1, #rect: rect(0, 0, pTextWidth, 0)]
   me.pWriter.define(tMetrics)
   me.pWriter.pMember.fixedLineSpace = 11
