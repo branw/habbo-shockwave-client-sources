@@ -42,7 +42,7 @@ on registerClientMessages me, tBool
 end
 
 on showTutorial me
-  if not me.pRunning then
+  if not me.pRunning or not me.pEnabled then
     return 0
   end if
   me.getInterface().show()
@@ -74,11 +74,12 @@ on restartTutorial me
   end if
   tConn.send("SET_TUTORIAL_MODE", [#integer: 1])
   me.startTutorial(me.pDefaultTutorial)
+  me.sendTrackingRequest(#restart)
 end
 
 on setEnabled me, tBoolean
   me.pEnabled = tBoolean
-  if me.pWaitingForPrefs and me.pRunning then
+  if me.pEnabled and me.pWaitingForPrefs and me.pRunning then
     me.pWaitingForPrefs = 0
     me.startTutorial()
   end if
@@ -167,6 +168,9 @@ on selectTopic me, tTopicID
 end
 
 on nextStep me
+  if not me.pEnabled or not me.pRunning then
+    return 0
+  end if
   if me.pSteps.count = 0 then
     return 1
   end if
@@ -174,9 +178,7 @@ on nextStep me
   if me.pCurrentStepNumber > me.pSteps.count then
     return 0
   end if
-  tTopicName = me.pTopics.getaProp(me.pTopicID)
-  tTrackMsg = "/client/tutorial/" & tTopicName & "/" & string(me.pCurrentStepNumber)
-  executeMessage(#sendTrackingPoint, tTrackMsg)
+  me.sendTrackingRequest(#step)
   me.pCurrentStepID = me.pSteps.getPropAt(me.pCurrentStepNumber)
   tTopic = me.pSteps[me.pCurrentStepNumber]
   me.clearTriggers()
@@ -207,6 +209,7 @@ on completeTopic me, tTopicID
   if voidp(tConn) then
     return error(me, "Connection not found.", #startTutorial, #major)
   end if
+  me.sendTrackingRequest(#topicCompleted)
   tConn.send("COMPLETE_TUTORIAL_TOPIC", [#integer: tTopicID])
   tConn.send("GET_TUTORIAL_STATUS", [#integer: me.pTutorialID])
 end
@@ -281,6 +284,8 @@ on exitTutorial me
     return error(me, "Connection not found.", #exitTutorial, #major)
   end if
   tConn.send("SET_TUTORIAL_MODE", [#integer: 0])
+  me.pEnabled = 0
+  me.sendTrackingRequest(#quit)
 end
 
 on restriction me
@@ -318,6 +323,24 @@ on getProperty me, tProp
   end case
 end
 
+on sendTrackingRequest me, tCase
+  case tCase of
+    #step:
+      tTopicName = me.pTopics.getaProp(me.pTopicID)
+      tTrackMsg = "/client/tutorial/" & tTopicName & "/" & string(me.pCurrentStepNumber)
+    #topicCompleted:
+      tTopicName = me.pTopics.getaProp(me.pTopicID)
+      tTrackMsg = "/client/tutorial/" & tTopicName & "/completed"
+    #quit:
+      tTrackMsg = "/client/tutorial/closed"
+    #restart:
+      tTrackMsg = "/client/tutorial/restarted"
+  end case
+  return 0
+  executeMessage(#sendTrackingPoint, tTrackMsg)
+  return 1
+end
+
 on tryExit me
   tPrerequisites = [:]
   tPrerequisites.setaProp(#hide_navigator, VOID)
@@ -345,8 +368,8 @@ on tryExit me
   tTutor.setaProp(#offsetx, 20)
   tTutor.setaProp(#offsety, 310)
   tTutor.setaProp(#links, [#quit: "tutorial_quit", #Cancel: "cancel"])
-  me.clearTriggers()
-  me.clearRestrictions()
+  me.clearTriggers(1)
+  me.clearRestrictions(1)
   me.executePrerequisites(tPrerequisites)
   me.getInterface().setBubbles(tBubbles)
   me.getInterface().setTutor(tTutor)

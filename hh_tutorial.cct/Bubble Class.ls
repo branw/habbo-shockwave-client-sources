@@ -33,6 +33,7 @@ on Init me
   me.pWriter.define(tMetrics)
   me.pEmptySizeX = me.pWindow.getProperty(#width)
   me.pEmptySizeY = me.pWindow.getProperty(#height)
+  me.hide()
   return 1
 end
 
