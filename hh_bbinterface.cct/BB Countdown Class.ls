@@ -10,7 +10,7 @@ on deconstruct me
   return me.removeGameCountdown()
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #gamereset:
       return me.startGameCountdown(tdata[#time_until_game_start], 0)

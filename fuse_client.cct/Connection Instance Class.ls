@@ -236,7 +236,7 @@ on getProperty me, tProp
       return pListenersPntr
     #commands:
       return pCommandsPntr
-    #Message:
+    #message:
       return pMsgStruct
   end case
   return 0

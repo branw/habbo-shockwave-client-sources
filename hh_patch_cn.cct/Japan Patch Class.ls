@@ -55,14 +55,14 @@ on construct me
   end if
   createObject(#layout_parser, getClassVariable("layout.parser.class"))
   createObject(#string_validator, "String Validator Cls")
-  registerMessage(#initialize, me.getID(), #delayedPatch)
+  registerMessage(#Initialize, me.getID(), #delayedPatch)
   registerMessage(#BalloonManagerCreated, me.getID(), #patchBalloonText)
   return 1
 end
 
 on delayedPatch me
   replaceMember("matik_upp", "matik_upp_jp")
-  unregisterMessage(#initialize, me.getID())
+  unregisterMessage(#Initialize, me.getID())
 end
 
 on patchBalloonText me, tProps

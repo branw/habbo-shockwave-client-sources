@@ -26,14 +26,14 @@ on retrieveData me, tid, tAuth, tCallBackObj
 end
 
 on storeData me, tdata, tCallBackObj
-  pQueue.add([#type: #store, #Data: tdata, #callback: tCallBackObj])
+  pQueue.add([#type: #store, #data: tdata, #callback: tCallBackObj])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
 end
 
 on addMessageToQueue me, tMsg
-  pQueue.add([#type: #fusemsg, #Message: tMsg])
+  pQueue.add([#type: #fusemsg, #message: tMsg])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
@@ -45,7 +45,7 @@ on checkConnection me
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
     tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#Password)
+    tPassword = getObject(#session).get(#password)
     if pUseCrypto then
       tUserName = pCrypto.encipher(tUserName)
       tPassword = pCrypto.encipher(tPassword)
@@ -71,12 +71,12 @@ on next me
         tTask = pQueue[1]
         case tTask.type of
           #store:
-            return getMultiuser(pConnectionId).sendBinary(tTask.Data)
+            return getMultiuser(pConnectionId).sendBinary(tTask.data)
           #retrieve:
             return getMultiuser(pConnectionId).send("GETBINDATA" && tTask.id && tTask.auth)
           #fusemsg:
             pQueue.deleteAt(1)
-            getMultiuser(pConnectionId).send(tTask.Message)
+            getMultiuser(pConnectionId).send(tTask.message)
             me.next()
             return 1
         end case

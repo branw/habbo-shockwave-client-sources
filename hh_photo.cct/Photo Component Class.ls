@@ -140,9 +140,9 @@ on setItemData me, tMsg
   else
     me.binaryDataReceived(pPhotoCache.getaProp(pPhotoId), pPhotoId)
   end if
-  tOwner = getObject(#session).get("room_owner")
+  towner = getObject(#session).get("room_owner")
   tCanRemovePhotos = getObject(#session).get("user_rights").getOne("fuse_remove_photos")
-  if not tOwner and not tCanRemovePhotos then
+  if not towner and not tCanRemovePhotos then
     tWndObj.getElement("photo_remove").setProperty(#visible, 0)
   end if
 end

@@ -82,7 +82,7 @@ on hideAll me
   repeat with tItem in me.pItemList
     tObj = me.get(tItem)
     if tObj.getProperty(#visible) then
-      tObj.Hide()
+      tObj.hide()
       pHideList.add(tItem)
     end if
   end repeat
