@@ -8,6 +8,7 @@ on define me, tMemName, tdata
   pType = tdata[#type]
   pCallBack = tdata[#callback]
   pPercent = 0.0
+  ptryCount = 0
   return me.Activate()
 end
 
@@ -41,7 +42,7 @@ on Activate me
     pNetId = preloadNetThing(pURL)
   end if
   pStatus = #LOADING
-  ptryCount = 0
+  pPercent = 0.0
   return 1
 end
 
@@ -61,8 +62,8 @@ on update me
     end if
   end if
   if netDone(pNetId) = 1 then
-    if netError(pNetId) = "OK" then
-      me.importFileToCast(pURL)
+    if netError(pNetId) = "OK" and tStreamStatus[#bytesSoFar] > 0 then
+      me.importFileToCast()
       getDownloadManager().removeActiveTask(pMemName, pCallBack)
       pStatus = #complete
       return 1
@@ -85,17 +86,29 @@ on update me
       ptryCount = ptryCount + 1
       if ptryCount > getIntVariable("download.retry.count", 10) then
         getDownloadManager().removeActiveTask(pMemName, pCallBack)
-        return error(me, "Download failed:" & RETURN & pURL, #update)
+        return error(me, "Download failed too many times:" & RETURN & pURL, #update)
+      else
+        pURL = me.addRandomRefreshParamToURL(pURL)
+        me.Activate()
       end if
     end if
   end if
+end
+
+on addRandomRefreshParamToURL me, tURL
+  tSeparator = "?"
+  if tURL contains "?" then
+    tSeparator = "&"
+  end if
+  tURL = tURL & tSeparator & "r" & random(999) & "=1"
+  return tURL
 end
 
 on importFileToCast me
   tmember = member(pMemNum)
   case pType of
     #text, #field:
-      tmember.text = netTextresult(pNetId)
+      tmember.text = netTextResult(pNetId)
     #bitmap:
       importFileInto(tmember, pURL, [#dither: 0, #trimWhiteSpace: 0])
     otherwise:

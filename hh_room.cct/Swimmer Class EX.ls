@@ -365,6 +365,7 @@ on render me
 end
 
 on action_swim me, props
+  me.stopAnimation()
   pSwim = 1
 end
 

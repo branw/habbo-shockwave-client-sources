@@ -331,22 +331,6 @@ on traderItemDownloadCallback me, tDownloadedId, tSuccess, tCallbackParams
     pRequiredDownloadsToTrade.deleteOne(tDownloadedId)
   end if
   tWndObj = getWindow(pTraderWndID)
-  repeat with i = 1 to pItemListMe.count
-    tClass = pItemListMe[i][#class]
-    if not voidp(pItemListMe[i][#props]) then
-      tClass = tClass & "_" & pItemListMe[i][#props]
-    end if
-    if voidp(pMySlotProps[tClass]) then
-      return 0
-      next repeat
-    end if
-    tCount = pMySlotProps[tClass]["count"]
-    tSlot = pMySlotProps[tClass]["slot"]
-    if tWndObj.elementExists("trading_mystuff_" & tSlot) then
-      tImage = me.createItemImg(pItemListMe[i], 1)
-      tWndObj.getElement("trading_mystuff_" & tSlot).feedImage(tImage)
-    end if
-  end repeat
   repeat with i = 1 to pItemListHe.count
     tClass = pItemListHe[i][#class]
     if not voidp(pItemListHe[i][#props]) then
