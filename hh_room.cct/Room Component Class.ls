@@ -1191,7 +1191,7 @@ on updateHeightMap me, tdata
     repeat with i = 1 to tdata.length
       if tdata.char[i] = "!" then
         i = i + 1
-        a = a + charToNum(tdata.char[i])
+        a = a + (charToNum(tdata.char[i]) - 32)
         next repeat
       end if
       tStringPos = a + a / tMapWidth
@@ -1493,4 +1493,19 @@ on showRespectFlashEffect me, tUserID
   tChangeEffect = createObject(#random, "Respect Flash Effect Class")
   tUserSprites = tUserObj.getSprites()
   tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+end
+
+on forceUpdateFlatinfo me, tFlatInfo
+  if voidp(pSaveData) then
+    return 
+  end if
+  pSaveData[#name] = tFlatInfo[#name]
+  pSaveData[#description] = tFlatInfo[#description]
+  pSaveData[#owner] = tFlatInfo[#owner]
+  pSaveData[#ableothersmovefurniture] = tFlatInfo[#ableothersmovefurniture]
+  pSaveData[#showownername] = tFlatInfo[#showownername]
+  pSaveData[#flatId] = tFlatInfo[#flatId]
+  pSaveData[#trading] = tFlatInfo[#trading]
+  pSaveData[#marker] = tFlatInfo[#marker]
+  pSaveData[#nodeType] = tFlatInfo[#nodeType]
 end

@@ -43,6 +43,7 @@ on handle_flatinfo me, tMsg
   end if
   me.getComponent().updateSingleSubNodeInfo(tFlat)
   me.getComponent().getInfoBroker().processNavigatorData(tFlat)
+  getThread(#room).getComponent().forceUpdateFlatinfo(tFlat)
   return 1
 end
 

@@ -532,7 +532,7 @@ on createItemImg me, tProps, tDownloadPrevented
     else
       tDynComponent = tDynThread.getComponent()
       tRoomSizePrefix = EMPTY
-      if tProps[#class] contains "poster" then
+      if tProps[#class] starts "poster" then
         tDownloadIdName = tClass & "_" & tProps[#data]
       else
         tDownloadIdName = tClass
