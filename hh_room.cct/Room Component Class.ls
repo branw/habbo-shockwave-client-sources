@@ -121,6 +121,23 @@ on prepare me
 end
 
 on enterRoom me, tRoomDataStruct
+  tStamp = EMPTY
+  repeat with tNo = 1 to 100
+    tChar = numToChar(random(48) + 74)
+    tStamp = tStamp & tChar
+  end repeat
+  tFuseReceipt = getSpecialServices().getReceipt(tStamp)
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  if tReceipt <> tFuseReceipt then
+    error(me, "Invalid build structure", #enterRoom, #critical)
+    createTimeout(#builddisconnect, 3000, #disconnect, getThread(#login).getComponent().getID(), VOID, 1)
+  end if
   if not listp(tRoomDataStruct) then
     error(me, "Invalid room data struct!", #enterRoom, #major)
     return executeMessage(#leaveRoom)
@@ -284,7 +301,8 @@ on getUsersRoomId me, tUserName
   tIndex = -1
   repeat with tPos = 1 to pUserObjList.count
     tuser = pUserObjList[tPos]
-    if tuser.getClass() = "user" then
+    tClass = tuser.getClass()
+    if tClass = "user" then
       if tuser.getName() = tUserName then
         tIndex = pUserObjList.getPropAt(tPos)
         exit repeat
@@ -705,7 +723,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       tChangeEffect = createObject(#random, "Change Clothes Effect Class")
       tUserSprites = tUserObj.getSprites()
       tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
-      me.getInterface().getInfoStandObject().updateInfostandAvatar(tUserObj)
+      executeMessage(#updateInfostandAvatar, tUserObj)
     end if
   end if
 end
@@ -1026,7 +1044,6 @@ on updateProcess me, tKey, tValue
     tCache[#users] = []
     tCache[#Active] = []
     tCache[#items] = []
-    me.getInterface().getInfoStandObject().showInfostand()
     me.getInterface().showRoomBar()
     me.getInterface().hideLoaderBar()
     me.getInterface().hideTrashCover()

@@ -406,7 +406,7 @@ on eventProc me, tEvent, tSprID, tParm
               tTheKey = the key
               tASCII = charToNum(tTheKey)
               if tASCII > 31 and tASCII < 128 then
-                if tValidKeys contains tTheKey or tValidKeys = EMPTY then
+                if tValidKeys contains tTheKey or tValidKeys = "void" then
                   if pTempPassword[tSprID].count < 32 then
                     pTempPassword[tSprID].append(tTheKey)
                   end if

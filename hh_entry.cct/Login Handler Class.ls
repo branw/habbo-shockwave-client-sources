@@ -1,7 +1,8 @@
-property pCryptoParams
+property pCryptoParams, pBigJob
 
 on construct me
   pCryptoParams = [:]
+  pMD5ChecksumArr = []
   registerMessage(#hideLogin, me.getID(), #hideLogin)
   return me.regMsgList(1)
 end
@@ -110,6 +111,7 @@ on handleUserObj me, tMsg
   tuser["ph_figure"] = tConn.GetStrFrom()
   tuser["photo_film"] = tConn.GetIntFrom()
   tuser["directMail"] = tConn.GetIntFrom()
+  tuser["figure_string"] = tuser["figure"]
   tDelim = the itemDelimiter
   the itemDelimiter = "="
   if not voidp(tuser["sex"]) then
@@ -275,7 +277,7 @@ on handleCryptoParameters me, tMsg
   tServerToClient = tMsg.connection.GetIntFrom() <> 0
   pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
   if tClientToServer then
-    tMsg.connection.send("GENERATEKEY")
+    me.responseWithPublicKey()
   else
     if tServerToClient then
       error(me, "Server to client encryption only is not supported.", #handleCryptoParameters, #minor)
@@ -286,12 +288,51 @@ on handleCryptoParameters me, tMsg
   return 1
 end
 
+on responseWithPublicKey me, tConnection
+  tConnection = getConnection(getVariable("connection.info.id"))
+  tHex = EMPTY
+  tLength = 30
+  tHexChars = "012345679ABCDEF"
+  repeat with tNo = 1 to tLength * 2
+    tRandPos = random(tHexChars.length)
+    tHex = tHex & chars(tHexChars, tRandPos, tRandPos)
+  end repeat
+  pBigJob = BigInt_str2bigInt(tHex, 0, tLength)
+  p = BigInt_str2bigInt("455de99a7bcd4cf7a2d2ed03ad35ee047750cea4b446cd7e297102ebec1daaad", 16)
+  g = BigInt_str2bigInt("3ef9fba7796ba6145b4dac13739bb5604ee70e2dff95f9c5a846633a4e6e1a5b", 16)
+  tJsPublicKey = BigInt_powMod(g, pBigJob, p)
+  tPublicKeyStr = BigInt_bigInt2str(tJsPublicKey, 16)
+  tConnection.send("GENERATEKEY", [#string: tPublicKeyStr])
+end
+
 on handleSecretKey me, tMsg
-  tKey = secretDecode(tMsg.content)
+  tConnection = tMsg.connection
+  p = BigInt_str2bigInt("455de99a7bcd4cf7a2d2ed03ad35ee047750cea4b446cd7e297102ebec1daaad", 16)
+  g = BigInt_str2bigInt("3ef9fba7796ba6145b4dac13739bb5604ee70e2dff95f9c5a846633a4e6e1a5b", 16)
+  t_sServerPublicKey = tMsg.content
+  serverPublic = BigInt_str2bigInt(t_sServerPublicKey, 16)
+  sharedKey = BigInt_powMod(serverPublic, pBigJob, p)
+  t_sSharedKey = BigInt_bigInt2str(sharedKey, 16)
+  if t_sSharedKey.length mod 2 <> 0 then
+    t_sSharedKey = "0" & t_sSharedKey
+  end if
+  tSharedKeyString = EMPTY
+  tStrSrv = getStringServices()
+  repeat with a = 1 to length(t_sSharedKey)
+    t = tStrSrv.convertHexToInt(t_sSharedKey.char[a..a + 1])
+    tSharedKeyString = tSharedKeyString & numToChar(t)
+    a = a + 1
+  end repeat
+  debug_array = []
+  repeat with a = 1 to tSharedKeyString.length
+    debug_array.append(charToNum(tSharedKeyString.char[a]))
+  end repeat
+  t_rDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
+  t_rDecoder.setKey(tSharedKeyString, #old)
+  tConnection.setDecoder(t_rDecoder)
+  tConnection.setEncryption(1)
   tMsg.connection.setEncoder(createObject(#temp, getClassVariable("connection.decoder.class")))
-  tMsg.connection.getEncoder().setKey(tKey)
-  tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 17)
+  tMsg.connection.getEncoder().setKey(tSharedKeyString, #old)
   tMsg.connection.setEncryption(1)
   if pCryptoParams.getaProp(#ServerToClient) = 1 then
     me.makeServerToClientKey()

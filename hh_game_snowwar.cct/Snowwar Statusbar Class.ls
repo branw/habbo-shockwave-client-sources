@@ -5,6 +5,7 @@ on construct me
   pBallCreateAnimTimer = 0
   pBottomBarId = "RoomBarID"
   registerMessage(#roomReady, me.getID(), #replaceRoomBar)
+  registerMessage(#updateInfostandAvatar, me.getID(), #updateRoomBarFigure)
   pMaxHealth = getIntVariable("snowwar.health.maximum")
   pMaxBallcount = getIntVariable("snowwar.snowball.maximum")
   pLastHealth = pMaxHealth
@@ -13,6 +14,7 @@ end
 
 on deconstruct me
   unregisterMessage(#roomReady, me.getID())
+  unregisterMessage(#updateInfostandAvatar, me.getID())
   removeWindow(pBottomBarId)
   return 1
 end
@@ -242,9 +244,7 @@ on replaceRoomBar me
   if not tWndObj.merge(tLayout) then
     return 0
   end if
-  if not tSpectator and objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "snowwar_avatar_face", ["hd", "fc", "ey", "hr"])
-  end if
+  me.updateRoomBarFigure()
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #keyDown)
@@ -253,6 +253,13 @@ on replaceRoomBar me
   me.updateSoundIcon()
   me.setCreateButtonState("_off")
   return 1
+end
+
+on updateRoomBarFigure me
+  tSpectator = me.getGameSystem().getSpectatorModeFlag()
+  if not tSpectator and objectExists("Figure_Preview") then
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "snowwar_avatar_face", #head)
+  end if
 end
 
 on eventProcRoomBar me, tEvent, tSprID, tParam

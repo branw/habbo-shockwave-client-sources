@@ -25,12 +25,14 @@ on showInfostand me
 end
 
 on hideInfoStand me
+  executeMessage(#hideObjectDEVELOPMENT)
   if windowExists(pInfoStandId) then
     return removeWindow(pInfoStandId)
   end if
 end
 
 on showObjectInfo me, tObjType
+  executeMessage(#showObjectDEVELOPMENT, tObjType)
   tWndObj = getWindow(pInfoStandId)
   if not tWndObj then
     return 0
@@ -103,6 +105,7 @@ on updateInfostandAvatar me, tUserObj
 end
 
 on hideObjectInfo me
+  executeMessage(#hideObjectDEVELOPMENT)
   if objectExists("BadgeEffect") then
     removeObject("BadgeEffect")
   end if

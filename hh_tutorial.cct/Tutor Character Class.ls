@@ -9,8 +9,16 @@ on construct me
   me.pBubble.setProperty(#targetID, "guide_image")
   me.pBubble.setProperty([#offsetx: 50])
   me.pBubble.update()
-  me.pDefPosX = 20
-  me.pDefPosY = 310
+  if variableExists("tutorial.tutor.default.x") then
+    me.pDefPosX = getVariable("tutorial.tutor.default.x")
+  else
+    me.pDefPosX = 20
+  end if
+  if variableExists("tutorial.tutor.default.y") then
+    me.pDefPosY = getVariable("tutorial.tutor.default.y")
+  else
+    me.pDefPosY = 250
+  end if
   me.pPose = 1
   return 1
 end
@@ -25,19 +33,8 @@ on hideLinks me
 end
 
 on update me
-  tWindowList = getWindowIDList()
-  tPosTutor = tWindowList.getPos(me.pTutorWindowID)
-  if tPosTutor > 0 then
-    tWindowList.deleteAt(tPosTutor)
-  end if
-  tPosBubble = tWindowList.getPos(me.pBubble.getProperty(#windowID))
-  if tPosBubble > 0 then
-    tWindowList.deleteAt(tPosBubble)
-  end if
-  tWindowList.add(me.pTutorWindowID)
-  tWindowList.add(me.pBubble.getProperty(#windowID))
-  getWindowManager().reorder(tWindowList)
   me.pBubble.update()
+  return [me.pTutorWindowID, me.pBubble.getProperty(#windowID)]
 end
 
 on setProperties me, tProperties

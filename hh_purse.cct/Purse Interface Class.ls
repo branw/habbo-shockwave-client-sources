@@ -439,7 +439,7 @@ on changePurseWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcPurse, me.getID(), #mouseLeave)
       me.showPurseAd()
       if objectExists("Figure_Preview") then
-        getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", ["hd", "fc", "ey", "hr"])
+        getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", #head)
       end if
       if tWndObj.elementExists("header_name") then
         tWndObj.getElement("header_name").setText(getObject(#session).GET("user_name"))
@@ -792,15 +792,7 @@ on eventProcPurse me, tEvent, tElemID, tParm
         me.drawPage(pPageView - 1)
       "purse_buy":
         tSession = getObject(#session)
-        if tSession.GET("user_rights").getOne("can_buy_credits") then
-          tURL = getText("url_purselink")
-        else
-          tURL = getText("url_purse_subscribe")
-        end if
-        tURL = tURL & urlEncode(tSession.GET("user_name"))
-        if tSession.exists("user_checksum") then
-          tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
-        end if
+        tURL = getText("url_purselink")
         openNetPage(tURL)
       "purse_voucher":
         if getObject(#session).GET("conf_voucher") then

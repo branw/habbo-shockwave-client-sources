@@ -23,8 +23,6 @@ on Init me, tName, tMemberModels, tplayerMode, tKeyList
   pInks = [:]
   pFlipped = [:]
   sort(pInks)
-  sort(pColors)
-  sort(pModels)
   lParts = []
   pSprites = [:]
   pLocFix = point(0, 0)
@@ -62,9 +60,14 @@ on Init me, tName, tMemberModels, tplayerMode, tKeyList
   pjumpBoardStart = 523
   pJumpSpeed = 2
   pAnimFixV = [[0, 0, 1, 0], [0, 1, 0, 1], [0, 1, 0, 1], [0, 0, 0, 0], [0, 1, 0, 1], [0, 1, 0, 1], [0, 0, 0, 1], [0, 0, 0, 0]]
-  repeat with tParts in ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
-    pModels[tParts] = tMemberModels[tParts]["model"]
-    pColors[tParts] = tMemberModels[tParts]["color"]
+  repeat with i = 1 to tMemberModels.count
+    if not voidp(tMemberModels[i]) then
+      if tMemberModels[i]["model"] <> "000" then
+        tPart = tMemberModels.getPropAt(i)
+        pModels.addProp(tPart, tMemberModels[i]["model"])
+        pColors.addProp(tPart, tMemberModels[i]["color"])
+      end if
+    end if
   end repeat
   pPelleImg = image(60, 60, 32, rgb(155, 155, 255))
   pPelleBgImg = image(108, 102, 16, rgb(157, 206, 255))
@@ -165,7 +168,8 @@ end
 
 on UpdatePelle me
   pPelleImg.fill(pPelleImg.rect, rgb(255, 255, 255))
-  repeat with f in ["bd", "lh", "hd", "fc", "hr", "ch", "rh"]
+  repeat with i = 1 to pModels.count
+    f = pModels.getPropAt(i)
     case f of
       "ey":
         pInk = 36

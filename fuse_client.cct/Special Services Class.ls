@@ -131,16 +131,6 @@ on openNetPage me, tURL_key, tTarget
       end if
     end if
   end if
-  if variableExists("client.http.request.sourceid") and tTargetIsPArent then
-    tSourceParamTxt = getVariable("client.http.request.sourceid") & "=1"
-    if not (tURL contains tSourceParamTxt) then
-      if tURL contains "?" then
-        tURL = tURL & "&" & tSourceParamTxt
-      else
-        tURL = tURL & "?" & tSourceParamTxt
-      end if
-    end if
-  end if
   gotoNetPage(tURL, tResolvedTarget)
   put "Open page:" && tURL && "target:" && tResolvedTarget
   return 1
@@ -165,8 +155,9 @@ end
 
 on getMachineID me
   tMachineID = string(getPref(getVariable("pref.value.id")))
+  tMachineID = replaceChunks(tMachineID, numToChar(10), EMPTY)
+  tMachineID = replaceChunks(tMachineID, numToChar(13), EMPTY)
   tMaxLength = 24
-  tMinLength = 10
   if chars(tMachineID, 1, 1) = "#" then
     tMachineID = chars(tMachineID, 2, tMachineID.length)
   else
@@ -206,6 +197,17 @@ on getExtVarPath me
     return getVariableManager().GET("external.variables.txt")
   end if
   return deobfuscate(getVariable(tVariableID))
+end
+
+on sendProcessTracking me, tStepValue
+  if not variableExists("processlog.enabled") then
+    return 0
+  end if
+  if not getVariable("processlog.enabled") then
+    return 0
+  end if
+  tJsHandler = script("javascriptLog").newJavaScriptLog()
+  tJsHandler.call(tStepValue)
 end
 
 on secretDecode me, tKey
@@ -297,7 +299,7 @@ end
 
 on generateMachineId me, tMaxLength
   tMachineID = string(the milliSeconds) & string(the time) & string(the date)
-  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM"]
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM", numToChar(10), numToChar(13)]
   repeat with tDelimiter in tLocaleDelimiters
     tMachineID = replaceChunks(tMachineID, tDelimiter, EMPTY)
   end repeat

@@ -65,8 +65,6 @@ on define me, tProps
           pStateSequenceList = []
         end if
       end if
-    else
-      outputList(tText)
     end if
   end if
   me.resetFrameNumbers()

@@ -1,7 +1,13 @@
-property pWindowID
+property pWindowID, pUseRatings
 
 on construct me
   pWindowID = "RoomInfoWindow"
+  pUseRatings = 0
+  if variableExists("room.rating.enable") then
+    if getVariable("room.rating.enable") = 1 then
+      pUseRatings = 1
+    end if
+  end if
   registerMessage(#roomRatingChanged, me.getID(), #updateRatingData)
   return 1
 end
@@ -33,7 +39,11 @@ end
 
 on createInfoWindow me
   if not windowExists(pWindowID) then
-    tSuccess = createWindow(pWindowID, "room_info.window", 10, 420)
+    if pUseRatings then
+      tSuccess = createWindow(pWindowID, "room_info.window", 10, 420)
+    else
+      tSuccess = createWindow(pWindowID, "room_info_no_rating.window", 10, 437)
+    end if
     if tSuccess = 0 then
       return 0
     else
@@ -52,8 +62,14 @@ on sendFlatRate me, tValue
 end
 
 on updateRatingData me
+  if not pUseRatings then
+    return 1
+  end if
   tWndObj = getWindow(pWindowID)
   if tWndObj = 0 then
+    return 0
+  end if
+  if not tWndObj.elementExists("room_info_rate_plus") then
     return 0
   end if
   tRoomRatings = getThread(#room).getComponent().getRoomRating()

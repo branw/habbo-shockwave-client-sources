@@ -69,7 +69,7 @@ on checkFlatAccess me, tFlatData
 end
 
 on handleRecommendedRoomListClicked me, tParm
-  tNodeInfo = me.getComponent().getNodeInfo(#recom)
+  tNodeInfo = me.getComponent().getRecomNodeInfo()
   tRoomList = tNodeInfo.getaProp(#children)
   if voidp(tRoomList) then
     return 0
@@ -85,7 +85,7 @@ on handleRecommendedRoomListClicked me, tParm
   if tParm.locH > tGoLinkH then
     me.getComponent().prepareRoomEntry(string(tNodeInfo[#id]), #private)
   else
-    me.showNodeInfo(tNodeInfo[#id])
+    me.showNodeInfo(tNodeInfo[#id], #recom)
   end if
   return 1
 end
@@ -107,6 +107,10 @@ on handleRoomListClicked me, tParm
   tClickedLine = integer(tParm.locV / me.pListItemHeight) + 1
   if tClickedLine > tNodeCount then
     tClickedLine = tNodeCount
+  else
+    if tClickedLine < 1 then
+      tClickedLine = 1
+    end if
   end if
   tNodeInfo = tNodeList[tClickedLine]
   if not listp(tNodeInfo) then
@@ -128,7 +132,7 @@ on handleRoomListClicked me, tParm
     if tParm.locH > tGoLinkH then
       me.getComponent().prepareRoomEntry(tNodeInfo[#id])
     else
-      me.showNodeInfo(tNodeInfo[#id])
+      me.showNodeInfo(tNodeInfo[#id], tCategoryId)
     end if
   end if
   return 1
@@ -243,6 +247,23 @@ on leaveModifyPage me
     "nav_gr_mod_b":
       pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
   end case
+end
+
+on showHideRefreshRecomLink me, tShow
+  tWndObj = getWindow(me.pWindowTitle)
+  if not tWndObj then
+    return 0
+  end if
+  if not tWndObj.elementExists("nav_refresh_recoms") then
+    return 0
+  end if
+  tElem = tWndObj.getElement("nav_refresh_recoms")
+  if tShow then
+    tElem.show()
+  else
+    tElem.hide()
+  end if
+  return 1
 end
 
 on hidePasswordFields me, tHidden
@@ -433,14 +454,14 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           me.ChangeWindowView("nav_gr_trypassword")
           me.getComponent().executeRoomEntry(tLastClickedId)
         "nav_tryagain_ok_button":
-          pFlatPasswords["nav_flatpassword_field"] = []
+          pFlatPasswords["nav_flatpassword_field"] = EMPTY
           me.ChangeWindowView("nav_gr_password")
         "nav_createroom_button", "nav_createroom_icon":
           return executeMessage(#open_roomkiosk)
         "nav_hidefull":
           return me.getComponent().showHideFullRooms(me.getProperty(#categoryId))
         "nav_refresh_recoms":
-          return me.getComponent().sendGetRecommendedRooms()
+          return me.getComponent().updateRecomRooms()
       end case
     else
       if tEvent = #keyDown then
@@ -644,7 +665,7 @@ on passwordFieldTypeEvent me, tSprID, tCheckLength
     otherwise:
       tValidKeys = getVariable("permitted.name.chars")
       tTheKey = the key
-      if not (tValidKeys = EMPTY) then
+      if not (tValidKeys = "void") then
         if not (tValidKeys contains tTheKey) then
           tMessageTxt = getText("reg_use_allowed_chars") & RETURN & tValidKeys
           executeMessage(#alert, [#Msg: tMessageTxt, #modal: 1])

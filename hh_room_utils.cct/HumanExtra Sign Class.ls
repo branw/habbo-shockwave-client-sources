@@ -29,7 +29,7 @@ on show_sign me, tProps
     tSignLoc.locH = tSignLoc.locH - 16
   else
     if tDirection = 4 then
-      tSignLoc.locH = tSignLoc.locH + 2
+      tSignLoc.locH = tSignLoc.locH
     else
       if tDirection = 6 then
         tSignLoc.locH = tSignLoc.locH - 18

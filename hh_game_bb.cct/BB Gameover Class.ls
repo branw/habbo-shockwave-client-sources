@@ -228,7 +228,12 @@ on renderFinalScoresText me
     tElem.setText(pBestPlayer[#score])
     tElem = tWndObj.getElement("bb_icon_winner")
     if tElem <> 0 and ilk(pBestPlayer[#image]) = #image then
-      tElem.feedImage(pBestPlayer[#image])
+      tImage = image(tElem.getProperty(#width), tElem.getProperty(#height), 32)
+      tDX = (tImage.width - pBestPlayer[#image].width) / 2
+      tDY = tImage.height - pBestPlayer[#image].height
+      tDX = tDX + 4
+      tImage.copyPixels(pBestPlayer[#image], pBestPlayer[#image].rect + rect(tDX, tDY, tDX, tDY), pBestPlayer[#image].rect)
+      tElem.feedImage(tImage)
     end if
   else
     tPlayerImage = member(getmemnum("guide_tie")).image
@@ -257,7 +262,8 @@ on getBestPlayerImage me, tUserID
   n = new(#bitmap, castLib("bin"))
   n.image = tTempImage.duplicate()
   tPlayerImage = image(tTempImage.width, tTempImage.height, 32)
-  tPlayerImage.copyPixels(tTempImage, tTempImage.rect + rect(7, -7, 7, -7), tTempImage.rect)
+  tPlayerImage.copyPixels(tTempImage, tTempImage.rect, tTempImage.rect)
+  tPlayerImage = tPlayerImage.trimWhiteSpace()
   return tPlayerImage
 end
 

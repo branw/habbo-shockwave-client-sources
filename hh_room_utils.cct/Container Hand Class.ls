@@ -381,6 +381,9 @@ on update me
 end
 
 on showContainerItems me
+  if pAnimMode = #close then
+    return 0
+  end if
   if not visualizerExists(pHandVisID) then
     return 0
   end if

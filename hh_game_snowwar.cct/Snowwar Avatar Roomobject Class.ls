@@ -1,6 +1,7 @@
-property pReady, pHiliteSpriteNum, pFramework, pAvatarAction, pInvincible, pInvincibleCounter, pTeamId, pAvatarId, pDump
+property pReady, pHiliteSpriteNum, pFramework, pAvatarAction, pInvincible, pInvincibleCounter, pTeamId, pAvatarId, pDump, pActionPartList
 
 on construct me
+  pActionPartList = ["bd", "sh"]
   pReady = 0
   pDump = 0
   pAvatarAction = [:]
@@ -23,20 +24,10 @@ on deconstruct me
 end
 
 on define me, tdata
-  callAncestor(#define, me, tdata)
-  me.setPartLists(tdata[#figure])
+  me.pPartClass = getVariableValue("snowwar.bodypart.class")
   pTeamId = string(tdata[#team_id])
   pAvatarId = string(tdata[#human_id])
-  if getObject(#session).GET("game_number_of_teams", tdata) > 1 then
-    tTeamColor = rgb(string(getVariable("snowwar.teamcolors.team" & pTeamId)))
-    me.setPartColor("sh", tTeamColor)
-  else
-    if tdata[#figure] <> VOID then
-      if ilk(tdata[#figure]) = #propList then
-        me.setPartColor("sh", tdata[#figure]["ch"]["color"])
-      end if
-    end if
-  end if
+  callAncestor(#define, me, tdata)
   case tdata[#activity_state] of
     1:
       me.gameObjectAction("start_create")
@@ -113,8 +104,7 @@ on gameObjectNewMoveTarget me, tX, tY, tH, tDirHead, tDirBody, tAction
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tX, tY, tH)
   me.pMoveStart = the milliSeconds
-  call(#defineActMultiple, me.pPartList, "wlk", ["bd", "sh"])
-  call(#defineActMultiple, me.pPartList, "std", ["lh", "rh", "ls", "rs"])
+  call(#defineAct, me.getDefinedPartList(pActionPartList), "wlk")
   me.Refresh(me.pLocX, me.pLocY, me.pLocH)
   return 1
 end
@@ -133,7 +123,7 @@ on gameObjectAction me, tAction, tdata
     "start_throw":
       me.resetValues(me.pLocX, me.pLocY, me.pLocH, tdata, tdata)
       me.Refresh(me.pLocX, me.pLocY, me.pLocH)
-      call(#defineActMultiple, me.pPartList, "tr1", ["bd", "sh"])
+      call(#defineAct, me.getDefinedPartList(pActionPartList), "tr1")
       me.pChanges = 1
       pAvatarAction[#tag] = "throw"
       return me.delay(100, #gameObjectAction, "next_throw")
@@ -144,7 +134,7 @@ on gameObjectAction me, tAction, tdata
       pAvatarAction[#tag] = EMPTY
       call(#reset, me.pPartList)
       me.pChanges = 1
-      call(#defineActMultiple, me.pPartList, "tr2", ["bd", "sh"])
+      call(#defineAct, me.getDefinedPartList(pActionPartList), "tr2")
       if pDump then
         put "next_throw calling timer_reset_figure"
       end if
@@ -173,7 +163,7 @@ on gameObjectAction me, tAction, tdata
       tDirection = me.pDirection - me.pDirection mod 2
       call(#defineDir, me.pPartList, tDirection)
       me.pMainAction = "pck"
-      call(#defineActMultiple, me.pPartList, "pck", ["bd", "sh"])
+      call(#defineAct, me.getDefinedPartList(pActionPartList), "pck")
       me.pChanges = 1
       me.arrangeParts()
       me.render()
@@ -201,7 +191,7 @@ on gameObjectAction me, tAction, tdata
       end if
       me.pDirection = tDeathDirection
       call(#defineDir, me.pPartList, me.pDirection)
-      call(#defineActExplicit, me.pPartList, pAvatarAction[#member] & "1", ["bd", "sh"])
+      call(#defineAct, me.getDefinedPartList(pActionPartList), pAvatarAction[#member] & "1")
       me.pMainAction = "std"
       me.arrangeParts()
       me.render()
@@ -214,8 +204,8 @@ on gameObjectAction me, tAction, tdata
         tPart.pAction = "foo"
       end repeat
       pAvatarAction[#frame] = 2
-      call(#defineDirMultiple, me.pPartList, pAvatarAction[#direction], ["bd", "sh"])
-      call(#defineActExplicit, me.pPartList, pAvatarAction[#member] & "2", ["bd", "sh"])
+      call(#defineDirMultiple, me.pPartList, pAvatarAction[#direction], pActionPartList)
+      call(#defineAct, me.getDefinedPartList(pActionPartList), pAvatarAction[#member] & "2")
       me.pChanges = 1
       me.arrangeParts()
       me.render()
@@ -297,25 +287,15 @@ on render me
     me.pMatteSpr.height = tSize[2]
     me.pBuffer = image(tSize[1], tSize[2], tSize[3])
     repeat with tPart in me.pPartList
-      tPart.pMemString = EMPTY
+      tPart.resetMemberCache()
     end repeat
   end if
-  if me.pFlipList[me.pDirection + 1] <> me.pDirection or me.pDirection = 3 and me.pHeadDir = 4 or me.pDirection = 7 and me.pHeadDir = 6 then
-    me.pMember.regPoint = point(me.pMember.image.width, me.pMember.regPoint[2])
-    me.pShadowFix = me.pXFactor
-    if not me.pSprite.flipH then
-      me.pSprite.flipH = 1
-      me.pMatteSpr.flipH = 1
-      me.pShadowSpr.flipH = 1
-    end if
-  else
-    me.pMember.regPoint = point(0, me.pMember.regPoint[2])
-    me.pShadowFix = 0
-    if me.pSprite.flipH then
-      me.pSprite.flipH = 0
-      me.pMatteSpr.flipH = 0
-      me.pShadowSpr.flipH = 0
-    end if
+  me.pMember.regPoint = point(0, me.pMember.regPoint[2])
+  me.pShadowFix = 0
+  if me.pSprite.flipH then
+    me.pSprite.flipH = 0
+    me.pMatteSpr.flipH = 0
+    me.pShadowSpr.flipH = 0
   end if
   if pAvatarAction[#tag] = "dead" then
     if pAvatarAction[#frame] = 1 then
@@ -326,9 +306,9 @@ on render me
           2:
             tpoint = point(-10, -2)
           4:
-            tpoint = point(-40, -2)
+            tpoint = point(35, -5)
           6:
-            tpoint = point(-36, 0)
+            tpoint = point(37, 0)
         end case
       else
         case pAvatarAction[#direction] of
@@ -339,7 +319,7 @@ on render me
           4:
             tpoint = point(0, 0)
           6:
-            tpoint = point(-20, -3)
+            tpoint = point(17, -3)
         end case
       end if
     else
@@ -348,11 +328,11 @@ on render me
           0:
             tpoint = point(-15, -10)
           2:
-            tpoint = point(-16, -40)
+            tpoint = point(-12, -36)
           4:
-            tpoint = point(-46, -40)
+            tpoint = point(38, -36)
           6:
-            tpoint = point(-46, -10)
+            tpoint = point(42, -10)
         end case
       else
         case pAvatarAction[#direction] of
@@ -361,9 +341,9 @@ on render me
           2:
             tpoint = point(37, -3)
           4:
-            tpoint = point(7, -3)
+            tpoint = point(-7, -3)
           6:
-            tpoint = point(10, -29)
+            tpoint = point(-10, -26)
         end case
       end if
     end if
@@ -410,7 +390,6 @@ end
 
 on Refresh me, tX, tY, tH
   call(#defineDir, me.pPartList, me.pDirection)
-  call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "ey", "fc"])
   me.arrangeParts()
   me.pChanges = 1
   return 1
@@ -459,7 +438,7 @@ on arrangeParts me
     me.pMainAction = "pck":
       me.arrangeParts_Pick()
     otherwise:
-      me.arrangeParts_Normal()
+      callAncestor(#arrangeParts, me)
   end case
   repeat with i = 1 to me.pPartList.count
     me.pPartIndex[me.pPartList[i].pPart] = i
@@ -467,42 +446,13 @@ on arrangeParts me
   return 1
 end
 
-on arrangeParts_Normal me
-  if me.pPartList = VOID then
-    return 0
-  end if
-  repeat with tPartId in ["hd", "fc", "ey", "hr", "sh", "bd"]
-    if me.pPartList.count < me.pPartIndex[tPartId] then
-      return 0
-    end if
-    tPart = me.pPartList[me.pPartIndex[tPartId]]
-    if tPart <> VOID then
-      tPart.pXFix = 0
-      tPart.pYFix = 0
-    end if
-  end repeat
-  tBD = me.pPartList[me.pPartIndex["bd"]]
-  tSH = me.pPartList[me.pPartIndex["sh"]]
-  me.pPartList.deleteOne(tBD)
-  me.pPartList.deleteOne(tSH)
-  case me.pDirection of
-    0, 7, 6:
-      me.pPartList.append(tBD)
-      me.pPartList.append(tSH)
-    otherwise:
-      me.pPartList.addAt(1, tSH)
-      me.pPartList.addAt(1, tBD)
-  end case
-  return 1
-end
-
 on arrangeParts_Pick me, tXFix, tYFix
   if me.pPartList = VOID then
     return 0
   end if
-  repeat with tPartId in ["hd", "fc", "ey", "hr"]
-    tPart = me.pPartList[me.pPartIndex[tPartId]]
-    if tPart <> VOID then
+  tDirection = me.pDirection - me.pDirection mod 2
+  repeat with tPart in me.pPartList
+    if pActionPartList.findPos(tPart.pPart) = 0 then
       tPart.pXFix = 3
       tPart.pYFix = 5
     end if
@@ -542,20 +492,29 @@ on arrangeParts_Death me
         tFace = point(-1, 10)
     end case
   end if
-  tBD = me.pPartList[me.pPartIndex["bd"]]
-  tSH = me.pPartList[me.pPartIndex["sh"]]
-  me.pPartList.deleteOne(tBD)
-  me.pPartList.deleteOne(tSH)
-  if tHeadBelow then
-    me.pPartList.append(tBD)
-    me.pPartList.append(tSH)
-  else
-    me.pPartList.addAt(1, tBD)
-    me.pPartList.addAt(2, tSH)
-  end if
+  tActionParts = []
+  repeat with tPart in pActionPartList
+    if not voidp(me.pPartIndex[tPart]) then
+      tActionParts.add(me.pPartList[me.pPartIndex[tPart]])
+    end if
+  end repeat
+  repeat with i = me.pPartList.count down to 1
+    tPart = me.pPartList[i]
+    if pActionPartList.findPos(tPart.pPart) > 0 then
+      me.pPartList.deleteAt(i)
+    end if
+  end repeat
+  tHeadBelow = 1
+  repeat with i = 1 to tActionParts.count
+    tPart = tActionParts[i]
+    if tHeadBelow then
+      me.pPartList.append(tPart)
+      next repeat
+    end if
+    me.pPartList.addAt(i, tPart)
+  end repeat
   repeat with tPart in me.pPartList
-    if tPart <> tBD and tPart <> tSH then
-      tPart.pTalking = 0
+    if pActionPartList.findPos(tPart.pPart) = 0 then
       tPart.pXFix = tFace.locH
       tPart.pYFix = tFace.locV
     end if
@@ -564,50 +523,37 @@ on arrangeParts_Death me
   return 1
 end
 
+on getPartListNameBase me
+  return "snowwar.human.parts"
+end
+
 on setPartLists me, tmodels
-  tAction = me.pMainAction
-  me.pPartList = []
-  tPartDefinition = getVariableValue("snowwar.human.parts." & me.pPeopleSize)
-  tPartClass = getVariableValue("snowwar.bodypart.class")
-  repeat with i = 1 to tPartDefinition.count
-    tPartSymbol = tPartDefinition[i]
-    if voidp(tmodels[tPartSymbol]) then
-      tmodels[tPartSymbol] = [:]
-    end if
-    if voidp(tmodels[tPartSymbol]["model"]) then
-      tmodels[tPartSymbol]["model"] = "001"
-    end if
-    if voidp(tmodels[tPartSymbol]["color"]) then
-      tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
-    end if
-    if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and me.pXFactor < 33 then
-      tmodels[tPartSymbol]["model"] = "001"
-    end if
-    if tPartSymbol = "bd" or tPartSymbol = "sh" then
-      tmodels[tPartSymbol]["model"] = "snowwar"
-      tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
-    end if
-    tPartObj = createObject(#temp, tPartClass)
-    if stringp(tmodels[tPartSymbol]["color"]) then
-      tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
-    end if
-    if tmodels[tPartSymbol]["color"].ilk <> #color then
-      tColor = rgb(tmodels[tPartSymbol]["color"])
-    else
-      tColor = tmodels[tPartSymbol]["color"]
-    end if
-    if tColor.red + tColor.green + tColor.blue > 238 * 3 then
-      tColor = rgb("EEEEEE")
-    end if
-    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, me.pDirection, tAction, me)
-    me.pPartList.add(tPartObj)
-    me.pColors.setaProp(tPartSymbol, tColor)
-  end repeat
-  me.pPartIndex = [:]
-  repeat with i = 1 to me.pPartList.count
-    me.pPartIndex[me.pPartList[i].pPart] = i
-  end repeat
+  tmodels = me.fixSnowWarFigure(tmodels)
+  callAncestor(#setPartLists, me, tmodels)
   return 1
+end
+
+on fixSnowWarFigure me, tFigure
+  repeat with tPartSymbol in pActionPartList
+    if voidp(tFigure[tPartSymbol]) then
+      tFigure[tPartSymbol] = [:]
+    end if
+    tFigure[tPartSymbol]["model"] = "snowwar"
+    tFigure[tPartSymbol]["color"] = rgb("EEEEEE")
+  end repeat
+  if getObject(#session).GET("game_number_of_teams") > 1 then
+    tTeamColor = rgb(string(getVariable("snowwar.teamcolors.team" & pTeamId)))
+  else
+    if not voidp(tFigure["ch"]) then
+      tTeamColor = tFigure["ch"]["color"]
+    else
+      tTeamColor = rgb("EEEEEE")
+    end if
+  end if
+  if not voidp(tFigure["sh"]) then
+    tFigure["sh"]["color"] = tTeamColor
+  end if
+  return tFigure
 end
 
 on setOwnHiliter me, tstate
@@ -644,20 +590,7 @@ on setOwnHiliter me, tstate
 end
 
 on getPicture me, tImg
-  if voidp(tImg) then
-    tCanvas = image(64, 102, 32)
-  else
-    tCanvas = tImg
-  end if
-  tPartDefinition = getVariableValue("snowwar.human.parts.sh")
-  tTempPartList = []
-  repeat with tPartSymbol in tPartDefinition
-    if not voidp(me.pPartIndex[tPartSymbol]) then
-      tTempPartList.append(me.pPartList[me.pPartIndex[tPartSymbol]])
-    end if
-  end repeat
-  call(#copyPicture, tTempPartList, tCanvas, VOID, "sh")
-  return me.flipImage(tCanvas)
+  return me.getPartialPicture(#Full, tImg, 4, "sh")
 end
 
 on getTeamId me
@@ -685,6 +618,5 @@ on action_mv me, tProps
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
-  call(#defineActMultiple, me.pPartList, "wlk", ["bd", "sh"])
-  call(#defineActMultiple, me.pPartList, "std", ["lh", "rh", "ls", "rs"])
+  call(#defineAct, me.getDefinedPartList(pActionPartList), "wlk")
 end

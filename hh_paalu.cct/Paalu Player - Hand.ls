@@ -6,7 +6,11 @@ on define me, tPart, tProps
   pAnimFrm = 0
   pPart = tPart
   pDirection = tProps[#Dir]
-  pBodyColor = tProps[#figure][pPart]["color"]
+  if not voidp(tProps[#figure][pPart]) then
+    pBodyColor = tProps[#figure][pPart]["color"]
+  else
+    pBodyColor = rgb("#EEEEEE")
+  end if
   pCounter = 0
   return 1
 end

@@ -1,7 +1,8 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout
 
 on construct me
   pWindowList = []
+  pTagRequestTimeout = 60000
   pCreatorID = "room.object.displayer.window.creator"
   createObject(pCreatorID, "Room Object Window Creator Class")
   pBadgeObjID = "room.obj.disp.badge.mngr"
@@ -27,6 +28,9 @@ on construct me
   registerMessage(#itemObjectsUpdated, me.getID(), #refreshView)
   registerMessage(#activeObjectsUpdated, me.getID(), #refreshView)
   registerMessage(#updateClubStatus, me.getID(), #refreshView)
+  registerMessage(#remove_user, me.getID(), #refreshView)
+  registerMessage(#activeObjectRemoved, me.getID(), #refreshView)
+  registerMessage(#itemObjectRemoved, me.getID(), #refreshView)
   pWindowCreator = getObject(pCreatorID)
   pTagListObj = getObject(pTagListObjID)
   pTagLists = [:]
@@ -52,14 +56,17 @@ on createBaseWindows me
       createWindow(tID, "obj_disp_base.window", 999, 999)
       tWndObj = getWindow(tID)
       if tIndex = 1 then
-        pBaseLocZ = tWndObj.getProperty(#locZ)
+        pBaseLocZ = tWndObj.getProperty(#locZ) - 1000
       end if
     end if
     tWndObj.hide()
   end repeat
 end
 
-on showObjectInfo me, tObjType
+on showObjectInfo me, tObjType, tRefresh
+  if pClosed and tRefresh then
+    return 1
+  end if
   if voidp(tObjType) then
     return 0
   end if
@@ -76,6 +83,10 @@ on showObjectInfo me, tObjType
     "user":
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       tWindowTypes = getVariableValue("object.display.windows.human")
+      if tObj <> 0 then
+        tUserID = integer(tObj.getWebID())
+        me.updateUserTags(tUserID)
+      end if
     "bot":
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       tWindowTypes = getVariableValue("object.display.windows.bot")
@@ -126,7 +137,12 @@ on showObjectInfo me, tObjType
           tTagsElem = tTagsWindow.getElement("room_obj_disp_tags")
           pTagListObj.setWidth(tTagsElem.getProperty(#width))
           pTagListObj.setHeight(tTagsElem.getProperty(#height))
-          tTagList = pTagLists.getaProp(tObj.getWebID())
+          tUserTagData = pTagLists.getaProp(tObj.getWebID())
+          if not listp(tUserTagData) then
+            tTagList = []
+          else
+            tTagList = tUserTagData[#tags]
+          end if
           tTagListImage = pTagListObj.createTagList(tTagList)
           tTagsElem.feedImage(tTagListImage)
         end if
@@ -143,6 +159,13 @@ on showObjectInfo me, tObjType
         pWindowCreator.createActionsHumanWindow(tID, tProps[#name], pShowActions)
         me.pushWindowToDisplayList(tID)
       "actions_furni":
+        if tRoomComponent.itemObjectExists(tSelectedObj) then
+          tselectedobject = tRoomComponent.getItemObject(tSelectedObj)
+          tClass = tselectedobject.getClass()
+          if tClass contains "post.it" then
+            next repeat
+          end if
+        end if
         tID = pBaseWindowIds[#links]
         pWindowCreator.createActionsFurniWindow(tID, tObjType, pShowActions)
         me.pushWindowToDisplayList(tID)
@@ -159,15 +182,17 @@ on showObjectInfo me, tObjType
     end if
   end repeat
   me.alignWindows()
+  pClosed = 0
 end
 
 on clearWindowDisplayList me
   repeat with tWindowID in pWindowList
-    tWndObj = getWindow(tWindowID)
-    tWndObj.hide()
-    tWndObj.unmerge()
+    pWindowCreator.clearWindow(tWindowID)
   end repeat
   pWindowList = []
+  if objectExists(pBadgeObjID) then
+    getObject(pBadgeObjID).removeBadgeEffect()
+  end if
 end
 
 on pushWindowToDisplayList me, tWindowID
@@ -176,7 +201,7 @@ end
 
 on refreshView me
   me.clearWindowDisplayList()
-  me.showObjectInfo(pLastSelectedObjType)
+  me.showObjectInfo(pLastSelectedObjType, 1)
 end
 
 on showHideActions me
@@ -189,6 +214,21 @@ on showHideTags me
   me.refreshView()
 end
 
+on updateUserTags me, tUserID
+  tLastUpdateTime = 0
+  tTimeNow = the milliSeconds
+  tUserData = pTagLists.getaProp(tUserID)
+  if listp(tUserData) then
+    tLastUpdateTime = tUserData[#lastUpdate]
+  else
+    pTagLists[string(tUserID)] = [#tags: [], #lastUpdate: 0]
+  end if
+  if tTimeNow - tLastUpdateTime > pTagRequestTimeout then
+    pTagLists[string(tUserID)][#lastUpdate] = tTimeNow
+    getConnection(#Info).send("GET_USER_TAGS", [#integer: tUserID])
+  end if
+end
+
 on alignWindows me
   if pWindowList.count = 0 then
     return 0
@@ -198,7 +238,7 @@ on alignWindows me
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     tWindowObj = getWindow(tWindowID)
-    tWindowObj.moveZ(pBaseLocZ)
+    tWindowObj.moveZ(pBaseLocZ + (tIndex - 1) * 100)
     if tIndex = pWindowList.count then
       tWindowObj.moveTo(tDefLeftPos, tDefBottomPos - tWindowObj.getProperty(#height))
       next repeat
@@ -255,9 +295,13 @@ on groupLogoDownloaded me, tGroupId
 end
 
 on updateTagList me, tUserID, tTagList
-  tOldList = pTagLists.getaProp(tUserID)
+  tUserTagData = pTagLists.getaProp(tUserID)
+  if voidp(tUserTagData) then
+    tUserTagData = [#tags: [], #lastUpdate: 0]
+  end if
+  tOldList = tUserTagData[#tags]
   if tOldList <> tTagList then
-    pTagLists.setaProp(tUserID, tTagList)
+    pTagLists.setaProp(tUserID, [#tags: tTagList, #lastUpdate: the milliSeconds])
     me.refreshView()
   end if
 end
@@ -307,6 +351,7 @@ on eventProc me, tEvent, tSprID, tParam
             ttype = "item"
         end case
         return me.clearWindowDisplayList()
+        me.clearWindowDisplayList()
         return tComponent.getRoomConnection().send("ADDSTRIPITEM", "new" && ttype && tSelectedObj)
       "delete.button":
         pDeleteObjID = tSelectedObj
@@ -381,11 +426,11 @@ on eventProc me, tEvent, tSprID, tParam
         end if
         me.clearWindowDisplayList()
         tSelectedObj = EMPTY
-      "room_obj_disp_badge_sel":
+      "room_obj_disp_badge_sel", "room_obj_disp_icon_badge":
         if objectExists(pBadgeObjID) then
           getObject(pBadgeObjID).openBadgeWindow()
         end if
-      "room_obj_disp_home":
+      "room_obj_disp_home", "room_obj_disp_icon_home":
         if variableExists("link.format.userpage") then
           tWebID = tComponent.getUserObject(tSelectedObj).getWebID()
           if not voidp(tWebID) then
@@ -419,8 +464,9 @@ on eventProc me, tEvent, tSprID, tParam
       "object_displayer_toggle_tags_icon":
         me.showHideTags()
       "room_obj_disp_close":
+        pClosed = 1
         me.clearWindowDisplayList()
-      "room_obj_disp_looks":
+      "room_obj_disp_looks", "room_obj_disp_icon_avatar":
         tAllowModify = 1
         if getObject(#session).exists("allow_profile_editing") then
           tAllowModify = getObject(#session).GET("allow_profile_editing")
@@ -439,7 +485,7 @@ on eventProc me, tEvent, tSprID, tParam
           openNetPage(tDestURL)
         end if
       "room_obj_disp_bg":
-        nothing()
+        return 0
     end case
     return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
   else

@@ -121,6 +121,7 @@ on sendLogin me, tConnection
       tSsoTicket = getObject(#session).GET("SSO_ticket")
     end if
     if tSsoTicket <> 0 then
+      sendProcessTracking(15)
       return tConnection.send("SSO", [#string: tSsoTicket])
     else
       tUserName = getObject(#session).GET(#userName)

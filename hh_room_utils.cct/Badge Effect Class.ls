@@ -1,4 +1,4 @@
-property pFrameCount, pAnimFrame, pStarSpr, pDestRect
+property pFrameCount, pAnimFrame, pStarSpr, pDestRect, pTargetElement
 
 on construct me
   pFrameCount = 0
@@ -19,8 +19,8 @@ on deconstruct me
   return 1
 end
 
-on Init me, tRect
-  pDestRect = tRect
+on Init me, tElem
+  pTargetElement = tElem
 end
 
 on update me
@@ -28,6 +28,7 @@ on update me
   if pFrameCount mod 3 <> 0 then
     return 
   end if
+  pDestRect = pTargetElement.getProperty(#rect)
   if pDestRect.ilk = #rect then
     pAnimFrame = pAnimFrame + 1
     if pAnimFrame > 9 then

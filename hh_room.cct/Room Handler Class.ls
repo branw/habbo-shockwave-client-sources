@@ -119,7 +119,19 @@ on handle_status me, tMsg
       tUserObj = me.getComponent().getUserObject(tuser[#id])
       if tUserObj <> 0 then
         tUserObj.resetValues(tuser[#x], tuser[#y], tuser[#h], tuser[#dirHead], tuser[#dirBody])
+        tPrimaryActions = ["mv", "sit", "lay"]
+        tActionList = []
+        repeat with i = tuser[#actions].count down to 1
+          tAction = tuser[#actions][i]
+          if tPrimaryActions.findPos(tAction[#name]) then
+            tActionList.add(tAction)
+            tuser[#actions].deleteAt(i)
+          end if
+        end repeat
         repeat with tAction in tuser[#actions]
+          tActionList.add(tAction)
+        end repeat
+        repeat with tAction in tActionList
           call(symbol("action_" & tAction[#name]), [tUserObj], tAction[#params])
         end repeat
         tUserObj.Refresh(tuser[#x], tuser[#y], tuser[#h])
@@ -787,7 +799,7 @@ on handle_userbadge me, tMsg
   end if
   tUserObj.pBadge = tBadge
   me.getInterface().unignoreAdmin(tUserID, tBadge)
-  me.getInterface().getInfoStandObject().updateInfoStandBadge(tBadge, tUserID)
+  executeMessage(#updateInfoStandBadge, tBadge, tUserID)
 end
 
 on handle_slideobjectbundle me, tMsg
@@ -956,6 +968,18 @@ on handle_room_rating me, tMsg
   executeMessage(#roomRatingChanged)
 end
 
+on handle_user_tag_list me, tMsg
+  tConn = tMsg.connection
+  tUserID = tConn.GetIntFrom()
+  tNumOfTags = tConn.GetIntFrom()
+  tTagList = []
+  repeat with tTagNum = 1 to tNumOfTags
+    tTag = tConn.GetStrFrom()
+    tTagList.add(tTag)
+  end repeat
+  executeMessage(#updateUserTags, tUserID, tTagList)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -1024,6 +1048,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(310, #handle_group_membership_update)
   tMsgs.setaProp(311, #handle_group_details)
   tMsgs.setaProp(345, #handle_room_rating)
+  tMsgs.setaProp(350, #handle_user_tag_list)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1084,6 +1109,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_GROUP_DETAILS", 231)
   tCmds.setaProp("SPIN_WHEEL_OF_FORTUNE", 247)
   tCmds.setaProp("RATEFLAT", 261)
+  tCmds.setaProp("GET_USER_TAGS", 263)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

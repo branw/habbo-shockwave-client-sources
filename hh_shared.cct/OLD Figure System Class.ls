@@ -7,7 +7,6 @@ on construct me
   pValidSetIDList = [:]
   pSelectablePartsList = [:]
   pSelectableSetIDList = [:]
-  setVariable("figurepartlist.loaded", 0)
   me.regMsgList(1)
   return 1
 end
@@ -458,14 +457,13 @@ end
 on loadFigurePartList me, tURL
   tMem = tURL
   tMemberCount = 0
-  tCastLib = castLib("hh_people_1")
-  if tCastLib <> 0 then
-    tMemberCount = tMemberCount + the number of castMembers of castLib "hh_people_1"
-    tCastLib = castLib("hh_people_2")
+  tCastList = ["hh_human_shirt", "hh_human_leg", "hh_human_shoe", "hh_human_body", "hh_human_face", "hh_human_hats", "hh_human_hair"]
+  repeat with tCastName in tCastList
+    tCastLib = castLib(tCastName)
     if tCastLib <> 0 then
-      tMemberCount = tMemberCount + the number of castMembers of castLib "hh_people_2"
+      tMemberCount = tMemberCount + the number of castMembers of castLib tCastName
     end if
-  end if
+  end repeat
   tSeparator = "?"
   if tURL contains "?" then
     tSeparator = "&"

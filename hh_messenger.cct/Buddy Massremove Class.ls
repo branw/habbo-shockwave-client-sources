@@ -30,11 +30,12 @@ on openRemoveWindow me, tFriendListCopy, tListLimitsPntr
     return 1
   end if
   if not createWindow(pWindowTitle, "habbo_full.window", 0, 0, #modal) then
-    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow)
+    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow, #major)
   end if
   tWndObj = getWindow(pWindowTitle)
   if not tWndObj.merge("console_buddylistfull.window") then
-    return tWndObj.close()
+    tWndObj.close()
+    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow, #major)
   end if
   tElem = tWndObj.getElement("console_friendremove_list_full")
   tText = getText("buddyremove_list_full")
@@ -187,18 +188,18 @@ on prevPage me
   end if
 end
 
-on nameClicked me, tid
-  return me.checkBoxClicked(tid, #name)
+on nameClicked me, tID
+  return me.checkBoxClicked(tID, #name)
 end
 
-on checkBoxClicked me, tid, ttype
+on checkBoxClicked me, tID, ttype
   if not windowExists(pWindowTitle) then
     return 0
   end if
   if ttype = #name then
-    tNum = integer(tid.char[26..tid.char.count])
+    tNum = integer(tID.char[26..tID.char.count])
   else
-    tNum = integer(tid.char[22..tid.char.count])
+    tNum = integer(tID.char[22..tID.char.count])
   end if
   tStartNr = (pPageNr - 1) * pOnScreenNum
   tBoxID = "friendremove_checkbox" & tNum
