@@ -56,6 +56,9 @@ on registerDownload me, ttype, tAssetId, tProps
   if voidp(pDynamicDownloader) then
     pDynamicDownloader = getThread(#dynamicdownloader).getComponent()
   end if
+  if tAssetId = EMPTY then
+    return 
+  end if
   tProps = [#type: ttype, #assetId: tAssetId, #props: tProps]
   if ttype = #bitmap then
     tSourceURL = pImageLibraryURL & "catalogue/" & tAssetId & ".gif"
