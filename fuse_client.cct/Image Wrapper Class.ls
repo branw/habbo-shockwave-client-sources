@@ -26,7 +26,7 @@ on prepare me
 end
 
 on feedImage me, tImage
-  if not ilk(tImage, #image) then
+  if not (ilk(tImage) = #image) then
     return error(me, "Image object expected!" && tImage, #feedImage)
   end if
   tTargetRect = rect(pOwnX, pOwnY, pOwnX + pOwnW, pOwnY + pOwnH)
