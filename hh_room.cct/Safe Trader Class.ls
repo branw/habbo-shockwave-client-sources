@@ -139,6 +139,7 @@ on Refresh me, tdata
   me.open(tdata)
   pMyStripItems = []
   tWndObj = getWindow(pTraderWndID)
+  tCreditFurniPrice = [#me: 0, #he: 0]
   pItemListMe = tdata[getObject(#session).GET("user_name")][#items]
   pMySlotProps = [:]
   repeat with i = 1 to pItemListMe.count
@@ -162,6 +163,9 @@ on Refresh me, tdata
       tWndObj.getElement("trading_mycount_" & tSlot).setText(pMySlotProps[tClass]["count"])
     end if
     pMyStripItems.add(pItemListMe[i][#stripId])
+    if getThread(#room).getComponent().isCreditFurniClass(pItemListMe[i][#class]) then
+      tCreditFurniPrice[#me] = tCreditFurniPrice[#me] + integer(pItemListMe[i][#stuffdata])
+    end if
   end repeat
   if tdata[pTraderPal] = VOID then
     return 0
@@ -182,15 +186,45 @@ on Refresh me, tdata
         tWndObj.getElement("trading_herstuff_" & tAddToSlot).feedImage(tImage)
         tWndObj.getElement("trading_herstuff_" & tAddToSlot).draw(rgb(64, 64, 64))
       end if
-      next repeat
+    else
+      tCount = pHerSlotProps[tClass]["count"]
+      tSlot = pHerSlotProps[tClass]["slot"]
+      pHerSlotProps[tClass]["count"] = tCount + 1
+      tWndObj.getElement("trading_hercount_" & tSlot).setText(pHerSlotProps[tClass]["count"])
     end if
-    tCount = pHerSlotProps[tClass]["count"]
-    tSlot = pHerSlotProps[tClass]["slot"]
-    pHerSlotProps[tClass]["count"] = tCount + 1
-    tWndObj.getElement("trading_hercount_" & tSlot).setText(pHerSlotProps[tClass]["count"])
+    if getThread(#room).getComponent().isCreditFurniClass(pItemListHe[i][#class]) then
+      tCreditFurniPrice[#he] = tCreditFurniPrice[#he] + integer(pItemListHe[i][#stuffdata])
+    end if
   end repeat
   me.accept(tdata.getPropAt(1), value(tdata[1][#accept]))
   me.accept(tdata.getPropAt(2), value(tdata[2][#accept]))
+  me.updateCreditFurniCount(tCreditFurniPrice)
+end
+
+on updateCreditFurniCount me, tCreditFurniPrice
+  tWndObj = getWindow(pTraderWndID)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if tWndObj.elementExists("credit_count_1") then
+    tPrice = tCreditFurniPrice[#he]
+    if tPrice = 0 then
+      tText = EMPTY
+    else
+      tText = replaceChunks(getText("credit_trade_value"), "%value%", string(tPrice))
+    end if
+    tWndObj.getElement("credit_count_1").setText(tText)
+  end if
+  if tWndObj.elementExists("credit_count_2") then
+    tPrice = tCreditFurniPrice[#me]
+    if tPrice = 0 then
+      tText = EMPTY
+    else
+      tText = replaceChunks(getText("credit_trade_value"), "%value%", string(tPrice))
+    end if
+    tWndObj.getElement("credit_count_2").setText(tText)
+  end if
+  return 1
 end
 
 on complete me, tdata

@@ -18,7 +18,7 @@ on prepare me, tdata
 end
 
 on select me
-  if the doubleClick then
+  if the doubleClick and getObject(#session).GET("room_owner") then
     me.showRedeemInterface()
   end if
   return 1
