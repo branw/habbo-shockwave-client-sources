@@ -95,7 +95,6 @@ on clearEffects me, tAvatarObj
     if tFigureChanged then
       tAvatarObj.changeFigureAndData()
     end if
-    call(#reset, tAvatarObj.pPartList)
     tAvatarObj.stopAnimation()
     tAvatarObj.pFx = 0
     executeMessage(#updateInfostandAvatar)

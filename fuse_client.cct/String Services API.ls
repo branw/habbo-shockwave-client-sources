@@ -90,3 +90,7 @@ end
 on decodeUTF8 tStr, tForceDecode
   return getStringServices().decodeUTF8(tStr, tForceDecode)
 end
+
+on handlers
+  return []
+end

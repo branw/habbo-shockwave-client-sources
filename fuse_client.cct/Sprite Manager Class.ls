@@ -139,3 +139,7 @@ on preIndexChannels me
   pTotalSprList.sort()
   return 1
 end
+
+on handlers
+  return []
+end

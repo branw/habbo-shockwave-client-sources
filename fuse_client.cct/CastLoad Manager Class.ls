@@ -1,4 +1,4 @@
-property pWaitList, pTaskList, pAvailableDynCasts, pPermanentLevelList, pLatestTaskID, pCurrentDownLoads, pLoadedCasts, pTempWaitList, pCastLibCount, pSysCastNum, pBinCastNum, pNullCastName, pFileExtension, pLastError
+property pWaitList, pTaskList, pAvailableDynCasts, pPermanentLevelList, pLatestTaskID, pCurrentDownLoads, pLoadedCasts, pTempWaitList, pCastLibCount, pSysCastNum, pBinCastNum, pNullCastName, pFileExtension, pLastError, pDontProfile
 
 on construct me
   if the runMode = "Author" then
@@ -13,6 +13,7 @@ on construct me
   pSysCastNum = castLib("fuse_client").number
   pBinCastNum = castLib(getVariable("dynamic.bin.cast")).number
   pLastError = 0
+  pDontProfile = 1
   me.verifyReset()
   return 1
 end
@@ -147,11 +148,11 @@ on getLoadPercent me, tID
   if voidp(tID) then
     tID = pLatestTaskID
   end if
-  if not voidp(pTaskList[tID]) then
-    if pTaskList[tID].getTaskState() = #ready then
+  if not voidp(pTaskList.getaProp(tID)) then
+    if pTaskList.getaProp(tID).getTaskState() = #ready then
       return 1.0
     else
-      return pTaskList[tID].getTaskPercent()
+      return pTaskList.getaProp(tID).getTaskPercent()
     end if
   else
     return 1.0
@@ -198,9 +199,24 @@ end
 
 on prepare me
   if count(pTaskList) > 0 then
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.core.enabled") then
+        pDontProfile = 0
+      end if
+    end if
     me.AddNextpreloadNetThing()
     call(#resetPercentCounter, pTaskList)
-    call(#update, pCurrentDownLoads)
+    if pDontProfile then
+      call(#update, pCurrentDownLoads)
+    else
+      repeat with i = 1 to pCurrentDownLoads.count
+        tTask = pCurrentDownLoads[i]
+        tTaskName = "Update Castload Task " & tTask.pURL
+        startProfilingTask(tTaskName)
+        call(#update, [tTask])
+        finishProfilingTask(tTaskName)
+      end repeat
+    end if
   end if
 end
 
@@ -239,10 +255,23 @@ on AddNextpreloadNetThing me
           tFileExtension = tPossibleExtension
           tParsedFile = chars(tFile, 1, tFile.length - tPossibleExtension.length)
         end if
-        if not tParsedFile contains "http://" then
-          tURL = getMoviePath() & tParsedFile & tFileExtension & tParamString
+        if tParsedFile contains "http://" or tParsedFile contains "https://" then
+          if the runMode contains "Author" then
+            tURL = tParsedFile & tFileExtension & tParamString
+          else
+            tClientDomain = me.getDomainAndTld(getMoviePath())
+            tUrlDomain = me.getDomainAndTld(tParsedFile)
+            if tClientDomain <> tUrlDomain then
+              tURL = tParsedFile & tFileExtension & tParamString
+              error(me, "Cross domain not allowed:" && tURL, #addPreloadNetThing, #critical)
+              fatalError(["error": "cross_domain_castload"])
+              return 0
+            else
+              tURL = tParsedFile & tFileExtension & tParamString
+            end if
+          end if
         else
-          tURL = tParsedFile & tFileExtension & tParamString
+          tURL = getMoviePath() & tParsedFile & tFileExtension & tParamString
         end if
         tID = pWaitList.getPropAt(1)
         pWaitList[1].deleteAt(1)
@@ -260,11 +289,49 @@ on AddNextpreloadNetThing me
   return 0
 end
 
+on getDomainAndTld me, tURL
+  if ilk(tURL) <> #string then
+    return tURL
+  end if
+  if offset("?", tURL) > 0 then
+    tURL = chars(tURL, 0, offset("?", tURL) - 1)
+  end if
+  if chars(tURL, tURL.length, tURL.length) = "/" then
+    tURL = chars(tURL, 0, tURL.length - 1)
+  end if
+  tDelim = the itemDelimiter
+  if tURL contains "http://" or tURL contains "https://" then
+    the itemDelimiter = "/"
+    tURL = tURL.item[3]
+  else
+    tURL = tURL.item[1]
+  end if
+  the itemDelimiter = "."
+  tTldItemCount = 1
+  tDomain = EMPTY
+  if tURL.item.count = 1 then
+    tDomain = tURL
+  else
+    if tURL.item.count = 2 then
+      tDomain = tURL.item[1]
+    else
+      tTldCount = 1
+      tDomainStrLength = tURL.item[tURL.item.count - 1].length
+      if tDomainStrLength = 2 or tDomainStrLength = 3 then
+        tTldItemCount = 2
+      end if
+      tDomain = tURL.item[tURL.item.count - tTldItemCount]
+    end if
+  end if
+  the itemDelimiter = tDelim
+  return tDomain
+end
+
 on DoneCurrentDownLoad me, tFile, tURL, tID, tstate
   if voidp(pCurrentDownLoads[tFile]) then
     return error(me, "CastLoad task was lost!" && tFile && tID, #DoneCurrentDownLoad, #major)
   end if
-  tTask = pTaskList[tID]
+  tTask = pTaskList.getaProp(tID)
   if tTask = VOID then
     return error(me, "Task list item was lost!" && tFile && tID, #DoneCurrentDownLoad, #major)
   end if
@@ -299,7 +366,7 @@ on removeCastLoadInstance me, tFile
 end
 
 on removeCastLoadTask me, tID, tstate
-  tTask = pTaskList[tID]
+  tTask = pTaskList.getaProp(tID)
   if tstate = #failed then
     tTask.setFailed()
   end if
@@ -317,15 +384,18 @@ on removeCastLoadTask me, tID, tstate
 end
 
 on TellStreamState me, tFileName, tstate, tPercent, tID
-  tObject = pTaskList[tID]
+  startProfilingTask("CastLoad Manager::tellStreamState")
+  tObject = pTaskList.getaProp(tID)
   if tObject <> VOID then
     call(#UpdateTaskPercent, tObject, tPercent, tFileName)
   else
     return error(me, "Task list instance was lost!" && tFileName && tID, #TellStreamState, #major)
   end if
+  finishProfilingTask("CastLoad Manager::tellStreamState")
 end
 
 on setImportedCast me, tCastNum, tCastName, tFileName, tDoIndexing
+  startProfilingTask("CastLoad Manager::setImportedCast")
   tCastLib = castLib(tCastNum)
   if voidp(tDoIndexing) then
     tDoIndexing = 1
@@ -340,6 +410,7 @@ on setImportedCast me, tCastNum, tCastName, tFileName, tDoIndexing
     pLoadedCasts[tCastName] = string(tCastNum)
   end if
   me.verifyReset()
+  finishProfilingTask("CastLoad Manager::setImportedCast")
 end
 
 on getAvailableEmptyCast me
@@ -494,4 +565,8 @@ on solveNetErrorMsg me, tErrorCode
       return "Cache download stopped for an unknown reason."
   end case
   return "Other network error:" && tErrorCode
+end
+
+on handlers
+  return []
 end

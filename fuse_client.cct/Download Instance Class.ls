@@ -42,6 +42,7 @@ on getProperty me, tProp
 end
 
 on Activate me
+  startProfilingTask("Download Instance::activate")
   if pType = #text or pType = #field then
     pNetId = getNetText(pURL)
   else
@@ -49,6 +50,7 @@ on Activate me
   end if
   pStatus = #LOADING
   pPercent = 0.0
+  finishProfilingTask("Download Instance::activate")
   return 1
 end
 
@@ -79,6 +81,9 @@ on update me
     end if
     if tStreamStatus[#bytesSoFar] > 0 then
       pPercent = 1.0 * tBytesSoFar / tBytesTotal
+    end if
+    if tStreamStatus[#bytesSoFar] = 0 and tStreamStatus[#bytesTotal] = 0 and tStreamStatus[#error] = "OK" then
+      pPercent = 1.0
     end if
   end if
   if netDone(pNetId) = 1 then
@@ -122,6 +127,7 @@ on update me
 end
 
 on importFileToCast me
+  startProfilingTask("Download Instance::importFileToCast")
   tmember = member(pMemNum)
   case pType of
     #text, #field:
@@ -132,5 +138,10 @@ on importFileToCast me
       importFileInto(tmember, pURL)
   end case
   tmember.name = pMemName
+  finishProfilingTask("Download Instance::importFileToCast")
   return 1
+end
+
+on handlers
+  return []
 end

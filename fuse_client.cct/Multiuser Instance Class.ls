@@ -253,3 +253,7 @@ on log me, tMsg
     return 1
   end if
 end
+
+on handlers
+  return []
+end

@@ -62,3 +62,7 @@ end
 on draw me
   me.pBuffer.image.draw(rect(me.pLocX, me.pLocY, me.pLocX + me.pwidth, me.pLocY + me.pheight), [#shapeType: #rect, #color: rgb(255, 0, 128)])
 end
+
+on handlers
+  return []
+end

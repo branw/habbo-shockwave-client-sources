@@ -270,3 +270,7 @@ on draw me, tRGB
   end if
   pBuffer.image.draw(pBuffer.image.rect, [#shapeType: #rect, #color: tRGB])
 end
+
+on handlers
+  return []
+end

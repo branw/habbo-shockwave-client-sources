@@ -1,4 +1,16 @@
+global _player
+
 on prepareMovie
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  the traceLogFile = EMPTY
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  if _player.windowList.count > 0 then
+    return stopMovie()
+  end if
   if not (the runMode contains "Author") then
     tProcessLogURL = EMPTY
     tAccountID = EMPTY
@@ -30,7 +42,9 @@ on prepareMovie
       postNetText(tProcessLogURL, ["step": 8, "account_id": tAccountID])
     end if
   end if
-  the debugPlaybackEnabled = 0
+  if (the activeWindow).name <> "stage" then
+    return stopMovie()
+  end if
   castLib(2).preloadMode = 1
   preloadNetThing(castLib(2).fileName)
   moveToFront(the stage)

@@ -301,3 +301,7 @@ on deleteDynamicMembers me
   pBmpMemNumList = []
   return 1
 end
+
+on handlers
+  return []
+end

@@ -52,7 +52,7 @@ on GET me, tID
   if not me.exists(tID) then
     return error(me, "Item not found:" && tID, #GET, #minor)
   end if
-  tTask = me.pItemList[tID]
+  tTask = me.pItemList.getaProp(tID)
   if voidp(tTask[#client]) then
     value(tTask[#handler] & "(" & tTask[#argument] & ")")
   else
@@ -81,14 +81,14 @@ on Remove me, tID
 end
 
 on exists me, tID
-  return listp(me.pItemList[tID])
+  return listp(me.pItemList.getaProp(tID))
 end
 
 on executeTimeOut me, tTimeout
   repeat with i = 1 to me.pItemList.count
     if me.pItemList[i][#uniqueid] = tTimeout.name then
       tID = me.pItemList.getPropAt(i)
-      tTask = me.pItemList[tID]
+      tTask = me.pItemList.getaProp(tID)
       exit repeat
     end if
   end repeat
@@ -105,10 +105,16 @@ on executeTimeOut me, tTimeout
   else
     tObject = getObject(tTask[#client])
     if objectp(tObject) then
+      startProfilingTask("Timeout Manager Call Handler")
       call(tTask[#handler], tObject, tTask[#argument])
+      finishProfilingTask("Timeout Manager Call Handler")
     else
       return me.Remove(tID)
     end if
   end if
   return 1
+end
+
+on handlers
+  return []
 end

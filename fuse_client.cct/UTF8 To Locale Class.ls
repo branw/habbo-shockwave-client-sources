@@ -164,3 +164,7 @@ on hextoint me, tStr
   end repeat
   return tValue
 end
+
+on handlers
+  return []
+end

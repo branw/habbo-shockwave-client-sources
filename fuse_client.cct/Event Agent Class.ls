@@ -51,3 +51,7 @@ end
 
 on null me
 end
+
+on handlers
+  return []
+end

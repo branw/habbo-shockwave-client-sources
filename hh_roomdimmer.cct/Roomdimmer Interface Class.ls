@@ -267,7 +267,7 @@ on eventProc me, tEvent, tElemID, tParam
         end if
         if tElemID contains "dimmer.button.preset" then
           tItems = explode(tElemID, ".")
-          tPresetNum = value(tItems[4])
+          tPresetNum = integer(tItems[4])
           me.selectPreset(tPresetNum)
         end if
     end case

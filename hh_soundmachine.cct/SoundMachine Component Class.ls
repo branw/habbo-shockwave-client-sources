@@ -19,7 +19,7 @@ on construct me
   pRoomActivityUpdateTimer = "sound_machine_room_activity_timer"
   pExternalSongTimer = "sound_machine_external_song_timer"
   pDiskList = []
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariable("connection.info.id", #Info)
   pSampleHorCount = 3
   pSampleVerCount = 3
   pSoundSetLimit = 4

@@ -105,6 +105,9 @@ on renderAchievements me, tAchievements
     tbadgerect = rect(0, (tIndex - 1) * pGridSize, pGridSize, tIndex * pGridSize)
     tListImage.copyPixels(tBgImage, tbadgerect, tBgImage.rect)
     tBadgeImage = member(getmemnum("badge" && tBadgeID)).image
+    if ilk(tBadgeImage) <> #image then
+      tBadgeImage = image(tbadgerect.width, tbadgerect.height, 8)
+    end if
     tCenteredImage = me.centerImage(tBadgeImage, tbadgerect)
     tListImage.copyPixels(tCenteredImage, tbadgerect, tCenteredImage.rect, [#maskImage: tCenteredImage.createMatte()])
     tWriter = me.getBoldWriter()
@@ -134,6 +137,9 @@ on renderAchievements me, tAchievements
 end
 
 on centerImage me, tImage, tRect
+  if ilk(tImage) <> #image then
+    return 0
+  end if
   tCentered = image(tRect.width, tRect.height, tImage.depth)
   tOffH = (tRect.width - tImage.width) / 2
   tOffV = (tRect.height - tImage.height) / 2

@@ -185,6 +185,12 @@ on showObjectInfo me, tObjType, tRefresh
           if ilk(pTagLists) <> #propList then
             pTagLists = [:]
           end if
+          tOwnUserId = integer(getObject(#session).GET("user_user_id"))
+          if voidp(pTagLists.getaProp(tOwnUserId)) then
+            me.updateUserTags(tOwnUserId)
+          else
+            tOwnTags = pTagLists.getaProp(tOwnUserId)[#tags]
+          end if
           tUserTagData = pTagLists.getaProp(tObj.getWebID())
           if ilk(tUserTagData) = #propList then
             tTagList = tUserTagData[#tags]
@@ -203,6 +209,11 @@ on showObjectInfo me, tObjType, tRefresh
             pTagListObj.setWidth(tTagsElem.getProperty(#width))
             pTagListObj.setHeight(tTagsElem.getProperty(#height))
             if objectp(pTagListObj) then
+              if tOwnUserId = tObj.getWebID() then
+                pTagListObj.setOwnTags([])
+              else
+                pTagListObj.setOwnTags(tOwnTags)
+              end if
               tTagListImage = pTagListObj.createTagList(tTagList)
               tTagsElem.feedImage(tTagListImage)
               tOffset = tTagListImage.height - tTagsWindow.getProperty(#height)
@@ -528,6 +539,9 @@ on eventProc me, tEvent, tSprID, tParam
         return 1
       "hcdance.button":
         tCurrentDance = tOwnUser.getProperty(#dancing)
+        if not (ilk(tParam) = #string) then
+          return error(me, "tParam was not a string", #eventProc, #minor)
+        end if
         if tParam.char.count = 6 then
           tInteger = integer(tParam.char[6])
           tComponent.getRoomConnection().send("DANCE", [#integer: tInteger])
@@ -544,6 +558,9 @@ on eventProc me, tEvent, tSprID, tParam
         end if
         return tComponent.getRoomConnection().send("WAVE")
       "fx.button":
+        if not (ilk(tParam) = #string) then
+          return error(me, "tParam was not a string", #eventProc, #minor)
+        end if
         if tParam.char.count < 3 then
           return 0
         end if
@@ -714,6 +731,9 @@ on eventProc me, tEvent, tSprID, tParam
           end if
         end if
       "room_obj_disp_tags":
+        if not (ilk(tParam) = #point) then
+          return 0
+        end if
         tTag = pTagListObj.getTagAt(tParam)
         if stringp(tTag) then
           tDestURL = replaceChunks(getVariable("link.format.tag.search"), "%tag%", tTag)
@@ -727,6 +747,9 @@ on eventProc me, tEvent, tSprID, tParam
     if tEvent = #mouseWithin then
       case tSprID of
         "room_obj_disp_tags":
+          if not (ilk(tParam) = #point) then
+            return 0
+          end if
           tTagsWindow = getWindow(pBaseWindowIds[#tags])
           tElem = tTagsWindow.getElement(tSprID)
           if stringp(pTagListObj.getTagAt(tParam)) then

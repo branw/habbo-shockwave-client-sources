@@ -1,6 +1,33 @@
-property pState, pLogoSpr, pFadingLogo, pLogoStartTime, pCrapFixing, pCrapFixSpr, pCrapFixRegionInvalidated, pFullScreenRefreshSpr
+property pState, pLogoSpr, pFadingLogo, pLogoStartTime, pCrapFixing, pCrapFixSpr, pCrapFixRegionInvalidated, pFullScreenRefreshSpr, pWhiteListEmbedParams
 
 on construct me
+  pWhiteListEmbedParams = []
+  pWhiteListEmbedParams.add("client.connection.failed.url")
+  pWhiteListEmbedParams.add("external.variables.txt")
+  pWhiteListEmbedParams.add("sso.ticket")
+  pWhiteListEmbedParams.add("processlog.url")
+  pWhiteListEmbedParams.add("connection.info.host")
+  pWhiteListEmbedParams.add("connection.info.port")
+  pWhiteListEmbedParams.add("site.url")
+  pWhiteListEmbedParams.add("url.prefix")
+  pWhiteListEmbedParams.add("connection.mus.host")
+  pWhiteListEmbedParams.add("connection.mus.port")
+  pWhiteListEmbedParams.add("client.allow.cross.domain")
+  pWhiteListEmbedParams.add("client.notify.cross.domain")
+  pWhiteListEmbedParams.add("external.texts.txt")
+  pWhiteListEmbedParams.add("use.sso.ticket")
+  pWhiteListEmbedParams.add("account_id")
+  pWhiteListEmbedParams.add("client.reload.url")
+  pWhiteListEmbedParams.add("client.fatal.error.url")
+  pWhiteListEmbedParams.add("client.connection.failed.url")
+  pWhiteListEmbedParams.add("user_partnersite")
+  pWhiteListEmbedParams.add("user_isp")
+  pWhiteListEmbedParams.add("friend.id")
+  pWhiteListEmbedParams.add("forward.type")
+  pWhiteListEmbedParams.add("forward.id")
+  pWhiteListEmbedParams.add("forward.open.hand")
+  pWhiteListEmbedParams.add("shortcut.id")
+  pWhiteListEmbedParams.add("external.hash")
   tSession = createObject(#session, getClassVariable("variable.manager.class"))
   tSession.set("client_startdate", the date)
   tSession.set("client_starttime", the long time)
@@ -90,6 +117,7 @@ on invalidateCrapFixer me
 end
 
 on update me
+  startProfilingTask("Core Thread::update")
   if pFadingLogo then
     tBlend = 0
     if pLogoSpr <> VOID then
@@ -122,6 +150,7 @@ on update me
       end if
     end if
   end if
+  finishProfilingTask("Core Thread::update")
 end
 
 on assetDownloadCallbacks me, tAssetId, tSuccess
@@ -152,6 +181,8 @@ on updateState me, tstate
       cursor(4)
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
+        tHash = EMPTY
+        tExtVarsPath = EMPTY
         repeat with i = 1 to 9
           tParamBundle = externalParamValue("sw" & i)
           if not voidp(tParamBundle) then
@@ -172,13 +203,17 @@ on updateState me, tstate
                       getVariableManager().set(tKey, tValue)
                     else
                       if tKey = "external.variables.txt" then
-                        getSpecialServices().setExtVarPath(tValue)
+                        tExtVarsPath = tValue
                       else
                         if tKey = "processlog.url" then
                           getVariableManager().set(tKey, tValue)
                         else
                           if tKey = "account_id" then
                             getVariableManager().set(tKey, tValue)
+                          else
+                            if tKey = "external.hash" then
+                              tHash = tValue
+                            end if
                           end if
                         end if
                       end if
@@ -191,6 +226,12 @@ on updateState me, tstate
           end if
         end repeat
         the itemDelimiter = tDelim
+        getSpecialServices().setSessionHash(tHash)
+        getSpecialServices().setExtVarPath(tExtVarsPath)
+      else
+        if the runMode contains "Author" then
+          getSpecialServices().setSessionHash(string(random(the maxinteger)))
+        end if
       end if
       tURL = getExtVarPath()
       tMemName = tURL
@@ -207,7 +248,7 @@ on updateState me, tstate
       dumpVariableField(getExtVarPath())
       removeMember(getExtVarPath())
       if variableExists("text.crap.fixing") then
-        pCrapFixing = getVariableValue("text.crap.fixing")
+        pCrapFixing = getIntVariable("text.crap.fixing")
       end if
       if variableExists("client.full.refresh.period") then
         createTimeout("client.refresh.timeout", getIntVariable("client.full.refresh.period"), #fullScreenRefresh, me.getID(), VOID, 0)
@@ -222,6 +263,9 @@ on updateState me, tstate
               tParam = tParamBundle.item[j]
               the itemDelimiter = "="
               if tParam.item.count > 1 then
+                if pWhiteListEmbedParams.getPos(tParam.item[1]) = 0 then
+                  next repeat
+                end if
                 getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
               end if
               the itemDelimiter = ";"
@@ -239,7 +283,7 @@ on updateState me, tstate
       return me.updateState("load_texts")
     "load_texts":
       pState = tstate
-      tURL = getVariable("external.texts.txt")
+      tURL = getVariable("external.texts.txt") & "&hash=" & getSpecialServices().getSessionHash()
       tMemName = tURL
       if tMemName = EMPTY then
         return me.updateState("load_casts")
@@ -254,7 +298,7 @@ on updateState me, tstate
       end if
     "load_casts":
       pState = tstate
-      tTxtFile = getVariable("external.texts.txt")
+      tTxtFile = getVariable("external.texts.txt") & "&hash=" & getSpecialServices().getSessionHash()
       if tTxtFile <> 0 then
         if memberExists(tTxtFile) then
           dumpTextField(tTxtFile)
@@ -335,4 +379,8 @@ on fullScreenRefresh me
         pFullScreenRefreshSpr.loc = point(0, 0)
     end case
   end if
+end
+
+on handlers
+  return []
 end

@@ -45,10 +45,12 @@ on catch me
 end
 
 on callJavaScriptFunction me, tCallString, tdata
+  startProfilingTask("Special Services::callJavascriptFunction")
   if the runMode = "Author" then
     return 0
   end if
   script("JavaScript Proxy").callJavaScript(QUOTE & tCallString & QUOTE, QUOTE & tdata & QUOTE)
+  finishProfilingTask("Special Services::callJavascriptFunction")
 end
 
 on createToolTip me, tText
@@ -252,12 +254,19 @@ on getExtVarPath me
 end
 
 on sendProcessTracking me, tStepValue
+  startProfilingTask("Special Services::sendProcessTracking")
   pProcessList.add(tStepValue)
+  if pProcessList.count > 25 then
+    pProcessList.deleteAt(1)
+  end if
   if the runMode contains "Author" then
   end if
   if variableExists("processlog.url") then
     tReportURL = string(getVariable("processlog.url"))
     if tReportURL = "javascript" then
+      if not memberExists("javascriptLog") then
+        return error("JavascriptLog script not found.")
+      end if
       tJsHandler = script("javascriptLog").newJavaScriptLog()
       if objectp(tJsHandler) then
         tJsHandler.call(tStepValue)
@@ -269,6 +278,7 @@ on sendProcessTracking me, tStepValue
       end if
     end if
   end if
+  finishProfilingTask("Special Services::sendProcessTracking")
 end
 
 on getProcessTrackingList me
@@ -406,10 +416,11 @@ on generateMachineId_ me, tMaxLength
 end
 
 on setExtVarPath me, tURL
-  if tURL contains "hash=" then
-    pSessionHash = chars(tURL, offset("hash=", tURL) + 5, tURL.length)
-  end if
-  return setVariable("system.v2", obfuscate(tURL))
+  return setVariable("system.v2", obfuscate(tURL & "&hash=" & pSessionHash))
+end
+
+on setSessionHash me, tHash
+  pSessionHash = tHash
 end
 
 on getSessionHash me
@@ -505,6 +516,52 @@ on getDelimiter me, a_string
   return ":"
 end
 
-on handlers me
+on getValueByType me, tContent, tExpectedType
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  tReturnValue = VOID
+  case tExpectedType of
+    #string:
+      tReturnValue = string(tContent)
+    #integer:
+      tReturnValue = integer(tContent)
+    #symbol:
+      tReturnValue = symbol(string(tContent))
+    #list:
+      tContentStr = string(tContent)
+      if chars(tContentStr, 1, 1) <> "[" then
+        return []
+      end if
+      if chars(tContentStr, tContentStr.length, tContentStr.length) <> "]" then
+        return []
+      end if
+      if offset(RETURN, tContentStr) > 1 then
+        return []
+      end if
+      tReturnValue = value(tContent)
+    #propList:
+      tContentStr = string(tContent)
+      if chars(tContentStr, 1, 1) <> "[" then
+        return [:]
+      end if
+      if chars(tContentStr, tContentStr.length, tContentStr.length) <> "]" then
+        return [:]
+      end if
+      if offset(RETURN, tContentStr) > 1 then
+        return [:]
+      end if
+      if offset(":", tContentStr) = 0 then
+        return [:]
+      end if
+      tReturnValue = value(tContent)
+  end case
+  return tReturnValue
+end
+
+on handlers
   return []
 end

@@ -33,3 +33,7 @@ end
 on printMultiusers
   return getMultiuserManager().print()
 end
+
+on handlers
+  return []
+end

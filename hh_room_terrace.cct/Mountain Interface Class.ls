@@ -227,9 +227,9 @@ on eventProcPukukoppi me, tEvent, tSprID, tParam
         tTempDelim = the itemDelimiter
         the itemDelimiter = ","
         tColor = string(pSwimSuitColor)
-        tR = value(tColor.item[1].char[5..tColor.item[1].length])
-        tG = value(tColor.item[2])
-        tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
+        tR = integer(tColor.item[1].char[5..tColor.item[1].length])
+        tG = integer(tColor.item[2])
+        tB = integer(tColor.item[3].char[1..tColor.item[3].length - 1])
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor

@@ -35,11 +35,11 @@ on showPurchaseDialog me
   end if
   tOfferTypeText = [#credits: "catalog_costs_credits", #creditsandpixels: "catalog_costs_pixelsandcredits", #pixels: "catalog_costs_pixels"]
   tItemName = EMPTY
-  tCatalogProps = pPersistentCatalogData.getProps(pProps[#item][#offername])
+  tCatalogProps = pPersistentCatalogData.getProps(pProps[#item].getName())
   if not voidp(tCatalogProps) then
     tItemName = tCatalogProps[#name]
   else
-    tItemName = pProps[#item][#offername]
+    tItemName = pProps[#item].getName()
   end if
   if not voidp(pProps[#disableGift]) then
     tWndObj.getElement("buy_gift_ok").hide()
@@ -47,15 +47,15 @@ on showPurchaseDialog me
   end if
   case pProps[#offerType] of
     #credits:
-      tPrice = integer(value(pProps[#item][#price][#credits]))
+      tPrice = integer(value(pProps[#item].getPrice(#credits)))
       tWallet = integer(value(getObject(#session).GET("user_walletbalance")))
       tMsgA = getText(tOfferTypeText[pProps[#offerType]], "\x1 costs \x2 credits")
       tMsgA = replaceChunks(tMsgA, "\x1", tItemName)
       tMsgA = replaceChunks(tMsgA, "\x2", tPrice)
       tMsgB = replaceChunks(getText("catalog_credits", "You have \x credits in your purse."), "\x", tWallet)
     #creditsandpixels:
-      tPriceX = integer(value(pProps[#item][#price][#credits]))
-      tPriceY = integer(value(pProps[#item][#price][#pixels]))
+      tPriceX = integer(value(pProps[#item].getPrice(#credits)))
+      tPriceY = integer(value(pProps[#item].getPrice(#pixels)))
       tWalletX = integer(value(getObject(#session).GET("user_walletbalance")))
       tWalletY = integer(value(getObject(#session).GET("user_pixelbalance")))
       tMsgA = getText(tOfferTypeText[pProps[#offerType]], "\x1 costs \x3 pixels and \x2 credits")
@@ -66,7 +66,7 @@ on showPurchaseDialog me
       tMsgB = replaceChunks(tMsgB, "\x", tWalletX)
       tMsgB = replaceChunks(tMsgB, "\y", tWalletY)
     #pixels:
-      tPrice = integer(value(pProps[#item][#price][#pixels]))
+      tPrice = integer(value(pProps[#item].getPrice(#pixels)))
       tWallet = integer(value(getObject(#session).GET("user_pixelbalance")))
       tMsgA = getText(tOfferTypeText[pProps[#offerType]], "\x1 costs \x3 pixels")
       tMsgA = replaceChunks(tMsgA, "\x1", tItemName)
@@ -125,24 +125,20 @@ on eventProcPurchaseDialog me, tEvent, tSprID, tParam, tWndID
         tGiftReceiver = tWndObj.getElement("shopping_gift_target").getText()
         tGiftMessage = convertSpecialChars(tWndObj.getElement("shopping_greeting_field").getText(), 1)
         tExtraParam = EMPTY
-        if listp(pProps[#item].getaProp(#content)) then
-          if pProps[#item][#content].count > 0 then
-            tExtraParam = convertSpecialChars(pProps[#item][#content][1][#extra_param], 1)
-          else
-            tExtraParam = EMPTY
-          end if
+        if pProps[#item].getCount() > 0 then
+          tExtraParam = convertSpecialChars(pProps[#item].getContent(1).getExtraParam(), 1)
+        else
+          tExtraParam = EMPTY
         end if
-        call(pProps[#method], getThread(#catalogue).getHandler(), pProps[#pageid], pProps[#item][#offercode], tExtraParam, 1, tGiftReceiver, tGiftMessage)
+        call(pProps[#method], getThread(#catalogue).getHandler(), pProps[#pageid], pProps[#item].getCode(), tExtraParam, 1, tGiftReceiver, tGiftMessage)
       else
         tExtraParam = EMPTY
-        if listp(pProps[#item].getaProp(#content)) then
-          if pProps[#item][#content].count > 0 then
-            tExtraParam = convertSpecialChars(pProps[#item][#content][1][#extra_param], 1)
-          else
-            tExtraParam = EMPTY
-          end if
+        if pProps[#item].getCount() > 0 then
+          tExtraParam = convertSpecialChars(pProps[#item].getContent(1).getExtraParam(), 1)
+        else
+          tExtraParam = EMPTY
         end if
-        call(pProps[#method], getThread(#catalogue).getHandler(), pProps[#pageid], pProps[#item][#offercode], tExtraParam, 0)
+        call(pProps[#method], getThread(#catalogue).getHandler(), pProps[#pageid], pProps[#item].getCode(), tExtraParam, 0)
       end if
       tWndObj.close()
       me.finishPurchase()
@@ -166,7 +162,8 @@ on eventProcPurchaseDialog me, tEvent, tSprID, tParam, tWndID
       end if
       executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL)
-      me.hideOrderInfo()
+      tWndObj = getWindow(pWndID)
+      tWndObj.close()
     "subscribe":
       tSession = getObject(#session)
       tOwnName = tSession.GET(#userName)
@@ -177,7 +174,8 @@ on eventProcPurchaseDialog me, tEvent, tSprID, tParam, tWndID
       end if
       executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL, "_new")
-      me.hideOrderInfo()
+      tWndObj = getWindow(pWndID)
+      tWndObj.close()
   end case
 end
 

@@ -1,13 +1,17 @@
-property pID, pData, pWriterIdBold
+property pID, pData, pWriterIdBold, pColorMember
 
 on construct me
   pData = [:]
   pWriterIdBold = "if_writer_bold"
+  pColorMember = VOID
   return 1
 end
 
 on deconstruct me
   pData = [:]
+  if not voidp(pColorMember) then
+    removeMember(pColorMember.name)
+  end if
   if writerExists(pWriterIdBold) then
     removeWriter(pWriterIdBold)
   end if
@@ -37,6 +41,9 @@ on renderMin me, tWndObj
   end if
   tWndObj.merge("if_min.window")
   me.feedTopic(tWndObj)
+  if not voidp(pData.getaProp(#bgColor)) then
+    me.setTitleBgColor(tWndObj, pData.getaProp(#bgColor))
+  end if
   return 1
 end
 
@@ -56,9 +63,41 @@ on renderFull me, tWndObj, tItemPos, tItemCount
     tElem.setProperty(#blend, 40 + not tIsLastItem * 60)
   end if
   me.feedTopic(tWndObj)
+  if not voidp(pData.getaProp(#bgColor)) then
+    me.setTitleBgColor(tWndObj, pData.getaProp(#bgColor))
+  end if
   me.feedContentText(tWndObj)
   me.feedContentImage(tWndObj)
+  me.feedMessageNumber(tWndObj)
   return 1
+end
+
+on getData me
+  return pData
+end
+
+on getShowOnCreate me
+  return 1
+end
+
+on setTitleBgColor me, tWndObj, tBgColor
+  if tWndObj = 0 then
+    return 0
+  end if
+  tSrc = tWndObj.getElement("back_title").getProperty(#image)
+  tDest = image(tSrc.width, tSrc.height, 32)
+  tDest.copyPixels(tSrc, tSrc.rect, tDest.rect)
+  tMask = tDest.createMatte()
+  tColorSrc = image(tSrc.width, tSrc.height, 32)
+  tColorSrc.fill(tColorSrc.rect, [#shapeType: #line, #color: tBgColor])
+  tDest.copyPixels(tColorSrc, tDest.rect, tColorSrc.rect, [#maskImage: tMask, #useFastQuads: 1])
+  if voidp(pColorMember) then
+    tMemberName = getUniqueID()
+    pColorMember = member(createMember(tMemberName, #bitmap))
+  end if
+  pColorMember.image = tDest
+  tWndObj.getElement("back_title").setProperty(#member, pColorMember)
+  tWndObj.getElement("back_title").setProperty(#image, pColorMember.image)
 end
 
 on feedTitle me, tWndObj
@@ -95,6 +134,11 @@ on feedTopic me, tWndObj
   tElem = tWndObj.getElement("if_title")
   if tElem = 0 then
     return 0
+  end if
+  if not voidp(pData.getaProp(#txtColor)) then
+    tFont = tElem.getFont()
+    tFont[#color] = pData.getaProp(#txtColor)
+    tElem.setFont(tFont)
   end if
   tElem.setText(getText("if_topic_" & pData.getaProp(#type)))
   return 1
@@ -135,6 +179,24 @@ on feedContentImage me, tWndObj
   end if
   tImage = member(tMemNum).image
   tElem.feedImage(tImage)
+  return 1
+end
+
+on feedMessageNumber me, tWndObj
+  if tWndObj = 0 then
+    return 0
+  end if
+  tElem = tWndObj.getElement("if_msgnumber")
+  if tElem = 0 then
+    return 0
+  end if
+  tText = getText("if_message_number")
+  tItemPointer = getThread("infofeed").getInterface().getItemPointer()
+  tItemPos = getThread("infofeed").getComponent().getItemPos(tItemPointer)
+  tItemCount = getThread("infofeed").getComponent().getItemCount()
+  tText = replaceChunks(tText, "%m%", tItemPos)
+  tText = replaceChunks(tText, "%n%", tItemCount)
+  tElem.setText(tText)
   return 1
 end
 

@@ -8,7 +8,7 @@ on construct me
   pProcessList = [:]
   pSaveData = VOID
   pCacheKey = EMPTY
-  pCacheFlag = getVariableValue("room.map.cache", 0)
+  pCacheFlag = getIntVariable("room.map.cache", 0)
   pTrgDoorID = VOID
   pPickedCryName = EMPTY
   pPersistentFurniData = VOID
@@ -620,6 +620,10 @@ on sendChat me, tChat
       ":performance":
         if getObject(#session).GET("user_rights").getOne("fuse_performance_panel") then
           return performance()
+        end if
+      ":profile":
+        if getObject(#session).GET("user_rights").getOne("fuse_performance_panel") then
+          showProfileWindow()
         end if
       ":editcatalogue":
         if getObject(#session).GET("user_rights").getOne("fuse_catalog_editor") then

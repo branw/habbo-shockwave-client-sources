@@ -60,7 +60,11 @@ end
 
 on executeDelay me, tTimeout
   tID = tTimeout.name
-  tTask = delays[tID]
+  tTask = delays.getaProp(tID)
   me.Cancel(tID)
   call(tTask[#method], me, tTask[#argument])
+end
+
+on handlers
+  return []
 end

@@ -133,3 +133,7 @@ on prepare me
     pReadyFlag = 1
   end if
 end
+
+on handlers
+  return []
+end

@@ -200,7 +200,7 @@ on getClientRect me
 end
 
 on getElement me, tID
-  tElement = pElemList[tID]
+  tElement = pElemList.getaProp(tID)
   if voidp(tElement) then
     return 0
   end if
@@ -208,7 +208,7 @@ on getElement me, tID
 end
 
 on elementExists me, tID
-  return not voidp(pElemList[tID])
+  return not voidp(pElemList.getaProp(tID))
 end
 
 on registerClient me, tClientID
@@ -429,7 +429,7 @@ on buildVisual me, tLayout
   tResManager = getResourceManager()
   repeat with tElement in tLayout[#elements]
     tID = tElement[1][#id]
-    if not voidp(pElemList[tID]) then
+    if not voidp(pElemList.getaProp(tID)) then
       tID = tID & tGroupNum
     end if
     tmember = member(tResManager.createMember(me.getID() & "_" & tID, #bitmap))
@@ -445,8 +445,8 @@ on buildVisual me, tLayout
       tmemberlist = [:]
       return error(me, "Failed to build window. System out of sprites!", #buildVisual, #major)
     end if
-    tmemberlist[tID] = tmember
-    tSpriteList[tID] = tsprite
+    setaProp(tmemberlist, tID, tmember)
+    setaProp(tSpriteList, tID, tsprite)
     tsprite.castNum = tmember.number
     tsprite.ink = 8
     tElemRect = rect(2000, 2000, -2000, -2000)
@@ -580,8 +580,8 @@ on buildVisual me, tLayout
     tloc = tSpriteList[i].loc - [tGroupData[#rect][1], tGroupData[#rect][2]]
     tSpriteList[i].loc = point(pLocX, pLocY) + tloc
     tID = tmemberlist.getPropAt(i)
-    pMemberList.addProp(tID, tmemberlist[tID])
-    pSpriteList.addProp(tID, tSpriteList[tID])
+    pMemberList.addProp(tID, tmemberlist.getaProp(tID))
+    pSpriteList.addProp(tID, tSpriteList.getaProp(tID))
     tSpriteList[i].locZ = pLocZ + (pSpriteList.count - 1)
   end repeat
   repeat with i = 1 to tElemList.count
@@ -722,4 +722,8 @@ on movePartTo me, ttype, tX, tY, tInverse
   tX = tX - pLocX
   tY = tY - pLocY
   me.movePartBy(ttype, tX, tY, tInverse)
+end
+
+on handlers
+  return []
 end

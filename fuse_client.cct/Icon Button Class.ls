@@ -156,3 +156,7 @@ on createButtonImg me, tText, tstate
   me.pCachedImgs[tstate] = tNewImg
   return tNewImg
 end
+
+on handlers
+  return []
+end

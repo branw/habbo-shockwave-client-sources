@@ -1,4 +1,4 @@
-property pWndObj, pPageImplObj, pOldPageData, pPersistentFurniData, pPersistentCatalogData, pPageItemDownloader, pDealPreviewObj, pDealNumber, pSmallItemWidth, pSmallItemHeight, pSelectedProduct, pCurrentPageData, pProductOffset, pProductPerPage, pLastProductNum, pPageLinkList
+property pWndObj, pPageImplObj, pOldPageData, pPersistentFurniData, pPersistentCatalogData, pPageItemDownloader, pDealPreviewObj, pDealNumber, pSmallItemWidth, pSmallItemHeight, pSelectedProduct, pCurrentPageData, pProductOffset, pProductPerPage, pLastProductNum, pPageLinkList, pTimeOutList
 
 on construct me
   pWndObj = VOID
@@ -14,6 +14,7 @@ on construct me
   pProductPerPage = 0
   pPageLinkList = VOID
   pSelectedProduct = VOID
+  pTimeOutList = []
   return callAncestor(#construct, [me])
 end
 
@@ -27,6 +28,9 @@ on deconstruct me
     end if
     pPageImplObj = VOID
   end if
+  repeat with tTimeOutName in pTimeOutList
+    removeTimeout(tTimeOutName)
+  end repeat
   return callAncestor(#deconstruct, [me])
 end
 
@@ -43,9 +47,17 @@ on define me, tdata
     i = 0
     repeat with tProduct in me.pPageData.offers
       i = i + 1
-      tOffer = tProduct[#offerList][1]
-      if tOffer[#content].count = 1 then
-        tFurniProps = pPersistentFurniData.getProps(tOffer[#content][1][#type], tOffer[#content][1][#classID])
+      if tProduct.getCount() < 1 then
+        error(me, "Offer group contains no offers", #define, #minor)
+        next repeat
+      end if
+      tOffer = tProduct.getOffer(1)
+      if tOffer.getCount() < 1 then
+        error(me, "Offer has no content", #define, #minor)
+        next repeat
+      end if
+      if tOffer.getCount() = 1 then
+        tFurniProps = pPersistentFurniData.getProps(tOffer.getContent(1).getType(), tOffer.getContent(1).getClassId())
         if not listp(tFurniProps) then
           next repeat
         end if
@@ -56,8 +68,9 @@ on define me, tdata
         end if
         next repeat
       end if
-      repeat with tDealItem in tOffer[#content]
-        tFurniProps = pPersistentFurniData.getProps(tDealItem[#type], tDealItem[#classID])
+      repeat with i = 1 to tOffer.getCount()
+        tDealItem = tOffer.getContent(i)
+        tFurniProps = pPersistentFurniData.getProps(tDealItem.getType(), tDealItem.getClassId())
         if not listp(tFurniProps) then
           next repeat
         end if
@@ -67,7 +80,9 @@ on define me, tdata
         end if
       end repeat
     end repeat
-    pPageItemDownloader.defineCallback(me, #downloadCompleted)
+    if tObjectLoadList.count > 0 then
+      pPageItemDownloader.defineCallback(me, #downloadCompleted)
+    end if
     repeat with tLoadObject in tObjectLoadList
       pPageItemDownloader.registerDownload(tLoadObject[#type], tLoadObject[#assetId], tLoadObject[#props])
     end repeat
@@ -102,14 +117,22 @@ end
 
 on convertPageData me, tdata
   tProductList = []
-  repeat with tOffer in tdata[#offers]
+  repeat with tOfferGroup in tdata[#offers]
+    if tOfferGroup.getCount() < 1 then
+      error(me, "Offergroup contains no offers", #convertPageData, #minor)
+      next repeat
+    end if
+    if tOfferGroup.getOffer(1).getCount() < 1 then
+      error(me, "Offer at index 1 has no content", #convertPageData, #minor)
+      next repeat
+    end if
     tProduct = [:]
-    tProduct["purchaseCode"] = tOffer[#offerList][1][#offername]
-    tCatalogProps = pPersistentCatalogData.getProps(tOffer[#offerList][1][#offername])
+    tProduct["purchaseCode"] = tOfferGroup.getOffer(1).getName()
+    tCatalogProps = pPersistentCatalogData.getProps(tOfferGroup.getOffer(1).getName())
     if voidp(tCatalogProps) then
       tCatalogProps = [:]
     end if
-    tFurniProps = pPersistentFurniData.getProps(tOffer[#offerList][1][#content][1][#type], tOffer[#offerList][1][#content][1][#classID])
+    tFurniProps = pPersistentFurniData.getProps(tOfferGroup.getOffer(1).getContent(1).getType(), tOfferGroup.getOffer(1).getContent(1).getClassId())
     if voidp(tFurniProps) then
       tFurniProps = [:]
     end if
@@ -117,16 +140,16 @@ on convertPageData me, tdata
     tProduct["description"] = tCatalogProps[#description]
     tProduct["specialText"] = tCatalogProps[#specialText]
     tProduct["class"] = tFurniProps[#class]
-    if tOffer[#offerList][1][#content][1][#extra_param] <> EMPTY then
-      tProduct["class"] = tProduct["class"] && tOffer[#offerList][1][#content][1][#extra_param]
+    if tOfferGroup.getOffer(1).getContent(1).getExtraParam() <> EMPTY then
+      tProduct["class"] = tProduct["class"] && tOfferGroup.getOffer(1).getContent(1).getExtraParam()
     end if
     tProduct["objectType"] = tFurniProps[#type]
     tProduct["direction"] = tFurniProps[#defaultDir]
     tProduct["dimensions"] = tFurniProps[#xdim] & "," & tFurniProps[#ydim]
     tProduct["partColors"] = tFurniProps[#partColors]
-    tProduct["price"] = tOffer[#offerList][1][#price][#credits]
-    if not voidp(tOffer.getaProp(#smallPreview)) then
-      tProduct["smallPrewImg"] = tOffer[#smallPreview]
+    tProduct["price"] = tOfferGroup.getOffer(1).getPrice(#credits)
+    if not voidp(tOfferGroup.getSmallPreview()) then
+      tProduct["smallPrewImg"] = tOfferGroup.getSmallPreview()
     else
       if pPageItemDownloader.isAssetDownloading(me.getClassAsset(tFurniProps[#class])) then
         tProduct["smallPrewImg"] = getMember("ctlg_loading_icon2").image
@@ -169,25 +192,39 @@ on convertPageData me, tdata
 end
 
 on resolveSmallPreview me, tOffer
+  if not objectp(tOffer) then
+    return error(me, "Invalid input format", #resolveSmallPreview, #major)
+  end if
+  if tOffer.getCount() < 1 then
+    return error(me, "Offer has no content", #resolveSmallPreview, #major)
+  end if
   tPrevMember = "ctlg_pic_"
-  tOfferName = tOffer[#offername]
+  tOfferName = tOffer.getName()
   if memberExists(tPrevMember & "small_" & tOfferName) then
     return getMember(tPrevMember & "small_" & tOfferName).image
   end if
-  if tOffer[#content].count = 1 then
-    tFurniProps = pPersistentFurniData.getProps(tOffer[#content][1][#type], tOffer[#content][1][#classID])
+  if tOffer.getCount() = 1 then
+    tFurniProps = pPersistentFurniData.getProps(tOffer.getContent(1).getType(), tOffer.getContent(1).getClassId())
     if not listp(tFurniProps) then
       return getMember("no_icon_small").image
     end if
     tClass = me.getClassAsset(tFurniProps.getaProp(#class))
     if getThread(#dynamicdownloader).getComponent().isAssetDownloaded(tClass) then
-      tImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tFurniProps.getaProp(#partColors), tFurniProps.getaProp(#class))
-      if tOffer[#content][1][#productcount] > 1 then
+      tImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tFurniProps.getaProp(#partColors), tFurniProps.getaProp(#class)).duplicate()
+      if tOffer.getContent(1).getProductCount() > 1 then
         if not objectp(pDealPreviewObj) then
           error(me, "Deal preview renderer object missing.", #resolveSmallPreview)
           return tImage
         end if
-        tCountImg = pDealPreviewObj.getNumberImage(tOffer[#content][1][#productcount])
+        tCountImg = pDealPreviewObj.getNumberImage(tOffer.getContent(1).getProductCount())
+        tNewImg = image(tImage.width, tImage.height, 32)
+        tNewImg.copyPixels(tImage, tImage.rect, tImage.rect)
+        tImage = tNewImg
+        if tCountImg.width + 2 > tImage.width then
+          tNewImg = image(tCountImg.width + 2, tImage.height, tImage.depth)
+          tNewImg.copyPixels(tImage, tImage.rect, tImage.rect)
+          tImage = tNewImg
+        end if
         tImage.copyPixels(tCountImg, tCountImg.rect + rect(2, 0, 2, 0), tCountImg.rect, [#ink: 36])
       end if
       return tImage
@@ -196,7 +233,7 @@ on resolveSmallPreview me, tOffer
     if not objectp(pDealPreviewObj) then
       return error(me, "Deal preview renderer object missing.", #resolveSmallPreview)
     end if
-    return pDealPreviewObj.renderDealPreviewImage(pDealNumber, me.convertOfferListToDeallist(tOffer[#content]), pSmallItemWidth, pSmallItemHeight)
+    return pDealPreviewObj.renderDealPreviewImage(pDealNumber, me.convertOfferListToDeallist(tOffer), pSmallItemWidth, pSmallItemHeight)
   end if
   return VOID
 end
@@ -213,26 +250,48 @@ on downloadCompleted me, tProps
     if not pWndObj.elementExists(tDlProps[#element]) then
       return error(me, "Missing target element " & tDlProps[#element], #downloadCompleted, #minor)
     end if
-    me.centerBlitImageToElement(getMember(tDlProps.getaProp(#assetId)).image, pWndObj.getElement(tDlProps[#element]))
+    tmember = getMember(tProps.getaProp(#assetId))
+    if tmember.type <> #bitmap then
+      return error(me, "Downloaded member was of incorrect type!", #downloadCompleted, #major)
+    end if
+    me.centerBlitImageToElement(tmember.image, pWndObj.getElement(tDlProps[#element]))
   else
+    if ilk(me.pPageData) <> #propList then
+      return error(me, "Pagedata was invalid", #downloadCompleted, #major)
+    end if
+    if ilk(pOldPageData["productList"]) <> #list then
+      return 
+    end if
     tItemIndex = tProps[#props].getaProp(#itemIndex)
     pDealNumber = tItemIndex
     if me.pPageData.offers.count < tItemIndex then
       return 
     end if
-    tPrev = me.resolveSmallPreview(me.pPageData.offers[tItemIndex][#offerList][1])
+    tPrev = me.resolveSmallPreview(me.pPageData.offers[tItemIndex].getOffer(1))
     if ilk(tPrev) <> #image then
       return 
     end if
     pOldPageData["productList"][tItemIndex].setaProp("smallPrewImg", tPrev)
-    me.pPageData[#offers][tItemIndex].setaProp(#smallPreview, tPrev)
-    createTimeout("RefreshSmallIcon-" & tItemIndex & "-" & getUniqueID(), 10, #renderGridPreview, me.getID(), tItemIndex, 1)
+    me.pPageData[#offers][tItemIndex].setSmallPreview(tPrev)
+    tTimeOutName = "RefreshSmallIcon-" & tItemIndex & "-" & me.getID()
+    createTimeout(tTimeOutName, 10, #renderGridPreview, me.getID(), tItemIndex, 1)
+    pTimeOutList.add(tTimeOutName)
   end if
 end
 
 on renderGridPreview me, tItemIndex
+  repeat with i = 1 to pTimeOutList.count
+    tTimeOutName = pTimeOutList[i]
+    if tTimeOutName contains "RefreshSmallIcon-" & tItemIndex & me.getID() then
+      pTimeOutList.deleteAt(i)
+      exit repeat
+    end if
+  end repeat
   if objectp(pPageImplObj) then
-    me.ShowSmallIcons(#furniLoaded, me.pPageData.offers[tItemIndex][#offerList][1][#offername])
+    if me.pPageData.offers.count < tItemIndex then
+      return 
+    end if
+    me.ShowSmallIcons(#furniLoaded, me.pPageData.offers[tItemIndex].getOffer(1).getName())
     pPageImplObj.define(pOldPageData)
   end if
 end
@@ -251,31 +310,23 @@ on handleClick me, tEvent, tSprID, tProp
         if tSprID = "ctlg_prev_button" then
           me.changeProductOffset(-1)
         else
-          if tSprID = "ctlg_nextpage_button" then
-            me.changeLinkPage(1)
+          if tSprID contains "ctlg_small_img_" then
+            tItemDeLimiter = the itemDelimiter
+            the itemDelimiter = "_"
+            tProductOrderNum = integer(tSprID.item[tSprID.item.count])
+            the itemDelimiter = tItemDeLimiter
+            me.selectProduct(tProductOrderNum, 1)
           else
-            if tSprID = "ctlg_prevpage_button" then
-              me.changeLinkPage(-1)
+            if tSprID = "ctlg_buy_button" then
+              getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
             else
-              if tSprID contains "ctlg_small_img_" then
-                tItemDeLimiter = the itemDelimiter
-                the itemDelimiter = "_"
-                tProductOrderNum = integer(tSprID.item[tSprID.item.count])
-                the itemDelimiter = tItemDeLimiter
-                me.selectProduct(tProductOrderNum, 1)
-              else
-                if tSprID = "ctlg_buy_button" then
-                  getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
-                else
-                  if tSprID = "ctlg_collectibles_link" then
-                    if variableExists("link.format.collectibles") then
-                      openNetPage(getVariable("link.format.collectibles"))
-                      executeMessage(#externalLinkClick, the mouseLoc)
-                    end if
-                  else
-                    nothing()
-                  end if
+              if tSprID = "ctlg_collectibles_link" then
+                if variableExists("link.format.collectibles") then
+                  openNetPage(getVariable("link.format.collectibles"))
+                  executeMessage(#externalLinkClick, the mouseLoc)
                 end if
+              else
+                nothing()
               end if
             end if
           end if
@@ -288,6 +339,9 @@ end
 on feedPageData me
   tWndObj = pWndObj
   pCurrentPageData = pOldPageData
+  if ilk(pCurrentPageData) <> #propList then
+    return 0
+  end if
   pProductOffset = 0
   pProductPerPage = 0
   pLastProductNum = VOID
@@ -315,7 +369,9 @@ on feedPageData me
           tDestImg.copyPixels(tSourceImg, tdestrect, tSourceImg.rect, [#ink: 8])
           tElem.feedImage(tDestImg)
         else
-          pPageItemDownloader.defineCallback(me, #downloadCompleted)
+          if not pPageItemDownloader.callbackExists(me, #downloadCompleted) then
+            pPageItemDownloader.defineCallback(me, #downloadCompleted)
+          end if
           pPageItemDownloader.registerDownload(#bitmap, pCurrentPageData["headerImage"], [#imagedownload: 1, #element: "ctlg_header_img", #assetId: pCurrentPageData["headerImage"], #pageid: me.pPageData[#pageid]])
         end if
       else
@@ -366,7 +422,9 @@ on feedPageData me
               tDestImg.copyPixels(tSourceImg, tdestrect, tSourceImg.rect, [#ink: 36])
               tElem.feedImage(tDestImg)
             else
-              pPageItemDownloader.defineCallback(me, #downloadCompleted)
+              if not pPageItemDownloader.callbackExists(me, #downloadCompleted) then
+                pPageItemDownloader.defineCallback(me, #downloadCompleted)
+              end if
               pPageItemDownloader.registerDownload(#bitmap, tImgList[t], [#imagedownload: 1, #element: "ctlg_teaserimg_" & t, #assetId: tImgList[t], #pageid: me.pPageData[#pageid]])
             end if
           else
@@ -466,6 +524,9 @@ end
 
 on ShowSmallIcons me, tstate, tPram
   tWndObj = pWndObj
+  if ilk(pCurrentPageData) <> #propList then
+    return 0
+  end if
   if objectp(pPageImplObj) then
     if pPageImplObj.handler(#renderSmallIcons) then
       if pPageImplObj.renderSmallIcons(tstate, tPram) then
@@ -683,8 +744,12 @@ end
 
 on refreshPreviewImage me, tClass, tdata
   if not voidp(tdata) and not voidp(pCurrentPageData) then
-    if tdata["id"] contains pCurrentPageData["id"] then
-      pCurrentPageData = tdata.duplicate()
+    if ilk(pCurrentPageData) = #propList then
+      if tdata["id"] contains pCurrentPageData["id"] then
+        if ilk(tdata) = #propList then
+          pCurrentPageData = tdata.duplicate()
+        end if
+      end if
     end if
   end if
   if voidp(pSelectedProduct) then
@@ -709,6 +774,9 @@ on selectProduct me, tOrderNum, tFeedFlag
   tWndObj = pWndObj
   if not integerp(tOrderNum) then
     return error(me, "Incorrect value", #selectProduct, #major)
+  end if
+  if ilk(pCurrentPageData) <> #propList then
+    return 0
   end if
   if voidp(pCurrentPageData["productList"]) then
     return 0
@@ -768,6 +836,9 @@ on selectProduct me, tOrderNum, tFeedFlag
 end
 
 on changeProductOffset me, tDirection
+  if ilk(pCurrentPageData) <> #propList then
+    return 0
+  end if
   if voidp(pCurrentPageData["productList"].count) then
     return 
   end if
@@ -786,29 +857,6 @@ on changeProductOffset me, tDirection
   end if
   ShowSmallIcons(me)
   showProductPageCounter(me)
-end
-
-on changeLinkPage me, tDirection
-  if not voidp(pPageLinkList) then
-    tID = pCurrentPageData["id"]
-    tPos = pPageLinkList.findPos(tID)
-    if tPos > 0 then
-      tPageNum = tPos + tDirection
-      if tPageNum < 1 then
-        tPageNum = 1
-      end if
-      if tPageNum > pPageLinkList.count then
-        tPageNum = pPageLinkList.count
-      end if
-      if tPos <> tPageNum then
-        tPageID = pPageLinkList[tPageNum]
-        pLoadingFlag = 1
-        tStatus = me.getComponent().retrieveCataloguePage(tPageID)
-        if tStatus then
-        end if
-      end if
-    end if
-  end if
 end
 
 on hideSpecialText me

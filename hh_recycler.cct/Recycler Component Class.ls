@@ -24,7 +24,7 @@ on deconstruct me
 end
 
 on Initialize me
-  tConn = getConnection(getVariableValue("connection.info.id"))
+  tConn = getConnection(getVariable("connection.info.id"))
   tConn.send("GET_FURNI_RECYCLER_CONFIGURATION")
   me.requestRecyclerState()
 end
@@ -38,7 +38,7 @@ on enableService me, tEnabled
 end
 
 on requestRecyclerState me
-  tConn = getConnection(getVariableValue("connection.info.id"))
+  tConn = getConnection(getVariable("connection.info.id"))
   tConn.send("GET_FURNI_RECYCLER_STATUS")
 end
 

@@ -36,6 +36,9 @@ on handlePageRequest me, tPageID
 end
 
 on createNode me, tdata, tWidth, tLevel
+  if ilk(tdata) <> #propList then
+    return 0
+  end if
   tNode = createObject(#random, "Treeview Node Class")
   tNode.feedData([#level: tLevel, #navigateable: tdata.navigateable, #color: tdata.color, #icon: tdata.icon, #pageid: tdata.pageid, #nodename: tdata.nodename], tWidth)
   if not voidp(tdata.getaProp(#subnodes)) then

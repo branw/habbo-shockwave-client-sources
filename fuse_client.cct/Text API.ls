@@ -41,3 +41,7 @@ end
 on dumpTextField tField, tDelimiter
   return getTextManager().dump(tField, tDelimiter)
 end
+
+on handlers
+  return []
+end

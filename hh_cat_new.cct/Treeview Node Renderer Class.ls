@@ -15,6 +15,12 @@ on deconstruct me
 end
 
 on define me, tNodeObj, tProps
+  if not objectp(tNodeObj) then
+    return 0
+  end if
+  if ilk(tProps) <> #propList then
+    return 0
+  end if
   pData = tNodeObj
   if tNodeObj.getData(#icon) > 0 and variableExists("treeview.node.icon." & tNodeObj.getData(#icon)) then
     pIcon = getMember(getVariable("treeview.node.icon." & tNodeObj.getData(#icon)))
@@ -67,7 +73,7 @@ end
 on render me
   pimage = image(pwidth, pheight, 32)
   tLevel = integer(pData.getData(#level)) - 1
-  tOffsetX = getVariableValue("treeview.node.start.offset") + getVariableValue("treeview.node.item.offset") * max([tLevel, 0])
+  tOffsetX = getIntVariable("treeview.node.start.offset") + getIntVariable("treeview.node.item.offset") * max([tLevel, 0])
   if pData.getSelected() then
     pimage.copyPixels(pSelectedBg.image, pimage.rect, pSelectedBg.image.rect, [#useFastQuads: 1])
   else
@@ -75,9 +81,9 @@ on render me
   end if
   if not voidp(pIcon) then
     tOffsetY = me.getCenteredOfs(pimage.height, pIcon.image.height)
-    tCenterX = me.getCenteredOfs(getVariableValue("treeview.node.icon.maxwidth"), pIcon.image.height)
+    tCenterX = me.getCenteredOfs(getIntVariable("treeview.node.icon.maxwidth"), pIcon.image.height)
     pimage.copyPixels(pIcon.image, pIcon.image.rect + rect(tOffsetX + tCenterX, tOffsetY, tOffsetX + tCenterX, tOffsetY), pIcon.image.rect, [#useFastQuads: 1, #ink: 36])
-    tOffsetX = tOffsetX + getVariableValue("treeview.node.icon.maxwidth") + getVariableValue("treeview.node.item.offset")
+    tOffsetX = tOffsetX + getIntVariable("treeview.node.icon.maxwidth") + getIntVariable("treeview.node.item.offset")
   end if
   tTextImage = getWriter(pTextRendererId).render(pText)
   tTextImage.useAlpha = 1
@@ -89,7 +95,7 @@ on render me
     tStateIndicator = getMember(getVariable("treeview.node.stateindicator.open"))
   end if
   if pData.hasChildren() then
-    tOffsetX = pimage.width - getVariableValue("treeview.node.stateindicator.offset.right")
+    tOffsetX = pimage.width - getIntVariable("treeview.node.stateindicator.offset.right")
     tOffsetY = me.getCenteredOfs(pimage.height, tStateIndicator.image.height)
     pimage.copyPixels(tStateIndicator.image, tStateIndicator.rect + rect(tOffsetX, tOffsetY, tOffsetX, tOffsetY), tStateIndicator.rect, [#useFastQuads: 1, #ink: 36])
   end if

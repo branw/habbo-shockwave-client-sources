@@ -204,3 +204,7 @@ end
 on mouseWithin me
   return point(the mouseH - me.pSprite.locH + pOwnX + pOffX, the mouseV - me.pSprite.locV + pOwnY + pOffY)
 end
+
+on handlers
+  return []
+end

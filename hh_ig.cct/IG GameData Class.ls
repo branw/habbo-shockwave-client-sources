@@ -3,7 +3,6 @@ property pPlayerData, pRoomIndexIndex
 on construct me
   me.clear()
   registerMessage(#ig_clear_game_info, me.getID(), #clear)
-  registerMessage(#ig_store_game_info, me.getID(), #define)
   registerMessage(#ig_store_gameplayer_info, me.getID(), #storeUser)
   registerMessage(#ig_user_left_game, me.getID(), #userLeftGame)
   return 1
@@ -11,7 +10,6 @@ end
 
 on deconstruct me
   unregisterMessage(#ig_clear_game_info, me.getID())
-  unregisterMessage(#ig_store_game_info, me.getID())
   unregisterMessage(#ig_store_gameplayer_info, me.getID())
   unregisterMessage(#ig_user_left_game, me.getID())
   me.clear()

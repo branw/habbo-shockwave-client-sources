@@ -1,4 +1,4 @@
-property pTagList, pWriter, pRectList, pwidth, pheight, pGapH
+property pTagList, pWriter, pWriterHighlight, pRectList, pwidth, pheight, pGapH, pOwnTags
 
 on construct me
   tID = getUniqueID()
@@ -7,11 +7,18 @@ on construct me
   tLinkFont.color = rgb(240, 240, 240)
   createWriter(tID, tLinkFont)
   pWriter = getWriter(tID)
+  tID = getUniqueID()
+  tLinkFont = getStructVariable("struct.font.plain")
+  tLinkFont.setaProp(#lineHeight, 15)
+  tLinkFont.color = rgb(240, 240, 180)
+  createWriter(tID, tLinkFont)
+  pWriterHighlight = getWriter(tID)
   pTagList = []
   pRectList = [:]
   pwidth = 1
   pheight = 1
   pGapH = 5
+  pOwnTags = []
   return 1
 end
 
@@ -29,7 +36,11 @@ on createTagList me, tTagList
   tPosX = 0
   tPosY = 0
   repeat with tTag in tTagList
-    tTagImage = pWriter.render(tTag).duplicate()
+    if pOwnTags.getPos(tTag) <> 0 then
+      tTagImage = pWriterHighlight.render(tTag).duplicate()
+    else
+      tTagImage = pWriter.render(tTag).duplicate()
+    end if
     if tPosX + tTagImage.width > pwidth then
       tPosX = 0
       tPosY = tPosY + tTagImage.height + 1
@@ -81,4 +92,11 @@ on setHeight me, tHeight
     return 0
   end if
   pheight = tHeight
+end
+
+on setOwnTags me, tTagList
+  if voidp(tTagList) then
+    tTagList = []
+  end if
+  pOwnTags = tTagList
 end

@@ -14,6 +14,9 @@ on deconstruct me
 end
 
 on create me, tID, tMetrics
+  if voidp(tID) then
+    return error(me, "Failed to create writer. Writer ID was void", #create, #major)
+  end if
   if not voidp(pItemList[tID]) then
     return error(me, "Writer already exists:" && tID, #create, #minor)
   end if
@@ -34,7 +37,7 @@ on create me, tID, tMetrics
 end
 
 on Remove me, tID
-  tObj = pItemList[tID]
+  tObj = pItemList.getaProp(tID)
   if voidp(tObj) then
     return error(me, "Writer not found:" && tID, #Remove, #minor)
   end if
@@ -43,7 +46,7 @@ on Remove me, tID
 end
 
 on GET me, tID
-  tObj = pItemList[tID]
+  tObj = pItemList.getaProp(tID)
   if voidp(tObj) then
     return 0
   end if
@@ -51,5 +54,9 @@ on GET me, tID
 end
 
 on exists me, tID
-  return not voidp(pItemList[tID])
+  return not voidp(pItemList.getaProp(tID))
+end
+
+on handlers
+  return []
 end

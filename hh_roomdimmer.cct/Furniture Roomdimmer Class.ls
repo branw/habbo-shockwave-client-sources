@@ -47,12 +47,13 @@ on setState me, tNewState
   tLightness = tNewState.item[5]
   the itemDelimiter = tDelim
   callAncestor(#setState, [me], tstate)
+  tLightness = max(integer(tLightness), 77)
   tStateData = [:]
   tStateData.setaProp(#dimmerID, me.getID())
   tStateData.setaProp(#isOn, tstate = 2)
-  tStateData.setaProp(#presetID, value(tPresetID))
-  tStateData.setaProp(#effectID, value(tEffectID))
+  tStateData.setaProp(#presetID, integer(tPresetID))
+  tStateData.setaProp(#effectID, integer(tEffectID))
   tStateData.setaProp(#color, rgb(tColor))
-  tStateData.setaProp(#lightness, value(tLightness))
+  tStateData.setaProp(#lightness, tLightness)
   executeMessage(#roomdimmer_set_state, tStateData)
 end

@@ -1,4 +1,4 @@
-property pPageCache, pCatalogIndex, pWaitingForData, pWaitingForFrontPage, pPersistentCatalogDataId, pPageItemDownloader, pCreditInfoPageID, pPixelInfoPageID, pCreditInfoNodeName, pPixelInfoNodeName, pPurchaseProcessor
+property pPageCache, pCatalogIndex, pWaitingForData, pWaitingForNodeName, pWaitingForFrontPage, pPersistentCatalogDataId, pPageItemDownloader, pCreditInfoPageID, pPixelInfoPageID, pCreditInfoNodeName, pPixelInfoNodeName, pPurchaseProcessor
 
 on construct me
   pPageCache = [:]
@@ -13,16 +13,19 @@ on construct me
   pCreditInfoPageID = VOID
   pPixelInfoPageID = VOID
   pPurchaseProcessor = VOID
+  pWaitingForNodeName = EMPTY
+  registerMessage(#refresh_catalogue, me.getID(), #refreshCatalogue)
 end
 
 on deconstruct me
   if objectExists(pPersistentCatalogDataId) then
     removeObject(pPersistentCatalogDataId)
   end if
+  unregisterMessage(#refresh_catalogue, me.getID())
 end
 
 on updatePageData me, tPageID, tdata
-  pPageCache.setaProp(tPageID, me.groupOffersByProducts(tdata.duplicate()))
+  pPageCache.setaProp(tPageID, me.createOfferGroups(tdata.duplicate()))
   if tPageID = pWaitingForData then
     me.getInterface().displayPage(tPageID)
   end if
@@ -38,6 +41,23 @@ on updateCatalogIndex me, tdata
     else
       me.preparePage(tNode[#pageid])
       pWaitingForFrontPage = 0
+    end if
+    tCreditInfoNode = me.getNodeByName(pCreditInfoNodeName, pCatalogIndex)
+    tPixelInfoNode = me.getNodeByName(pPixelInfoNodeName, pCatalogIndex)
+    if not voidp(tCreditInfoNode) then
+      pCreditInfoPageID = tCreditInfoNode[#pageid]
+    end if
+    if not voidp(tPixelInfoNode) then
+      pPixelInfoPageID = tPixelInfoNode[#pageid]
+    end if
+  end if
+  if pWaitingForNodeName <> EMPTY then
+    tNode = me.getFirstNodeByName(pWaitingForNodeName, pCatalogIndex)
+    if voidp(tNode) then
+      return 
+    else
+      me.preparePage(tNode[#pageid])
+      pWaitingForNodeName = EMPTY
     end if
     tCreditInfoNode = me.getNodeByName(pCreditInfoNodeName, pCatalogIndex)
     tPixelInfoNode = me.getNodeByName(pPixelInfoNodeName, pCatalogIndex)
@@ -71,6 +91,21 @@ on prepareFrontPage me
     end if
   else
     pWaitingForFrontPage = 1
+    me.initCatalogData()
+  end if
+end
+
+on preparePageByName me, tLocalizedName
+  if not voidp(pCatalogIndex) then
+    tNode = me.getFirstNodeByName(tLocalizedName, pCatalogIndex)
+    if voidp(tNode) then
+      return 
+    else
+      me.preparePage(tNode[#pageid])
+      pWaitingForNodeName = EMPTY
+    end if
+  else
+    pWaitingForNodeName = tLocalizedName
     me.initCatalogData()
   end if
 end
@@ -165,14 +200,15 @@ on initCatalogData me
   end if
 end
 
-on groupOffersByProducts me, tPageData
+on createOfferGroups me, tPageData
   tGroupedOffers = [:]
   repeat with tOffer in tPageData[#offers]
     tProductCode = tOffer[#offername]
     if voidp(tGroupedOffers.getaProp(tProductCode)) then
-      tGroupedOffers.setaProp(tProductCode, [#offerList: []])
+      tOfferGroup = createObject(#random, ["Offergroup Class"])
+      tGroupedOffers.setaProp(tProductCode, tOfferGroup)
     end if
-    tGroupedOffers[tProductCode][#offerList].add(tOffer)
+    tGroupedOffers[tProductCode].add(tOffer)
   end repeat
   tPageData[#offers] = tGroupedOffers
   return tPageData
@@ -183,16 +219,19 @@ on findOfferByOldpageSelection me, tSelectedProduct, tPageID
   tOffer = VOID
   repeat with i = 1 to tPageData[#offers].count
     if tSelectedProduct["purchaseCode"] = tPageData[#offers].getPropAt(i) then
-      tOffer = tPageData[#offers][i][#offerList][1].duplicate()
+      tOffer = tPageData[#offers][i].getOffer(1)
       exit repeat
     end if
   end repeat
   if voidp(tOffer) then
     error(me, "Could not map old page's product code to a current product id", #findOfferByOldpageSelection, #major)
+    return VOID
   else
-    tOffer[#content][1][#extra_param] = tSelectedProduct["extra_parm"]
+    tRemappedOffer = createObject(#random, ["Offer Class"])
+    tRemappedOffer.copy(tOffer)
+    tRemappedOffer.getContent(1).setExtraParam(tSelectedProduct["extra_parm"])
+    return tRemappedOffer
   end if
-  return tOffer
 end
 
 on checkProductOrder me, tSelectedProduct
@@ -201,6 +240,9 @@ on checkProductOrder me, tSelectedProduct
   end if
   tPageID = me.getInterface().getLastOpenedPage()
   tOffer = me.findOfferByOldpageSelection(tSelectedProduct, tPageID)
+  if voidp(tOffer) then
+    return error(me, "Could not reference an offer by selected product", #checkProductOrder, #major)
+  end if
   if not objectp(pPurchaseProcessor) then
     pPurchaseProcessor = createObject(getUniqueID(), "Purchase Processor Class")
   end if
@@ -221,17 +263,21 @@ on requestPurchase me, tOfferType, tPageID, tSelectedItem, tMethod, tExtraProps
 end
 
 on getArePixelsEnabled me
-  if getVariableValue("pixels.enabled") = 1 then
+  if getStringVariable("pixels.enabled") = "true" then
     return 1
   else
     return 0
   end if
 end
 
-on refreshCatalogue me
-  if me.getInterface().isVisible() then
+on refreshCatalogue me, tMode
+  if tMode = #club then
     me.getInterface().hideCatalogue()
-    me.getInterface().showCatalogWasPublishedDialog()
+  else
+    if me.getInterface().isVisible() then
+      me.getInterface().hideCatalogue()
+      me.getInterface().showCatalogWasPublishedDialog()
+    end if
   end if
   me.getHandler().requestCatalogIndex()
 end

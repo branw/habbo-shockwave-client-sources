@@ -1,4 +1,4 @@
-property pObjectList, pUpdateList, pPrepareList, pManagerList, pInstanceList, pEraseLock, pTimeout, pUpdatePause, pBaseClsMem
+property pObjectList, pUpdateList, pPrepareList, pManagerList, pInstanceList, pEraseLock, pTimeout, pUpdatePause, pBaseClsMem, pDontProfile
 
 on construct me
   pObjectList = [:]
@@ -10,6 +10,7 @@ on construct me
   pTimeout = VOID
   pUpdatePause = 0
   pBaseClsMem = script("Object Base Class")
+  pDontProfile = 1
   pObjectList.sort()
   pUpdateList.sort()
   return 1
@@ -37,7 +38,7 @@ on create me, tID, tClassList
   if not symbolp(tID) and not stringp(tID) then
     return error(me, "Symbol or string expected:" && tID, #create, #major)
   end if
-  if objectp(pObjectList[tID]) then
+  if objectp(pObjectList.getaProp(tID)) then
     return error(me, "Object already exists:" && tID, #create, #major)
   end if
   if tID = #random then
@@ -94,7 +95,7 @@ on create me, tID, tClassList
 end
 
 on GET me, tID
-  tObj = pObjectList[tID]
+  tObj = pObjectList.getaProp(tID)
   if voidp(tObj) then
     return 0
   else
@@ -103,7 +104,7 @@ on GET me, tID
 end
 
 on Remove me, tID
-  tObj = pObjectList[tID]
+  tObj = pObjectList.getaProp(tID)
   if voidp(tObj) then
     return 0
   end if
@@ -133,7 +134,7 @@ on exists me, tID
   if voidp(tID) then
     return 0
   end if
-  return objectp(pObjectList[tID])
+  return objectp(pObjectList.getaProp(tID))
 end
 
 on print me
@@ -151,19 +152,19 @@ on registerObject me, tID, tObject
   if not objectp(tObject) then
     return error(me, "Invalid object:" && tObject, #register, #major)
   end if
-  if not voidp(pObjectList[tID]) then
+  if not voidp(pObjectList.getaProp(tID)) then
     return error(me, "Object already exists:" && tID, #register, #minor)
   end if
-  pObjectList[tID] = tObject
+  setaProp(pObjectList, tID, tObject)
   pInstanceList.append(tID)
   return 1
 end
 
 on unregisterObject me, tID
-  if voidp(pObjectList[tID]) then
+  if voidp(pObjectList.getaProp(tID)) then
     return error(me, "Referred object not found:" && tID, #unregister, #minor)
   end if
-  tObj = pObjectList[tID]
+  tObj = pObjectList.getaProp(tID)
   pObjectList.deleteProp(tID)
   pUpdateList.deleteOne(tObj)
   pPrepareList.deleteOne(tObj)
@@ -200,7 +201,7 @@ on getManager me, tID
   if not pManagerList.getOne(tID) then
     return error(me, "Manager not found:" && tID, #getManager, #major)
   end if
-  return pObjectList[tID]
+  return pObjectList.getaProp(tID)
 end
 
 on managerExists me, tID
@@ -208,13 +209,13 @@ on managerExists me, tID
 end
 
 on receivePrepare me, tID
-  if voidp(pObjectList[tID]) then
+  if voidp(pObjectList.getaProp(tID)) then
     return 0
   end if
-  if pPrepareList.getPos(pObjectList[tID]) > 0 then
+  if pPrepareList.getPos(pObjectList.getaProp(tID)) > 0 then
     return 0
   end if
-  pPrepareList.add(pObjectList[tID])
+  pPrepareList.add(pObjectList.getaProp(tID))
   if not pUpdatePause then
     if voidp(pTimeout) then
       pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
@@ -224,13 +225,13 @@ on receivePrepare me, tID
 end
 
 on removePrepare me, tID
-  if voidp(pObjectList[tID]) then
+  if voidp(pObjectList.getaProp(tID)) then
     return 0
   end if
-  if pPrepareList.getOne(pObjectList[tID]) < 1 then
+  if pPrepareList.getOne(pObjectList.getaProp(tID)) < 1 then
     return 0
   end if
-  pPrepareList.deleteOne(pObjectList[tID])
+  pPrepareList.deleteOne(pObjectList.getaProp(tID))
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
     if objectp(pTimeout) then
       pTimeout.forget()
@@ -241,13 +242,13 @@ on removePrepare me, tID
 end
 
 on receiveUpdate me, tID
-  if voidp(pObjectList[tID]) then
+  if voidp(pObjectList.getaProp(tID)) then
     return 0
   end if
-  if pUpdateList.getPos(pObjectList[tID]) > 0 then
+  if pUpdateList.getPos(pObjectList.getaProp(tID)) > 0 then
     return 0
   end if
-  pUpdateList.add(pObjectList[tID])
+  pUpdateList.add(pObjectList.getaProp(tID))
   if not pUpdatePause then
     if voidp(pTimeout) then
       pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
@@ -257,13 +258,13 @@ on receiveUpdate me, tID
 end
 
 on removeUpdate me, tID
-  if voidp(pObjectList[tID]) then
+  if voidp(pObjectList.getaProp(tID)) then
     return 0
   end if
-  if pUpdateList.getOne(pObjectList[tID]) < 1 then
+  if pUpdateList.getOne(pObjectList.getaProp(tID)) < 1 then
     return 0
   end if
-  pUpdateList.deleteOne(pObjectList[tID])
+  pUpdateList.deleteOne(pObjectList.getaProp(tID))
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
     if objectp(pTimeout) then
       pTimeout.forget()
@@ -291,13 +292,45 @@ on resumeUpdate me
 end
 
 on prepareFrame me
+  if pDontProfile and getObjectManager().managerExists(#variable_manager) then
+    if variableExists("profile.core.enabled") then
+      pDontProfile = 0
+    end if
+  end if
+  if not pDontProfile then
+    startProfilingTask("Object Manager::prepareFrame")
+  end if
   the traceScript = 0
   if (the activeWindow).name <> "stage" then
     return stopMovie()
   end if
-  call(#prepare, pPrepareList)
-  call(#update, pUpdateList)
+  if pDontProfile then
+    call(#prepare, pPrepareList)
+    call(#update, pUpdateList)
+  else
+    repeat with i = 1 to pPrepareList.count
+      tTask = pPrepareList[i]
+      tTaskName = "Prepare " & string(tTask)
+      startProfilingTask(tTaskName)
+      call(#prepare, [tTask])
+      finishProfilingTask(tTaskName)
+    end repeat
+    repeat with i = 1 to pUpdateList.count
+      tTask = pUpdateList[i]
+      tTaskName = "Update " & string(tTask)
+      startProfilingTask(tTaskName)
+      call(#update, [tTask])
+      finishProfilingTask(tTaskName)
+    end repeat
+  end if
+  if not pDontProfile then
+    finishProfilingTask("Object Manager::prepareFrame")
+  end if
 end
 
 on null me
+end
+
+on handlers
+  return []
 end

@@ -5,7 +5,7 @@ on construct me
   pimage = VOID
   pwidth = 0
   pheight = 0
-  pClickAreas = VOID
+  pClickAreas = []
 end
 
 on deconstruct me
@@ -83,17 +83,27 @@ on select me, tNodeObj
 end
 
 on simulateClickByName me, tNodeName
+  if ilk(pClickAreas) <> #list then
+    return 0
+  end if
   tClickLoc = point(2, 0)
   repeat with i = 1 to pClickAreas.count
-    if pClickAreas[i][#data].getData(#nodename) = tNodeName then
-      tClickLoc.locV = pClickAreas[i][#min] + 1
-      exit repeat
+    if ilk(pClickAreas[i]) = #propList then
+      if objectp(pClickAreas[i][#data]) then
+        if pClickAreas[i][#data].getData(#nodename) = tNodeName then
+          tClickLoc.locV = pClickAreas[i][#min] + 1
+          exit repeat
+        end if
+      end if
     end if
   end repeat
   me.handleClick(tClickLoc)
 end
 
 on handleClick me, tloc
+  if ilk(tloc) <> #point then
+    return 
+  end if
   tNode = VOID
   repeat with i = 1 to pClickAreas.count
     if pClickAreas[i][#min] < tloc.locV and pClickAreas[i][#max] > tloc.locV then

@@ -1,4 +1,4 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pHeaderDecoder, pHeaderEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector, pLastError, pConnectionEstablishing, pConnectionRetryDelay, pConnectionRetryCount, pConnectionTries, pMsgOffset, pMsgSize, pToken, pMsgCount, pTx, pRx
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pHeaderDecoder, pHeaderEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector, pLastError, pConnectionEstablishing, pConnectionRetryDelay, pConnectionRetryCount, pConnectionTries, pMsgOffset, pMsgSize, pToken, pMsgCount, pTx, pRx, pHelloReceived, pDontProfile
 
 on construct me
   if value(chars(_player.productVersion, 1, 2)) >= 11 then
@@ -32,6 +32,13 @@ on construct me
   pMsgCount = 0
   pTx = 0
   pRx = 0
+  pHelloReceived = 0
+  pDontProfile = 1
+  if pDontProfile and getObjectManager().managerExists(#variable_manager) then
+    if variableExists("profile.network.enabled") then
+      pDontProfile = 0
+    end if
+  end if
   return 1
 end
 
@@ -611,6 +618,9 @@ on xtraMsgHandler me
   the traceScript = 0
   _movie.traceScript = 0
   _player.traceScript = 0
+  if not pDontProfile then
+    startProfilingTask("Connection Instance::xtraMsgHandler")
+  end if
   if pConnectionShouldBeKilled <> 0 then
     return 0
   end if
@@ -618,6 +628,13 @@ on xtraMsgHandler me
   tNewMsg = pXtra.getNetMessage()
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
+  tSender = tNewMsg.getaProp(#senderID)
+  tSubject = tNewMsg.getaProp(#subject)
+  if tSender = "System" and tSubject = "ConnectToNetServer" then
+    pConnectionEstablishing = 0
+    pHelloReceived = 1
+    me.forwardMsg(0, EMPTY)
+  end if
   if tErrCode <> 0 then
     pLastError = tErrCode
     if ilk(tNewMsg) = #propList then
@@ -692,6 +709,9 @@ on xtraMsgHandler me
       me.msghandler(tContent)
     end if
   end if
+  if not pDontProfile then
+    finishProfilingTask("Connection Instance::xtraMsgHandler")
+  end if
 end
 
 on msghandler me, tContent
@@ -739,6 +759,9 @@ on msghandler me, tContent
     tParams = char 3 to tLength - 1 of tContent
     tContent = char tLength + 1 to tContent.length of tContent
     tParams = decodeUTF8(tParams, pDecipherOn)
+    if tMsgType = 0 and pHelloReceived then
+      return 0
+    end if
     me.forwardMsg(tMsgType, tParams)
   end repeat
 end
@@ -750,6 +773,9 @@ on forwardMsg me, tSubject, tParams
   the traceScript = 0
   _movie.traceScript = 0
   _player.traceScript = 0
+  if not pDontProfile then
+    startProfilingTask("Connection Instance::forwardMsg")
+  end if
   if pLogMode > 0 then
     me.log("-->" && tSubject & RETURN & tParams)
   end if
@@ -774,9 +800,22 @@ on forwardMsg me, tSubject, tParams
     tCallbackList.deleteAt(1)
     i = i - 1
   end repeat
+  if not pDontProfile then
+    finishProfilingTask("Connection Instance::forwardMsg")
+  end if
 end
 
 on log me, tMsg
+  if _player.windowList.count > 0 then
+    return stopMovie()
+  end if
+  the traceLogFile = EMPTY
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if not pD then
     the debugPlaybackEnabled = 0
     if not (the runMode contains "Author") then

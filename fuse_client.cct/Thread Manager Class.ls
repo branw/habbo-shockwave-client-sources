@@ -25,7 +25,7 @@ on Remove me, tID
 end
 
 on GET me, tID
-  tThreadObj = pThreadList[tID]
+  tThreadObj = pThreadList.getaProp(tID)
   if voidp(tThreadObj) then
     return 0
   else
@@ -34,10 +34,11 @@ on GET me, tID
 end
 
 on exists me, tID
-  return not voidp(pThreadList[tID])
+  return not voidp(pThreadList.getaProp(tID))
 end
 
 on initThread me, tCastNumOrMemName, tID
+  startProfilingTask("Thread Manager::initThread")
   if stringp(tCastNumOrMemName) then
     tMemNum = getResourceManager().getmemnum(tCastNumOrMemName)
     if tMemNum = 0 then
@@ -116,9 +117,10 @@ on initThread me, tCastNumOrMemName, tID
           tThreadObj.setaProp(tModule, tObject)
         end if
       end repeat
-      pThreadList[tThreadID] = tThreadObj
+      setaProp(pThreadList, tThreadID, tThreadObj)
     end if
   end repeat
+  startProfilingTask("Thread Manager::initThread")
   return 1
 end
 
@@ -215,4 +217,8 @@ on buildThreadObj me, tID, tClassList, tThreadObj
     end if
   end repeat
   return tObject
+end
+
+on handlers
+  return []
 end

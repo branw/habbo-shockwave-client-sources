@@ -172,9 +172,9 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
         tTempDelim = the itemDelimiter
         the itemDelimiter = ","
         tColor = string(pSwimSuitColor)
-        tR = value(tColor.item[1].char[5..tColor.item[1].length])
-        tG = value(tColor.item[2])
-        tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
+        tR = integer(tColor.item[1].char[5..tColor.item[1].length])
+        tG = integer(tColor.item[2])
+        tB = integer(tColor.item[3].char[1..tColor.item[3].length - 1])
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
@@ -194,7 +194,11 @@ on showRoomBar me, tRoomData
   tRoomInterface.showVote()
   return 1
   if not windowExists(pBottomBarId) then
-    createWindow(pBottomBarId, "room_bar.window", 0, 486)
+    tLayout = "room_bar.window"
+    if (the stage).image.widht >= 960 then
+      tLayout = "room_bar_wide.window"
+    end if
+    createWindow(pBottomBarId, tLayout, 0, 486)
     tWndObj = getWindow(pBottomBarId)
     if tWndObj.elementExists("chat_field_bg_long") then
       tWidthLong = tWndObj.getElement("chat_field_bg_long").getProperty(#width)
@@ -259,7 +263,7 @@ end
 
 on updateMessageCount me, tMsgCount
   if windowExists(pBottomBarId) then
-    pNewMsgCount = value(tMsgCount)
+    pNewMsgCount = integer(tMsgCount)
     if pNewMsgCount > 0 then
       me.flashMessengerIcon()
     end if
@@ -269,7 +273,7 @@ end
 
 on updateBuddyrequestCount me, tReqCount
   if windowExists(pBottomBarId) then
-    pNewBuddyReq = value(tReqCount)
+    pNewBuddyReq = integer(tReqCount)
     if pNewBuddyReq > 0 then
       me.flashMessengerIcon()
     end if

@@ -51,9 +51,6 @@ on construct me
 end
 
 on deconstruct me
-  if ilk(pUserSprite) = #sprite then
-    removeEventBroker(pUserSprite.spriteNum)
-  end if
   if ilk(pBgSprite) = #sprite then
     releaseSprite(pBgSprite.spriteNum)
     pBgSprite = VOID

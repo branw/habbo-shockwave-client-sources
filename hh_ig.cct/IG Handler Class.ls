@@ -431,7 +431,6 @@ on handle_enter_arena me, tMsg
   getObject(#session).set("lastroom", EMPTY)
   executeMessage(#hide_navigator)
   executeMessage(#ig_clear_game_info)
-  executeMessage(#ig_store_game_info, tdata)
   me.getComponent().setSystemState(#pre_game)
   me.getComponent().displayIGComponentEvent("PreGame", #pre_game, tdata, 1)
   tService = me.getComponent().getIGComponent("BottomBar")
@@ -481,7 +480,6 @@ on handle_stage_starting me, tMsg
     return 0
   end if
   tService.constructArena(tdata, tMsg)
-  executeMessage(#ig_store_game_info, tdata)
   me.getComponent().displayIGComponentEvent("PreGame", #stage_starting, tdata)
   return 1
 end
@@ -524,7 +522,6 @@ end
 
 on handle_game_ending me, tMsg
   tConn = tMsg.connection
-  put "* received game_ending"
   tGameDataService = me.getComponent().getIGComponent("GameData")
   if tGameDataService = 0 then
     return error(me, "Game data IGComponent not found.", #handle_game_ending)

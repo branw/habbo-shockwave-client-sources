@@ -1,6 +1,9 @@
 property pState, pProp, pTextKeys, pTextlist, pShowOrder, pDropMenuImg, pDropActiveBtnImg, pDropDownImg, pLineHeight, pMarginTop, pMarginBottom, pMarginLeft, pAlignment, pOpenDir, pMaxWidth, pDotLineImg, pFont, pFonSize, pSelectedItemNum, pRollOverItem, pLoc, pFixedSize, pOrigWidth, pLastRollOver, pTextWidth, pClickPass, pDelayID, pOnFirstChoice, pDropDownType, pmodel, pOrdering
 
 on define me, tProps
+  if ilk(tProps) <> #propList then
+    return 0
+  end if
   tField = tProps[#type] & tProps[#model] & ".element"
   pProp = getObject(#layout_parser).parse(tField)
   if pProp = 0 then
@@ -105,6 +108,12 @@ on deactivate me
 end
 
 on updateData me, tTextList, tTextKeys, tChosenIndex, tChosenValue
+  if ilk(tTextList) <> #list then
+    return 0
+  end if
+  if ilk(tTextKeys) <> #list then
+    return 0
+  end if
   pTextlist = tTextList
   pTextKeys = tTextKeys
   pShowOrder = []
@@ -113,6 +122,9 @@ on updateData me, tTextList, tTextKeys, tChosenIndex, tChosenValue
   end repeat
   if tChosenIndex > 0 and tChosenIndex <= pShowOrder.count then
     pSelectedItemNum = tChosenIndex
+  end if
+  if tChosenIndex > pShowOrder.count then
+    pSelectedItemNum = 1
   end if
   if not voidp(tChosenValue) then
     me.setSelection(tChosenValue)
@@ -136,6 +148,12 @@ end
 
 on setSelection me, tSelNumOrStr, tUpdate
   tEarlierSelection = pSelectedItemNum
+  if not listp(pTextKeys) then
+    return error(me, "pTextKeys is not a list!", #arrangeTextList, #major)
+  end if
+  if not listp(pShowOrder) then
+    return error(me, "pShowOrder is not a list!", #arrangeTextList, #major)
+  end if
   if stringp(tSelNumOrStr) then
     tSelNum = pTextlist.getPos(tSelNumOrStr)
     if tSelNum = 0 then
@@ -168,6 +186,9 @@ on setShowOrder me, tStyle, tFirstNum, tDeleteOne, tOpenDir
   if not pOrdering then
     return 1
   end if
+  if not listp(pShowOrder) then
+    return error(me, "pShowOrder is not a list!", #arrangeTextList, #major)
+  end if
   tChoice = pShowOrder[pSelectedItemNum]
   case tStyle of
     #normal:
@@ -199,6 +220,9 @@ on setOrdering me, tMode
 end
 
 on arrangeTextList me, tStyle
+  if not listp(pShowOrder) then
+    return error(me, "pShowOrder is not a list!", #arrangeTextList, #major)
+  end if
   if pDropDownType = #titleWithCancel then
     case tStyle of
       #open:
@@ -285,6 +309,15 @@ on chooseFromMenu me
     me.pimage = pDropActiveBtnImg
     me.pSprite.loc = pLoc
     me.render()
+    if not listp(pTextKeys) then
+      return error(me, "pTextKeys is not a list!", #chooseFromMenu, #major)
+    end if
+    if not listp(pShowOrder) then
+      return error(me, "pShowOrder is not a list!", #chooseFromMenu, #major)
+    end if
+    if pSelectedItemNum > pShowOrder.count then
+      return error(me, "pShowOrder is out of sync!", #chooseFromMenu, #major)
+    end if
     if pTextKeys.count < 1 then
       return EMPTY
     end if
@@ -639,4 +672,8 @@ on RotateQuad me, tDestquad, tClockwise
     tDestquad = [tPoint4, tPoint1, tPoint2, tPoint3]
   end if
   return tDestquad
+end
+
+on handlers
+  return []
 end

@@ -304,10 +304,11 @@ on encodeUTF8 me, tStr
 end
 
 on decodeUTF8 me, tStr, tForceDecode
+  startProfilingTask("DecodeUTF8")
   if voidp(pUsesUTF8) then
     tVar = "client.textdata.utf8"
     if variableExists(tVar) then
-      pUsesUTF8 = getVariableValue(tVar)
+      pUsesUTF8 = getIntVariable(tVar)
     else
       pUsesUTF8 = VOID
     end if
@@ -372,6 +373,7 @@ on decodeUTF8 me, tStr, tForceDecode
     i = i + 1
   end repeat
   tResult = me.convertFromUnicode(tUnicodeData)
+  finishProfilingTask("DecodeUTF8")
   return tResult
 end
 
@@ -465,4 +467,8 @@ on initConvList me
     pConvList[tKey] = tVal
   end repeat
   return 1
+end
+
+on handlers
+  return []
 end

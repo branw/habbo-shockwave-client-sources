@@ -1,4 +1,4 @@
-property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pOwnDomain, pLastError
+property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pOwnDomain, pLastError, pDontProfile
 
 on construct me
   pTaskQueue = [:]
@@ -9,6 +9,7 @@ on construct me
   me.emptyCookies()
   pOwnDomain = getDomainPart(getMoviePath())
   pLastError = 0
+  pDontProfile = 1
   return 1
 end
 
@@ -25,7 +26,6 @@ on create me, tURL, tMemName, ttype, tForceFlag
 end
 
 on Remove me, tMemNameOrNum
-  return me.abort(tMemNameOrNum)
 end
 
 on exists me, tMemName
@@ -43,24 +43,13 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType, 
     ttype = me.recognizeMemberType(tURL)
   end if
   tURL = getPredefinedURL(tURL)
-  tOwnDomain = getDomainPart(getMoviePath())
-  tDownloadDomain = getDomainPart(tURL)
-  if tOwnDomain <> tDownloadDomain and (tURL contains "http://" or tURL contains "https://") and not (tURL contains "://localhost") then
-    tAllowCrossDomain = 0
-    if variableExists("client.allow.cross.domain") then
-      tAllowCrossDomain = value(getVariable("client.allow.cross.domain"))
-    end if
-    tNotifyCrossDomain = 1
-    if variableExists("client.notify.cross.domain") then
-      tNotifyCrossDomain = value(getVariable("client.notify.cross.domain"))
-    end if
-    if tNotifyCrossDomain then
-      executeMessage("crossDomainDownload", tURL)
-    end if
-    if not tAllowCrossDomain then
-      tPref = getPref("CrossDomainAlert.txt")
-      setPref("CrossDomainAlert.txt", tURL && date() && time() & RETURN & tPref)
-      return error(me, "Cross domain download not allowed:" && tURL, #queue, #minor)
+  tOwnDomain = getDomainAndTld(getMoviePath())
+  tDownloadDomain = getDomainAndTld(tURL)
+  if tOwnDomain <> tDownloadDomain then
+    if not the runMode contains "Author" then
+      error(me, "Cross domain not allowed:" && tURL, #queue, #critical)
+      fatalError(["error": "cross_domain_download"])
+      return 0
     end if
   end if
   if not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName]) then
@@ -93,6 +82,7 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType, 
 end
 
 on registerCallback me, tMemNameOrNum, tMethod, tClientID, tArgument
+  startProfilingTask("Download Manager::registerCallback")
   tTaskData = me.searchTask(tMemNameOrNum)
   if not tTaskData then
     if stringp(tMemNameOrNum) then
@@ -127,6 +117,7 @@ on registerCallback me, tMemNameOrNum, tMethod, tClientID, tArgument
     #Active:
       call(#addCallBack, pActiveTasks, tTaskData[#name], [#method: tMethod, #client: tClientID, #argument: tArgument])
   end case
+  finishProfilingTask("Download Manager::registerCallback")
   return 1
 end
 
@@ -242,7 +233,22 @@ on GetLastError me
 end
 
 on update me
-  call(#update, pActiveTasks)
+  if getObjectManager().managerExists(#variable_manager) then
+    if variableExists("profile.core.enabled") then
+      pDontProfile = 0
+    end if
+  end if
+  if pDontProfile then
+    call(#update, pActiveTasks)
+  else
+    repeat with i = 1 to pActiveTasks.count
+      tTask = pActiveTasks[i]
+      tTaskName = "Update Download Task " & tTask.getProperty(#url)
+      startProfilingTask(tTaskName)
+      call(#update, [tTask])
+      finishProfilingTask(tTaskName)
+    end repeat
+  end if
 end
 
 on searchTask me, tMemNameOrNum
@@ -298,6 +304,7 @@ on updateQueue me
 end
 
 on removeActiveTask me, tMemName, tCallback, tSuccess
+  startProfilingTask("Download Manager::removeActiveTask")
   if voidp(tSuccess) then
     tSuccess = 1
   end if
@@ -318,6 +325,7 @@ on removeActiveTask me, tMemName, tCallback, tSuccess
       call(tCallback[#method], getObject(tCallback[#client]), tCallback[#argument], tSuccess)
     end if
   end if
+  finishProfilingTask("Download Manager::removeActiveTask")
   return 0
 end
 
@@ -377,4 +385,49 @@ on fillTypeDefinitions me
   pTypeDefList["ttf"] = #font
   pTypeDefList["cur"] = #cursor
   return 1
+end
+
+on getDomainAndTld me, tURL
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  if ilk(tURL) <> #string then
+    return tURL
+  end if
+  if offset("?", tURL) > 0 then
+    tURL = chars(tURL, 0, offset("?", tURL) - 1)
+  end if
+  if chars(tURL, tURL.length, tURL.length) = "/" then
+    tURL = chars(tURL, 0, tURL.length - 1)
+  end if
+  tDelim = the itemDelimiter
+  the itemDelimiter = "/"
+  if tURL contains "http://" or tURL contains "https://" then
+    tURL = tURL.item[3]
+  else
+    tURL = tURL.item[1]
+  end if
+  the itemDelimiter = ":"
+  tURL = tURL.item[1]
+  the itemDelimiter = "."
+  tTldItemCount = 1
+  tDomainAndTld = EMPTY
+  if tURL.item.count > 2 then
+    tExtTld = tURL.item[tURL.item.count - 1..tURL.item.count]
+    if tExtTld = "co.uk" or tExtTld = "com.br" or tExtTld = "com.au" then
+      tTldItemCount = 2
+    end if
+    tDomainAndTld = tURL.item[tURL.item.count - tTldItemCount..tURL.item.count]
+  else
+    tDomainAndTld = tURL
+  end if
+  the itemDelimiter = tDelim
+  return tDomainAndTld
+end
+
+on handlers
+  return []
 end

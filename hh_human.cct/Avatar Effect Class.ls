@@ -388,6 +388,10 @@ on setHumanSpriteProps me, tParam, tAvatarObj
         tAvatarObj.pSprite.bgColor = rgb(tValue)
       #foreColor:
         tAvatarObj.pSprite.foreColor = rgb(tValue)
+      #righthandup:
+        tAvatarObj.pRightHandUp = 1
+      #lefthandup:
+        tAvatarObj.pLeftHandUp = 1
     end case
   end repeat
   return 1

@@ -50,7 +50,7 @@ on separateURL me, tURL
   if tServerURL contains ":" then
     tPortOffset = offset(":", tServerURL)
     tServer = chars(tServerURL, 1, tPortOffset - 1)
-    tPort = value(chars(tServerURL, tPortOffset + 1, tServerURL.length))
+    tPort = integer(chars(tServerURL, tPortOffset + 1, tServerURL.length))
   end if
   return [#server: tServer, #destination: tDestination, #port: tPort]
 end
@@ -123,17 +123,27 @@ on sendRequest me
   end if
 end
 
-on getStoredCookies tDomain
+on getStoredCookies me, tDomain
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if voidp(tDomain) then
     tDomain = pServer
   end if
   tDelim = the itemDelimiter
+  if tDomain.item.count < 2 then
+    the itemDelimiter = tDelim
+    return []
+  end if
   the itemDelimiter = "."
   tDomainItemCount = tDomain.item.count
   tDomain = tDomain.item[tDomainItemCount - 1] & tDomain.item[tDomainItemCount]
   the itemDelimiter = tDelim
   tCookiePrefLoc = getVariable("httpcookie.pref.name")
-  tAllCookies = value(getPref(tCookiePrefLoc))
+  tAllCookies = getValueByType(getPref(tCookiePrefLoc), #propList)
   if ilk(tAllCookies) <> #propList then
     tAllCookies = [:]
   end if
@@ -148,17 +158,27 @@ on getStoredCookies tDomain
   return tFlatCookieList
 end
 
-on setStoredCookies tDomain, tNewCookies
+on setStoredCookies me, tDomain, tNewCookies
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if voidp(tDomain) or voidp(tNewCookies) then
     return 0
   end if
   tDelim = the itemDelimiter
   the itemDelimiter = "."
+  if tDomain.item.count < 2 then
+    the itemDelimiter = tDelim
+    return 0
+  end if
   tDomainItemCount = tDomain.item.count
   tDomain = tDomain.item[tDomainItemCount - 1] & tDomain.item[tDomainItemCount]
   the itemDelimiter = tDelim
   tCookiePrefLoc = getVariable("httpcookie.pref.name")
-  tAllCookies = value(getPref(tCookiePrefLoc))
+  tAllCookies = getValueByType(getPref(tCookiePrefLoc), #propList)
   if ilk(tAllCookies) <> #propList then
     tAllCookies = [:]
   end if
@@ -186,7 +206,7 @@ on createNetRequest me
   tHeaders.add("User-Agent:" && pUserAgent)
   tHeaders.add("Accept: text/*")
   tHeaders.add("Accept-Charset: ISO-8859-1")
-  pCookies = getStoredCookies(pServer)
+  pCookies = me.getStoredCookies(pServer)
   tCookieString = EMPTY
   repeat with tCookie in pCookies
     if pDestination starts tCookie["path"] then
@@ -266,7 +286,7 @@ on handleContentResponse me, tMsg, tContent
           exit repeat
         end if
       end repeat
-      setStoredCookies(pServer, pCookies)
+      me.setStoredCookies(pServer, pCookies)
     end if
   else
     if tContent.char[tContent.length - 4..tContent.length] = "0" & pCRLF & pCRLF then
@@ -302,11 +322,11 @@ on handleContentResponse me, tMsg, tContent
         if tOwnDomain <> tDownloadDomain and (tCompleteUrl contains "http://" or tCompleteUrl contains "https://") and not (tCompleteUrl contains "://localhost") then
           tAllowCrossDomain = 0
           if variableExists("client.allow.cross.domain") then
-            tAllowCrossDomain = getVariable("client.allow.cross.domain")
+            tAllowCrossDomain = getVariableValue("client.allow.cross.domain")
           end if
           tNotifyCrossDomain = 1
           if variableExists("client.notify.cross.domain") then
-            tNotifyCrossDomain = value(getVariable("client.notify.cross.domain"))
+            tNotifyCrossDomain = getVariableValue("client.notify.cross.domain")
           end if
           if tNotifyCrossDomain then
             executeMessage("crossDomainDownload", tCompleteUrl)
@@ -417,4 +437,8 @@ end
 on hex2dec me, tHex
   tCol = rgb(tHex)
   return tCol.red * 65536 + tCol.green * 256 + tCol.blue
+end
+
+on handlers
+  return []
 end

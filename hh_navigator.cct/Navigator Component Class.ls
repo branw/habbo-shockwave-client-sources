@@ -33,7 +33,7 @@ on construct me
   else
     pRecomRefreshBlockInterval = 5000
   end if
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariable("connection.info.id", #Info)
   pInfoBroker = createObject(#navigator_infobroker, "Navigator Info Broker Class")
   getObject(#session).set("lastroom", "Entry")
   registerMessage(#userlogin, me.getID(), #updateState)

@@ -54,6 +54,7 @@ on setViewToState me, tstate
         removeTimeout(pTimeLeftTimeoutID)
       end if
       pProgressAnimation.stopAnimation()
+      getThread(#room).getInterface().getContainer().open()
     "progress":
       pWindowObj.unmerge()
       pWindowObj.merge("ctlg_recycler_progress.window")

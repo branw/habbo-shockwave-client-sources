@@ -104,7 +104,7 @@ on handle_catalogpage me, tMsg
   end repeat
   tTextCount = tConn.GetIntFrom()
   repeat with i = 1 to tTextCount
-    tText = decodeUTF8(tConn.GetStrFrom())
+    tText = tConn.GetStrFrom()
     tText = replaceChunks(tText, "\n", RETURN)
     tPageData[#localization][#texts].add(tText)
   end repeat

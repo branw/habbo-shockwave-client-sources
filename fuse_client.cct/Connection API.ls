@@ -49,3 +49,7 @@ end
 on unregisterCommands tID, tObjID, tCmdList
   return getConnectionManager().unregisterCommands(tID, tObjID, tCmdList)
 end
+
+on handlers
+  return []
+end

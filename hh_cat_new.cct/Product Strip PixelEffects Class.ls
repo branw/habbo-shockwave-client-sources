@@ -6,8 +6,8 @@ on construct me
   pSelectedItem = 0
   pItemsPerRow = 0
   pBgImages = [#selected: getMember(getVariable("productstrip.itembg.selected")), #unselected: getMember(getVariable("productstrip.itembg.unselected"))]
-  pSpacing = getVariableValue("productstrip.pixelfx.default.item.spacing")
-  pBgColor = rgb(string(getVariable("productstrip.default.background.color")))
+  pSpacing = getIntVariable("productstrip.pixelfx.default.item.spacing")
+  pBgColor = rgb(getStringVariable("productstrip.default.background.color"))
   pRefreshTimeoutId = getUniqueID()
   tLoadImg = getMember("ctlg_loading_icon2").image
   pRotationQuad = [point(0, 0), point(tLoadImg.width, 0), point(tLoadImg.width, tLoadImg.height), point(0, tLoadImg.height)]
@@ -23,6 +23,9 @@ end
 on setTargetElement me, tElement, tScroll
   callAncestor(#setTargetElement, [me], tElement, tScroll)
   pItemsPerRow = me.pwidth / (pBgImages[#unselected].image.width + pSpacing)
+  if ilk(me.pStripData) <> #propList then
+    return error(me, "Stripdata was invalid", #setTargetElement, #major)
+  end if
   me.renderStripBg()
   pSelectedItem = 0
   repeat with i = 1 to me.pStripData.count
@@ -44,17 +47,23 @@ on disableRefreshTimeout me
 end
 
 on resolveSmallPreview me, tOffer
-  if tOffer[#content].count <> 1 then
+  if not objectp(tOffer) then
+    return error(me, "Invalid input format", #resolveSmallPreview, #minor)
+  end if
+  if tOffer.getCount() <> 1 then
     return callAncestor(#resolveSmallPreview, [me])
   end if
   tPrefix = "ctlg_pic_small_fx_"
-  tClassID = tOffer[#content][1][#classID]
+  tClassID = tOffer.getContent(1).getClassId()
   if memberExists(tPrefix & tClassID) then
     return getMember(tPrefix & tClassID).image
   end if
 end
 
 on renderStripBg me
+  if ilk(me.pStripData) <> #propList then
+    return error(me, "Strip data invalid", #renderStripBg, #major)
+  end if
   tItemCount = me.pStripData.count
   tRowCount = tItemCount / pItemsPerRow + 1
   if tItemCount mod pItemsPerRow = 0 then
@@ -69,11 +78,14 @@ on renderStripItem me, tItemIndex, tImageOverride
   if me.pItemsPerRow = 0 then
     return error(me, "Cannot render, strip items per row not resolved yet!", #renderStripItem)
   end if
+  if ilk(me.pStripData) <> #propList then
+    return error(me, "Strip data invalid", #renderStripItem, #major)
+  end if
   tRowHeight = pBgImages[#unselected].image.height + pSpacing
   tItemWidth = pBgImages[#unselected].image.width + pSpacing
   tItemCount = me.pStripData.count
   if tItemIndex > tItemCount then
-    return error(me, "Item index out of range", #renderStripItem)
+    return 
   end if
   tOffsetY = tRowHeight * ((tItemIndex - 1) / pItemsPerRow)
   tOffsetX = (tItemIndex - 1) mod pItemsPerRow * tItemWidth
@@ -85,12 +97,12 @@ on renderStripItem me, tItemIndex, tImageOverride
   tRect = tBgImg.rect
   pimage.copyPixels(tBgImg, tRect + rect(tOffsetX, tOffsetY, tOffsetX, tOffsetY), tRect, [#useFastQuads: 1])
   if voidp(tImageOverride) then
-    tPrevImage = me.pStripData[tItemIndex].getaProp(#smallPreview)
+    tPrevImage = me.pStripData[tItemIndex].getSmallPreview()
     if not voidp(tPrevImage) then
-      me.pStripData[tItemIndex].deleteProp(#state)
+      me.pStripData[tItemIndex].setState(VOID)
     else
       tPrevImage = getMember("ctlg_loading_icon2").image
-      me.pStripData[tItemIndex].setaProp(#state, #downloading)
+      me.pStripData[tItemIndex].setState(#downloading)
       me.enableRefreshTimeout()
     end if
   else
@@ -128,6 +140,9 @@ on downloadCompleted me, tProps
 end
 
 on refreshDownloadingSlots me
+  if ilk(me.pStripData) <> #propList then
+    return error(me, "Strip data invalid", #refreshDownloadingSlots, #major)
+  end if
   tIcon = getMember("ctlg_loading_icon2")
   t1 = pRotationQuad[1]
   t2 = pRotationQuad[2]
@@ -139,7 +154,7 @@ on refreshDownloadingSlots me
   tDownloadingStuffs = 0
   repeat with i = 1 to me.pStripData.count
     tStripItem = me.pStripData[i]
-    if tStripItem[#state] = #downloading then
+    if tStripItem.getState() = #downloading then
       me.renderStripItem(i, tImage)
       tDownloadingStuffs = 1
     end if
@@ -162,6 +177,12 @@ on pushImage me
 end
 
 on selectItemAt me, tloc
+  if ilk(tloc) <> #point then
+    return 
+  end if
+  if ilk(me.pStripData) <> #propList then
+    return error(me, "Strip data invalid", #selectItemAt, #major)
+  end if
   tItemIndex = me.getItemIndexAt(tloc)
   if tItemIndex <> pSelectedItem and tItemIndex <= me.pStripData.count then
     tOldSelection = pSelectedItem
@@ -175,6 +196,14 @@ on selectItemAt me, tloc
 end
 
 on getSelectedItem me
+  if ilk(me.pStripData) <> #propList then
+    error(me, "Strip data invalid", #getSelectedItem, #major)
+    return VOID
+  end if
+  if pSelectedItem > me.pStripData.count then
+    error(me, "Selected item index was larger than stripitem count!", #getSelectedItem, #major)
+    return VOID
+  end if
   if pSelectedItem > 0 then
     return me.pStripData[pSelectedItem]
   else

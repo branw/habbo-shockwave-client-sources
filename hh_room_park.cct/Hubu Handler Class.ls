@@ -26,10 +26,10 @@ on handle_vote_results me, tMsg
   tDelim = the itemDelimiter
   tLine = tMsg.content.line[1]
   the itemDelimiter = "/"
-  tTotalVotes = value(tLine.item[2])
+  tTotalVotes = integer(tLine.item[2])
   tChoiceVotes = []
   repeat with i = 3 to tLine.item.count
-    tChoiceVotes.add(value(tLine.item[i]))
+    tChoiceVotes.add(integer(tLine.item[i]))
   end repeat
   the itemDelimiter = tDelim
   me.getInterface().showVoteResults(tTotalVotes, tChoiceVotes)

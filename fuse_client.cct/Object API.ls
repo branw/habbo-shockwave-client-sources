@@ -131,3 +131,7 @@ end
 on unpauseUpdate
   return getObjectManager().resumeUpdate()
 end
+
+on handlers
+  return []
+end

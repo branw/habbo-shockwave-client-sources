@@ -343,6 +343,7 @@ on handleCryptoParameters me, tMsg
 end
 
 on responseWithPublicKey me, tConnection
+  startProfilingTask("Login Handler Diffie-Hellman Handshake")
   if the traceScript then
     return 0
   end if
@@ -435,6 +436,7 @@ on handleServerSecretKey me, tMsg
   sendProcessTracking(28)
   executeMessage(#loadingBarSetExtraTaskDone, #handshake2)
   me.startNewSession()
+  finishProfilingTask("Login Handler Diffie-Hellman Handshake")
   return 1
 end
 

@@ -13,6 +13,9 @@ on deconstruct me
 end
 
 on create me, tID, tObject
+  if voidp(tID) then
+    return error(me, "Failed to create method object, ID was void", #create, #major)
+  end if
   if not me.register(tID, tObject) then
     return error(me, "Failed to register object:" && tID, #create, #major)
   else
@@ -31,7 +34,7 @@ on getMethod me, tConnectionID, tCommand
 end
 
 on Remove me, tID
-  if voidp(me.pItemList[tID]) then
+  if voidp(me.pItemList.getaProp(tID)) then
     return error(me, "Object not found:" && tID, #Remove, #minor)
   else
     me.unregister(tID)
@@ -85,4 +88,8 @@ on unregister me, tObjectOrID
     end repeat
   end repeat
   return 1
+end
+
+on handlers
+  return []
 end

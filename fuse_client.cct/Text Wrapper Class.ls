@@ -1,4 +1,4 @@
-property pFontData, pTextMem, pNeedFill, pTextRenderMode, pUnderliningDisabled
+property pFontData, pTextMem, pNeedFill, pTextRenderMode, pUnderliningDisabled, pDontProfile
 
 on prepare me
   me.pOffX = 0
@@ -49,7 +49,19 @@ on prepare me
     pUnderliningDisabled = 0
   end if
   me.initResources(pFontData)
+  me.setProfiling()
   return me.createImgFromTxt()
+end
+
+on setProfiling
+  if voidp(pDontProfile) then
+    pDontProfile = 1
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.fields.enabled") then
+        pDontProfile = 0
+      end if
+    end if
+  end if
 end
 
 on setText me, tText
@@ -128,6 +140,9 @@ on initResources me, tFontProps
 end
 
 on createImgFromTxt me
+  if not pDontProfile then
+    startProfilingTask("Text Wrapper::createImgFromTxt")
+  end if
   pTextMem.rect = rect(0, 0, me.pOwnW, me.pOwnH)
   if not listp(pFontData[#fontStyle]) then
     tList = []
@@ -253,5 +268,12 @@ on createImgFromTxt me
     end if
   end if
   executeMessage(#invalidateCrapFixRegion)
+  if not pDontProfile then
+    finishProfilingTask("Text Wrapper::createImgFromTxt")
+  end if
   return 1
+end
+
+on handlers
+  return []
 end

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pDoorBellID, pPreviewObjID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pIgnoreListID, pRespectMgrID, pWideScreenOffset
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pDoorBellID, pPreviewObjID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pIgnoreListID, pRespectMgrID, pWideScreenOffset, pWIndowText
 
 on construct me
   pInfoConnID = getVariable("connection.info.id", #Info)
@@ -29,6 +29,7 @@ on construct me
   pBannerLink = 0
   pSwapAnimations = []
   pTradeTimeout = 0
+  pWIndowText = VOID
   pLoadingBarID = 0
   pQueueCollection = []
   pModBadgeList = getVariableValue("moderator.badgelist")
@@ -103,7 +104,7 @@ on showRoom me, tRoomID
   tAnimations = tVisObj.getProperty(#swapAnims)
   if tAnimations <> 0 then
     repeat with tAnimation in tAnimations
-      tObj = createObject(#random, getVariableValue("swap.animation.class"))
+      tObj = createObject(#random, getStringVariable("swap.animation.class"))
       if tObj = 0 then
         error(me, "Error creating swap animation", #showRoom, #minor)
         next repeat
@@ -276,6 +277,7 @@ on showLoaderBar me, tCastLoadId, tText
     if stringp(tText) then
       tWndObj.getElement("general_loader_text").setText(tText)
     end if
+    pWIndowText = tText
   end if
   return 1
 end
@@ -303,6 +305,20 @@ on resizeInterstitialWindow me
   tMemNum = tInterstitialMngr.getInterstitialMemNum()
   if tMemNum < 1 then
     return 0
+  end if
+  tWndObj.unmerge()
+  if pQueueCollection.count() <= 1 then
+    tWndObj.merge("room_loader_interstitial_ad.window")
+  else
+    tWndObj.merge("room_loader_2_interstitial_ad.window")
+  end if
+  if objectExists(pLoadingBarID) then
+    tLoadID = getObject(pLoadingBarID).pTaskId
+    tBuffer = tWndObj.getElement("gen_loaderbar").getProperty(#buffer).image
+    showLoadingBar(tLoadID, [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)])
+  end if
+  if stringp(pWIndowText) then
+    tWndObj.getElement("general_loader_text").setText(pWIndowText)
   end if
   tAdMember = member(tMemNum)
   if tAdMember.type = #bitmap then
@@ -404,6 +420,9 @@ on updateQueueWindow me, tQueueCollection
     if tWndObj.elementExists(tTextElementList[i]) then
       tQueueTxtElem = tWndObj.getElement(tTextElementList[i])
       tQueueTxt = getText("queue_set." & tQueueSetName & ".info")
+      if ilk(tQueueData) <> #propList then
+        return error(me, "tQueueData is not a propList", #updateQueueWindow, #major)
+      end if
       repeat with tCount = 1 to tQueueData.count
         tQueueProp = getPropAt(tQueueData, tCount)
         tQueueValue = tQueueData[tQueueProp]
@@ -665,7 +684,7 @@ on startTrading me, tTargetUser
   if tTargetUser = getObject(#session).GET("user_name") then
     return 0
   end if
-  me.getComponent().getRoomConnection().send("TRADE_OPEN", tTargetUser)
+  me.getComponent().getRoomConnection().send("TRADE_OPEN", [#integer: integer(tTargetUser)])
   if objectExists(pObjMoverID) then
     getObject(pObjMoverID).moveTrade()
   end if
@@ -1034,10 +1053,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     end if
     me.showArrowHiliter(tSprID)
     tloc = tObject.getLocation()
-    if tParam = #userEnters then
-      tloc[1] = tloc[1] + 4
-    end if
-    if tObject <> me.getComponent().getOwnUser() or (tObject.getProperty(#moving) or tParam = #userEnters) then
+    if tObject <> me.getComponent().getOwnUser() or tObject.getProperty(#moving) then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
     end if
   else

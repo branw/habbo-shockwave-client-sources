@@ -1,5 +1,7 @@
+property pDontProfile
+
 on GET me, tKey, tDefault
-  tText = me.pItemList[tKey]
+  tText = me.pItemList.getaProp(tKey)
   if voidp(tText) then
     tError = "Text not found:" && tKey
     if not voidp(tDefault) then
@@ -18,6 +20,7 @@ on dump me, tField, tDelimiter
   if not memberExists(tField) then
     return error(me, "Field member expected:" && tField, #dump, #major)
   end if
+  startProfilingTask("Text Manager::dump")
   tRawStr = field(tField)
   tRawStr = decodeUTF8(tRawStr)
   tStrServices = getStringServices()
@@ -51,5 +54,10 @@ on dump me, tField, tDelimiter
     end repeat
   end repeat
   the itemDelimiter = tDelim
+  finishProfilingTask("Text Manager::dump")
   return 1
+end
+
+on handlers
+  return []
 end

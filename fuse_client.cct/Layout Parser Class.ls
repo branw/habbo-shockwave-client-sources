@@ -1,8 +1,20 @@
-property pCache
+property pCache, pDontProfile
 
 on construct me
   pCache = [:]
+  me.setProfiling()
   return 1
+end
+
+on setProfiling
+  if voidp(pDontProfile) then
+    pDontProfile = 1
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.fields.enabled") then
+        pDontProfile = 0
+      end if
+    end if
+  end if
 end
 
 on parse me, tFieldName
@@ -36,6 +48,9 @@ on parse me, tFieldName
 end
 
 on parse_window me, tFieldName
+  if not pDontProfile then
+    startProfilingTask("Layout Parser::parse_window")
+  end if
   tdata = member(getResourceManager().getmemnum(tFieldName)).text
   tSupportedTags = [#elements: [#open: "<elements>", #close: "</elements>"], #rect: [#open: "<rect>", #close: "</rect>"], #border: [#open: "<border>", #close: "</border>"], #clientrect: [#open: "<clientrect>", #close: "</clientrect>"]]
   tLayDefinition = [:]
@@ -212,10 +227,16 @@ on parse_window me, tFieldName
     end if
   end if
   tLayDefinition[#elements] = tElements
+  if not pDontProfile then
+    finishProfilingTask("Layout Parser::parse_window")
+  end if
   return tLayDefinition
 end
 
 on parse_element me, tFieldName
+  if not pDontProfile then
+    startProfilingTask("Layout Parser::parse_element")
+  end if
   tProps = [:]
   tdata = member(getResourceManager().getmemnum(tFieldName)).text
   repeat with f = 1 to tdata.line.count
@@ -227,10 +248,16 @@ on parse_element me, tFieldName
       end if
     end if
   end repeat
+  if not pDontProfile then
+    finishProfilingTask("Layout Parser::parse_element")
+  end if
   return tProps
 end
 
 on parse_visual me, tFieldName
+  if not pDontProfile then
+    startProfilingTask("Layout Parser::parse_visual")
+  end if
   tdata = member(getResourceManager().getmemnum(tFieldName)).text
   tSupportedTags = [#roomdata: [#open: "<roomdata>", #close: "</roomdata>"], #rect: [#open: "<rect>", #close: "</rect>"], #version: [#open: "<version>", #close: "</version>"], #elements: [#open: "<elements>", #close: "</elements>"]]
   tLayDefinition = [:]
@@ -281,5 +308,12 @@ on parse_visual me, tFieldName
       tElem[#Active] = 1
     end if
   end repeat
+  if not pDontProfile then
+    finishProfilingTask("Layout Parser::parse_visual")
+  end if
   return [#name: tLayDefinition[#name], #roomdata: tLayDefinition[#roomdata], #rect: tLayDefinition[#rect], #elements: tLayDefinition[#elements]]
+end
+
+on handlers
+  return []
 end

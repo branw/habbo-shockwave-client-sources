@@ -53,3 +53,7 @@ end
 on printMembers
   return getResourceManager().print()
 end
+
+on handlers
+  return []
+end

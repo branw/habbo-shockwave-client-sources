@@ -244,3 +244,7 @@ end
 on draw me, tRGB
   call(#draw, pElemList, tRGB)
 end
+
+on handlers
+  return []
+end

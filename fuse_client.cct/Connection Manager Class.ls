@@ -38,19 +38,19 @@ on create me, tID, tHost, tPort
     end if
     me.pItemList.add(tID)
   end if
-  if voidp(pListenerList[tID]) then
+  if voidp(pListenerList.getaProp(tID)) then
     tMsgPtr = getStructVariable("struct.pointer")
     tMsgPtr.setaProp(#value, [:])
     pListenerList[tID] = tMsgPtr
   else
-    tMsgPtr = pListenerList[tID]
+    tMsgPtr = pListenerList.getaProp(tID)
   end if
-  if voidp(pCommandsList[tID]) then
+  if voidp(pCommandsList.getaProp(tID)) then
     tCmdPtr = getStructVariable("struct.pointer")
     tCmdPtr.setaProp(#value, [:])
     pCommandsList[tID] = tCmdPtr
   else
-    tCmdPtr = pCommandsList[tID]
+    tCmdPtr = pCommandsList.getaProp(tID)
   end if
   me.GET(tID).setProperty(#listener, tMsgPtr)
   me.GET(tID).setProperty(#commands, tCmdPtr)
@@ -75,12 +75,12 @@ on registerListener me, tID, tObjID, tMsgList
   if tObject = 0 then
     return error(me, "Object not found:" && tObjID, #registerListener, #major)
   end if
-  if voidp(pListenerList[tID]) then
+  if voidp(pListenerList.getaProp(tID)) then
     tPtr = getStructVariable("struct.pointer")
     tPtr.setaProp(#value, [:])
     pListenerList[tID] = tPtr
   else
-    tPtr = pListenerList[tID]
+    tPtr = pListenerList.getaProp(tID)
   end if
   repeat with i = 1 to tMsgList.count
     tMsg = tMsgList.getPropAt(i)
@@ -101,7 +101,7 @@ on unregisterListener me, tID, tObjID, tMsgList
   if tID.ilk <> #symbol and tID.ilk <> #string then
     return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  tPtr = pListenerList[tID]
+  tPtr = pListenerList.getaProp(tID)
   if voidp(tPtr) then
     return 0
   end if
@@ -128,12 +128,12 @@ on registerCommands me, tID, tObjID, tCmdList
   if tID.ilk <> #symbol and tID.ilk <> #string then
     return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  if voidp(pCommandsList[tID]) then
+  if voidp(pCommandsList.getaProp(tID)) then
     tPtr = getStructVariable("struct.pointer")
     tPtr.setaProp(#value, [:])
     pCommandsList[tID] = tPtr
   else
-    tPtr = pCommandsList[tID]
+    tPtr = pCommandsList.getaProp(tID)
   end if
   repeat with i = 1 to tCmdList.count
     tCmd = tCmdList.getPropAt(i)
@@ -156,7 +156,7 @@ on unregisterCommands me, tID, tObjID, tCmdList
   if tID.ilk <> #symbol and tID.ilk <> #string then
     return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  tPtr = pCommandsList[tID]
+  tPtr = pCommandsList.getaProp(tID)
   if voidp(tPtr) then
     return 0
   end if
@@ -168,17 +168,23 @@ on registerLastMessage me, tmessageId, tMessage
     pLastMessageData = [:]
   end if
   pLastMessageData[#id] = tmessageId
-  pLastMessageData[#message] = tMessage
+  pLastMessageData[#message] = tmessageId & "-" & tMessage & ";" & pLastMessageData[#message]
   pLastMessageData[#isParsed] = 0
+  tMaximumLength = 128
+  pLastMessageData[#message] = chars(pLastMessageData[#message], 1, tMaximumLength)
 end
 
 on lastMessageParsed me
   if voidp(pLastMessageData) then
     return 0
   end if
-  pLastMessageData[#isParsed] = 0
+  pLastMessageData[#isParsed] = 1
 end
 
 on getLastMessageData me
-  return pLastMessageData
+  return pLastMessageData.duplicate()
+end
+
+on handlers
+  return []
 end

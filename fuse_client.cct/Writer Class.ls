@@ -1,4 +1,4 @@
-property pMember, pDefRect, pTxtRect, pFntStru, pTextRenderMode, pUnderliningDisabled
+property pMember, pDefRect, pTxtRect, pFntStru, pTextRenderMode, pUnderliningDisabled, pDontProfile
 
 on construct me
   pDefRect = rect(0, 0, 480, 480)
@@ -15,12 +15,24 @@ on construct me
   else
     pUnderliningDisabled = 0
   end if
+  me.setProfiling()
   if pMember.number = 0 then
     return 0
   else
     pMember.alignment = #left
     pMember.wordWrap = 0
     return 1
+  end if
+end
+
+on setProfiling
+  if voidp(pDontProfile) then
+    pDontProfile = 1
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.fields.enabled") then
+        pDontProfile = 0
+      end if
+    end if
   end if
 end
 
@@ -35,6 +47,9 @@ end
 on define me, tMetrics
   if not ilk(tMetrics, #propList) then
     return 0
+  end if
+  if not pDontProfile then
+    startProfilingTask("Writer::define")
   end if
   if stringp(tMetrics[#font]) then
     if pMember.font <> tMetrics.font then
@@ -97,10 +112,16 @@ on define me, tMetrics
   end if
   executeMessage(#invalidateCrapFixRegion)
   pTxtRect = tMetrics[#rect]
+  if not pDontProfile then
+    finishProfilingTask("Writer::define")
+  end if
   return 1
 end
 
 on render me, tText, tRect
+  if not pDontProfile then
+    startProfilingTask("Writer::render")
+  end if
   if tText = VOID then
     tText = EMPTY
   end if
@@ -136,15 +157,24 @@ on render me, tText, tRect
   end if
   executeMessage(#invalidateCrapFixRegion)
   if pTextRenderMode = 1 then
-    return pMember.image
+    tImage = pMember.image
   else
     if pTextRenderMode = 2 then
-      return me.fakeAlphaRender()
+      tImage = me.fakeAlphaRender()
+    else
+      tImage = image(1, 1, 32)
     end if
   end if
+  if not pDontProfile then
+    finishProfilingTask("Writer::render")
+  end if
+  return tImage
 end
 
 on renderHTML me, tHtml, tRect
+  if not pDontProfile then
+    startProfilingTask("Writer::renderHTML")
+  end if
   tFont = me.getFont()
   pMember.html = tHtml
   if tRect.ilk = #rect then
@@ -178,15 +208,24 @@ on renderHTML me, tHtml, tRect
   end if
   me.setFont(tFont)
   if pTextRenderMode = 1 then
-    return pMember.image
+    tImage = pMember.image
   else
     if pTextRenderMode = 2 then
-      return me.fakeAlphaRender()
+      tImage = me.fakeAlphaRender()
+    else
+      tImage = image(1, 1, 32)
     end if
   end if
+  if not pDontProfile then
+    finishProfilingTask("Writer::renderHTML")
+  end if
+  return tImage
 end
 
 on setFont me, tStruct
+  if not pDontProfile then
+    startProfilingTask("Writer::setFont")
+  end if
   if tStruct.ilk <> #struct then
     return error(me, "Font struct expected!", #setFont, #major)
   end if
@@ -210,6 +249,9 @@ on setFont me, tStruct
     pMember.topSpacing = tStruct.getaProp(#lineHeight) - pMember.fontSize
   end if
   executeMessage(#invalidateCrapFixRegion)
+  if not pDontProfile then
+    finishProfilingTask("Writer::setFont")
+  end if
   return 1
 end
 
@@ -255,4 +297,8 @@ on fakeAlphaRender me
   pMember.color = tColorWas
   pMember.bgColor = tBgColorWas
   return tOut
+end
+
+on handlers
+  return []
 end

@@ -11,6 +11,7 @@ on define me, tFile, tURL, tpreloadId
 end
 
 on Activate me
+  startProfilingTask("Castload Instance::activate")
   if ptryCount > 3 then
     if pURL contains "http://" then
       if pURL contains "?" then
@@ -25,6 +26,7 @@ on Activate me
   pBytesSoFar = 0
   pPercent = 0.0
   pState = #LOADING
+  finishProfilingTask("Castload Instance::activate")
   return 1
 end
 
@@ -78,4 +80,8 @@ on update me
     pState = #done
     getCastLoadManager().DoneCurrentDownLoad(pFile, pURL, pGroupId, pState)
   end if
+end
+
+on handlers
+  return []
 end

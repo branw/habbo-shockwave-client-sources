@@ -282,6 +282,12 @@ on moveActive me
       end repeat
     end repeat
   end if
+  tRecyclerThread = getThread(#recycler)
+  if not (tRecyclerThread = 0) then
+    if tRecyclerThread.getComponent().isRecyclerOpenAndVisible() then
+      return me.showSmallPic()
+    end if
+  end if
   if not tloc or tOccupied then
     me.showSmallPic()
   else

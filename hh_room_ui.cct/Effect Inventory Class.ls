@@ -49,6 +49,22 @@ on openFxWindow me
   me.setUpdateTimer(1)
 end
 
+on setCatalogLinkVisibility me
+  tWndObj = getWindow(pBadgeWindowID)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if pInventoryEffects.count > 0 then
+    tWndObj.getElement("selected_fx").show()
+    tWndObj.getElement("selected_fx_bg").show()
+    tWndObj.getElement("fx_catalog_link_text").hide()
+  else
+    tWndObj.getElement("selected_fx").hide()
+    tWndObj.getElement("selected_fx_bg").hide()
+    tWndObj.getElement("fx_catalog_link_text").show()
+  end if
+end
+
 on updateListImage me
   tWndObj = getWindow(pBadgeWindowID)
   if tWndObj = 0 then
@@ -78,6 +94,9 @@ on updatePreview me
     else
       tBadgeImage = image(1, 1, 8)
     end if
+    tConvertImage = image(tBadgeImage.width, tBadgeImage.height, 32)
+    tConvertImage.copyPixels(tBadgeImage, tBadgeImage.rect, tBadgeImage.rect)
+    tBadgeImage = tConvertImage
     tBadgeImage = pListRenderer.centerImage(tBadgeImage, rect(0, 0, tElem.getProperty(#width), tElem.getProperty(#height)))
     tElem.feedImage(tBadgeImage)
   end if
@@ -94,7 +113,9 @@ on updatePreview me
     if pSelectedEffectType <> 0 then
       tText = getText("fx_" & pSelectedEffectType & "_desc") & getText("fx_desc_duration")
       tText = replaceChunks(tText, "%r", RETURN)
-      tText = replaceChunks(tText, "%d", tItemData.getaProp(#time_duration))
+      tText = replaceChunks(tText, "%h", me.getHours(tItemData.getaProp(#time_duration)))
+      tText = replaceChunks(tText, "%m", me.getMinutes(tItemData.getaProp(#time_duration)) mod 60)
+      tText = replaceChunks(tText, "%d", me.getHours(tItemData.getaProp(#time_duration)) & ":" & me.getMinutes(tItemData.getaProp(#time_duration)) mod 60)
       tText = replaceChunks(tText, "%c", tItemData.getaProp(#count))
       tDescElem.setText(tText)
     else
@@ -110,6 +131,14 @@ on updatePreview me
     end if
   end if
   return 1
+end
+
+on getHours me, tSeconds
+  return tSeconds / 3600
+end
+
+on getMinutes me, tSeconds
+  return tSeconds / 60
 end
 
 on selectSlot me, tSlotIndex
@@ -175,6 +204,10 @@ on updateSlots me
       tElem.hide()
       tSlotElem = tWindow.getElement("slot_bg_" & tSlot)
       tSlotElem.setProperty(#member, "slot")
+      tTimeElem = tWindow.getElement("fx_slot_" & tSlot & "_time")
+      if tTimeElem <> 0 then
+        tTimeElem.setText(EMPTY)
+      end if
       next repeat
     end if
     tElem.show()
@@ -251,6 +284,7 @@ on getWindowObj me
     removeWindow(pBadgeWindowID)
     return error(me, "FX Inventory selection window not merged!", #getWindowObj, #major)
   end if
+  me.setCatalogLinkVisibility()
   registerMessage(#leaveRoom, tWndObj.getID(), #close)
   registerMessage(#changeRoom, tWndObj.getID(), #close)
   tWndObj.registerProcedure(#eventProc, me.getID(), #mouseUp)
@@ -476,6 +510,8 @@ on eventProc me, tEvent, tSprID, tParam, tWndID
         return 1
       end if
       me.selectItem(pActiveEffectIndex[tPos])
+    "fx_catalog_link_text":
+      getThread(#catalogue).getComponent().preparePageByName(getText("fx.catalog.link.nodename", "Special Effects"))
   end case
   return 1
 end

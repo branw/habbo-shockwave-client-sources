@@ -6,8 +6,12 @@ on WvUrP88jJ4snglkrhCh3u9vHu0ADDS me, tMyKey, tMode, tOtherKey
     return 0
   end if
   the traceScript = 0
+  the traceLogFile = EMPTY
   _movie.traceScript = 0
   _player.traceScript = 0
+  if _player.windowList.count > 0 then
+    return stopMovie()
+  end if
   tMyKeyS = string(tMyKey)
   pR3hu24v5 = []
   tKey = []
@@ -116,8 +120,13 @@ on AkwGx8bHG2kc1xGG4xbdHPCV0fqvK me, tdata
     return 0
   end if
   the traceScript = 0
+  the traceLogFile = EMPTY
   _movie.traceScript = 0
   _player.traceScript = 0
+  if _player.windowList.count > 0 then
+    return stopMovie()
+  end if
+  startProfilingTask("encipher")
   tBytes = []
   repeat with e = 1 to length(tdata)
     a = charToNum(char e of tdata)
@@ -181,16 +190,22 @@ on AkwGx8bHG2kc1xGG4xbdHPCV0fqvK me, tdata
     a = a + 3
   end repeat
   i = random(256) - 1
+  finishProfilingTask("encipher")
   return tCipher
 end
 
 on kg4R6Jo5xjlqtFGs1klMrK4ZTzb3R me, tdata
+  startProfilingTask("decipher")
   if the traceScript then
     return 0
   end if
   the traceScript = 0
+  the traceLogFile = EMPTY
   _movie.traceScript = 0
   _player.traceScript = 0
+  if _player.windowList.count > 0 then
+    return stopMovie()
+  end if
   tCipher = EMPTY
   a = 1
   repeat while a <= tdata.char.count
@@ -243,14 +258,20 @@ on kg4R6Jo5xjlqtFGs1klMrK4ZTzb3R me, tdata
     end repeat
   end repeat
   i = random(256) - 1
+  finishProfilingTask("decipher")
   return tCipher
 end
 
 on jfh2ZSJi5QnANFH me
-  if _player <> VOID then
-    if _player.traceScript then
-      return 0
-    end if
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  the traceLogFile = EMPTY
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  if _player.windowList.count > 0 then
+    return stopMovie()
   end if
   tKeyMinLength = 30
   tKeyLengthVariation = 40

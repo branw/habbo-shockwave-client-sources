@@ -33,3 +33,7 @@ end
 on printSprites tCount
   return getSpriteManager().print(tCount)
 end
+
+on handlers
+  return []
+end

@@ -41,3 +41,7 @@ end
 on printCasts
   return getCastLoadManager().print()
 end
+
+on handlers
+  return []
+end

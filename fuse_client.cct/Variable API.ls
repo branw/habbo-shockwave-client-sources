@@ -34,6 +34,14 @@ on getIntVariable tID, tDefault
   return getVariableManager().getInt(tID, tDefault)
 end
 
+on getStringVariable tID, tDefault
+  return getVariableManager().getString(tID, tDefault)
+end
+
+on getSymbolVariable tID, tDefault
+  return getVariableManager().getSymbol(tID, tDefault)
+end
+
 on getStructVariable tID, tDefault
   return getVariableManager().GetValue(tID, tDefault)
 end
@@ -56,4 +64,8 @@ end
 
 on dumpVariableField tField, tDelimiter
   return getVariableManager().dump(tField, tDelimiter)
+end
+
+on handlers
+  return []
 end

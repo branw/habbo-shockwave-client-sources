@@ -45,3 +45,7 @@ end
 on executeMessage tMessage, tArgA, tArgB, tArgC
   return getBrokerManager().Execute(tMessage, tArgA, tArgB, tArgC)
 end
+
+on handlers
+  return []
+end

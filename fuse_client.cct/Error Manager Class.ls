@@ -100,7 +100,7 @@ on getClientErrors me
   repeat with tError in pClientErrorList
     tErrorStr = tErrorStr & tError & ";"
   end repeat
-  tMaxLength = 1000
+  tMaxLength = 128
   tErrorStr = chars(tErrorStr, tErrorStr.length - tMaxLength, tErrorStr.length)
   return tErrorStr
 end
@@ -110,7 +110,7 @@ on getServerErrors me
   repeat with tError in pServerErrorList
     tErrorStr = tErrorStr & tError & ";"
   end repeat
-  tMaxLength = 1000
+  tMaxLength = 128
   tErrorStr = chars(tErrorStr, tErrorStr.length - tMaxLength, tErrorStr.length)
   return tErrorStr
 end
@@ -152,9 +152,9 @@ on alertHook me, tErr, tMsgA, tMsgB
   tErrorData["eventbrokerclick_time"] = getObject(#session).GET("client_lastclick_time")
   tLastMessageData = getConnectionManager().getLastMessageData()
   if listp(tLastMessageData) then
-    tErrorData["lastmessage"] = tLastMessageData[#id]
-    tLastMessageData = tLastMessageData[#message] & "-" & tLastMessageData[#isParsed]
-    tErrorData["server_errors"] = tLastMessageData
+    tErrorData["lastmessage"] = tLastMessageData[#id] & "p" & tLastMessageData[#isParsed]
+    tLastMessageDataStr = tLastMessageData[#message] & "-p" & tLastMessageData[#isParsed]
+    tErrorData["server_errors"] = tLastMessageDataStr
   end if
   tSessionObj = getObject(#session)
   if objectp(tSessionObj) then
@@ -166,8 +166,10 @@ on alertHook me, tErr, tMsgA, tMsgB
         tErrorData["lastroom"] = string(tLastRoom[#id])
       end if
     end if
-    me.handleFatalError(tErrorData)
+  else
+    tErrorData["lastroom"] = "No_SESSION_object"
   end if
+  me.handleFatalError(tErrorData.duplicate())
   return 1
 end
 
@@ -284,4 +286,8 @@ on eventProcError me, tEvent, tSprID, tParam
   if tEvent = #mouseUp and tSprID = "error_close" then
     removeWindow(#error)
   end if
+end
+
+on handlers
+  return []
 end

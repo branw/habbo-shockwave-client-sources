@@ -281,6 +281,7 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody, tActionList
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
   end if
+  tWasDancing = pDancing
   pMoving = 0
   pDancing = tActionList.findPos("dance") > 0
   pTalking = tActionList.findPos("talk") > 0
@@ -292,6 +293,9 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody, tActionList
   pModState = 0
   pSleeping = tActionList.findPos("sleep") > 0
   pQueuesWithObj = 0
+  if tWasDancing and not pDancing then
+    executeMessage(#updateInfoStandButtons)
+  end if
   repeat with i = 1 to pExtraObjsActive.count
     pExtraObjsActive[i] = 0
   end repeat
@@ -1213,7 +1217,11 @@ end
 
 on carryObject me, tProps, tDefaultItem, tDefaultItemPublic
   tItem = tProps.word[2]
-  if value(tItem) > 0 then
+  tItemInt = integer(tItem)
+  tItemString = string(tItem)
+  tIsInteger = string(tItemInt) = tItemString
+  if tIsInteger and tItemInt > 0 then
+    tItem = tItemInt
     tCarrying = tItem
     if variableExists("handitem.right." & tCarrying) then
       tCarryItm = getVariable("handitem.right." & tCarrying, string(tDefaultItem))
@@ -1249,7 +1257,11 @@ end
 
 on useObject me, tProps, tDefaultItem, tDefaultItemPublic
   tItem = tProps.word[2]
-  if integerp(value(tItem)) then
+  tItemInt = integer(tItem)
+  tItemString = string(tItem)
+  tIsInteger = string(tItemInt) = tItemString
+  if tIsInteger and tItemInt > 0 then
+    tItem = tItemInt
     tCarrying = tItem
     if variableExists("handitem.right." & tCarrying) then
       tCarryItm = getVariable("handitem.right." & tCarrying, string(tDefaultItem))
@@ -1417,27 +1429,72 @@ on action_fx me, tProps
   return 1
 end
 
-on validateFxForActionList me, tActionList
-  if tActionList.findPos("fx") = 0 then
+on validateFxForActionList me, tActionDefs, tActionIndex
+  if ilk(tActionDefs) <> #list then
+    return 0
+  end if
+  if ilk(tActionIndex) <> #list then
+    return 0
+  end if
+  tEffectID = VOID
+  tActions = []
+  repeat with tAction in tActionDefs
+    if ilk(tAction) = #propList then
+      if tAction.getaProp(#name) = "fx" then
+        tEffectID = tAction.getaProp(#params).word[2]
+        next repeat
+      end if
+      tActions.add(tAction.getaProp(#name))
+    end if
+  end repeat
+  if tEffectID = VOID then
     if pFx then
       me.clearEffects()
     end if
     return 0
-  else
-    repeat with tAction in tActionList
-      case tAction of
-        "std", "mv":
-          return 1
-        "lay", "sit":
-          tActionList.deleteOne("fx")
-          if pFx then
-            me.clearEffects()
-          end if
-          return 0
-      end case
-    end repeat
+  end if
+  tVarName = "fx.blacklist." & tEffectID
+  if not variableExists(tVarName) then
     return 1
   end if
+  tBlackList = getVariableValue(tVarName)
+  if ilk(tBlackList) <> #list then
+    return 1
+  end if
+  if variableExists("fx.whitelist." & tEffectID) then
+    tWhiteList = getVariableValue("fx.whitelist." & tEffectID)
+  end if
+  if ilk(tWhiteList) <> #list then
+    tWhiteList = []
+  end if
+  tAllow = 1
+  tRemovedActions = []
+  repeat with tAction in tActions
+    if tBlackList.getOne(tAction) then
+      if tWhiteList.getOne(tAction) then
+        tRemovedActions.add(tAction)
+        next repeat
+      end if
+      if pFx then
+        me.clearEffects()
+      end if
+      tAllow = 0
+    end if
+  end repeat
+  repeat with tNumAction = tActionDefs.count down to 1
+    tAction = tActionDefs[tNumAction]
+    if ilk(tAction) <> #propList then
+      next repeat
+    end if
+    if tRemovedActions.getOne(tAction[#name]) then
+      tActionDefs.deleteAt(tNumAction)
+      tPos = tActionIndex.getPos(tAction[#name])
+      if tPos > 0 then
+        tActionIndex.deleteAt(tPos)
+      end if
+    end if
+  end repeat
+  return tAllow
 end
 
 on getEffectDirOffset me

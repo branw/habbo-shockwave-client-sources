@@ -45,8 +45,10 @@ on handleInvitationSent me
   me.getComponent().invitingStarted()
 end
 
-on handleGuideFound me
-  me.getComponent().guideFound()
+on handleGuideFound me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tAccountID = tConn.GetIntFrom()
+  me.getComponent().guideFound(tAccountID)
 end
 
 on handleInviterLeftRoom me, tMsg

@@ -39,7 +39,6 @@ on update me
 end
 
 on startCastDownload me, tdata
-  put me.getID() && "startCastDownload"
   if not listp(tdata) then
     return 0
   end if

@@ -46,6 +46,9 @@ on showCard me, tloc
     return 0
   end if
   tWndObj = getWindow(pCardWndID)
+  if tWndObj = 0 then
+    return 0
+  end if
   tUserRights = getObject(#session).GET("user_rights")
   tUserCanOpen = getObject(#session).GET("room_owner") or tUserRights.findPos("fuse_pick_up_any_furni")
   if not tUserCanOpen and tWndObj.getElement("open_package") <> 0 then
@@ -146,7 +149,17 @@ on feedIconToCard me, tImg
     return error(me, "tImg is not an #image", #feedIconToCard, #minor)
   end if
   tWndObj = getWindow(pCardWndID)
+  if tWndObj = 0 then
+    me.showCard()
+    tWndObj = getWindow(pCardWndID)
+    if tWndObj = 0 then
+      return 0
+    end if
+  end if
   tElem = tWndObj.getElement("small_img")
+  if tElem = 0 then
+    return 0
+  end if
   tWid = tElem.getProperty(#width)
   tHei = tElem.getProperty(#height)
   tCenteredImage = image(tWid, tHei, 32)

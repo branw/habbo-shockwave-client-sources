@@ -160,7 +160,7 @@ on tryNextDownload me
     if not pAliasListLoading then
       pAliasList = [:]
       pAliasListLoading = 1
-      tConn = getConnection(getVariableValue("connection.info.id"))
+      tConn = getConnection(getVariable("connection.info.id"))
       tConn.send("GET_ALIAS_LIST")
     end if
     return 0

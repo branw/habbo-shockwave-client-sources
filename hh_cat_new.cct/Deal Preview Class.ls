@@ -71,6 +71,7 @@ on getPicture me, tImg
   if pheight * pwidth < tLimit then
     tLimit = pheight * pwidth
   end if
+  tDownloader = getThread(#catalogue).getComponent().getPageItemDownloader()
   repeat with i = tLimit down to 1
     if voidp(pDealList[i]["class"]) then
       return error(me, "class property missing", #showPreviewImage, #minor)
@@ -81,10 +82,15 @@ on getPicture me, tImg
     tCount = pDealList[i]["count"]
     tmember = getImage(tClass)
     if tmember <> 0 then
-      if not voidp(tClass) and not voidp(tpartColors) then
-        tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
+      tAssetId = me.getClassAsset(tClass)
+      if not tDownloader.isAssetDownloading(tAssetId) then
+        if not voidp(tClass) and not voidp(tpartColors) then
+          tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass).duplicate()
+        else
+          tRenderedImage = member(tmember).image
+        end if
       else
-        tRenderedImage = member(tmember).image
+        tRenderedImage = getMember("ctlg_loading_icon2").image
       end if
       me.drawItem(tCanvas, tRenderedImage, i, tCount)
     end if
@@ -237,4 +243,15 @@ on getNumberImage me, tNumber
     end if
   end repeat
   return tCountImg.trimWhiteSpace()
+end
+
+on getClassAsset me, tClassName
+  if ilk(tClassName) <> #string then
+    return EMPTY
+  end if
+  tClass = tClassName
+  if tClass contains "*" then
+    tClass = tClass.char[1..offset("*", tClass) - 1]
+  end if
+  return tClass
 end

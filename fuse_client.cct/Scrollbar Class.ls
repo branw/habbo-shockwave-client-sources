@@ -576,3 +576,7 @@ on RotateQuad me, tDestquad, tClockwise
     return [tPnt4, tPnt1, tPnt2, tPnt3]
   end if
 end
+
+on handlers
+  return []
+end

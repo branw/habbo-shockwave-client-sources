@@ -50,3 +50,7 @@ on eventProc me, tEvent, tElemID, tParam
     return 0
   end if
 end
+
+on handlers
+  return []
+end

@@ -49,7 +49,7 @@ on create me, tID, tLayout, tLocX, tLocY, tSpecial
     tX = tLocX
     tY = tLocY
   else
-    if not voidp(me.pPosCache[tID]) then
+    if not voidp(me.pPosCache.getaProp(tID)) then
       tX = me.pPosCache[tID][1]
       tY = me.pPosCache[tID][2]
     else
@@ -83,6 +83,9 @@ on create me, tID, tLayout, tLocX, tLocY, tSpecial
 end
 
 on Remove me, tID
+  if voidp(tID) then
+    return 0
+  end if
   tWndObj = me.GET(tID)
   if tWndObj = 0 then
     return 0
@@ -254,4 +257,8 @@ end
 
 on getLastEventTime me
   return pLastEventData[#time]
+end
+
+on handlers
+  return []
 end

@@ -52,9 +52,17 @@ on showRoomBar me, tLayout
   tWndObj.unmerge()
   if not stringp(tLayout) then
     if getThread(#room).getComponent().getSpectatorMode() then
-      tLayout = "room_bar_spectator.window"
+      if me.getWideDocksEnabled() then
+        tLayout = "room_bar_spectator_wide.window"
+      else
+        tLayout = "room_bar_spectator.window"
+      end if
     else
-      tLayout = "room_bar.window"
+      if me.getWideDocksEnabled() then
+        tLayout = "room_bar_wide.window"
+      else
+        tLayout = "room_bar.window"
+      end if
     end if
   end if
   if not tWndObj.merge(tLayout) then
@@ -76,6 +84,7 @@ on showRoomBar me, tLayout
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseWithin)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUpOutSide)
   me.updateSoundButton()
+  me.hideHiliters()
   return 1
 end
 
@@ -312,6 +321,28 @@ on flashIMIcon me, tstate
       end if
       pIMFlashState = not pIMFlashState
   end case
+end
+
+on hideHiliters me
+  tWndObj = getWindow(pBottomBarId)
+  if tWndObj = 0 then
+    return 0
+  end if
+  tElementList = tWndObj.getProperty(#elementList)
+  repeat with i = 1 to tElementList.count
+    tElemName = tElementList.getPropAt(i)
+    if tElemName contains "hilite" then
+      tElementList[i].hide()
+    end if
+  end repeat
+end
+
+on getWideDocksEnabled me
+  if (the stage).image.width >= 960 then
+    return 1
+  else
+    return 0
+  end if
 end
 
 on eventProcRoomBar me, tEvent, tSprID, tParam

@@ -157,3 +157,7 @@ on helloReply me, tMsg
   end if
   pHandshakeFinished = 1
 end
+
+on handlers
+  return []
+end

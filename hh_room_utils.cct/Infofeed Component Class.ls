@@ -1,4 +1,4 @@
-property pBaseClassName, pItemList, pMaxItems
+property pBaseClassName, pItemList, pMaxItems, pCallbackList
 
 on test me
   tItem = [#type: #newbadge, #value: "ACH_RegistrationDuration" & random(10)]
@@ -8,7 +8,8 @@ end
 on construct me
   pBaseClassName = "Infofeed Item Base Class"
   pItemList = [:]
-  pMaxItems = 10
+  pMaxItems = integer(getIntVariable("infofeed.maxitems.count"))
+  pCallbackList = []
   return 1
 end
 
@@ -69,6 +70,45 @@ on getNextFrom me, tID
     return me.getLatestItemId()
   end if
   return pItemList.getPropAt(tPos + 1)
+end
+
+on registerButtonCallback me, ttype, tMethod, tObject
+  if ttype <> #prev and ttype <> #next then
+    return error(me, "Only allowed types are #prev and #next", #registerButtonCallback, #minor)
+  end if
+  tCallbackItem = [:]
+  tCallbackItem[#type] = ttype
+  tCallbackItem[#method] = tMethod
+  tCallbackItem[#object] = tObject
+  pCallbackList.add(tCallbackItem)
+end
+
+on removeButtonCallback me, ttype, tMethod, tObject
+  repeat with i = 1 to pCallbackList.count
+    tItem = pCallbackList[i]
+    if tItem[#type] = ttype and tItem[#method] = tMethod and tItem[#object] = tObject then
+      pCallbackList.deleteAt(i)
+      return 
+    end if
+  end repeat
+end
+
+on executeNextCallbacks me, tItemID
+  tInfofeedItem = me.getItem(tItemID)
+  repeat with tItem in pCallbackList
+    if tItem[#type] = #next then
+      call(tItem[#method], [tItem[#object]], tInfofeedItem)
+    end if
+  end repeat
+end
+
+on executePrevCallbacks me, tItemID
+  tInfofeedItem = me.getItem(tItemID)
+  repeat with tItem in pCallbackList
+    if tItem[#type] = #prev then
+      call(tItem[#method], [tItem[#object]], tInfofeedItem)
+    end if
+  end repeat
 end
 
 on createItem me, tStruct

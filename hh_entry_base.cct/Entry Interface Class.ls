@@ -53,7 +53,7 @@ on showHotel me
     tAnimations = tVisObj.getProperty(#swapAnims)
     if tAnimations <> 0 then
       repeat with tAnimation in tAnimations
-        tObj = createObject(#random, getVariableValue("swap.animation.class"))
+        tObj = createObject(#random, getStringVariable("swap.animation.class"))
         if tObj = 0 then
           error(me, "Error creating swap animation", #showHotel, #minor)
           next repeat
@@ -109,7 +109,11 @@ end
 
 on showEntryBar me
   if not windowExists(pBottomBar) then
-    if not createWindow(pBottomBar, "entry_bar.window", 0, 535) then
+    tLayout = "entry_bar.window"
+    if (the stage).image.width >= 960 then
+      tLayout = "entry_bar_wide.window"
+    end if
+    if not createWindow(pBottomBar, tLayout, 0, 535) then
       return 0
     end if
     tWndObj = getWindow(pBottomBar)

@@ -33,3 +33,7 @@ end
 on printTimeouts
   return getTimeoutManager().print()
 end
+
+on handlers
+  return []
+end

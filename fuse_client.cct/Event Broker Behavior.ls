@@ -170,6 +170,7 @@ on keyUp me
 end
 
 on redirectEvent me, tEvent
+  startProfilingTask("Event Broker::redirectEvent")
   if voidp(pProcList) then
     pProcList = me.createProcListTemplate()
   end if
@@ -179,7 +180,9 @@ on redirectEvent me, tEvent
   if not objectExists(pProcList[tEvent][2]) then
     return 0
   end if
-  return call(pProcList[tEvent][1], getObject(pProcList[tEvent][2]), tEvent, id)
+  tOut = call(pProcList[tEvent][1], getObject(pProcList[tEvent][2]), tEvent, id)
+  finishProfilingTask("Event Broker::redirectEvent")
+  return tOut
 end
 
 on createProcListTemplate me
@@ -193,4 +196,8 @@ on createProcListTemplate me
   tList[#keyDown] = [#null, 0]
   tList[#keyUp] = [#null, 0]
   return tList
+end
+
+on handlers
+  return []
 end

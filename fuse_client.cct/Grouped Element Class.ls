@@ -157,3 +157,7 @@ on draw me, tRGB
   tTargetRect = rect(pLocX, pLocY, pLocX + pwidth, pLocY + pheight)
   pBuffer.image.draw(tTargetRect, [#shapeType: #rect, #color: tRGB])
 end
+
+on handlers
+  return []
+end

@@ -82,6 +82,9 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
     end if
     return me.applyDarkenColor(member(getmemnum(tMemStr)).image, tColor)
   end if
+  if getmemnum(tMemStr) = 0 then
+    return 0
+  end if
   tMem = member(getmemnum(tMemStr))
   tOffset = point(50, 50)
   tRect = rect(tOffset.locH, tOffset.locV, tMem.rect.width + tOffset.locH, tMem.rect.height + tOffset.locV)
@@ -92,6 +95,9 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
       tRendered = me.addLayerToImage(tRendered, i, tMemStr, tColorList, tOffset)
     end if
   end repeat
+  if tRendered = 0 then
+    return 0
+  end if
   tRendered = tRendered.trimWhiteSpace()
   return tRendered
 end

@@ -1,4 +1,4 @@
-property pUpdate, pSkipFrames
+property pUpdate, pSkipFrames, pHumanObj
 
 on construct me
   pUpdate = 1
@@ -11,6 +11,7 @@ on construct me
   pTargetX = pLocX
   pTargetY = pLocY
   pBubbleId = VOID
+  pHumanObj = VOID
   me.Init()
   me.pWindow.registerProcedure(#eventHandler, me.getID(), #mouseUp)
   return 1
@@ -38,18 +39,19 @@ on setText me, tText
   me.selectPointerAndPosition(me.pDirection)
 end
 
+on setTargetHumanObj me, tHumanObj
+  pHumanObj = tHumanObj
+end
+
 on update me
   pSkipFrames = not pSkipFrames
   if pSkipFrames = 1 then
     return 0
   end if
-  tRoomComponent = getThread("room").getComponent()
-  tOwnRoomId = tRoomComponent.getUsersRoomId(getObject(#session).GET("user_name"))
-  tHumanObj = tRoomComponent.getUserObject(tOwnRoomId)
-  if tHumanObj = 0 then
+  if pHumanObj = 0 then
     return 0
   end if
-  tHumanLoc = tHumanObj.getPartLocation("hd")
+  tHumanLoc = pHumanObj.getPartLocation("hd")
   me.setProperty(#targetX, tHumanLoc[1])
   me.setProperty(#targetY, tHumanLoc[2])
   tSideThreshold = 200

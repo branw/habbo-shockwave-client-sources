@@ -57,3 +57,7 @@ end
 on createButtonImg me, tstate
   return me.pButtonImg.getProp(tstate)
 end
+
+on handlers
+  return []
+end

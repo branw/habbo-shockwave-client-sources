@@ -21,6 +21,7 @@ on define me, tdata
 end
 
 on OneCastDone me, tFile
+  startProfilingTask("CastLoad Task::oneCastDone")
   pLoadedSoFar = pLoadedSoFar + 1.0
   if integer(pLoadedSoFar) = pCastcount then
     pStatus = #ready
@@ -40,6 +41,7 @@ on OneCastDone me, tFile
     end if
     exit repeat
   end repeat
+  finishProfilingTask("CastLoad Task::oneCastDone")
   return 1
 end
 
@@ -125,4 +127,8 @@ end
 
 on getFailed
   return pContainsFailedItems
+end
+
+on handlers
+  return []
 end

@@ -74,3 +74,7 @@ on print me
   end repeat
   return 1
 end
+
+on handlers
+  return []
+end

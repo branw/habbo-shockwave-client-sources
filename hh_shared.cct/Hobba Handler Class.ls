@@ -59,7 +59,8 @@ on handle_picked_cry me, tMsg
   tConn = tMsg.getaProp(#connection)
   tID = tConn.GetStrFrom()
   tPicker = tConn.GetStrFrom()
-  tProps = [#picker: tPicker, #cry_id: tID]
+  tIsBlock = tConn.GetIntFrom()
+  tProps = [#picker: tPicker, #cry_id: tID, #block: tIsBlock]
   me.getComponent().receive_pickedCry(tProps)
 end
 

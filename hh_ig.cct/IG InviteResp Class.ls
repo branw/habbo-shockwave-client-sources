@@ -75,12 +75,10 @@ on storeGameInvitation me, tdata
 end
 
 on removeInvitation me, tGameId, tRenderFlag
-  put "* removeInvitation" && tGameId && tRenderFlag
   return 1
 end
 
 on declineAllInvitations me
-  put "* declineAllInvitations"
   tMainThread = me.getMainThread()
   if tMainThread = 0 then
     return 0
@@ -104,7 +102,6 @@ on invitationDeclined me, tGameId
 end
 
 on invitationAccepted me, tGameId, tTeamIndex
-  put "* invitationAccepted, join team" && tTeamIndex
   me.removeInvitation(tGameId, 0)
   me.ChangeWindowView("GameList")
   tListService = me.getIGComponent("GameList")

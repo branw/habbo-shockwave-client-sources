@@ -106,3 +106,11 @@ end
 on getClientUpTime
   return getSpecialServices().getClientUpTime()
 end
+
+on getValueByType tContent, tExpectedType
+  return getSpecialServices().getValueByType(tContent, tExpectedType)
+end
+
+on handlers
+  return []
+end

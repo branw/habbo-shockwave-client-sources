@@ -3,8 +3,8 @@ property pRecyclerButtonSpr, pButtonLoc, pNormalMem, pHighlightMem, pSkippedFram
 on construct me
   pRecyclerButtonSpr = VOID
   pButtonLoc = point(40, 5)
-  pNormalMem = member(getmemnum(getVariableValue("recycler.status.icon.normal")))
-  pHighlightMem = member(getmemnum(getVariableValue("recycler.status.icon.highlight")))
+  pNormalMem = member(getmemnum(getStringVariable("recycler.status.icon.normal")))
+  pHighlightMem = member(getmemnum(getStringVariable("recycler.status.icon.highlight")))
   pStatusWindowID = getText("recycler_status_window_title")
 end
 

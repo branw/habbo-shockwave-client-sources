@@ -60,3 +60,7 @@ end
 on printErrors
   return getErrorManager().print()
 end
+
+on handlers
+  return []
+end

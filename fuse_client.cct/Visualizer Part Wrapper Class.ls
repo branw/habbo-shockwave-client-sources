@@ -382,3 +382,7 @@ on renderImage me
   pWrapperStatus[#rendered] = 1
   return 1
 end
+
+on handlers
+  return []
+end

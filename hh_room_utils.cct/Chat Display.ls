@@ -7,7 +7,7 @@ on construct me
   pBalloonsVisible = 1
   pAutoScrollAmountPx = 18
   pAutoScrollOn = 0
-  pScrollDelayTime = getVariableValue("chat.scroll.delay", 5000)
+  pScrollDelayTime = getIntVariable("chat.scroll.delay", 5000)
   pAutoScrolledNow = 0
   pChatItemCount = 0
   pMaximumChatBufferSize = 7
@@ -143,15 +143,6 @@ on showNextChatMessage me
 end
 
 on getChatItem me, tChatMode, tObjID, tChatMessage
-  if pFreeChatItemList.count = 0 then
-    tChatItem = createObject(#random, "Chat Bubble Normal")
-    pChatItemCount = pChatItemCount + 1
-    tItemID = pChatItemCount
-  else
-    tChatItem = pFreeChatItemList[1]
-    pFreeChatItemList.deleteAt(1)
-    tItemID = tChatItem.getItemId()
-  end if
   tUserID = VOID
   if tChatMode = "OBJECT" then
     tObj = getThread(#room).getComponent().getActiveObject(tObjID)
@@ -189,6 +180,28 @@ on getChatItem me, tChatMode, tObjID, tChatMessage
       tUserID = tObjID
     end if
     tSourceLoc = tUserObj.getScrLocation()
+    tFXState = VOID
+    if tUserObj.handler(#getCurrentEffectState) then
+      tFXState = tUserObj.getCurrentEffectState()
+    end if
+    if not (tFXState = 0) then
+      if tFXState.getaProp(16) then
+        tChatItem = createObject("Sing-" & getUniqueID(), "Chat Bubble Sing")
+        pChatItemCount = pChatItemCount + 1
+        tItemID = pChatItemCount
+      end if
+    end if
+  end if
+  if not objectp(tChatItem) then
+    if pFreeChatItemList.count = 0 then
+      tChatItem = createObject(#random, "Chat Bubble Normal")
+      pChatItemCount = pChatItemCount + 1
+      tItemID = pChatItemCount
+    else
+      tChatItem = pFreeChatItemList[1]
+      pFreeChatItemList.deleteAt(1)
+      tItemID = tChatItem.getItemId()
+    end if
   end if
   tChatItem.defineBalloon(tChatMode, tBalloonColor, tUserName, tChatMessage, tItemID, tUserImg, tUserID, tSourceLoc)
   pActiveItemList.add(tChatItem)
@@ -231,7 +244,8 @@ on showChatItemUnheard me, tRoomUserId
 end
 
 on moveAllItemsUpBy me, tAmount
-  repeat with tItemNo = 1 to pActiveItemList.count
+  tItemNo = 1
+  repeat while tItemNo <= pActiveItemList.count
     tItem = pActiveItemList[tItemNo]
     tLocV = tItem.moveVerticallyBy(tAmount)
     if tLocV < -50 then
@@ -242,10 +256,12 @@ on moveAllItemsUpBy me, tAmount
         else
           tItem.deconstruct()
         end if
-        next repeat
+      else
+        tItem.deconstruct()
       end if
-      tItem.deconstruct()
+      next repeat
     end if
+    tItemNo = tItemNo + 1
   end repeat
 end
 

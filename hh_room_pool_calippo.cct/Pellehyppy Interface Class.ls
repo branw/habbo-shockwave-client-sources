@@ -172,9 +172,9 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
         tTempDelim = the itemDelimiter
         the itemDelimiter = ","
         tColor = string(pSwimSuitColor)
-        tR = value(tColor.item[1].char[5..tColor.item[1].length])
-        tG = value(tColor.item[2])
-        tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
+        tR = integer(tColor.item[1].char[5..tColor.item[1].length])
+        tG = integer(tColor.item[2])
+        tB = integer(tColor.item[3].char[1..tColor.item[3].length - 1])
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
@@ -259,7 +259,7 @@ end
 
 on updateMessageCount me, tMsgCount
   if windowExists(pBottomBarId) then
-    pNewMsgCount = value(tMsgCount)
+    pNewMsgCount = integer(tMsgCount)
     if pNewMsgCount > 0 then
       me.flashMessengerIcon()
     end if
@@ -269,7 +269,7 @@ end
 
 on updateBuddyrequestCount me, tReqCount
   if windowExists(pBottomBarId) then
-    pNewBuddyReq = value(tReqCount)
+    pNewBuddyReq = integer(tReqCount)
     if pNewBuddyReq > 0 then
       me.flashMessengerIcon()
     end if

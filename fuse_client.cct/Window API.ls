@@ -91,3 +91,7 @@ end
 on printWindows
   return getWindowManager().print()
 end
+
+on handlers
+  return []
+end

@@ -9,7 +9,8 @@ on construct me
 end
 
 on deconstruct me
-  repeat with tChild in pChildren
+  tChildren = pChildren.duplicate()
+  repeat with tChild in tChildren
     if objectp(tChild) then
       if tChild.valid then
         removeObject(tChild.getID())
@@ -32,6 +33,9 @@ on feedData me, tdata, tWidth
 end
 
 on getData me, tKey
+  if ilk(pData) <> #propList then
+    return VOID
+  end if
   return pData.getaProp(tKey)
 end
 

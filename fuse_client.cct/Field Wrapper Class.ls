@@ -1,10 +1,25 @@
-property pMember
+property pMember, pDontProfile
 
 on deconstruct me
   return getResourceManager().removeMember(pMember.name)
 end
 
+on setProfiling
+  if voidp(pDontProfile) then
+    pDontProfile = 1
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.fields.enabled") then
+        pDontProfile = 0
+      end if
+    end if
+  end if
+end
+
 on prepare me
+  me.setProfiling()
+  if not pDontProfile then
+    startProfilingTask("Field Wrapper::prepare")
+  end if
   pMember = member(getResourceManager().createMember(me.pProps[#member] & the milliSeconds & numToChar(random(99)), #field))
   pMember.wordWrap = me.pProps[#wordWrap]
   pMember.autoTab = me.pProps[#autoTab]
@@ -35,6 +50,9 @@ on prepare me
   end if
   me.pSprite.member = pMember
   pMember.rect = rect(0, 0, me.pwidth, me.pheight)
+  if not pDontProfile then
+    finishProfilingTask("Field Wrapper::prepare")
+  end if
   return 1
 end
 
@@ -43,10 +61,16 @@ on getText me
 end
 
 on setText me, tText
+  if not pDontProfile then
+    startProfilingTask("Field Wrapper::setText")
+  end if
   if not stringp(tText) then
     tText = string(tText)
   end if
   pMember.text = tText
+  if not pDontProfile then
+    finishProfilingTask("Field Wrapper::setText")
+  end if
   return 1
 end
 
@@ -81,4 +105,8 @@ on draw me, tRGB
     tRGB = rgb(255, 0, 0)
   end if
   (the stage).image.draw(me.pSprite.rect, [#shapeType: #rect, #color: tRGB])
+end
+
+on handlers
+  return []
 end

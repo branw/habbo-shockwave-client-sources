@@ -49,3 +49,7 @@ end
 on printThreads
   return getThreadManager().print()
 end
+
+on handlers
+  return []
+end

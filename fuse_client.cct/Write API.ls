@@ -33,3 +33,7 @@ end
 on printWriters
   return getWriterManager().print()
 end
+
+on handlers
+  return []
+end

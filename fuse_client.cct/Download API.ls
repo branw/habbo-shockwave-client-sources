@@ -19,7 +19,6 @@ on queueDownload tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirect
 end
 
 on abortDownLoad tMemNameOrNum
-  return getDownloadManager().abort(tMemNameOrNum)
 end
 
 on registerDownloadCallback tMemNameOrNum, tMethod, tClientID, tArgument
@@ -36,4 +35,8 @@ end
 
 on printDownloads
   return getDownloadManager().print()
+end
+
+on handlers
+  return []
 end

@@ -1,5 +1,4 @@
 on showInfo me, tWindowList, tdata, tMode
-  put "PreGameUserLeft showInfo"
   return 1
 end
 

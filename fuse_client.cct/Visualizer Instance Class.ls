@@ -112,23 +112,23 @@ on moveZ me, tZ
 end
 
 on getSprite me, tID
-  return pActSprList[tID]
+  return pActSprList.getaProp(tID)
 end
 
 on getSprById me, tID
-  return pActSprList[tID]
+  return pActSprList.getaProp(tID)
 end
 
 on getSpriteByID me, tID
-  return pActSprList[tID]
+  return pActSprList.getaProp(tID)
 end
 
 on spriteExists me, tID
-  return not voidp(pActSprList[tID])
+  return not voidp(pActSprList.getaProp(tID))
 end
 
 on moveSprBy me, tID, tX, tY
-  tsprite = pActSprList[tID]
+  tsprite = pActSprList.getaProp(tID)
   if voidp(tsprite) then
     return error(me, "Sprite not found:" && tID, #moveSprBy, #minor)
   end if
@@ -137,7 +137,7 @@ on moveSprBy me, tID, tX, tY
 end
 
 on moveSprTo me, tID, tX, tY
-  tsprite = pActSprList[tID]
+  tsprite = pActSprList.getaProp(tID)
   if voidp(tsprite) then
     return error(me, "Sprite not found:" && tID, #moveSprTo, #minor)
   end if
@@ -549,4 +549,8 @@ on buildVisual me, tLayout
     end if
   end repeat
   return me.Refresh()
+end
+
+on handlers
+  return []
 end

@@ -25,3 +25,7 @@ end
 on addMessageToBinaryQueue tMsg
   return getBinaryManager().addMessageToQueue(tMsg)
 end
+
+on handlers
+  return []
+end

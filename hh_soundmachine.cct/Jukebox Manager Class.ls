@@ -1,7 +1,7 @@
 property pOwner, pConnectionId, pDiskList, pSelectedDisk, pSelectedEject, pSelectedLoad, pDiskListRenderList, pDiskListImage, pWriterID, pPlaylistWriterID, pItemWidth, pItemHeight, pItemMarginX, pItemMarginY, pDiskArrayWidth, pDiskArrayHeight, pPlaylistWidth, pPlaylistHeight, pPlaylistLimit, pItemName, pItemNameSelected, pItemNameEmpty, pItemNameEmptySelected, pEjectName, pEjectNameSelected, pTextEmpty, pTextLoadTrax
 
 on construct me
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariable("connection.info.id", #Info)
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#000000")]

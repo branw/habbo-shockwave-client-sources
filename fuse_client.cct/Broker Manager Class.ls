@@ -100,3 +100,7 @@ end
 on getLastExecutedMessageId me
   return pLastExecutedMessage
 end
+
+on handlers
+  return []
+end

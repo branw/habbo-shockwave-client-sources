@@ -411,6 +411,17 @@ on redrawCryWindow me
   else
     tWndObj.getElement("hobba_pickedby").setText(getText("hobba_pickedby") && pCurrCryData.picker)
   end if
+  tFont = tWndObj.getElement("hobba_pickedby").getFont()
+  if not voidp(pCurrCryData.getaProp(#block)) then
+    if pCurrCryData.block = 1 then
+      tFont[#color] = rgb("#FF0000")
+    else
+      tFont[#color] = rgb("#000000")
+    end if
+  else
+    tFont[#color] = rgb("#000000")
+  end if
+  tWndObj.getElement("hobba_pickedby").setFont(tFont)
 end
 
 on initAudioAlertCheckBox me
@@ -600,6 +611,8 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
         return me.showCryWnd()
       "hobba_change_cfh_type":
         return me.getComponent().send_changeCfhType(pCurrCryID, pCurrCryData[#category])
+      "hobba_pickblock":
+        return me.getComponent().send_blockCfh(pCurrCryID)
     end case
     return 0
   else

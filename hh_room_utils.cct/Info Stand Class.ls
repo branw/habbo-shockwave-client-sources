@@ -64,12 +64,23 @@ on showObjectInfo me, tObjType
     tProps = tObj.getInfo()
   end if
   if listp(tProps) then
-    tWndObj.getElement("bg_darken").show()
-    tWndObj.getElement("info_name").show()
+    tElem = tWndObj.getElement("bg_darken")
+    if tElem = 0 then
+      return 0
+    end if
+    tElem.show()
+    tElem = tWndObj.getElement("info_name")
+    if tElem = 0 then
+      return 0
+    end if
+    tElem.show()
     tWndObj.getElement("info_text").show()
     tWndObj.getElement("info_name").setText(tProps[#name])
     tWndObj.getElement("info_text").setText(tProps[#custom])
     tElem = tWndObj.getElement("info_image")
+    if tElem = 0 then
+      return 0
+    end if
     if ilk(tProps[#image]) = #image then
       tElem.resizeTo(tProps[#image].width, tProps[#image].height)
       tElem.getProperty(#sprite).member.regPoint = point(tProps[#image].width / 2, tProps[#image].height)
@@ -135,6 +146,9 @@ on updateInfoStandGroup me, tGroupId
     tWindowObj = getWindow(pInfoStandId)
     if tWindowObj.elementExists("info_group_badge") then
       tElem = tWindowObj.getElement("info_group_badge")
+      if tElem = 0 then
+        return 0
+      end if
     else
       return 0
     end if
@@ -148,8 +162,11 @@ on updateInfoStandGroup me, tGroupId
   end if
   tRoomComponent = getThread(#room).getComponent()
   tGroupInfoObject = tRoomComponent.getGroupInfoObject()
+  if tGroupInfoObject = 0 then
+    return 0
+  end if
   tLogoMemNum = tGroupInfoObject.getGroupLogoMemberNum(tGroupId)
-  if not voidp(tGroupId) then
+  if not voidp(tGroupId) and tLogoMemNum > 0 then
     tElem.clearImage()
     tElem.setProperty(#image, member(tLogoMemNum).image)
     tElem.setProperty(#cursor, "cursor.finger")

@@ -35,7 +35,6 @@ on getUserListFilter me
 end
 
 on sendInviteToListIndex me, tIndex, tMessage
-  put "* sendInviteToListIndex" && tIndex && tMessage
   if tIndex = VOID then
     return 0
   end if
@@ -48,23 +47,19 @@ on sendInviteToListIndex me, tIndex, tMessage
   tUserName = pUserList[tIndex]
   me.getHandler().send_INVITE_USER(tUserName, tMessage)
   me.pExcludeList.append(tUserName)
-  put "* TODO: how to exclude people.."
   return 1
 end
 
 on sendInviteToName me, tUserName, tMessage
-  put "* sendInviteToName" && tUserName && tMessage
   if tUserName = EMPTY then
     return 0
   end if
   me.getHandler().send_INVITE_USER(tUserName, tMessage)
   me.pExcludeList.append(tUserName)
-  put "* TODO: how to exclude people.."
   return 1
 end
 
 on excludeListIndex me, tIndex
-  put "* TODO: excludeListIndex" && tIndex
   if tIndex = VOID then
     return 0
   end if
@@ -76,7 +71,6 @@ on excludeListIndex me, tIndex
   end if
   tUserName = pUserList[tIndex]
   me.pExcludeList.append(tUserName)
-  put "* TODO: how to exclude people.." && tUserName
   return 1
 end
 
@@ -90,7 +84,6 @@ on getInviteTicketCount me
 end
 
 on showInviteResponse me, tdata
-  put me.getID() && "* showInviteResponse" && tdata
   return 1
 end
 

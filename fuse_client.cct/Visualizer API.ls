@@ -33,3 +33,7 @@ end
 on printVisualizers
   return getVisualizerManager().print()
 end
+
+on handlers
+  return []
+end

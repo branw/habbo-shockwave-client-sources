@@ -254,3 +254,7 @@ on getTextWidth me, tTextMem
   tTextMem.rect = tStoreRect
   return tTextWidth
 end
+
+on handlers
+  return []
+end

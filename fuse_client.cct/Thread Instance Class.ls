@@ -25,3 +25,7 @@ end
 on getHandler me
   return handler
 end
+
+on handlers
+  return []
+end

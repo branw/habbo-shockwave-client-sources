@@ -32,6 +32,7 @@ on receive_pickedCry me, tMsg
     return 0
   end if
   pCryDataBase[tMsg[#cry_id]].picker = tMsg[#picker]
+  pCryDataBase[tMsg[#cry_id]].setaProp(#block, tMsg[#block])
   me.getInterface().updateCryWnd()
   return 1
 end
@@ -68,7 +69,7 @@ on send_cryPick me, tCryID, tGoHelp
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.info.id")).send("PICK_CRYFORHELP", [#string: tCryID])
+  getConnection(getVariable("connection.info.id")).send("PICK_CRYFORHELP", [#string: tCryID, #integer: 0])
   if tGoHelp then
     tdata = pCryDataBase[tCryID].duplicate()
     if voidp(tdata) then
@@ -113,6 +114,13 @@ on send_cryPick me, tCryID, tGoHelp
     getConnection(getVariable("connection.info.id")).send("FOLLOW_CRYFORHELP", [#string: tCryID])
   end if
   return 1
+end
+
+on send_blockCfh me, tCryID
+  if not connectionExists(getVariable("connection.info.id")) then
+    return 0
+  end if
+  getConnection(getVariable("connection.info.id")).send("PICK_CRYFORHELP", [#string: tCryID, #integer: 1])
 end
 
 on send_cryForHelp me, tMsg, ttype

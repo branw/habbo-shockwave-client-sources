@@ -1,4 +1,4 @@
-property pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pFigureData
+property pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pFigureData, pDontProfile
 
 on construct me
   pFigurePartListLoadedFlag = 0
@@ -10,12 +10,24 @@ on construct me
   me.loadActionSetXML()
   me.loadAnimationSetXML()
   pFigureData = createObject(#temp, "Figure Data Class")
+  me.setProfiling()
   return 1
 end
 
 on deconstruct me
   me.regMsgList(0)
   return 1
+end
+
+on setProfiling
+  if voidp(pDontProfile) then
+    pDontProfile = 1
+    if getObjectManager().managerExists(#variable_manager) then
+      if variableExists("profile.fields.enabled") then
+        pDontProfile = 0
+      end if
+    end if
+  end if
 end
 
 on define me, tProps
@@ -206,7 +218,6 @@ on loadFigurePartList me, tURL
       tURL = tURL & tSeparator & "graphcount=" & tMemberCount
     end if
   end if
-  sendProcessTracking(13)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partListLoaded, me.getID())
 end
@@ -219,6 +230,9 @@ on partListLoaded me, tParams, tSuccess
   tMemName = getVariable("external.figurepartlist.txt")
   if tMemName = 0 then
     tMemName = EMPTY
+  end if
+  if not pDontProfile then
+    startProfilingTask("Figure System::partListLoaded")
   end if
   if not memberExists(tMemName) then
     tValidpartList = VOID
@@ -234,6 +248,9 @@ on partListLoaded me, tParams, tSuccess
   me.checkDataLoaded()
   if memberExists(tMemName) then
     removeMember(tMemName)
+  end if
+  if not pDontProfile then
+    finishProfilingTask("Figure System::partListLoaded")
   end if
 end
 
@@ -292,7 +309,6 @@ on loadPartSetXML me
     return error(me, "Can't load partset XML - no URL configured", #loadPartSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(14)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partSetLoaded, me.getID())
 end
@@ -308,7 +324,6 @@ on loadActionSetXML me
     return error(me, "Can't load action set XML - no URL configured", #loadActionSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(16)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #actionSetLoaded, me.getID())
 end
@@ -324,13 +339,11 @@ on loadAnimationSetXML me
     return error(me, "Can't load animation XML - no URL configured", #loadAnimationSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(17)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #animationSetLoaded, me.getID())
 end
 
 on partSetLoaded me, tParams, tSuccess
-  sendProcessTracking(18)
   if not tSuccess then
     fatalError(["error": "part_sets"])
     return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
@@ -341,6 +354,9 @@ on partSetLoaded me, tParams, tSuccess
   end if
   if not memberExists(tMemName) then
     return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
+  end if
+  if not pDontProfile then
+    startProfilingTask("Figure System::partSetLoaded")
   end if
   tdata = member(tMemName).text
   if not voidp(tdata) then
@@ -441,10 +457,12 @@ on partSetLoaded me, tParams, tSuccess
   end if
   setVariable("partsets.xml.loaded", 1)
   me.checkDataLoaded()
+  if not pDontProfile then
+    finishProfilingTask("Figure System::partSetLoaded")
+  end if
 end
 
 on actionSetLoaded me, tParams, tSuccess
-  sendProcessTracking(19)
   if not tSuccess then
     fatalError(["error": "action_set"])
     return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
@@ -455,6 +473,9 @@ on actionSetLoaded me, tParams, tSuccess
   end if
   if not memberExists(tMemName) then
     return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
+  end if
+  if not pDontProfile then
+    startProfilingTask("Figure System::actionSetLoaded")
   end if
   tdata = member(tMemName).text
   if not voidp(tdata) then
@@ -522,10 +543,12 @@ on actionSetLoaded me, tParams, tSuccess
   end if
   setVariable("draworder.xml.loaded", 1)
   me.checkDataLoaded()
+  if not pDontProfile then
+    finishProfilingTask("Figure System::actionSetLoaded")
+  end if
 end
 
 on animationSetLoaded me, tParams, tSuccess
-  sendProcessTracking(20)
   if not tSuccess then
     fatalError(["error": "animation_set"])
     return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
@@ -537,6 +560,9 @@ on animationSetLoaded me, tParams, tSuccess
   end if
   if not memberExists(tMemName) then
     return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
+  end if
+  if not pDontProfile then
+    startProfilingTask("Figure System::animationSetLoaded")
   end if
   tdata = member(tMemName).text
   if not voidp(tdata) then
@@ -595,6 +621,9 @@ on animationSetLoaded me, tParams, tSuccess
   setVariable("human.parts.animationList", tAnimationData)
   setVariable("animation.xml.loaded", 1)
   me.checkDataLoaded()
+  if not pDontProfile then
+    finishProfilingTask("Figure System::animationSetLoaded")
+  end if
 end
 
 on parsePartListXML me, tElement

@@ -13,7 +13,7 @@ on create me, tVariable, tValue
   if not stringp(tVariable) and not symbolp(tVariable) then
     return error(me, "String or symbol expected:" && tVariable, #create, #major)
   end if
-  me.pItemList[tVariable] = tValue
+  setaProp(me.pItemList, tVariable, tValue)
   return 1
 end
 
@@ -21,12 +21,12 @@ on set me, tVariable, tValue
   if not stringp(tVariable) and not symbolp(tVariable) then
     return error(me, "String or symbol expected:" && tVariable, #set, #major)
   end if
-  me.pItemList[tVariable] = tValue
+  setaProp(me.pItemList, tVariable, tValue)
   return 1
 end
 
 on GET me, tVariable, tDefault
-  tValue = me.pItemList[tVariable]
+  tValue = me.pItemList.getaProp(tVariable)
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
     if not voidp(tDefault) then
@@ -41,7 +41,7 @@ on GET me, tVariable, tDefault
 end
 
 on getInt me, tVariable, tDefault
-  tValue = integer(me.pItemList[tVariable])
+  tValue = integer(me.pItemList.getaProp(tVariable))
   if not integerp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
     if not voidp(tDefault) then
@@ -53,8 +53,38 @@ on getInt me, tVariable, tDefault
   return tValue
 end
 
+on getString me, tVariable, tDefault
+  tValue = EMPTY
+  if me.pItemList.getaProp(tVariable) = VOID then
+    tError = "Variable not found:" && QUOTE & tVariable & QUOTE
+    if not voidp(tDefault) and stringp(tDefault) then
+      tValue = tDefault
+      tError = tError & RETURN & "Using given default:" && tDefault
+    end if
+    error(me, tError, #getString, #minor)
+  else
+    tValue = string(me.pItemList.getaProp(tVariable))
+  end if
+  return tValue
+end
+
+on getSymbol me, tVariable, tDefault
+  tValue = EMPTY
+  if me.pItemList.getaProp(tVariable) = VOID then
+    tError = "Variable not found:" && QUOTE & tVariable & QUOTE
+    if not voidp(tDefault) and stringp(tDefault) then
+      tValue = tDefault
+      tError = tError & RETURN & "Using given default:" && tDefault
+    end if
+    error(me, tError, #getString, #minor)
+  else
+    tValue = symbol(me.pItemList.getaProp(tVariable))
+  end if
+  return tValue
+end
+
 on GetValue me, tVariable, tDefault
-  tValue = value(me.pItemList[tVariable])
+  tValue = value(me.pItemList.getaProp(tVariable))
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
     if not voidp(tDefault) then
@@ -65,6 +95,8 @@ on GetValue me, tVariable, tDefault
   end if
   if ilk(tValue) = #list or ilk(tValue) = #propList then
     return tValue.duplicate()
+  else
+    error(me, "Using getValue to get something other than list or proplist:" && tVariable, #GetValue, #minor)
   end if
   return tValue
 end
@@ -74,7 +106,7 @@ on Remove me, tVariable
 end
 
 on exists me, tVariable
-  return not voidp(me.pItemList[tVariable])
+  return not voidp(me.pItemList.getaProp(tVariable))
 end
 
 on dump me, tField, tDelimiter, tOverride
@@ -115,7 +147,7 @@ on dump me, tField, tDelimiter, tOverride
       end if
       tPos = me.pItemList.findPos(tProp)
       if tOverride or voidp(tPos) then
-        me.pItemList[tProp] = tValue
+        setaProp(me.pItemList, tProp, tValue)
       end if
       the itemDelimiter = tDelimiter
     end if
