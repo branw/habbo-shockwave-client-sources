@@ -111,11 +111,11 @@ on sendRequest me
   pMUXtra.setNetBufferLimits(16 * 1024 * 2, pMaxBytes, 100)
   tErrCode = pMUXtra.setNetMessageHandler(#messageHandler, me)
   if tErrCode <> 0 then
-    error(me, "Error with setNetMessageHandler", #sendRequest)
+    error(me, "Error with setNetMessageHandler", #sendRequest, #major)
   end if
   tErrCode = pMUXtra.connectToNetServer("*", "*", pServer, pPort, "HTTP_CLASS", 1)
   if tErrCode <> 0 then
-    error(me, "Error sending ConnectToNetServer to server", #sendRequest)
+    error(me, "Error sending ConnectToNetServer to server", #sendRequest, #major)
     pStatus = #error
     pNetDone = 1
     return 0
@@ -177,7 +177,11 @@ on createNetRequest me
   tCmd = EMPTY
   tHeaders = []
   tBody = EMPTY
-  tHeaders.add("Host: " & pServer & ":" & pPort)
+  tPort = ":" & pPort
+  if tPort = ":80" then
+    tPort = EMPTY
+  end if
+  tHeaders.add("Host: " & pServer & tPort)
   tHeaders.add("User-Agent:" && pUserAgent)
   tHeaders.add("Accept: text/*")
   tHeaders.add("Accept-Charset: ISO-8859-1")
@@ -278,7 +282,7 @@ on handleContentResponse me, tMsg, tContent
     if voidp(tRedirectUrl) then
       tmember = member(pMemName)
       if tmember.type <> #text then
-        error(me, "Incompatible download type. Maybe not redirected.", #handleContentResponse)
+        error(me, "Incompatible download type. Maybe not redirected.", #handleContentResponse, #minor)
       else
         member(pMemName).text = pNetResult["body"]
         pNetDone = 1

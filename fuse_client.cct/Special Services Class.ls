@@ -161,18 +161,14 @@ on getUniqueID me
 end
 
 on getMachineID me
-  tMachineID = getPref(getVariable("pref.value.id"))
+  tMachineID = string(getPref(getVariable("pref.value.id")))
   tMaxLength = 24
-  if voidp(tMachineID) or tMachineID = EMPTY or string(tMachineID).char.count > tMaxLength then
+  tMinLength = 10
+  if chars(tMachineID, 1, 1) = "#" then
+    tMachineID = chars(tMachineID, 2, tMachineID.length)
+  else
     tMachineID = me.generateMachineId(tMaxLength)
-    setPref(getVariable("pref.value.id"), tMachineID)
-  end if
-  if string(tMachineID).length < 10 then
-    tMachineID = tMachineID & string(random(9999999999.0))
-  end if
-  if string(tMachineID).char[1..4] = "uid:" then
-    tMachineID = me.generateMachineId(tMaxLength)
-    setPref(getVariable("pref.value.id"), tMachineID)
+    setPref(getVariable("pref.value.id"), "#" & tMachineID)
   end if
   return tMachineID
 end
@@ -297,8 +293,8 @@ on print me, tObj, tMsg
 end
 
 on generateMachineId me, tMaxLength
-  tMachineID = string(the milliSeconds) & string(the date) & string(the time)
-  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-"]
+  tMachineID = string(the milliSeconds) & string(the time) & string(the date)
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM"]
   repeat with tDelimiter in tLocaleDelimiters
     tMachineID = replaceChunks(tMachineID, tDelimiter, EMPTY)
   end repeat
