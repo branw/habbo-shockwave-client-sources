@@ -78,6 +78,7 @@ on handleLoginOK me, tMsg
   tMsg.connection.send("GET_INFO")
   tMsg.connection.send("GET_CREDITS")
   tMsg.connection.send("GETAVAILABLEBADGES")
+  tMsg.connection.send("GET_SOUND_SETTING")
   if objectExists(#session) then
     getObject(#session).set("userLoggedIn", 1)
   end if
@@ -241,7 +242,7 @@ on handleErr me, tMsg
       the itemDelimiter = tDelim
       executeMessage(#alert, [#title: "alert_warning", #Msg: tTextStr, #modal: 1])
     tMsg.content contains "Version not correct":
-      executeMessage(#alert, [#Msg: "Old client version!!!"])
+      executeMessage(#alert, [#Msg: "alert_old_client"])
     tMsg.content contains "Duplicate session":
       removeConnection(tMsg.connection.getID())
       me.getComponent().setaProp(#pOkToLogin, 0)
@@ -260,7 +261,7 @@ on handleModAlert me, tMsg
 end
 
 on handleCryptoParameters me, tMsg
-  tClientToServer = tMsg.connection.GetIntFrom() <> 0
+  tClientToServer = 1
   tServerToClient = tMsg.connection.GetIntFrom() <> 0
   pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
   if tClientToServer then
@@ -280,7 +281,7 @@ on handleSecretKey me, tMsg
   tMsg.connection.setEncoder(createObject(#temp, getClassVariable("connection.decoder.class")))
   tMsg.connection.getEncoder().setKey(tKey)
   tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 13)
+  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 17)
   tMsg.connection.setEncryption(1)
   if pCryptoParams.getaProp(#ServerToClient) = 1 then
     me.makeServerToClientKey()
@@ -309,6 +310,12 @@ on handleHotelLogout me, tMsg
   end case
 end
 
+on handleSoundSetting me, tMsg
+  tstate = tMsg.connection.GetIntFrom()
+  setSoundState(tstate)
+  executeMessage(#soundSettingChanged, tstate)
+end
+
 on makeServerToClientKey me
   tConnection = getConnection(getVariable("connection.info.id"))
   tDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
@@ -318,7 +325,7 @@ on makeServerToClientKey me
   tConnection.setDecoder(tDecoder)
   tConnection.getDecoder().setKey(tKey)
   tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tConnection.getDecoder().preMixEncodeSbox(tPremixChars, 13)
+  tConnection.getDecoder().preMixEncodeSbox(tPremixChars, 17)
   tConnection.setProperty(#deciphering, 1)
 end
 
@@ -379,6 +386,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(277, #handleCryptoParameters)
   tMsgs.setaProp(278, #handleEndCrypto)
   tMsgs.setaProp(287, #handleHotelLogout)
+  tMsgs.setaProp(308, #handleSoundSetting)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
   tCmds.setaProp("VERSIONCHECK", 5)
@@ -395,6 +403,8 @@ on regMsgList me, tBool
   tCmds.setaProp("SSO", 204)
   tCmds.setaProp("INIT_CRYPTO", 206)
   tCmds.setaProp("SECRETKEY", 207)
+  tCmds.setaProp("GET_SOUND_SETTING", 228)
+  tCmds.setaProp("SET_SOUND_SETTING", 229)
   tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

@@ -132,7 +132,7 @@ on sendThrowBall me, tloc, tTrajectory
     if not getObject(#session).exists("user_game_index") then
       return 0
     end if
-    tMyId = getObject(#session).get("user_game_index")
+    tMyId = getObject(#session).GET("user_game_index")
     tFramework.executeGameObjectEvent(tMyId, #send_throw_at_loc, [#targetloc: tWorldLoc, #trajectory: tTrajectory])
     return 1
   end if
@@ -148,7 +148,7 @@ on sendMoveGoal me, tloc
     if not getObject(#session).exists("user_game_index") then
       return 0
     end if
-    tMyId = getObject(#session).get("user_game_index")
+    tMyId = getObject(#session).GET("user_game_index")
     return tFramework.executeGameObjectEvent(tMyId, #send_set_target_tile, [#tile_x: tloc[1], #tile_y: tloc[2]])
   else
     return tFramework.sendHabboRoomMove(tloc[1], tloc[2])

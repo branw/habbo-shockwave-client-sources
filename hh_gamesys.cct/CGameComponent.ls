@@ -280,7 +280,7 @@ on _MinigameTestChecksum me, i_iChecksum
   if i_iChecksum <> tMyChecksum then
     put "*** TURN" && m_rCurrentTurn.GetNumber() && " - CHECKSUM MISMATCH! server says:" && i_iChecksum & ", we say:" && tMyChecksum && ". Previous turn:" && m_aLastTurnData
     put "Turn was " & m_syncLostTime & " seconds late."
-    me.getComponent().dumpChecksumValues()
+    put me.getComponent().dumpChecksumValues()
     me._ClearTurnBuffer()
     me.getMessageSender().sendRequestFullStatusUpdate()
     pWaitingForSync = 1

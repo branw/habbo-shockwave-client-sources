@@ -37,14 +37,31 @@ on getNumTickets me
   if getObject(#session) = 0 then
     return 0
   end if
-  return getObject(#session).get("user_ph_tickets")
+  return getObject(#session).GET("user_ph_tickets")
 end
 
 on getSpectatorModeFlag me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#spectatormode_flag)
+  return me.getVarMgr().GET(#spectatormode_flag)
+end
+
+on getTournamentFlag me
+  if me.getVarMgr() = 0 then
+    return 0
+  end if
+  if not me.getVarMgr().exists(#tournament_flag) then
+    return 0
+  end if
+  return me.getVarMgr().GET(#tournament_flag)
+end
+
+on getWorldReady me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().getWorldReady()
 end
 
 on getGamestatus me
@@ -54,25 +71,26 @@ on getGamestatus me
   return pThread.getBaseLogic().getGamestatus()
 end
 
-on getTournamentFlag me
-  if me.getVarMgr() = 0 then
+on setGameStatus me, tStatus
+  tVarMgr = me.getVarMgr()
+  if tVarMgr = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#tournament_flag)
+  return tVarMgr.set(#game_status, tStatus)
 end
 
 on getInstanceList me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#instancelist)
+  return me.getVarMgr().GET(#instancelist)
 end
 
 on getObservedInstance me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#observed_instance_data)
+  return me.getVarMgr().GET(#observed_instance_data)
 end
 
 on getGameParameters me
@@ -82,7 +100,7 @@ on getGameParameters me
   if not me.getVarMgr().exists(#gameparametervalues_format) then
     return 0
   end if
-  return me.getVarMgr().get(#gameparametervalues_format)
+  return me.getVarMgr().GET(#gameparametervalues_format)
 end
 
 on getJoinParameters me
@@ -92,7 +110,7 @@ on getJoinParameters me
   if not me.getVarMgr().exists(#joinparametervalues_format) then
     return 0
   end if
-  return me.getVarMgr().get(#joinparametervalues_format)
+  return me.getVarMgr().GET(#joinparametervalues_format)
 end
 
 on setInstanceListUpdates me, tBoolean

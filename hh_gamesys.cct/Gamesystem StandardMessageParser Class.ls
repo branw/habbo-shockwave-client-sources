@@ -55,6 +55,7 @@ on handle_msgstruct_gameparameters me, tMsg
     tItem = [:]
     tItem.addProp(#name, tConn.GetStrFrom())
     ttype = tConn.GetIntFrom()
+    tItem.addProp(#editable, tConn.GetIntFrom())
     if ttype = 0 then
       tItem.addProp(#type, #integer)
       tItem.addProp(#default, tConn.GetIntFrom())

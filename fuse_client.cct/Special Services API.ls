@@ -50,6 +50,10 @@ on getMachineID
   return getSpecialServices().getMachineID()
 end
 
+on getPredefinedURL tURL
+  return getSpecialServices().getPredefinedURL(tURL)
+end
+
 on getMoviePath me
   return getSpecialServices().getMoviePath()
 end

@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup
 
 on construct me
   pID = 0
@@ -47,6 +47,8 @@ on construct me
   pHFactor = pGeometry.pHFactor
   pCorrectLocZ = 0
   pPartClass = value(getThread(#room).getComponent().getClassContainer().GET("bodypart"))
+  pGroupId = VOID
+  pStatusInGroup = VOID
   pBaseLocZ = 0
   return 1
 end
@@ -153,6 +155,8 @@ on setup me, tdata
   pLocY = tdata[#y]
   pLocH = tdata[#h]
   pBadge = tdata[#badge]
+  pGroupId = tdata[#groupid]
+  pStatusInGroup = tdata[#groupstatus] = tdata[#groupstatus]
   if not voidp(tdata.getaProp(#webID)) then
     pWebID = tdata[#webID]
   end if
@@ -343,6 +347,7 @@ on getInfo me
     pInfoStruct[#ctrl] = pCtrlType
   end if
   pInfoStruct[#badge] = me.pBadge
+  pInfoStruct[#groupid] = me.pGroupId
   if pTrading then
     pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
@@ -379,12 +384,21 @@ on getProperty me, tPropID
       return me.pBadge
     #swimming:
       return me.pSwim
+    #groupid:
+      return pGroupId
+    #groupstatus:
+      return pStatusInGroup
   end case
   return 0
 end
 
 on setProperty me, tPropID, tValue
-  -- ERROR: Could not identify jmp
+  case tPropID of
+    #groupid:
+      pGroupId = tValue
+    #groupstatus:
+      pGroupStatus = tValue
+  end case
   return 0
 end
 

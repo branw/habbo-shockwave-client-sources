@@ -28,7 +28,7 @@ on Refresh me, tTopic, tdata
       repeat with tEvent in tdata
         case tEvent[#type] of
           0:
-            me.createRoomObject(tEvent[#Data])
+            me.createRoomObject(tEvent[#data])
           1:
             me.deleteRoomObject(tEvent[#id])
           2:

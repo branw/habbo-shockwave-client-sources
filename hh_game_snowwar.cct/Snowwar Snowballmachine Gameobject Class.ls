@@ -93,6 +93,8 @@ on reserveSpaceForObject me
     return 0
   end if
   tWorld.clearObjectFromTileSpace(me.getObjectId())
-  tWorld.reserveTileForObject(me.getGameObjectProperty(#tile_x), me.getGameObjectProperty(#tile_y), me.getObjectId(), me.getGameObjectProperty(#gameobject_height))
+  if not tWorld.reserveTileForObject(me.getGameObjectProperty(#tile_x), me.getGameObjectProperty(#tile_y), me.getObjectId(), me.getGameObjectProperty(#gameobject_height)) then
+    return error(me, "Unable to reserve tile for snowballmachine in:" && me.pGameObjectSyncValues, #reserveSpaceForObject)
+  end if
   return 1
 end

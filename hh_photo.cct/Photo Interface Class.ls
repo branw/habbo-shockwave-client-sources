@@ -155,7 +155,7 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       getThread(#room).getComponent().getBalloon().hideBalloons()
       tHandVis = getThread(#room).getInterface().getContainer().getVisual()
       if tHandVis <> 0 then
-        tHandVis.hide()
+        tHandVis.Hide()
       end if
       hideWindows()
       executeMessage(#takingPhoto)

@@ -20,9 +20,9 @@ on deconstruct me
 end
 
 on prepare me
+  executeMessage(#hideInfoStand)
   tRoomInt = getObject(#room_interface)
   if tRoomInt <> 0 then
-    tRoomInt.hideInfoStand()
     if getObject(pFrameworkId) = 0 then
       return 0
     end if
@@ -47,7 +47,7 @@ on handleUserCreated me, tName, tUserStrId
   if tRoomInt = 0 then
     return 0
   end if
-  if tName = getObject(#session).get(#userName) then
+  if tName = getObject(#session).GET(#userName) then
     tRoomInt.showArrowHiliter(tUserStrId)
   end if
   return 1

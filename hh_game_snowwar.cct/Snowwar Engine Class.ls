@@ -1,8 +1,11 @@
+property pObjectCache
+
 on construct me
   return 1
 end
 
 on deconstruct me
+  pObjectCache = VOID
   return 1
 end
 
@@ -10,7 +13,7 @@ on Refresh me, tTopic, tdata
   case tTopic of
     #gameend:
       if getObject(#session).exists("user_game_index") then
-        me.getGameSystem().executeGameObjectEvent(getObject(#session).get("user_game_index"), #gameend)
+        me.getGameSystem().executeGameObjectEvent(getObject(#session).GET("user_game_index"), #gameend)
       end if
     #update_game_object:
       return me.updateGameObject(tdata)
@@ -23,12 +26,31 @@ on Refresh me, tTopic, tdata
     #snowwar_event_8:
       playSound("LS-throw")
       return me.createSnowballGameObject(tdata)
+    #world_ready:
+      return me.createStoredObjects()
   end case
   return error(me, "Undefined event!" && tTopic && "for" && me.pID, #Refresh)
 end
 
+on createStoredObjects me
+  if pObjectCache = VOID then
+    return 1
+  end if
+  repeat with tDataObject in pObjectCache
+    me.createGameObject(tDataObject)
+  end repeat
+  pObjectCache = VOID
+end
+
 on createGameObject me, tDataObject
   tGameSystem = me.getGameSystem()
+  if tGameSystem.getWorldReady() = 0 then
+    if pObjectCache = VOID then
+      pObjectCache = []
+    end if
+    pObjectCache.add(tDataObject)
+    return 1
+  end if
   tGameSystem.createGameObject(tDataObject[#id], tDataObject[#str_type], tDataObject[#objectDataStruct])
   tGameObject = tGameSystem.getGameObject(tDataObject[#id])
   if tGameObject = 0 then
@@ -57,19 +79,17 @@ on updateGameObject me, tDataObject
   return tGameObject.define(tDataObject)
 end
 
-on removeGameObject me, tObjectId
+on removeGameObject me, tObjectID
   tGameSystem = me.getGameSystem()
-  return tGameSystem.removeGameObject(tObjectId)
+  return tGameSystem.removeGameObject(tObjectID)
 end
 
 on verifyGameObjectList me, tObjectIdList
   tGameSystem = me.getGameSystem()
   tAllGameObjectIds = tGameSystem.getGameObjectIdsOfType(#all)
-  put "* Server objects:" && tObjectIdList
-  put "* Client objects:" && tAllGameObjectIds
-  repeat with tObjectId in tAllGameObjectIds
-    if tObjectIdList.getPos(tObjectId) < 1 then
-      tGameSystem.removeGameObject(tObjectId)
+  repeat with tObjectID in tAllGameObjectIds
+    if tObjectIdList.getPos(tObjectID) < 1 then
+      tGameSystem.removeGameObject(tObjectID)
     end if
   end repeat
   return 1

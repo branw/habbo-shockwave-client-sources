@@ -20,13 +20,46 @@ on preloadSounds me, tSampleList
   end repeat
 end
 
+on getSampleLoadingStatus me, tMemName
+  if memberExists(tMemName) then
+    return 1
+  end if
+  return 0
+end
+
+on getSampleLength me, tMemName
+  if getMember(tMemName) = VOID then
+    return 0
+  end if
+  if getMember(tMemName).type <> #sound then
+    return 0
+  end if
+  tLength = getMember(tMemName).duration
+  return tLength
+end
+
+on startSamplePreview me, tMemberName
+  return getObject(pSongPlayer).startSamplePreview([#name: tMemberName])
+end
+
+on stopSamplePreview me
+  return getObject(pSongPlayer).stopSamplePreview()
+end
+
+on playSong me, tSongData
+  return getObject(pSongPlayer).startSong(tSongData)
+end
+
+on stopSong me
+  return getObject(pSongPlayer).stopSong()
+end
+
 on startSampleDownload me, tMemberName
   if memberExists(tMemberName) then
     if pSampleList.getaProp(tMemberName) = VOID then
       tSample = [#status: "ready"]
       pSampleList.addProp(tMemberName, tSample)
     else
-      return 1
     end if
   else
     if pSampleList.getaProp(tMemberName) = VOID then
@@ -39,44 +72,12 @@ on startSampleDownload me, tMemberName
       end if
     end if
   end if
-end
-
-on getSampleLoadingStatus me, tMemName
-  if memberExists(tMemName) then
-    return 1
-  end if
-  return 0
-end
-
-on getSampleLength me, tMemName
-  if getMember(tMemName) = VOID or getMember(tMemName).type <> #sound then
-    return 0
-  end if
-  tLength = getMember(tMemName).duration
-  return tLength
+  return 1
 end
 
 on soundDownloadCompleted me, tName, tParam2
   tSample = pSampleList.getaProp(tName)
-  if tSample = VOID then
-    return 
+  if not voidp(tSample) then
+    tSample.status = "ready"
   end if
-  tSample.status = "ready"
-end
-
-on startSamplePreview me, tMemberName
-  return getObject(pSongPlayer).startSamplePreview([#name: tMemberName])
-end
-
-on stopSamplePreview me
-  return getObject(pSongPlayer).stopSamplePreview()
-end
-
-on playSong me, tSongData
-  pSongData = tSongData
-  return getObject(pSongPlayer).startSong(tSongData)
-end
-
-on stopSong me
-  return getObject(pSongPlayer).stopSong()
 end

@@ -22,9 +22,9 @@ on showLogo me
   if memberExists("Logo") then
     tmember = member(getmemnum("Logo"))
     pLogoSpr = sprite(reserveSprite(me.getID()))
-    pLogoSpr.ink = 36
-    pLogoSpr.blend = 60
     pLogoSpr.member = tmember
+    pLogoSpr.ink = 0
+    pLogoSpr.blend = 90
     pLogoSpr.locZ = -20000001
     pLogoSpr.loc = point((the stage).rect.width / 2, (the stage).rect.height / 2 - tmember.height)
   end if

@@ -89,6 +89,10 @@ on getCatalogWindow me
   return getWindow(pCatalogID)
 end
 
+on getSelectedProduct me
+  return pSelectedProduct
+end
+
 on showOrderInfo me, tstate, tInfo
   if windowExists(pInfoWindowID) then
     return 0
@@ -259,7 +263,7 @@ on cataloguePageData me, tdata
   pCurrentPageData = tdata.duplicate()
   tLayout = pCurrentPageData["layout"] & ".window"
   if not memberExists(tLayout) then
-    error(me, "Catalogue page Layout not found!", #cataloguePageData)
+    error(me, "Catalogue page Layout not found: " & tLayout, #cataloguePageData)
     tLayout = "ctlg_layout1.window"
   end if
   if not voidp(pCurrentPageData["linkList"]) then
@@ -339,7 +343,7 @@ on ChangeWindowView me, tWindowName
       me.getComponent().retrieveCatalogueIndex()
       return 1
     "frontpage.window":
-    "ctlg_layout1.window", "ctlg_layout2.window":
+    "ctlg_layout1.window", "ctlg_layout2.window", "ctlg_soundmachine.window":
       if not voidp(pCurrentPageData["teaserText"]) then
         tText = pCurrentPageData["teaserText"]
         if tWndObj.elementExists("ctlg_description") then

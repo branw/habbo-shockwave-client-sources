@@ -1,11 +1,10 @@
-property pWindowObj, pCurrentPageIndex, pLastPageIndex, pFurnisPerPage, pAcceptBtnActive, pProgressAnimation, pStatusIcon, pTimeLeftTimeoutID
+property pWindowObj, pCurrentPageIndex, pLastPageIndex, pFurnisPerPage, pAcceptBtnActive, pProgressAnimation, pStatusIcon, pTimeLeftTimeoutID, pHeaderImageNum
 
 on construct me
   pWindowObj = VOID
   pCurrentPageIndex = 1
   pLastPageIndex = 1
   pFurnisPerPage = 12
-  pIsVisible = 0
   pAcceptBtnActive = 0
   pTimeLeftTimeoutID = "timeLeftTimeout"
   pProgressAnimation = createObject("rec_prg_anim", getClassVariable("recycler.progress.animation.class"))
@@ -16,8 +15,8 @@ on construct me
 end
 
 on deconstruct me
-  unregisterMessage(#gamesystem_constructed)
-  unregisterMessage(#gamesystem_deconstructed)
+  unregisterMessage(#gamesystem_constructed, me.getID())
+  unregisterMessage(#gamesystem_deconstructed, me.getID())
   removeObject(pProgressAnimation)
   removeObject(pStatusIcon)
   return 1
@@ -27,11 +26,15 @@ on setHostWindowObject me, tHostWindowObj
   pWindowObj = tHostWindowObj
 end
 
+on setHeaderImage me, tMemberNo
+  pHeaderImageNum = tMemberNo
+end
+
 on setViewToState me, tstate
   case tstate of
-    "open":
+    "open", "disabled":
       me.hideRecyclerStatusButton()
-    "progress", "ready":
+    "progress", "ready", "timeout":
       me.showRecyclerStatusButton()
   end case
   if voidp(pWindowObj) then
@@ -43,10 +46,10 @@ on setViewToState me, tstate
       pWindowObj.unmerge()
       pWindowObj.merge("ctlg_recycler_open.window")
       tHeaderText = getText("recycler_info_open")
-      tRecyclingHours = me.getComponent().getRecyclingHours()
-      tQuarantineHours = me.getComponent().getQuarantineHours()
-      tHeaderText = replaceChunks(tHeaderText, "%quarantinehours%", tQuarantineHours)
-      tHeaderText = replaceChunks(tHeaderText, "%recyclinghours%", tRecyclingHours)
+      tMinutesToRecycle = me.getComponent().getRecyclingMinutes()
+      tHeaderText = me.replaceTimeKeysText(tHeaderText, tMinutesToRecycle, "total_")
+      tQuarantineMinutes = me.getComponent().getQuarantineMinutes()
+      tHeaderText = me.replaceTimeKeysText(tHeaderText, tQuarantineMinutes, "quarantine_")
       if timeoutExists(pTimeLeftTimeoutID) then
         removeTimeout(pTimeLeftTimeoutID)
       end if
@@ -54,10 +57,13 @@ on setViewToState me, tstate
     "progress":
       pWindowObj.unmerge()
       pWindowObj.merge("ctlg_recycler_progress.window")
-      tHeaderText = me.getInProgressHeaderText()
+      tHeaderText = getText("recycler_info_progress")
+      tRecyclingMinutes = me.getComponent().getRecyclingMinutes()
+      tHeaderText = me.replaceTimeKeysText(tHeaderText, tRecyclingMinutes)
       pProgressAnimation.startAnimation(pWindowObj)
+      me.updateInProgressText()
       if not timeoutExists(pTimeLeftTimeoutID) then
-        createTimeout(pTimeLeftTimeoutID, 60000, #updateInProgressHeader, me.getID(), VOID, 0)
+        createTimeout(pTimeLeftTimeoutID, 60000, #updateInProgressText, me.getID(), VOID, 0)
       end if
     "ready":
       pWindowObj.unmerge()
@@ -74,13 +80,21 @@ on setViewToState me, tstate
         removeTimeout(pTimeLeftTimeoutID)
       end if
       pProgressAnimation.stopAnimation()
+    "timeout":
+      pWindowObj.unmerge()
+      pWindowObj.merge("ctlg_recycler_progress.window")
+      tHeaderText = getText("recycler_info_timeout")
+    "disabled":
+      pWindowObj.unmerge()
+      pWindowObj.merge("ctlg_recycler_progress.window")
+      tHeaderText = getText("recycler_info_closed")
   end case
   return 0
   me.updateDynamicContent()
   tHeaderImgElement = pWindowObj.getElement("ctlg_header_img")
   if not voidp(tHeaderImgElement) then
-    if getmemnum("catalog_recycler_headline1") <> 0 then
-      tHeaderImgElement.setProperty(#image, getMember("catalog_recycler_headline1").image)
+    if pHeaderImageNum <> 0 then
+      tHeaderImgElement.setProperty(#image, member(pHeaderImageNum).image)
     end if
   end if
   tHeaderTextElement = pWindowObj.getElement("ctlg_header_text")
@@ -170,40 +184,44 @@ on updateDynamicContent me
     "ready":
       me.updateAcceptButton()
       me.updateCancelButton()
+    "timeout":
+      me.updateCancelButton()
+    "disabled":
+      me.hideCancelButton()
   end case
 end
 
-on updateInProgressHeader me
+on updateInProgressText me
   if me.getComponent().getState() <> "progress" or voidp(pWindowObj) then
     return 0
   end if
-  if pWindowObj.elementExists("ctlg_header_text") then
-    tHeaderText = me.getInProgressHeaderText()
-    pWindowObj.getElement("ctlg_header_text").setText(tHeaderText)
+  tTimeLeftText = getText("recycler_progress_timeleft")
+  tMinutesLeft = me.getComponent().getMinutesLeftToRecycle() + 1
+  tTimeLeftText = me.replaceTimeKeysText(tTimeLeftText, tMinutesLeft)
+  if pWindowObj.elementExists("ctlg_time_left") then
+    pWindowObj.getElement("ctlg_time_left").setText(tTimeLeftText)
   end if
 end
 
-on getInProgressHeaderText me
-  tHeaderText = getText("recycler_info_progress")
-  tRecyclingHours = me.getComponent().getRecyclingHours()
-  tHeaderText = replaceChunks(tHeaderText, "%recyclinghours%", tRecyclingHours)
-  tMinutesLeft = me.getComponent().getMinutesLeftToRecycle()
-  if not voidp(tMinutesLeft) then
-    tHoursLeft = tMinutesLeft / 60
-    tMinutesLeft = tMinutesLeft - tHoursLeft * 60
-    tHeaderText = replaceChunks(tHeaderText, "%lefthours%", tHoursLeft)
-    tHeaderText = replaceChunks(tHeaderText, "%leftminutes%", tMinutesLeft)
+on replaceTimeKeysText me, tText, tMinutes, tKeyPrefix
+  if not voidp(tMinutes) then
+    tHours = tMinutes / 60
+    tMinutes = tMinutes - tHours * 60
+    tText = replaceChunks(tText, "%" & tKeyPrefix & "hours%", tHours)
+    tText = replaceChunks(tText, "%" & tKeyPrefix & "minutes%", tMinutes)
   end if
-  return tHeaderText
+  return tText
 end
 
 on showRecyclerStatusButton me
   tstate = me.getComponent().getState()
-  if tstate = "progress" then
-    pStatusIcon.showRecyclerButton("normal")
+  if tstate = "ready" or tstate = "timeout" then
+    pStatusIcon.showRecyclerButton("highlight")
   else
-    if tstate = "ready" then
-      pStatusIcon.showRecyclerButton("highlight")
+    if tstate = "progress" then
+      pStatusIcon.showRecyclerButton("normal")
+    else
+      nothing()
     end if
   end if
 end
@@ -331,8 +349,18 @@ end
 
 on updateCancelButton me
   tCurrentBarElement = pWindowObj.getElement("rec_cancel_btn")
+  tBarTextElement = pWindowObj.getElement("rec_cancel_text")
   tBarWidth = tCurrentBarElement.getProperty(#width)
+  tCurrentBarElement.setProperty(#visible, 1)
+  tBarTextElement.setProperty(#visible, 1)
   tCurrentBarElement.setProperty(#image, me.getCustomButtonImage(tBarWidth, "orange"))
+end
+
+on hideCancelButton me
+  tCurrentBarElement = pWindowObj.getElement("rec_cancel_btn")
+  tCurrentBarElement.setProperty(#visible, 0)
+  tBarTextElement = pWindowObj.getElement("rec_cancel_text")
+  tBarTextElement.setProperty(#visible, 0)
 end
 
 on updateProgressBar me

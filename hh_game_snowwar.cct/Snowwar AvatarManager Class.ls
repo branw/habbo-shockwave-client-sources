@@ -97,7 +97,7 @@ on eventProcSnowwarUserRollOver me, tEvent, tid, tProp
     tName = tObject.getName()
     tOwnPlayer = 0
     if not tGameSystem.getSpectatorModeFlag() then
-      if tName = getObject(#session).get(#userName) then
+      if tName = getObject(#session).GET(#userName) then
         tOwnPlayer = 1
       else
         if tGameSystem.getGamestatus() = #game_started then

@@ -4,6 +4,8 @@ on construct me
     tWindowObj = VOID
     return error(me, "Couldn't access catalogue window!", #construct)
   end if
+  tHeaderImageNo = getThread(#catalogue).getComponent().pCatalogProps["Recycler"]["headerImage"]
+  getThread(#recycler).getInterface().setHeaderImage(tHeaderImageNo)
   getThread(#recycler).getInterface().setHostWindowObject(tWindowObj)
   getThread(#recycler).getComponent().openRecycler()
   return 1

@@ -110,18 +110,7 @@ on openNetPage me, tURL_key, tTarget
   else
     tURL = tURL_key
   end if
-  if tURL contains "http://%predefined%/" then
-    if variableExists("url.prefix") then
-      tReplace = "http://%predefined%"
-      tPrefix = getVariable("url.prefix")
-      if chars(tPrefix, tPrefix.length, tPrefix.length) = "/" then
-        tReplace = "http://%predefined%/"
-      end if
-      tURL = replaceChunks(tURL, tReplace, tPrefix)
-    else
-      return error(me, "URL prefix not defined, invalid link.", #openNetPage)
-    end if
-  end if
+  tURL = me.getPredefinedURL(tURL)
   tResolvedTarget = VOID
   tTargetIsPArent = 0
   if voidp(tTarget) then
@@ -196,6 +185,22 @@ on getMoviePath me
     setVariable(tVariableID, obfuscate(the moviePath))
   end if
   return deobfuscate(getVariable(tVariableID))
+end
+
+on getPredefinedURL me, tURL
+  if tURL contains "http://%predefined%/" then
+    if variableExists("url.prefix") then
+      tReplace = "http://%predefined%"
+      tPrefix = getVariable("url.prefix")
+      if chars(tPrefix, tPrefix.length, tPrefix.length) = "/" then
+        tReplace = "http://%predefined%/"
+      end if
+      tURL = replaceChunks(tURL, tReplace, tPrefix)
+    else
+      return error(me, "URL prefix not defined, invalid link.", #openNetPage)
+    end if
+  end if
+  return tURL
 end
 
 on getExtVarPath me

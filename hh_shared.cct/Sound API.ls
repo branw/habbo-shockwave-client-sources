@@ -27,20 +27,11 @@ on playSound tMemName, tPriority, tProps
 end
 
 on playSoundInChannel tMemName, tChannelNum
-  tChannelObj = getSoundManager().getChannel(tChannelNum)
-  if tChannelObj = 0 then
-    return error(VOID, "Invalid sound channel:" && tChannelNum, #playSoundInChannel)
-  end if
-  tChannelObj.reset()
-  return tChannelObj.play(tMemName)
+  return getSoundManager().playInChannel(tMemName, tChannelNum)
 end
 
 on queueSound tMemName, tChannelNum, tProps
-  tChannelObj = getSoundManager().getChannel(tChannelNum)
-  if tChannelObj = 0 then
-    return error(VOID, "Invalid sound channel:" && tChannelNum, #queueSound)
-  end if
-  return tChannelObj.queue(tMemName, tProps)
+  return getSoundManager().queue(tMemName, tChannelNum, tProps)
 end
 
 on stopAllSounds tid

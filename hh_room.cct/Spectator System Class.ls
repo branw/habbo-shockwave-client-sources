@@ -107,8 +107,11 @@ on showSpectatorView me
   tRoomInt = getObject(#room_interface)
   if objectp(tRoomInt) then
     tRoomInt.hideInterface(#Remove)
-    tRoomInt.hideObjectInfo()
-    tRoomInt.hideInfoStand()
+    tInfoStand = tRoomInt.getInfoStandObject()
+    if not voidp(tInfoStand) then
+      tInfoStand.hideObjectInfo()
+      tInfoStand.hideInfoStand()
+    end if
     tRoomInt.showRoomBar()
     if tRoomInt.getHiliter() <> 0 then
       removeUpdate(tRoomInt.getHiliter().getID())

@@ -12,7 +12,7 @@ on handle_error_report me, tMsg
   tErrorList[#errorId] = tConn.GetIntFrom()
   tErrorList[#errorMsgId] = tConn.GetIntFrom()
   tErrorList[#time] = tConn.GetStrFrom()
-  tErrorList[#errorId] = "SERVER" & tErrorList[#errorId]
+  tErrorList[#errorId] = "SERVER-" & tErrorList[#errorId]
   me.getComponent().storeErrorReport(tErrorList)
   me.getInterface().showErrors()
 end

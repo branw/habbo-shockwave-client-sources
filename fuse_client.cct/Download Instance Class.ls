@@ -36,6 +36,7 @@ on getProperty me, tProp
 end
 
 on Activate me
+  pURL = getPredefinedURL(pURL)
   if pType = #text or pType = #field then
     pNetId = getNetText(pURL)
   else
@@ -99,7 +100,7 @@ on importFileToCast me
   tmember = member(pMemNum)
   case pType of
     #text, #field:
-      tmember.text = netTextResult(pNetId)
+      tmember.text = netTextresult(pNetId)
     #bitmap:
       importFileInto(tmember, pURL, [#dither: 0, #trimWhiteSpace: 0])
     otherwise:

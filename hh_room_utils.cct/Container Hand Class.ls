@@ -22,7 +22,7 @@ on deconstruct me
       removeMember("handcontainer_" & i)
     end if
   end repeat
-  unregisterMessage(#recyclerStateChange)
+  unregisterMessage(#recyclerStateChange, me.getID())
   removeWindow(pHandButtonsWnd)
   removeUpdate(me.getID())
   if visualizerExists(pHandVisID) then

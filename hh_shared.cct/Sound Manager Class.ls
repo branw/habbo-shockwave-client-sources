@@ -53,9 +53,6 @@ on print me, tCount
 end
 
 on play me, tMemName, tPriority, tProps
-  if pMuted then
-    return 1
-  end if
   tObject = me.createSoundInstance(tMemName, tPriority, tProps)
   case tPriority of
     #pass, VOID:
@@ -73,8 +70,13 @@ on play me, tMemName, tPriority, tProps
         if tStatus = 0 then
           return pChannelList[i].play(tObject)
         end if
-        tStatusList.addProp(tStatus, i)
+        if not pChannelList[i].getIsReserved() then
+          tStatusList.addProp(tStatus, i)
+        end if
       end repeat
+      if tStatusList.count = 0 then
+        return 0
+      end if
       tStatusList.sort()
       return pChannelList[tStatusList[1]].play(tObject)
     #queue:
@@ -84,8 +86,13 @@ on play me, tMemName, tPriority, tProps
         if tStatus = 0 then
           return pChannelList[i].play(tObject)
         end if
-        tStatusList.addProp(tStatus, i)
+        if not pChannelList[i].getIsReserved() then
+          tStatusList.addProp(tStatus, i)
+        end if
       end repeat
+      if tStatusList.count = 0 then
+        return 0
+      end if
       tStatusList.sort()
       return pChannelList[tStatusList[1]].queue(tObject)
   end case
@@ -93,8 +100,33 @@ on play me, tMemName, tPriority, tProps
   return 0
 end
 
+on playInChannel me, tMemName, tChannelNum
+  tChannel = me.getChannel(tChannelNum)
+  if tChannel = 0 then
+    return error(VOID, "Invalid sound channel:" && tChannelNum, #playInChannel)
+  end if
+  tObject = me.createSoundInstance(tMemName, VOID, VOID)
+  tChannel.reset()
+  return tChannel.play(tObject)
+end
+
+on queue me, tMemName, tChannelNum, tProps
+  tChannel = me.getChannel(tChannelNum)
+  if tChannel = 0 then
+    return error(VOID, "Invalid sound channel:" && tChannelNum, #queue)
+  end if
+  tObject = me.createSoundInstance(tMemName, VOID, tProps)
+  tRetVal = tChannel.queue(tObject)
+  if tRetVal then
+    tChannel.setReserved()
+  end if
+end
+
 on stopChannel me, tNum
   if tNum = VOID then
+    return 0
+  end if
+  if tNum < 1 or tNum > pChannelList.count then
     return 0
   end if
   return pChannelList[tNum].reset()
@@ -102,6 +134,9 @@ end
 
 on playChannel me, tNum
   if tNum = VOID then
+    return 0
+  end if
+  if tNum < 1 or tNum > pChannelList.count then
     return 0
   end if
   return pChannelList[tNum].startPlaying()
@@ -119,10 +154,10 @@ on setSoundState me, tValue
     pMuted = 0
   else
     pMuted = 1
-    repeat with i = 1 to pChannelCount
-      pChannelList[i].reset()
-    end repeat
   end if
+  repeat with i = 1 to pChannelCount
+    pChannelList[i].setSoundState(tValue)
+  end repeat
   return 1
 end
 

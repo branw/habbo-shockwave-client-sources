@@ -9,6 +9,7 @@ end
 on handle_sound_data me, tMsg
   tdata = []
   tStr = tMsg.connection.GetStrFrom()
+  tPlayTime = tMsg.connection.GetIntFrom()
   tDelim = the itemDelimiter
   the itemDelimiter = ":"
   repeat with i = 1 to tStr.item.count / 2
@@ -34,7 +35,7 @@ on handle_sound_data me, tMsg
     the itemDelimiter = ":"
   end repeat
   the itemDelimiter = tDelim
-  me.getComponent().parseSongData(tdata)
+  me.getComponent().parseSongData(tdata, tPlayTime)
 end
 
 on handle_machine_sound_packages me, tMsg

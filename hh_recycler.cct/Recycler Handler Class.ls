@@ -11,8 +11,10 @@ on handle_recycler_configuration me, tMsg
   if not tConn then
     return 0
   end if
-  tQuarantineHours = tConn.GetIntFrom()
-  tRecyclingHours = tConn.GetIntFrom()
+  tServiceEnabled = tConn.GetIntFrom()
+  tQuarantineMinutes = tConn.GetIntFrom()
+  tRecyclingMinutes = tConn.GetIntFrom()
+  tMinutesToTimeout = tConn.GetIntFrom()
   tNumOfRewardItems = tConn.GetIntFrom()
   tRewardItems = []
   repeat with tNo = 1 to tNumOfRewardItems
@@ -30,11 +32,16 @@ on handle_recycler_configuration me, tMsg
       1:
         tItem[#class] = tConn.GetStrFrom()
         tItem[#name] = getText("wallitem_" & tItem[#class] & "_name")
+      2:
+        tItem[#name] = tConn.GetStrFrom()
     end case
     tRewardItems.add(tItem)
   end repeat
-  me.getComponent().setRewardItems(tRewardItems)
-  me.getComponent().setRecyclingTimes(tQuarantineHours, tRecyclingHours)
+  tComponent = me.getComponent()
+  tComponent.enableService(tServiceEnabled)
+  tComponent.setRewardItems(tRewardItems)
+  tComponent.setRecyclingTimes(tQuarantineMinutes, tRecyclingMinutes)
+  tComponent.setRecyclingTimeout(tMinutesToTimeout)
 end
 
 on handle_recycler_status me, tMsg
@@ -70,8 +77,10 @@ on handle_recycler_status me, tMsg
         tRewardType = #wallItem
       end if
       me.getComponent().setRewardProps(tRewardType, tFurniClass)
+    3:
+      tStatus = "timeout"
   end case
-  me.getComponent().setStateTo(tStatus)
+  me.getComponent().openRecyclerWithState(tStatus)
 end
 
 on handle_approve_recycling_result me, tMsg
@@ -83,7 +92,7 @@ on handle_approve_recycling_result me, tMsg
   if not tResult then
     nothing()
   else
-    me.getComponent().setStateTo("open")
+    me.getComponent().requestRecyclerState()
   end if
 end
 

@@ -382,6 +382,8 @@ on catalogImgDownloaded me, tImgId
       tImage = member(getmemnum(tImgId)).image
       if tImage.width = 0 or tImage.height = 0 then
         member(getmemnum(tImgId)).image = member(getmemnum("loading_icon")).image
+      else
+        tSuccess = 1
       end if
     end if
   end if

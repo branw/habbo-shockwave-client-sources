@@ -205,6 +205,10 @@ on handle_users me, tMsg
         tList[tuser][#badge] = tdata
       "a":
         tList[tuser][#webID] = tdata
+      "g":
+        tList[tuser][#groupid] = tdata
+      "t":
+        tList[tuser][#groupstatus] = tdata
       otherwise:
         if tLine.word[1] = "[bot]" then
           tList[tuser][#class] = "bot"
@@ -597,6 +601,7 @@ end
 
 on handle_removestripitem me, tMsg
   me.getInterface().getContainer().removeStripItem(tMsg.content.word[1])
+  me.getInterface().getContainer().Refresh()
 end
 
 on handle_youarenotallowed me
@@ -776,7 +781,7 @@ on handle_userbadge me, tMsg
   end if
   tUserObj.pBadge = tBadge
   me.getInterface().unignoreAdmin(tUserID, tBadge)
-  me.getInterface().updateInfoStandBadge(tBadge, tUserID)
+  me.getInterface().getInfoStandObject().updateInfoStandBadge(tBadge, tUserID)
 end
 
 on handle_slideobjectbundle me, tMsg
@@ -895,6 +900,46 @@ on handle_spectator_amount me, tMsg
   me.getComponent().updateSpectatorCount(tSpecCount, tSpecMax)
 end
 
+on handle_group_badges me, tMsg
+  tConn = tMsg.connection
+  tNumberOfGroups = tConn.GetIntFrom()
+  tGroupData = []
+  repeat with tNo = 1 to tNumberOfGroups
+    tGroup = [:]
+    tGroup[#id] = tConn.GetIntFrom()
+    tGroup[#logo] = tConn.GetStrFrom()
+    tGroupData.add(tGroup)
+  end repeat
+  me.getComponent().getGroupInfoObject().updateGroupInformation(tGroupData)
+end
+
+on handle_group_details me, tMsg
+  tConn = tMsg.connection
+  tGroupData = []
+  tGroup = [:]
+  tGroup[#id] = tConn.GetIntFrom()
+  if tGroup[#id] = -1 then
+    return 0
+  end if
+  tGroup[#name] = tConn.GetStrFrom()
+  tGroup[#desc] = tConn.GetStrFrom()
+  tGroupData.add(tGroup)
+  me.getComponent().getGroupInfoObject().updateGroupInformation(tGroupData)
+  executeMessage(#groupInfoRetrieved, tGroup[#id])
+end
+
+on handle_group_membership_update me, tMsg
+  tConn = tMsg.connection
+  tUserIndex = tConn.GetIntFrom()
+  tGroupId = tConn.GetIntFrom()
+  tStatus = tConn.GetIntFrom()
+  tuser = me.getComponent().getUserObject(tUserIndex)
+  if not voidp(tuser) then
+    tuser.setProperty(#groupid, tGroupId)
+    tuser.setProperty(#groupstatus, tStatus)
+  end if
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -959,6 +1004,9 @@ on regMsgList me, tBool
   tMsgs.setaProp(283, #handle_removespecs)
   tMsgs.setaProp(266, #handle_figure_change)
   tMsgs.setaProp(298, #handle_spectator_amount)
+  tMsgs.setaProp(309, #handle_group_badges)
+  tMsgs.setaProp(310, #handle_group_membership_update)
+  tMsgs.setaProp(311, #handle_group_details)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1015,6 +1063,8 @@ on regMsgList me, tBool
   tCmds.setaProp("ROOM_QUEUE_CHANGE", 211)
   tCmds.setaProp("SETITEMSTATE", 214)
   tCmds.setaProp("GET_SPECTATOR_AMOUNT", 216)
+  tCmds.setaProp("GET_GROUP_BADGES", 230)
+  tCmds.setaProp("GET_GROUP_DETAILS", 231)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

@@ -73,17 +73,17 @@ on dumpChecksumValues me
   repeat with tObject in pObjects
     tText = tText & tObject.dump() & RETURN
   end repeat
-  put tText
+  return tText
 end
 
-on createGameObject me, tObjectId, ttype, tdata
+on createGameObject me, tObjectID, ttype, tdata
   if not listp(tdata) then
     tdata = [:]
   end if
-  tObjectId = integer(tObjectId)
-  tObjectStrId = string(tObjectId)
-  if pObjectTypeIndex.getaProp(tObjectId) <> VOID then
-    return error(me, "Game object by id already exists! Id:" && tObjectId, #createGameObject)
+  tObjectID = integer(tObjectID)
+  tObjectStrId = string(tObjectID)
+  if pObjectTypeIndex.getaProp(tObjectID) <> VOID then
+    return error(me, "Game object by id already exists! Id:" && tObjectID, #createGameObject)
   end if
   tClass = getClassVariable(me.getSystemId() & "." & ttype & ".class")
   tBaseClass = getClassVariable("gamesystem.gameobject.class")
@@ -103,9 +103,9 @@ on createGameObject me, tObjectId, ttype, tdata
   tObject.setID(tObjectStrId)
   tObject.setObjectId(tObjectStrId)
   tObject.setGameSystemReference(me.getFacade())
-  pObjects.setaProp(tObjectId, tObject)
+  pObjects.setaProp(tObjectID, tObject)
   pObjects.sort()
-  pObjectTypeIndex.setaProp(tObjectId, ttype)
+  pObjectTypeIndex.setaProp(tObjectID, ttype)
   if tdata[#z] = VOID then
     tZ = 0
   else
@@ -118,14 +118,14 @@ on createGameObject me, tObjectId, ttype, tdata
   return tObject
 end
 
-on updateGameObject me, tObjectId, tdata
-  tObjectId = string(tObjectId)
-  tObject = me.getGameObject(tObjectId)
+on updateGameObject me, tObjectID, tdata
+  tObjectID = string(tObjectID)
+  tObject = me.getGameObject(tObjectID)
   if not listp(tdata) then
     return 0
   end if
   if tObject = 0 then
-    return error(me, "Game object not found:" && tObjectId, #updateGameObject)
+    return error(me, "Game object not found:" && tObjectID, #updateGameObject)
   end if
   tObject.setGameObjectSyncProperty(tdata)
   if tdata[#z] = VOID then
@@ -137,10 +137,10 @@ on updateGameObject me, tObjectId, tdata
   return 1
 end
 
-on removeGameObject me, tObjectId
-  tObjectId = integer(tObjectId)
-  tObjectStrId = string(tObjectId)
-  ttype = pObjectTypeIndex.getaProp(tObjectId)
+on removeGameObject me, tObjectID
+  tObjectID = integer(tObjectID)
+  tObjectStrId = string(tObjectID)
+  ttype = pObjectTypeIndex.getaProp(tObjectID)
   if ttype = VOID then
     return 1
   end if
@@ -148,12 +148,12 @@ on removeGameObject me, tObjectId
   if objectp(tObject) then
     tObject.deconstruct()
   end if
-  pObjects.deleteProp(tObjectId)
-  pObjectTypeIndex.deleteProp(tObjectId)
+  pObjects.deleteProp(tObjectID)
+  pObjectTypeIndex.deleteProp(tObjectID)
   return 1
 end
 
-on executeSubturnMoves me, tSync, tSubturn
+on executeSubturnMoves me
   tRemoveList = []
   repeat with i = 1 to pObjects.count
     tGameObject = pObjects[i]
@@ -162,17 +162,17 @@ on executeSubturnMoves me, tSync, tSubturn
       tRemoveList.add(tGameObject.getObjectId())
     end if
   end repeat
-  repeat with tObjectId in tRemoveList
-    me.removeGameObject(tObjectId)
+  repeat with tObjectID in tRemoveList
+    me.removeGameObject(tObjectID)
   end repeat
   return 1
 end
 
-on getGameObject me, tObjectId
+on getGameObject me, tObjectID
   if pObjects = VOID then
     return 0
   end if
-  return pObjects.getaProp(integer(tObjectId))
+  return pObjects.getaProp(integer(tObjectID))
 end
 
 on getGameObjectIdsOfType me, ttype
@@ -185,9 +185,9 @@ on getGameObjectIdsOfType me, ttype
   return tResult
 end
 
-on getGameObjectType me, tObjectId
-  tObjectId = integer(tObjectId)
-  return pObjectTypeIndex.getaProp(tObjectId)
+on getGameObjectType me, tObjectID
+  tObjectID = integer(tObjectID)
+  return pObjectTypeIndex.getaProp(tObjectID)
 end
 
 on dump me

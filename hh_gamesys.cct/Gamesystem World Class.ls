@@ -1,4 +1,4 @@
-property pGeometry, pRoomGeometry, pReceivedMap, pWorldMaxX, pWorldMaxY, pTileGrid, pTileSpaceReserveList, pTileWidth, pAccuracyFactor, pLocationClass
+property pGeometry, pRoomGeometry, pWorldReady, pObjectCache, pReceivedMap, pWorldMaxX, pWorldMaxY, pTileGrid, pTileSpaceReserveList, pTileWidth, pAccuracyFactor, pLocationClass
 
 on construct me
   pLocationClass = getClassVariable("gamesystem.location.class")
@@ -7,7 +7,7 @@ on construct me
   if not objectp(pGeometry) then
     return error(me, "Cannot create pGeometry.", #construct)
   end if
-  pReady = 0
+  pWorldReady = 0
   pTileWidth = 32
   pAccuracyFactor = 100
   pTileGrid = []
@@ -41,11 +41,19 @@ on storeHeightmap me, tdata
       tTile.define(tTileLocX, tTileLocY, tCenterLocX, tCenterLocY, tdata.line[tLocY].char[tLocX])
     end repeat
   end repeat
+  pWorldReady = 1
+  if pObjectCache <> VOID then
+    me.storeObjects(pObjectCache)
+  end if
   me.getProcManager().distributeEvent(#world_ready)
   return 1
 end
 
 on storeObjects me, tdata
+  if pWorldReady = 0 then
+    pObjectCache = tdata
+    return 0
+  end if
   repeat with tItem in tdata
     if tItem[#height] = 0 then
       if not listp(tItem[#dimensions]) then
@@ -54,7 +62,9 @@ on storeObjects me, tdata
         tItem[#height] = tItem[#dimensions][2]
       end if
     end if
-    me.reserveTileForObject(tItem[#x], tItem[#y], tItem[#id], tItem[#height])
+    if not me.reserveTileForObject(tItem[#x], tItem[#y], tItem[#id], tItem[#height]) then
+      error(me, "Unable to reserve tile for furniture!", #storeObjects)
+    end if
   end repeat
   me.getProcManager().distributeEvent(#objects_ready)
   return 1
@@ -115,29 +125,26 @@ on getTileNeighborInDirection me, tX, tY, tdir
   return error(me, "Invalid direction for tile:" && tdir, #getTileNeighborInDirection)
 end
 
-on reserveTileForObject me, tLocX, tLocY, tObjectId, tObjectHeight
+on reserveTileForObject me, tLocX, tLocY, tObjectID, tObjectHeight
   tTile = me.getTile(tLocX, tLocY)
   if tTile = 0 then
     return 0
   end if
-  if not tTile.isAvailable() then
-    return error(me, "Tile is not available yet!" && tTile.dump(), #reserveTileForObject)
+  if not listp(pTileSpaceReserveList[tObjectID]) then
+    pTileSpaceReserveList.setaProp(tObjectID, [])
   end if
-  if not listp(pTileSpaceReserveList[tObjectId]) then
-    pTileSpaceReserveList.setaProp(tObjectId, [])
-  end if
-  pTileSpaceReserveList[tObjectId].append(tTile)
-  return tTile.addContent(tObjectId, [#height: tObjectHeight])
+  pTileSpaceReserveList[tObjectID].append(tTile)
+  return tTile.addContent(tObjectID, [#height: tObjectHeight])
 end
 
-on clearObjectFromTileSpace me, tObjectId
-  if not listp(pTileSpaceReserveList[tObjectId]) then
+on clearObjectFromTileSpace me, tObjectID
+  if not listp(pTileSpaceReserveList[tObjectID]) then
     return 1
   end if
-  repeat with tTile in pTileSpaceReserveList[tObjectId]
-    tTile.removeContent(tObjectId)
+  repeat with tTile in pTileSpaceReserveList[tObjectID]
+    tTile.removeContent(tObjectID)
   end repeat
-  pTileSpaceReserveList.setaProp(tObjectId, [])
+  pTileSpaceReserveList.setaProp(tObjectID, [])
   return 1
 end
 
@@ -170,6 +177,10 @@ on convertWorldToScreenCoordinate me, tX, tY, tZ
   tZ = tZ / tMultiplier
   tloc = pRoomGeometry.getScreenCoordinate(tX, tY, tZ)
   return tloc
+end
+
+on getWorldReady me
+  return pWorldReady
 end
 
 on getGeometry me

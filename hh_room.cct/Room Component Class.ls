@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -24,6 +24,7 @@ on construct me
   pSpectatorSystemID = "Room Mode Manager"
   pFurniChooserID = "Furniture Chooser"
   pShadowManagerID = "Room Shadow Manager"
+  pGroupInfoID = "Group_Info"
   pChatProps = [:]
   pChatProps["returnCount"] = 0
   pChatProps["timerStart"] = 0
@@ -40,6 +41,7 @@ on construct me
   createObject(pSpectatorSystemID, "Spectator System Class")
   pCurrentSlidingObjects = [:]
   createObject(pShadowManagerID, "Shadow Manager")
+  createObject(pGroupInfoID, "Group Info Class")
   registerMessage(#pickAndGoCFH, me.getID(), #pickAndGoCFH)
   registerMessage(#enterRoom, me.getID(), #enterRoom)
   registerMessage(#leaveRoom, me.getID(), #leaveRoom)
@@ -89,6 +91,9 @@ on deconstruct me
   end if
   if objectExists(pShadowManagerID) then
     removeObject(pShadowManagerID)
+  end if
+  if objectExists(pGroupInfoID) then
+    removeObject(pGroupInfoID)
   end if
   pRoomId = EMPTY
   pUserObjList = [:]
@@ -266,6 +271,20 @@ on getUserObject me, tid
   return me.getRoomObject(tid, pUserObjList)
 end
 
+on getUsersRoomId me, tUserName
+  tIndex = -1
+  repeat with tPos = 1 to pUserObjList.count
+    tuser = pUserObjList[tPos]
+    if tuser.getClass() = "user" then
+      if tuser.getName() = tUserName then
+        tIndex = pUserObjList.getPropAt(tPos)
+        exit repeat
+      end if
+    end if
+  end repeat
+  return tIndex
+end
+
 on userObjectExists me, tid
   return me.roomObjectExists(tid, pUserObjList)
 end
@@ -401,6 +420,10 @@ on getShadowManager me
   else
     return error(me, "Shadow manager not found", #getShadowManager)
   end if
+end
+
+on getGroupInfoObject me
+  return getObject(pGroupInfoID)
 end
 
 on roomExists me, tRoomID
@@ -670,7 +693,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       tChangeEffect = createObject(#random, "Change Clothes Effect Class")
       tUserSprites = tUserObj.getSprites()
       tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
-      me.getInterface().updateInfostandAvatar(tUserObj)
+      me.getInterface().getInfoStandObject().updateInfostandAvatar(tUserObj)
     end if
   end if
 end
@@ -991,7 +1014,7 @@ on updateProcess me, tKey, tValue
     tCache[#users] = []
     tCache[#Active] = []
     tCache[#items] = []
-    me.getInterface().showInfostand()
+    me.getInterface().getInfoStandObject().showInfostand()
     me.getInterface().showRoomBar()
     me.getInterface().hideLoaderBar()
     me.getInterface().hideTrashCover()

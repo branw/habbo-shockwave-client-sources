@@ -17,14 +17,44 @@ on showErrors me
   end if
   if not windowExists(pWindowID) then
     createWindow(pWindowID, "habbo_full.window")
+    tWndObj = getWindow(pWindowID)
+    tWndObj.merge("error_report_details.window")
+    tWndObj.center()
+    tWndObj.registerClient(me.getID())
+    tWndObj.registerProcedure(#eventProcErrorReport, me.getID(), #mouseUp)
+    tWndObj.getElement("error_report_prev").setText("<<<")
+    tWndObj.getElement("error_report_next").setText(">>>")
   end if
+  me.updateErrorView()
+end
+
+on showPreviousError me
+  tTriedErrorIndex = pCurrentErrorIndex - 1
+  tReportList = me.getComponent().getErrorLists()
+  if tTriedErrorIndex < 1 or tReportList.count = 0 then
+    return 0
+  end if
+  pCurrentErrorIndex = tTriedErrorIndex
+  me.updateErrorView()
+end
+
+on showNextError me
+  tTriedErrorIndex = pCurrentErrorIndex + 1
+  tReportList = me.getComponent().getErrorLists()
+  if tTriedErrorIndex > tReportList.count then
+    return 0
+  end if
+  pCurrentErrorIndex = tTriedErrorIndex
+  me.updateErrorView()
+end
+
+on updateErrorView me
   tWndObj = getWindow(pWindowID)
-  tWndObj.merge("error_report_details.window")
-  tWndObj.center()
-  tWndObj.registerClient(me.getID())
-  tWndObj.registerProcedure(#eventProcErrorReport, me.getID(), #mouseUp)
-  tIndexOfCurrentReport = tReportLists.count
-  tErrorReport = tReportLists[tIndexOfCurrentReport]
+  tIndexOfCurrentReport = pCurrentErrorIndex
+  tReportList = me.getComponent().getErrorLists()
+  tErrorReport = tReportList[tIndexOfCurrentReport]
+  tCounts = pCurrentErrorIndex & "/" & tReportList.count
+  tWndObj.getElement("error_report_count").setText(tCounts)
   tTexts = [:]
   tTexts["error_report_errorid"] = "ID:" && tErrorReport[#errorId]
   tExplainText = EMPTY
@@ -54,6 +84,10 @@ on eventProcErrorReport me, tEvent, tElemID, tParams
     case tElemID of
       "error_report_ok", "close":
         me.hideErrorReportWindow()
+      "error_report_prev":
+        me.showPreviousError()
+      "error_report_next":
+        me.showNextError()
     end case
   end if
 end

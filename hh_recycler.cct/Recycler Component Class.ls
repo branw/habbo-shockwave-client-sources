@@ -1,4 +1,4 @@
-property pRecyclerState, pGiveFurniPool, pGetFurniPool, pRewardProps, pREwardItems, pTimeProps, pQuarantineHours, pRecyclingHours, pIsVisible
+property pServiceEnabled, pRecyclerState, pGiveFurniPool, pGetFurniPool, pRewardProps, pREwardItems, pTimeProps, pQuarantineMinutes, pRecyclingMinutes, pIsVisible, pRecyclingTimeoutMinutes, pOpeningRequestPending
 
 on construct me
   pIsVisible = 0
@@ -8,12 +8,15 @@ on construct me
   pRewardProps = [:]
   pTimeProps = [:]
   pREwardItems = [:]
+  pServiceEnabled = 0
+  pOpeningRequestPending = 0
+  pRecyclingTimeoutMinutes = 0
   registerMessage(#userloggedin, me.getID(), #Initialize)
   return 1
 end
 
 on deconstruct me
-  unregisterMessage(#userloggedin)
+  unregisterMessage(#userloggedin, me.getID())
   if objectExists(#recyclingFinished) then
     removeTimeout(#recyclingFinished)
   end if
@@ -26,18 +29,35 @@ on Initialize me
   me.requestRecyclerState()
 end
 
+on enableService me, tEnabled
+  if tEnabled then
+    pServiceEnabled = 1
+  else
+    pServiceEnabled = 0
+  end if
+end
+
 on requestRecyclerState me
   tConn = getConnection(getVariableValue("connection.info.id"))
   tConn.send("GET_FURNI_RECYCLER_STATUS")
 end
 
 on openRecycler me
-  pIsVisible = 1
-  me.setStateTo(me.getState())
+  pOpeningRequestPending = 1
+  me.requestRecyclerState()
+end
+
+on openRecyclerWithState me, tstate
+  if pOpeningRequestPending = 1 then
+    pIsVisible = 1
+    pOpeningRequestPending = 0
+  end if
+  me.setStateTo(tstate)
 end
 
 on closeRecycler me
   pIsVisible = 0
+  pOpeningRequestPending = 0
   if threadExists(#room) then
     tRoomInterface = getThread(#room).getInterface()
     tContainer = tRoomInterface.getContainer()
@@ -94,6 +114,10 @@ on cancelRecycling me
   else
     if pRecyclerState = "ready" then
       tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 0])
+    else
+      if pRecyclerState = "timeout" then
+        tConn.send("CONFIRM_FURNI_RECYCLING", [#integer: 0])
+      end if
     end if
   end if
   me.clearObjectMover()
@@ -187,17 +211,21 @@ on getNextRewardItemForCurrentAmount me
   return tNextItem
 end
 
-on setRecyclingTimes me, tQuarantineHours, tRecyclingHours
-  pQuarantineHours = tQuarantineHours
-  pRecyclingHours = tRecyclingHours
+on setRecyclingTimes me, tQuarantineMinutes, tRecyclingMinutes
+  pQuarantineMinutes = tQuarantineMinutes
+  pRecyclingMinutes = tRecyclingMinutes
 end
 
-on getQuarantineHours me
-  return pQuarantineHours
+on setRecyclingTimeout me, tMinutesToTimeout
+  pRecyclingTimeoutMinutes = tMinutesToTimeout
 end
 
-on getRecyclingHours me
-  return pRecyclingHours
+on getQuarantineMinutes me
+  return pQuarantineMinutes
+end
+
+on getRecyclingMinutes me
+  return pRecyclingMinutes
 end
 
 on setTimeLeftProps me, tMinutesLeft
@@ -239,6 +267,7 @@ end
 
 on setStateTo me, tstate
   pRecyclerState = tstate
+  pStateRequestPending = 0
   if not threadExists(#room) then
     return 0
   end if
@@ -246,6 +275,9 @@ on setStateTo me, tstate
   tObjMover = tRoomInterface.getObjectMover()
   case tstate of
     "open":
+      if not pServiceEnabled then
+        return me.setStateTo("disabled")
+      end if
       pGiveFurniPool = []
       pGetFurniPool = [:]
       tRoomInterface.cancelObjectMover()
@@ -256,6 +288,10 @@ on setStateTo me, tstate
     "progress":
       me.clearObjectMover()
     "ready":
+      me.clearObjectMover()
+    "disabled":
+      me.clearObjectMover()
+    "timeout":
       me.clearObjectMover()
     otherwise:
       me.clearObjectMover()

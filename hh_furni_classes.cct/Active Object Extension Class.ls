@@ -127,9 +127,6 @@ on update me
               else
                 pFrameNumberList2[tLayer] = pFrameNumberList[tLayer]
               end if
-              if pFrameNumberList2[tLayer] < 0 then
-                pFrameNumberList2[tLayer] = random(abs(pFrameNumberList2[tLayer]))
-              end if
               if not voidp(tFrameList[#blend]) then
                 tBlendList = tFrameList[#blend]
                 if tBlendList.count >= pFrameNumberList2[tLayer] then
@@ -258,6 +255,9 @@ on getMemberName me, tLayer
     if not voidp(tFrameSequence) then
       tFrameNumber = pFrameNumberList2[tLayerIndex]
       tFrame = tFrameSequence[tFrameNumber]
+      if tFrame < 0 then
+        tFrame = random(abs(tFrame))
+      end if
     end if
   end if
   tName = tName & "_" & tLayer & "_0_" & me.pDimensions[1] & "_" & me.pDimensions[2] & "_" & tDirection & "_" & tFrame
