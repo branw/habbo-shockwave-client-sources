@@ -92,6 +92,11 @@ on setPartLists me, tmodels
   tmodels = me.fixSwimmerFigure(tmodels)
   callAncestor(#setPartLists, [me], tmodels)
   pPelleFigure = [:]
+  tDirectionOld = me.pDirection
+  tActionOld = me.pMainAction
+  me.pDirection = 4
+  me.pMainAction = "std"
+  me.arrangeParts()
   repeat with i = 1 to me.pPartIndex.count
     tPartSymbol = me.pPartIndex.getPropAt(i)
     tPartObj = me.pPartList[me.pPartIndex[i]]
@@ -102,6 +107,9 @@ on setPartLists me, tmodels
     end if
     tPartObj.setUnderWater(1)
   end repeat
+  me.pDirection = tDirectionOld
+  me.pMainAction = tActionOld
+  me.arrangeParts()
   if not me.isSwimming() then
     me.resumeAnimation()
   end if

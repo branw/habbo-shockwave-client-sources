@@ -74,7 +74,10 @@ on getPreventedPartsBySetID me, tsex, tModelID
     tsex = "M"
   end if
   tmodellist = pValidSetIDList[tsex]
-  tmodel = getaProp(tmodellist, integer(tModelID))
+  if not voidp(integer(tModelID)) then
+    tModelID = integer(tModelID)
+  end if
+  tmodel = getaProp(tmodellist, tModelID)
   if ilk(tmodel) = #propList then
     tHiddenParts = tmodel[#hideparts]
   else
@@ -263,6 +266,30 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
         tFigure[tProp] = tValue
         the itemDelimiter = "&"
       end repeat
+      tHairChangeList = [:]
+      tHairChangeList["007"] = ["ha": "001", "fa": "001"]
+      tHairChangeList["014"] = ["ha": "002"]
+      tHairChangeList["015"] = ["ha": "003"]
+      tHairChangeList["021"] = ["ha": "004"]
+      tHairChangeList["022"] = ["ha": "005"]
+      tHairChangeList["996"] = ["ha": "006"]
+      tHairChangeList["458"] = ["ha": "008", "fa": "002"]
+      tHairChangeList["013"] = ["ha": "010"]
+      tHairChangeList["505"] = ["ha": "011", "fa": "002"]
+      tHairChangeList["502"] = ["ha": "012"]
+      if not voidp(tFigure["hr"]) then
+        tPos = tHairChangeList.findPos(tFigure["hr"]["model"])
+        if tPos > 0 then
+          tChangeList = tHairChangeList[tPos]
+          repeat with k = 1 to tChangeList.count
+            tPart = tChangeList.getPropAt(k)
+            if voidp(tFigure[tPart]) then
+              tFigure[tPart] = tFigure["hr"]
+            end if
+          end repeat
+          tFigure["hr"] = VOID
+        end if
+      end if
       if voidp(tFigure["hrb"]) and not voidp(tFigure["hr"]) then
         tFigure["hrb"] = tFigure["hr"]
       end if
@@ -293,19 +320,61 @@ on parseNewTypeFigure me, tFigure, tsex
   else
     tsex = "M"
   end if
+  tChangeList = member("figure_part_replace_list").text
+  if not voidp(tChangeList) then
+    tChangeList = value(replaceChunks(tChangeList, RETURN, EMPTY))
+  end if
+  tReverseMap = [:]
+  if not voidp(pValidPartsList[tsex]["hr"]) then
+    tHairList = pValidPartsList[tsex]["hr"]
+    repeat with tHairData in tHairList
+      tSetID = tHairData["s"]
+      tParts = tHairData["p"]
+      if not voidp(tParts["hr"]) then
+        tReverseMap.addProp(tSetID, tParts["hr"])
+      end if
+    end repeat
+  end if
+  if voidp(tChangeList) then
+    tChangeList = [:]
+  end if
+  repeat with f = tFigure.count down to 1
+    tSetID = tFigure.getPropAt(f)
+    tPos = tReverseMap.findPos(tSetID)
+    if tPos > 0 then
+      tMappedID = tReverseMap[tPos]
+      tPos = tChangeList.findPos(tMappedID)
+      if tPos > 0 then
+        tdata = tFigure[f]
+        tFigure.deleteAt(f)
+        repeat with tNewPart in tChangeList[tPos]
+          if not voidp(integer(tNewPart)) then
+            repeat with i = 1 to tReverseMap.count
+              if tReverseMap[i] = tNewPart then
+                tNewPart = string(tReverseMap.getPropAt(i))
+                exit repeat
+              end if
+            end repeat
+          end if
+          repeat while tNewPart.length < 1
+            tNewPart = "0" & tNewPart
+          end repeat
+          tFigure.addProp(tNewPart, tdata)
+        end repeat
+      end if
+    end if
+  end repeat
   repeat with f = 1 to tFigure.count
     tSetID = tFigure.getPropAt(f)
     tColorId = value(tFigure[tSetID])
-    if not voidp(value(tSetID)) then
-      if voidp(tColorId) then
-        tColorId = 1
-      end if
-      if not voidp(pValidSetIDList[tsex][tSetID]) then
-        tMainPart = pValidSetIDList[tsex].getProp(tSetID)[#part]
-        tlocation = pValidSetIDList[tsex].getProp(tSetID)[#location]
-        tchangeparts = pValidPartsList[tsex][tMainPart][tlocation]["p"]
-        tColorList = pValidPartsList[tsex][tMainPart][tlocation]["c"]
-      end if
+    if voidp(tColorId) then
+      tColorId = 1
+    end if
+    if not voidp(pValidSetIDList[tsex][tSetID]) then
+      tMainPart = pValidSetIDList[tsex].getProp(tSetID)[#part]
+      tlocation = pValidSetIDList[tsex].getProp(tSetID)[#location]
+      tchangeparts = pValidPartsList[tsex][tMainPart][tlocation]["p"]
+      tColorList = pValidPartsList[tsex][tMainPart][tlocation]["c"]
       if tMainPart = "hr" then
         if voidp(tchangeparts["hrb"]) and not voidp(tchangeparts["hr"]) then
           tchangeparts["hrb"] = tchangeparts["hr"]
@@ -388,6 +457,28 @@ on getCountOfPart me, tPart, tsex
   else
     return error(me, "Can«t get part count:" && tPart && tsex, #getCountOfPart, #major)
   end if
+end
+
+on getPartColors me, tSetID, tsex
+  if voidp(tSetID) or voidp(tsex) then
+    return error(me, "Can«t get part colors because setID or tSex is VOID" && tSetID && tsex, #getPartColors, #major)
+  end if
+  if tsex.char[1] = "F" or tsex.char[1] = "f" then
+    tsex = "F"
+  else
+    tsex = "M"
+  end if
+  if voidp(pValidPartsList[tsex]) then
+    return 0
+  end if
+  repeat with tPartList in pValidPartsList[tsex]
+    repeat with tPart in tPartList
+      if tPart["s"] = tSetID then
+        return tPart["c"]
+      end if
+    end repeat
+  end repeat
+  return VOID
 end
 
 on getCountOfPartColors me, tPart, tSetID, tsex
@@ -668,6 +759,71 @@ on initializeValidPartLists me, tPlist
     end if
   end if
   pValidPartsList = tPlist
+  tChangeList = member("figure_part_replace_list").text
+  if not voidp(tChangeList) then
+    tChangeList = value(replaceChunks(tChangeList, RETURN, EMPTY))
+  end if
+  if voidp(tChangeList) then
+    tChangeList = [:]
+  end if
+  tReverseMap = ["M": [:], "F": [:]]
+  repeat with tsex in ["M", "F"]
+    if not voidp(pValidPartsList[tsex]["hr"]) then
+      tHairList = pValidPartsList[tsex]["hr"]
+      repeat with tHairData in tHairList
+        tSetID = tHairData["s"]
+        tParts = tHairData["p"]
+        if not voidp(tParts["hr"]) then
+          tPartId = tParts["hr"]
+          tPos = tChangeList.findPos(tPartId)
+          if tPos > 0 then
+            tReverseMap[tsex].addProp(tPartId, tSetID)
+          end if
+        end if
+      end repeat
+    end if
+  end repeat
+  tExtraList = member("figure_accessories_extra").text
+  if not voidp(tExtraList) then
+    tExtraList = value(replaceChunks(tExtraList, RETURN, EMPTY))
+    if not voidp(tExtraList) then
+      repeat with tsex in ["M", "F"]
+        if not voidp(pValidPartsList[tsex]) then
+          tList = tExtraList[tsex]
+          if not voidp(tList) then
+            repeat with i = 1 to tList.count
+              ttype = tList.getPropAt(i)
+              if voidp(pValidPartsList[tsex][ttype]) then
+                pValidPartsList[tsex][ttype] = []
+              end if
+              repeat with tSet in tList[i]
+                tColorList = VOID
+                repeat with j = 1 to tChangeList.count
+                  repeat with tReplacePart in tChangeList[j]
+                    if tReplacePart = tSet["s"] then
+                      tPartId = tChangeList.getPropAt(j)
+                      tSetID = tReverseMap[tsex][tPartId]
+                      if not voidp(tSetID) then
+                        tColorList = me.getPartColors(tSetID, tsex)
+                      end if
+                      exit repeat
+                    end if
+                  end repeat
+                  if not voidp(tColorList) then
+                    exit repeat
+                  end if
+                end repeat
+                if not voidp(tColorList) then
+                  tSet["c"] = tColorList.duplicate()
+                end if
+                pValidPartsList[tsex][ttype].add(tSet)
+              end repeat
+            end repeat
+          end if
+        end if
+      end repeat
+    end if
+  end if
   pValidSetIDList = [:]
   repeat with tsex in ["M", "F"]
     pValidSetIDList[tsex] = [:]

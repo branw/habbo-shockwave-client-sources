@@ -158,7 +158,7 @@ on showObjectInfo me, tObjType
       tWndObj.registerProcedure(#eventProc, me.getID(), #mouseLeave)
     end if
   end repeat
-  createTimeout(getUniqueID(), 1, #alignWindows, me.getID(), VOID, 1)
+  me.alignWindows()
 end
 
 on clearWindowDisplayList me

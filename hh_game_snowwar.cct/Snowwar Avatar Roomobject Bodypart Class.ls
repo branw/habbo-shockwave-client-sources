@@ -85,7 +85,7 @@ on update me
       if me.pTalking and me.pAction <> "lay" and me.pAnimCounter mod 2 = 0 then
         me.pYFix = -1
       end if
-    "hr":
+    "hr", "hrb":
       if me.pTalking and me.pAnimCounter mod 2 = 0 then
         if me.pAction <> "lay" then
           tAction = "spk"

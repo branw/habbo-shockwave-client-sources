@@ -4,7 +4,7 @@ on construct me
   pBallState = 1
   pBounceState = 0
   pBounceAnimCount = 1
-  pBallClass = ["Bodypart Class EX", "Bouncing Bodypart Class"]
+  pBallClass = ["OLD Bodypart Class EX", "Bouncing Bodypart Class"]
   me.pDirChange = 1
   me.pLocChange = 1
   pActiveEffects = []
@@ -56,9 +56,8 @@ on roomObjectAction me, tAction, tdata
       me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
       me.pDestLScreen = me.pGeometry.getScreenCoordinate(tdata[#x], tdata[#y], tdata[#z])
       me.pMoveStart = the milliSeconds
-      call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-      call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-      call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+      call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+      call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
   end case
 end
 
@@ -169,12 +168,22 @@ on render me
     me.pMatteSpr.height = tSize[2]
     me.pBuffer = image(tSize[1], tSize[2], tSize[3])
   end if
-  me.pMember.regPoint = point(0, me.pMember.regPoint[2])
-  me.pShadowFix = 0
-  if me.pSprite.flipH then
-    me.pSprite.flipH = 0
-    me.pMatteSpr.flipH = 0
-    me.pShadowSpr.flipH = 0
+  if me.pFlipList[me.pDirection + 1] <> me.pDirection or me.pDirection = 3 and me.pHeadDir = 4 or me.pDirection = 7 and me.pHeadDir = 6 then
+    me.pMember.regPoint = point(me.pMember.image.width, me.pMember.regPoint[2])
+    me.pShadowFix = me.pXFactor
+    if not me.pSprite.flipH then
+      me.pSprite.flipH = 1
+      me.pMatteSpr.flipH = 1
+      me.pShadowSpr.flipH = 1
+    end if
+  else
+    me.pMember.regPoint = point(0, me.pMember.regPoint[2])
+    me.pShadowFix = 0
+    if me.pSprite.flipH then
+      me.pSprite.flipH = 0
+      me.pMatteSpr.flipH = 0
+      me.pShadowSpr.flipH = 0
+    end if
   end if
   me.setHumanSpriteLoc()
   me.pUpdateRect = rect(0, 0, 0, 0)
@@ -221,8 +230,8 @@ end
 
 on setPartLists me, tmodels
   me.pMainAction = "sit"
-  callAncestor(#setPartLists, [me], tmodels)
-  tPartDefinition = ["bl"]
+  me.pPartList = []
+  tPartDefinition = getVariableValue("bouncing.human.parts.sh")
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
     if voidp(tmodels[tPartSymbol]) then
@@ -268,23 +277,31 @@ on setPartLists me, tmodels
     me.pPartIndex[me.pPartList[i].pPart] = i
   end repeat
   call(#reset, me.pPartList)
-  call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+  call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+  call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
   return 1
 end
 
-on arrangeParts me
-  callAncestor(#arrangeParts, [me], "bouncing.human.parts")
-end
-
 on getPicture me, tImg
-  return me.getPartialPicture(#Full, tImg, 4, "sh")
+  if voidp(tImg) then
+    tCanvas = image(32, 62, 32)
+  else
+    tCanvas = tImg
+  end if
+  tPartDefinition = getVariableValue("human.parts.sh")
+  tTempPartList = []
+  repeat with tPartSymbol in tPartDefinition
+    if not voidp(me.pPartIndex[tPartSymbol]) then
+      tTempPartList.append(me.pPartList[me.pPartIndex[tPartSymbol]])
+    end if
+  end repeat
+  call(#copyPicture, tTempPartList, tCanvas, "2", "sh")
+  return tCanvas
 end
 
 on Refresh me, tX, tY, tH
   call(#defineDir, me.pPartList, me.pDirection)
-  call(#defineDirMultiple, me.pPartList, me.pDirection, me.pPartListSubSet["head"])
+  call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "ey", "fc"])
   me.arrangeParts()
   return 1
 end
@@ -382,7 +399,6 @@ on action_mv me, tProps
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
-  call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+  call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+  call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
 end

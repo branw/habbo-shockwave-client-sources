@@ -53,6 +53,42 @@ on define me, tdata
   return 1
 end
 
+on changeFigureAndData me, tdata
+  me.pSex = tdata[#sex]
+  me.pCustom = tdata[#custom]
+  tmodels = tdata[#figure]
+  tPartDefinition = me.getClearedFigurePartList(tmodels)
+  repeat with tPart in me.pPartList
+    tPartId = tPart.getPartID()
+    tNewModelItem = tmodels[tPartId]
+    if voidp(tNewModelItem) then
+      tNewModelItem = [:]
+      tNewModelItem["model"] = "000"
+      tNewModelItem["color"] = rgb("000000")
+    end if
+    if ilk(tNewModelItem) = #propList then
+      tmodel = tNewModelItem["model"]
+      tColor = tNewModelItem["color"]
+      if tColor.red + tColor.green + tColor.blue > 238 * 3 then
+        tColor = rgb("EEEEEE")
+      end if
+      if tPartDefinition.findPos(tPartId) = 0 then
+        tmodel = "000"
+      end if
+      tPart.changePartData(tmodel, tColor)
+      me.pColors[tPartId] = tColor
+    end if
+  end repeat
+  me.pChanges = 1
+  me.render()
+  if me.isInSwimsuit() then
+    me.setPartLists(tdata[#figure], #preserveAnimation)
+  else
+    me.reDraw()
+  end if
+  me.pInfoStruct[#image] = me.getPicture()
+end
+
 on select me
   if pFramework = VOID then
     pFramework = getObject(#snowwar_gamesystem)
@@ -410,7 +446,7 @@ end
 
 on Refresh me, tX, tY, tH
   call(#defineDir, me.pPartList, me.pDirection)
-  call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "ey", "fc"])
+  call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "hrb", "ha", "ey", "fc"])
   me.arrangeParts()
   me.pChanges = 1
   return 1
@@ -471,14 +507,16 @@ on arrangeParts_Normal me
   if me.pPartList = VOID then
     return 0
   end if
-  repeat with tPartId in ["hd", "fc", "ey", "hr", "sh", "bd"]
-    if me.pPartList.count < me.pPartIndex[tPartId] then
-      return 0
-    end if
-    tPart = me.pPartList[me.pPartIndex[tPartId]]
-    if tPart <> VOID then
-      tPart.pXFix = 0
-      tPart.pYFix = 0
+  repeat with tPartId in ["hd", "fc", "ey", "hr", "hrb", "ha", "sh", "bd"]
+    if not voidp(me.pPartIndex[tPartId]) then
+      if me.pPartList.count < me.pPartIndex[tPartId] then
+        return 0
+      end if
+      tPart = me.pPartList[me.pPartIndex[tPartId]]
+      if tPart <> VOID then
+        tPart.pXFix = 0
+        tPart.pYFix = 0
+      end if
     end if
   end repeat
   tBD = me.pPartList[me.pPartIndex["bd"]]
@@ -500,11 +538,13 @@ on arrangeParts_Pick me, tXFix, tYFix
   if me.pPartList = VOID then
     return 0
   end if
-  repeat with tPartId in ["hd", "fc", "ey", "hr"]
-    tPart = me.pPartList[me.pPartIndex[tPartId]]
-    if tPart <> VOID then
-      tPart.pXFix = 3
-      tPart.pYFix = 5
+  repeat with tPartId in ["hd", "fc", "ey", "hr", "hrb", "ha"]
+    if not voidp(me.pPartIndex[tPartId]) then
+      tPart = me.pPartList[me.pPartIndex[tPartId]]
+      if tPart <> VOID then
+        tPart.pXFix = 3
+        tPart.pYFix = 5
+      end if
     end if
   end repeat
   me.pChanges = 1
@@ -567,7 +607,7 @@ end
 on setPartLists me, tmodels
   tAction = me.pMainAction
   me.pPartList = []
-  tPartDefinition = getVariableValue("snowwar.human.parts." & me.pPeopleSize)
+  tPartDefinition = me.getClearedFigurePartList(tmodels)
   tPartClass = getVariableValue("snowwar.bodypart.class")
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
@@ -575,7 +615,11 @@ on setPartLists me, tmodels
       tmodels[tPartSymbol] = [:]
     end if
     if voidp(tmodels[tPartSymbol]["model"]) then
-      tmodels[tPartSymbol]["model"] = "001"
+      if tPartSymbol <> "ha" then
+        tmodels[tPartSymbol]["model"] = "001"
+      else
+        tmodels[tPartSymbol]["model"] = "000"
+      end if
     end if
     if voidp(tmodels[tPartSymbol]["color"]) then
       tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
@@ -608,6 +652,34 @@ on setPartLists me, tmodels
     me.pPartIndex[me.pPartList[i].pPart] = i
   end repeat
   return 1
+end
+
+on getClearedFigurePartList me, tmodels
+  tPartList = getVariableValue("snowwar.human.parts" & "." & me.pPeopleSize)
+  if tPartList.ilk <> #list then
+    return []
+  end if
+  if not objectExists("Figure_System") then
+    error("No figure system!", me.getID, #getSpecificClearedFigurePartList, #critical)
+    return tPartList
+  end if
+  tFigureSystem = getObject("Figure_System")
+  repeat with tmodel in tmodels
+    tSetID = tmodel["setid"]
+    tsex = me.pSex
+    if voidp(me.pSex) then
+      tsex = "M"
+    end if
+    tPreventedParts = tFigureSystem.getPreventedPartsBySetID(tsex, tSetID)
+    if tPreventedParts.count > 0 then
+      repeat with tPart in tPreventedParts
+        if tPartList.getOne(tPart) then
+          tPartList.deleteOne(tPart)
+        end if
+      end repeat
+    end if
+  end repeat
+  return tPartList
 end
 
 on setOwnHiliter me, tstate

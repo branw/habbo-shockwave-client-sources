@@ -3,6 +3,19 @@ property pFrameworkId, pUserTeamIndex
 on construct me
   pFrameworkId = getVariable("bb.loungesystem.id")
   pUserTeamIndex = 0
+  repeat with i = 0 to 7
+    tPartList = getVariable("human.parts.sh.sit." & i)
+    if tPartList = 0 then
+      tPartList = getVariable("human.parts.sh." & i)
+    end if
+    if tPartList <> 0 then
+      tPartListNew = ["bl"]
+      repeat with tPart in tPartList
+        tPartListNew.add(tPart)
+      end repeat
+    end if
+    setVariable("bouncing.human.parts.sh." & i, tPartListNew)
+  end repeat
   return 1
 end
 

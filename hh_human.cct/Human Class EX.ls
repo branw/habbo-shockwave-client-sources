@@ -741,13 +741,16 @@ on setPartLists me, tmodels
   return 1
 end
 
-on arrangeParts me
+on arrangeParts me, tOrderName
   tPartOrder = EMPTY
   tDirData = EMPTY
   if not voidp(pDirection) then
     tDirData = "." & pDirection
   end if
-  tPartOrder = "human.parts." & pPeopleSize
+  if voidp(tOrderName) then
+    tOrderName = "human.parts"
+  end if
+  tPartOrder = tOrderName & "." & pPeopleSize
   tPartOrderAction = tPartOrder & "." & pMainAction
   if variableExists(tPartOrderAction & tDirData) then
     tPartOrder = tPartOrderAction
