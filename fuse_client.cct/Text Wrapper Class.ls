@@ -23,9 +23,12 @@ on prepare me
   pFontData[#fontSize] = me.pProps[#fontSize]
   pFontData[#fontStyle] = me.pProps[#fontStyle]
   if integerp(me.pProps[#fixedLineSpace]) then
+    if me.pProps[#fixedLineSpace] = me.pProps[#fontSize] then
+      me.pProps[#fixedLineSpace] = me.pProps[#fixedLineSpace] + 1
+    end if
     pFontData[#fixedLineSpace] = me.pProps[#fixedLineSpace]
   else
-    pFontData[#fixedLineSpace] = me.pProps[#fontSize]
+    pFontData[#fixedLineSpace] = me.pProps[#fontSize] + 1
   end if
   if voidp(pFontData[#key]) then
     pFontData[#key] = EMPTY

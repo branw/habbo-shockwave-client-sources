@@ -223,7 +223,9 @@ on placeItemToRoom me, tid
             tdata[#type] = "#ffff33"
           end if
           tdata[#direction] = "leftwall"
-          getThread(#room).getComponent().createItemObject(tdata)
+          if not getThread(#room).getComponent().createItemObject(tdata) then
+            return 0
+          end if
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
           if not (tdata[#class] contains "post.it") then
             me.removeStripItem(tid)

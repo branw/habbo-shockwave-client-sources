@@ -39,14 +39,8 @@ on hideSpaceNodeUsers me
 end
 
 on getPasswordFromField me, tElementId
-  tPw = EMPTY
-  if voidp(pFlatPasswords[tElementId]) then
-    return "null"
-  end if
-  repeat with f in pFlatPasswords[tElementId]
-    tPw = tPw & f
-  end repeat
-  return tPw
+  tPwd = pFlatPasswords[tElementId]
+  return tPwd
 end
 
 on flatPasswordIncorrect me
@@ -240,26 +234,18 @@ end
 on checkModifiedFlatPasswords me
   tElementId1 = "nav_modify_door_pw"
   tElementId2 = "nav_modify_door_pw2"
-  if voidp(pFlatPasswords[tElementId1]) then
-    tPw1 = []
-  else
-    tPw1 = pFlatPasswords[tElementId1]
-  end if
-  if voidp(pFlatPasswords[tElementId2]) then
-    tPw2 = []
-  else
-    tPw2 = pFlatPasswords[tElementId2]
-  end if
-  if tPw1.count = 0 then
-    executeMessage(#alert, [#Msg: "Alert_ForgotSetPassword"])
+  tPw1 = pFlatPasswords[tElementId1]
+  tPw2 = pFlatPasswords[tElementId2]
+  if tPw1.length = 0 then
+    executeMessage(#alert, [#Msg: "Alert_ForgotSetPassword", #modal: 1])
     return 0
   end if
-  if tPw1.count < 3 then
-    executeMessage(#alert, [#Msg: "nav_error_passwordtooshort"])
+  if tPw1.length < 3 then
+    executeMessage(#alert, [#Msg: "nav_error_passwordtooshort", #modal: 1])
     return 0
   end if
   if tPw1 <> tPw2 then
-    executeMessage(#alert, [#Msg: "Alert_WrongPassword"])
+    executeMessage(#alert, [#Msg: "Alert_WrongPassword", #modal: 1])
     return 0
   end if
   return 1
@@ -408,7 +394,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           tLastClickedId = me.getProperty(#passwordNodeId)
           tCategory = me.getProperty(#categoryId)
           tTemp = me.getPasswordFromField("nav_flatpassword_field")
-          if length(tTemp) = 0 or tTemp = "null" then
+          if voidp(tTemp) or tTemp = EMPTY then
             return 
           end if
           tFlatData = me.getComponent().getNodeInfo(tLastClickedId, tCategory)
@@ -434,45 +420,15 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
             if the key = RETURN then
               return me.startFlatSearch()
             end if
-          "nav_modify_door_pw", "nav_modify_door_pw2", "nav_flatpassword_field":
-            if voidp(pFlatPasswords[tSprID]) then
-              pFlatPasswords[tSprID] = []
+          "OLD":
+          "nav_flatpassword_field":
+            tKeyCatched = me.passwordFieldTypeEvent(tSprID, 0)
+            if tKeyCatched then
+              pPasswordChecked = 0
+              tTimeoutHideName = "asteriskUpdate" & the milliSeconds
+              createTimeout(tTimeoutHideName, 1, #updatePasswordAsterisks, me.getID(), [me.pWindowTitle, tSprID], 1)
             end if
-            case the keyCode of
-              48:
-                return 0
-              36, 76:
-                if tSprID = "nav_flatpassword_field" then
-                  return me.eventProcNavigatorPrivate(#mouseUp, "nav_flatpassword_ok_button", VOID)
-                else
-                  return 1
-                end if
-              51:
-                if pFlatPasswords[tSprID].count > 0 then
-                  pFlatPasswords[tSprID].deleteAt(pFlatPasswords[tSprID].count)
-                end if
-              117:
-                pFlatPasswords[tSprID] = []
-              otherwise:
-                tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
-                tTheKey = the key
-                tASCII = charToNum(tTheKey)
-                if tASCII > 31 and tASCII < 128 then
-                  if tValidKeys contains tTheKey or tValidKeys = EMPTY then
-                    if pFlatPasswords[tSprID].count < 32 then
-                      pFlatPasswords[tSprID].append(tTheKey)
-                    end if
-                  end if
-                end if
-            end case
-            tStr = EMPTY
-            repeat with i = 1 to pFlatPasswords[tSprID].count
-              put "*" after tStr
-            end repeat
-            getWindow(me.pWindowTitle).getElement(tSprID).setText(tStr)
-            set the selStart to pFlatPasswords[tSprID].count
-            set the selEnd to pFlatPasswords[tSprID].count
-            return 1
+            return 0
         end case
       end if
     end if
@@ -610,46 +566,14 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
     else
       if tEvent = #keyDown then
         case tSprID of
-          "nav_modify_door_pw", "nav_modify_door_pw2", "nav_flatpassword_field":
-            if voidp(pFlatPasswords[tSprID]) then
-              pFlatPasswords[tSprID] = []
+          "nav_modify_door_pw", "nav_modify_door_pw2":
+            tKeyCatched = me.passwordFieldTypeEvent(tSprID, 1)
+            if tKeyCatched then
+              pPasswordChecked = 0
+              tTimeoutHideName = "asteriskUpdate" & the milliSeconds
+              createTimeout(tTimeoutHideName, 1, #updatePasswordAsterisks, me.getID(), [me.pWindowTitle, tSprID], 1)
             end if
-            case the keyCode of
-              48:
-                return 0
-              36, 76:
-                if tSprID = "nav_flatpassword_field" then
-                  return me.eventProcNavigatorPrivate(#mouseUp, "nav_flatpassword_ok_button", VOID)
-                else
-                  return 1
-                end if
-              51:
-                if pFlatPasswords[tSprID].count > 0 then
-                  pFlatPasswords[tSprID].deleteAt(pFlatPasswords[tSprID].count)
-                end if
-              117:
-                pFlatPasswords[tSprID] = []
-              otherwise:
-                tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
-                tTheKey = the key
-                tASCII = charToNum(tTheKey)
-                if tASCII > 31 and tASCII < 128 then
-                  if tValidKeys contains tTheKey or tValidKeys = EMPTY then
-                    if pFlatPasswords[tSprID].count < 32 then
-                      pFlatPasswords[tSprID].append(tTheKey)
-                    end if
-                  end if
-                end if
-            end case
-            tStr = EMPTY
-            repeat with i = 1 to pFlatPasswords[tSprID].count
-              put "*" after tStr
-            end repeat
-            getWindow(me.pWindowTitle).getElement(tSprID).setText(tStr)
-            set the selStart to pFlatPasswords[tSprID].count
-            set the selEnd to pFlatPasswords[tSprID].count
-            pDoorStatusModified = 1
-            return 1
+            return 0
           "nav_modify_roomdescription_field", "nav_modify_roomnamefield":
             tKeyCode = the keyCode
             case tKeyCode of
@@ -660,4 +584,50 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
       end if
     end if
   end if
+end
+
+on passwordFieldTypeEvent me, tSprID, tCheckLength
+  if voidp(tSprID) then
+    return error(me, "No password field defined!", #passwordFieldTypeEvent)
+  end if
+  if voidp(tCheckLength) then
+    tCheckLength = 1
+  end if
+  tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
+  if voidp(pFlatPasswords[tSprID]) then
+    pFlatPasswords[tSprID] = EMPTY
+  end if
+  case the keyCode of
+    36, 76:
+      return 1
+    48:
+      return 0
+    123, 124, 125, 126:
+      return 1
+    51:
+      if pFlatPasswords[tSprID].length > 0 then
+        tTempPass = pFlatPasswords[tSprID]
+        pFlatPasswords[tSprID] = chars(tTempPass, 1, tTempPass.length - 1)
+      end if
+    117:
+      getWindow(me.pWindowTitle).getElement(tSprID).setText(EMPTY)
+      pFlatPasswords[tSprID] = EMPTY
+    otherwise:
+      tValidKeys = getVariable("permitted.name.chars")
+      tTheKey = the key
+      if not (tValidKeys = EMPTY) then
+        if not (tValidKeys contains tTheKey) then
+          tMessageTxt = getText("reg_use_allowed_chars") & RETURN & tValidKeys
+          executeMessage(#alert, [#Msg: tMessageTxt, #modal: 1])
+          return 1
+        end if
+        if tCheckLength then
+          if pFlatPasswords[tSprID].length > getIntVariable("pass.length.max", 16) then
+            executeMessage(#alert, [#Msg: "alert_shortenPW", #modal: 1])
+            return 1
+          end if
+        end if
+      end if
+  end case
+  return 1
 end

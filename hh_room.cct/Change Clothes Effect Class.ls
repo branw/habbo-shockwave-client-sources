@@ -36,7 +36,7 @@ on defineWithSprite me, tsprite, tSize
   tRect = tsprite.rect
   pHostSpriteData[#sprite] = tsprite
   pHostSpriteData[#previousink] = tsprite.ink
-  pHostSpriteData[#previousfcolor] = tsprite.color
+  pHostSpriteData[#previousfcolor] = color(#rgb, 0, 0, 0)
   tsprite.color = color(#rgb, 150, 150, 150)
   tsprite.ink = 41
   me.define(tloc, tlocz, tSize)

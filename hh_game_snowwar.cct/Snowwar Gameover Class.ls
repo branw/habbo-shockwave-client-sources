@@ -3,7 +3,7 @@ property pWindowID, pTimeOutID, pOpenWindow, pScoreData, pPlayerData, pCountdown
 on construct me
   pScoreData = [:]
   pPlayerData = [:]
-  pJoinedPlayers = []
+  pJoinedPlayers = [:]
   pBestPlayer = [:]
   pWindowID = getText("gs_title_finalscores")
   pTimeOutID = "gs_endgame_resetGameTimeout"
@@ -35,7 +35,7 @@ end
 on Refresh me, tTopic, tdata
   case tTopic of
     #gameend:
-      pJoinedPlayers = []
+      pJoinedPlayers = [:]
       me.saveSortedScores(tdata)
       me.startResetCountdown(tdata[#time_until_game_reset])
       me.toggleWindowMode()
@@ -262,22 +262,23 @@ end
 
 on showJoinedPlayer me, tdata
   tStrId = string(tdata[#id])
-  tStrId = string(me.getGameSystem().getGameObjectProperty(tStrId, "human_id"))
-  if pJoinedPlayers.findPos(tStrId) = 0 then
-    pJoinedPlayers.add(tStrId)
+  tHumanId = string(me.getGameSystem().getGameObjectProperty(tStrId, "human_id"))
+  tRoomIndex = string(me.getGameSystem().getGameObjectProperty(tStrId, "room_index"))
+  if pJoinedPlayers.findPos(tRoomIndex) = 0 then
+    pJoinedPlayers.addProp(tRoomIndex, ["human_id": tHumanId])
   end if
-  me.showPlayerIcon(#joined, [#id: tStrId])
+  me.showPlayerIcon(#joined, [#id: tHumanId])
   me.showJoinedPlayersNum()
   return 1
 end
 
-on showRemovedPlayer me, tStrId
-  put "* showRemovedPlayer" && tStrId
-  if pJoinedPlayers.findPos(tStrId) = 0 then
+on showRemovedPlayer me, tRoomIndex
+  if pJoinedPlayers.findPos(tRoomIndex) = 0 then
     return 0
   end if
-  pJoinedPlayers.deleteOne(tStrId)
-  me.showPlayerIcon(0, [#id: tStrId])
+  tHumanId = pJoinedPlayers[tRoomIndex]["human_id"]
+  pJoinedPlayers.deleteProp(tRoomIndex)
+  me.showPlayerIcon(0, [#id: tHumanId])
   me.showJoinedPlayersNum()
   return 1
 end

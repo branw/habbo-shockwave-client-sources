@@ -584,7 +584,9 @@ on sendupdateFlatInfo me, tPropList
   getConnection(pConnectionId).send("UPDATEFLAT", tFlatMsg)
   tFlatMsg = string(tPropList[#flatId]) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & tPropList[#description] & RETURN
-  tFlatMsg = tFlatMsg & "password=" & tPropList[#password] & RETURN
+  if tPropList[#password] <> EMPTY and tPropList[#password] <> VOID then
+    tFlatMsg = tFlatMsg & "password=" & tPropList[#password] & RETURN
+  end if
   tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture] & RETURN
   tFlatMsg = tFlatMsg & "maxvisitors=" & tPropList[#maxVisitors]
   getConnection(pConnectionId).send("SETFLATINFO", tFlatMsg)
