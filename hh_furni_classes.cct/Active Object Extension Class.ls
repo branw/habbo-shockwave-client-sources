@@ -142,7 +142,23 @@ on update me
   repeat with tLayer = 1 to pLayerDataList.count
     tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
     tIsAnimatingList[tLayer] = pIsAnimatingList[tLayer]
-    if not voidp(tFrameList) and tIsAnimatingList[tLayer] then
+    tValidConfs = 1
+    if pLoopCountList.count < tLayer then
+      tValidConfs = 0
+    end if
+    if pFrameNumberList.count < tLayer then
+      tValidConfs = 0
+    end if
+    if pFrameNumberList2.count < tLayer then
+      tValidConfs = 0
+    end if
+    if pFrameSequenceNumberList.count < tLayer then
+      tValidConfs = 0
+    end if
+    if pFrameRepeatList.count < tLayer then
+      tValidConfs = 0
+    end if
+    if not voidp(tFrameList) and tIsAnimatingList[tLayer] and tValidConfs then
       if not voidp(tFrameList[#frames]) or not voidp(tFrameList[#sequences]) then
         tDelay = tFrameList[#delay]
         if voidp(tDelay) or voidp(integer(tDelay)) or tDelay < 1 then
