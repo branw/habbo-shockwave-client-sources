@@ -1,2 +1,1 @@
-property UNKNOWN_NAME_13032, UNKNOWN_NAME_-1, shadowNum
-global UNKNOWN_NAME_13032, UNKNOWN_NAME_-1
+global UNKNOWN_NAME_13032, UNKNOWN_NAME_-1, sendAllSprites, UNKNOWN_NAME_1140, sendAllSprites, handleSpecialMessages, goToFlat, UNKNOWN_NAME_-1, UNKNOWN_NAME_-1, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, createItem, handleSpecialMessages, handleAddItems, UNKNOWN_NAME_-1, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, numToChar, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages, handleSpecialMessages

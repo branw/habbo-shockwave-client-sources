@@ -5,7 +5,7 @@ on handleSpecialMessages data
   ln1 = line 1 of data
   data = doSpecialCharConversion(data)
   if ln1 contains "OPEN_UIMAKOPPI" then
-    openUimakoppi()
+    openuimakoppi()
   else
     if ln1 contains "CLOSE_UIMAKOPPI" then
       closeUimaKoppi()

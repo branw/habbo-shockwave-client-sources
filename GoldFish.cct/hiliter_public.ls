@@ -134,7 +134,7 @@ on mouseDown me, brokenClickFromItem
 end
 
 on hiliteAvatar me, ChosenObject, whichSprite
-  if ChosenObject.name <> "Piers" and ChosenObject.name <> "Maria" and ChosenObject.name <> "James" and ChosenObject.name <> "Dave" and ChosenObject.name <> "Sadie" and ChosenObject.name <> "Marion" then
+  if ChosenObject.name <> "Maria" and ChosenObject.name <> "James" and ChosenObject.name <> "Dave" and ChosenObject.name <> "Sadie" and ChosenObject.name <> "Marion" then
     repeat with part in ChosenObject.lParts
       memName = "h_" & "std" & "_" & part & "_" & getaProp(ChosenObject.pModels, part) & "_" & "2" & "_" & 0
       memNum = getmemnum(memName)

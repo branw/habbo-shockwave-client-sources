@@ -5,7 +5,7 @@ on beginSprite me
   hiliteSprite = 0
   hiliteSprite = sprMan_getPuppetSprite()
   if hiliteSprite < 1 then
-    Init()
+    init()
     hiliteSprite = sprMan_getPuppetSprite()
   end if
   set the member of sprite hiliteSprite to "memberhilite_0"

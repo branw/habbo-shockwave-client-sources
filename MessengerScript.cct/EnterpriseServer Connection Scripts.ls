@@ -221,8 +221,7 @@ on handleEPMessageContent content
                 ShowAlert("unacceptableName")
                 put EMPTY into field "charactername_field"
               else
-                if firstline contains "ERROR" and not (firstline contains "PURCHASE") then
-                  put content
+                if firstline contains "ERROR" then
                   if content contains "login incorrect" then
                     put content
                     ShowAlert("WrongPassword")
@@ -317,7 +316,6 @@ on handleMessengerMessages content
     else
       if firstline contains "USEROBJECT" then
         p = keyValueToPropList(content, RETURN)
-        put content, p
         if getaProp(p, "phoneNumber") = VOID then
           gPhonenumberOk = 0
         else
@@ -366,7 +364,7 @@ on handleMessengerMessages content
           sendEPFuseMsg("GETCREDITS")
           return 
         else
-          tmpStr = "figure=" & p["figure"]
+          tmpStr = content.line[8]
           tmpStr2 = EMPTY
           the itemDelimiter = "="
           repeat with c = 1 to tmpStr.item.count

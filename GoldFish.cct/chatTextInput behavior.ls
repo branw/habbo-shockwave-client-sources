@@ -43,23 +43,19 @@ on keyDown me
     exit
   end if
   if the key = RETURN then
-    message = sprite(me.spriteNum).member.text
     if getaProp(gUserSprites, getaProp(gpObjects, gMyName)).isModerator then
-      s = message
-      if s contains "alert x" or s contains "ban x" or s contains "kick x" or s contains "superban x" then
+      s = member("texttypefield").text
+      if s contains ":alert x" or s contains ":ban x" or s contains ":kick x" or s contains ":superban x" then
         if s contains member("item.info_name").text = 0 then
-          message = stringReplace(s, "x", member("item.info_name").text)
-          sprite(me.spriteNum).member.text = message
-          set the selStart to sprite(me.spriteNum).member.text.length
-          set the selEnd to sprite(me.spriteNum).member.text.length
+          member("texttypefield").text = stringReplace(member("texttypefield").text, "x", member("item.info_name").text)
         end if
+        set the selStart to member("texttypefield").text.length
+        set the selEnd to member("texttypefield").text.length
       end if
     end if
-    if message contains ":bot" then
-      sendFuseMsg("CTRL_SAY" && message.word[2..message.word.count])
-      return 
-    end if
     ReturnCount = ReturnCount + 1
+    iSpr = me.spriteNum
+    message = line 1 of the text of the member of sprite iSpr
     if message <> EMPTY then
       if gChatMode = 1 then
         chatType = "CHAT"
@@ -91,7 +87,7 @@ on keyDown me
           gChatMode = 1
         end if
       end if
-      sprite(me.spriteNum).member.text = EMPTY
+      put EMPTY into the member of sprite iSpr
     end if
   else
     pass()
