@@ -58,3 +58,15 @@ end
 on replaceChunks tString, tChunkA, tChunkB
   return getStringServices().replaceChunks(tString, tChunkA, tChunkB)
 end
+
+on obfuscate tString
+  return getStringServices().obfuscate(tString)
+end
+
+on deobfuscate tString
+  return getStringServices().deobfuscate(tString)
+end
+
+on getLocalFloat tStrFloat
+  return getStringServices().getLocalFloat(tStrFloat)
+end

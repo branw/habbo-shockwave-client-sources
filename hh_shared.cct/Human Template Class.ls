@@ -1,4 +1,4 @@
-property pName, pClass, pSex, pBuffer, pMember, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pLocFix, pAnimCounter, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pCurrentAnim, pValid
+property pName, pClass, pSex, pCanvasName, pBuffer, pMember, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pLocFix, pAnimCounter, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pCurrentAnim, pValid
 
 on construct me
   pPartList = []
@@ -28,7 +28,10 @@ end
 on deconstruct me
   pValid = 0
   pPartList = []
-  return removeMember(me.pClass && me.pName && "Canvas")
+  if memberExists(pCanvasName) and pCanvasName <> VOID then
+    removeMember(pCanvasName)
+  end if
+  return 1
 end
 
 on define me, tdata
@@ -47,11 +50,12 @@ on define me, tdata
     error(me, "Canvas size not found, using default!", #define)
     me.pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
   end if
-  if not memberExists(me.pClass && me.pName && "Canvas") then
-    createMember(me.pClass && me.pName && "Canvas", #bitmap)
+  pCanvasName = me.pClass && me.pName && me.getID() && "Canvas"
+  if not memberExists(pCanvasName) then
+    createMember(pCanvasName, #bitmap)
   end if
   tSize = pCanvasSize[#std]
-  pMember = member(getmemnum(me.pClass && me.pName && "Canvas"))
+  pMember = member(getmemnum(pCanvasName))
   pMember.image = image(tSize[1], tSize[2], tSize[3])
   pMember.regPoint = point(0, pMember.image.height + tSize[4])
   pBuffer = pMember.image
