@@ -1,4 +1,7 @@
+property pModBadgeList
+
 on construct me
+  pModBadgeList = getVariableValue("moderator.badgelist")
   return 1
 end
 
@@ -18,18 +21,32 @@ on createFurnitureWindow me, tClass, tName, tDesc, tMemName
   return tID
 end
 
-on createHumanWindow me, tClass, tName, tPersMessage, tImage, tBadge, tGroupId
-  tID = "object.displayer.human"
+on getHumanWindowID me
+  return "object.displayer.human"
+end
+
+on createHumanWindow me, tClass, tName, tPersMessage, tImage, tBadge, tSelectedObj, tBadgeObjID
+  tID = me.getHumanWindowID()
   createWindow(tID, "obj_disp_human.window")
   tWndObj = getWindow(tID)
   tWndObj.getElement("room_obj_disp_name").setText(tName)
   tWndObj.getElement("room_obj_disp_desc").setText(tPersMessage)
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tImage)
+  tBadgeObj = getObject(tBadgeObjID)
+  tBadgeObj.updateInfoStandBadge(tID, tSelectedObj, tBadge)
   tWndObj.lock()
   return tID
 end
 
-on createPetWindow me, tPetID
+on createPetWindow me, tClass, tName, tDesc, tImage
+  tID = "object.displayer.furni"
+  createWindow(tID, "obj_disp_furni.window")
+  tWndObj = getWindow(tID)
+  tWndObj.getElement("room_obj_disp_name").setText(tName)
+  tWndObj.getElement("room_obj_disp_desc").setText(tDesc)
+  tWndObj.getElement("room_obj_disp_avatar").feedImage(tImage)
+  tWndObj.lock()
+  return tID
 end
 
 on createActionsHumanWindow me, tTargetUserName
@@ -61,7 +78,7 @@ on createActionsHumanWindow me, tTargetUserName
     if threadExists(#messenger) then
       tBuddyData = getThread(#messenger).getComponent().getBuddyData()
       if tBuddyData.online.getPos(tTargetUserName) > 0 then
-        tButtonList["friend"] = #hidden
+        tButtonList["friend"] = #deactive
       end if
     end if
     tRoomComponent = getThread(#room).getComponent()
@@ -73,22 +90,74 @@ on createActionsHumanWindow me, tTargetUserName
     if tTradeTimeout or tNotPrivateRoom or tNoTrading or tTradeProhibited then
       tButtonList["trade"] = #deactive
     end if
-    tUserInfo = tRoomComponent.getUserObject().getInfo()
+    tRoomInterface = getThread(#room).getInterface()
+    tSelectedObj = tRoomInterface.getSelectedObject()
+    tUserInfo = tRoomComponent.getUserObject(tSelectedObj).getInfo()
     tBadge = tUserInfo.getaProp(#badge)
+    tIgnoreListObj = getThread(#room).getInterface().pIgnoreListObj
+    if tIgnoreListObj.getIgnoreStatus(tUserInfo.name) then
+      tButtonList["ignore"] = #hidden
+    else
+      tButtonList["unignore"] = #hidden
+    end if
+    if pModBadgeList.getOne(tBadge) > 0 then
+      tButtonList["ignore"] = #hidden
+      tButtonList["unignore"] = #hidden
+    end if
     if not tRoomOwner and not tAnyRoomController then
       tButtonList["kick"] = #hidden
     end if
     if tRoomOwner then
+      if tUserInfo.ctrl = 0 then
+        tButtonList["take_rights"] = #hidden
+      else
+        if tUserInfo.ctrl = "furniture" then
+          tButtonList["give_rights"] = #hidden
+        else
+          if tUserInfo.ctrl = "useradmin" then
+            tButtonList["give_rights"] = #hidden
+          end if
+        end if
+      end if
+    else
+      tButtonList["give_rights"] = #hidden
+      tButtonList["take_rights"] = #hidden
     end if
   end if
   createWindow(tID, tWindowModel)
   tWndObj = getWindow(tID)
-  tButtonVertMargins = 5
+  tCurrentButtonTopPos = 0
+  tButtonVertMargins = 3
+  tButtonHeight = 15
+  tHiddenRowCount = 0
+  repeat with tIndex = 1 to tButtonList.count
+    tButtonID = tButtonList.getPropAt(tIndex)
+    tButtonVisibility = tButtonList[tButtonID]
+    tElement = tWndObj.getElement(tButtonID & ".button")
+    tLeftPos = tElement.getProperty(#locX)
+    if tIndex = 1 then
+      tCurrentButtonTopPos = tElement.getProperty(#locY)
+    end if
+    case tButtonVisibility of
+      #visible:
+        tElement.moveTo(tLeftPos, tCurrentButtonTopPos)
+        tCurrentButtonTopPos = tCurrentButtonTopPos + tButtonHeight + tButtonVertMargins
+      #deactive:
+        tElement.moveTo(tLeftPos, tCurrentButtonTopPos)
+        tElement.deactivate()
+        tCurrentButtonTopPos = tCurrentButtonTopPos + tButtonHeight + tButtonVertMargins
+      #hidden:
+        tElement.setProperty(#visible, 0)
+        tHiddenRowCount = tHiddenRowCount + 1
+    end case
+  end repeat
   tWndObj.lock()
+  tNewHeight = tWndObj.getProperty(#height) - tHiddenRowCount * (tButtonHeight + tButtonVertMargins) - tButtonVertMargins
+  createTimeout(#temp, 10, #resizeWindowTo, me.getID(), [#id: tID, #x: tWndObj.getProperty(#width), #y: tNewHeight], 1)
   return tID
 end
 
-on createActionsFurniWindow me
+on createActionsFurniWindow me, tClass
   tButtonList = []
   tSessionObj = getObject(#session)
   tRoomController = tSessionObj.GET("room_controller")
@@ -101,7 +170,11 @@ on createActionsFurniWindow me
   end if
   tAnyRoomController = tSessionObj.GET("user_rights").getOne("fuse_any_room_controller")
   if tAnyRoomController then
-    tButtonList = ["move", "rotate", "pick", "delete"]
+    tButtonList = ["move", "rotate", "pick"]
+  end if
+  if tClass = "item" then
+    tButtonList.deleteOne("move")
+    tButtonList.deleteOne("rotate")
   end if
   tID = "object.displayer.actions"
   createWindow(tID, "obj_disp_actions_furni.window")
@@ -117,8 +190,9 @@ on createActionsFurniWindow me
     end if
   end repeat
   tDeletedRowCount = tAllButtons.count - tButtonList.count
+  tNewHeight = -1 * tDeletedRowCount * tRowHeight
   tWndObj.lock()
-  createTimeout(#temp, 10, #resizeWindow, me.getID(), [#id: tID, #x: 0, #y: -1 * tDeletedRowCount * tRowHeight], 1)
+  createTimeout(#temp, 10, #resizeWindowBy, me.getID(), [#id: tID, #x: 0, #y: tNewHeight], 1)
   return tID
 end
 
@@ -146,9 +220,16 @@ on createBottomWindow me
   return tID
 end
 
-on resizeWindow me, tParams
+on resizeWindowBy me, tParams
   tWndObj = getWindow(tParams[#id])
   tX = tParams[#x]
   tY = tParams[#y]
   tWndObj.resizeBy(tX, tY)
+end
+
+on resizeWindowTo me, tParams
+  tWndObj = getWindow(tParams[#id])
+  tX = tParams[#x]
+  tY = tParams[#y]
+  tWndObj.resizeTo(tX, tY)
 end
