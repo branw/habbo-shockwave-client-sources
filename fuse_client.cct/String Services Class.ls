@@ -3,13 +3,13 @@ property pConvList, pDigits, pUsesUTF8, pUnicodeDirector
 on construct me
   pConvList = [:]
   pDigits = "0123456789ABCDEF"
-  me.initConvList()
   pUsesUTF8 = VOID
   if value(_player.productVersion) >= 11 then
     pUnicodeDirector = 1
   else
     pUnicodeDirector = 0
   end if
+  me.initConvList()
   return 1
 end
 
