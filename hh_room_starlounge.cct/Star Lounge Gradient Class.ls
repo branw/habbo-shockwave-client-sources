@@ -1,4 +1,4 @@
-property pSprite, pOffset, pMaxOffset, pPhase, pSpeed, pLocOrig, pCreases, pUseCreases, pBinMember, pPaletteMember
+property pSprite, pOffset, pMaxOffset, pPhase, pSpeed, pLocOrig, pCreases, pUseCreases, pImageOrig, pBinMember, pPaletteMember
 
 on define me, tsprite
   pMaxOffset = 300
@@ -14,23 +14,20 @@ on define me, tsprite
   else
     pBinMember = member(createMember("starlounge_gradient", #bitmap))
   end if
-  tImage = tOrigMember.image.duplicate()
-  if ilk(tImage.paletteRef) <> #symbol then
+  pBinMember.image = tOrigMember.image
+  pSprite.member = pBinMember
+  if pUseCreases then
+    pBinMember.image = me.makeCreases(pBinMember.image, pCreases, tOrigMember.paletteRef)
+  end if
+  if ilk(tOrigMember.paletteRef) <> #symbol then
     if memberExists("starlounge_gradient_palette") then
       pPaletteMember = member(getmemnum("starlounge_gradient_palette"))
     else
       pPaletteMember = member(createMember("starlounge_gradient_palette", #palette))
     end if
-    pPaletteMember.media = tImage.paletteRef.media
+    pPaletteMember.media = tOrigMember.paletteRef.media
+    pBinMember.paletteRef = pPaletteMember
   end if
-  if pUseCreases then
-    tImage = me.makeCreases(tImage, pCreases, tImage.paletteRef)
-  end if
-  if tImage.paletteRef.ilk <> #symbol then
-    tImage.paletteRef = pPaletteMember
-  end if
-  pBinMember.image = tImage
-  pSprite.member = pBinMember
   tWidth = (the stage).rect.width
   tHeight = (the stage).rect.height
   pSprite.rect = rect(0, 0, tWidth, tHeight)

@@ -197,6 +197,15 @@ on removeGhostEffect me
   end repeat
 end
 
+on getScreenLocation me
+  if pSprList.count < 1 then
+    return point(0, 0)
+  end if
+  tSpr = pSprList[1]
+  tloc = point(tSpr.rect[1] + tSpr.width / 2, tSpr.rect[2] + tSpr.height / 2)
+  return tloc
+end
+
 on prepare me, tdata
   return 1
 end

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -15,6 +15,7 @@ on construct me
   pActiveObjList = [:]
   pPassiveObjList = [:]
   pItemObjList = [:]
+  pFlatRatings = [#rate: -1, #Percent: 0]
   pBalloonId = "Room Balloon"
   pClassContId = "Room Classes"
   pRoomPrgID = "Room Program"
@@ -366,6 +367,15 @@ end
 
 on itemObjectExists me, tID
   return me.roomObjectExists(tID, pItemObjList)
+end
+
+on setRoomRating me, tRoomRating, tRoomRatingPercent
+  pFlatRatings[#rate] = tRoomRating
+  pFlatRatings[#Percent] = tRoomRatingPercent
+end
+
+on getRoomRating me
+  return pFlatRatings
 end
 
 on getRoomPrg me

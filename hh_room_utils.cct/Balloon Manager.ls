@@ -54,6 +54,7 @@ on construct me
   registerMessage(#leaveRoom, me.getID(), #removeBalloons)
   registerMessage(#changeRoom, me.getID(), #removeBalloons)
   executeMessage(#BalloonManagerCreated, [#objectPointer: me])
+  registerMessage(#show_balloon, me.getID(), #createBalloon)
   me.resetBalloons()
   return 1
 end
@@ -86,6 +87,7 @@ on deconstruct me
   pAvailableBalloons = VOID
   pVisibleBalloons = VOID
   pBalloonBuffer = VOID
+  unregisterMessage(#show_balloon, me.getID())
   return 1
 end
 
@@ -220,16 +222,26 @@ end
 on createBalloon me, tMsg
   if pState = #normal then
     if pAvailableBalloons.count > 0 then
-      tUserObj = getThread(#room).getComponent().getUserObject(tMsg[#id])
-      if not tUserObj then
-        return error(me, "User object not found:" && tMsg[#id], #createBalloon, #major)
-      end if
-      pBalloonColor = tUserObj.getPartColor("ch")
-      if ilk(pBalloonColor) <> #color then
+      if tMsg[#furni] then
+        tActiveObj = getThread(#room).getComponent().getActiveObject(tMsg[#id])
+        if not tActiveObj then
+          return error(me, "Acitve object not found:" && tMsg[#id], #createBalloon, #major)
+        end if
         pBalloonColor = rgb(232, 177, 55)
+        pHumanLoc = tActiveObj.getScreenLocation()
+        tMsg.setaProp(#name, tActiveObj.getInfo().getaProp(#name))
+      else
+        tUserObj = getThread(#room).getComponent().getUserObject(tMsg[#id])
+        if not tUserObj then
+          return error(me, "User object not found:" && tMsg[#id], #createBalloon, #major)
+        end if
+        pBalloonColor = tUserObj.getPartColor("ch")
+        if ilk(pBalloonColor) <> #color then
+          pBalloonColor = rgb(232, 177, 55)
+        end if
+        pHumanLoc = tUserObj.getPartLocation("hd")
+        tMsg.setaProp(#name, tUserObj.getInfo().getaProp(#name))
       end if
-      pHumanLoc = tUserObj.getPartLocation("hd")
-      tMsg.setaProp(#name, tUserObj.getInfo().getaProp(#name))
       pLastBalloonId = pAvailableBalloons.getPropAt(1)
       pLastMsg = tMsg
       pBalloonPulse.set(#humanLoc, pHumanLoc)

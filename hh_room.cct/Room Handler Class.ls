@@ -948,6 +948,14 @@ on handle_group_membership_update me, tMsg
   end if
 end
 
+on handle_room_rating me, tMsg
+  tConn = tMsg.connection
+  tRoomRating = tConn.GetIntFrom()
+  tRoomRatingPercent = tConn.GetIntFrom()
+  me.getComponent().setRoomRating(tRoomRating, tRoomRatingPercent)
+  executeMessage(#roomRatingChanged)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -1015,6 +1023,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(309, #handle_group_badges)
   tMsgs.setaProp(310, #handle_group_membership_update)
   tMsgs.setaProp(311, #handle_group_details)
+  tMsgs.setaProp(345, #handle_room_rating)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1074,6 +1083,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_GROUP_BADGES", 230)
   tCmds.setaProp("GET_GROUP_DETAILS", 231)
   tCmds.setaProp("SPIN_WHEEL_OF_FORTUNE", 247)
+  tCmds.setaProp("RATEFLAT", 261)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

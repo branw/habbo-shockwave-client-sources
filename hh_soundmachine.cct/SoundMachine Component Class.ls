@@ -485,7 +485,7 @@ on soundMachineDefined me, tFurniID
   if tSoundMachine = 0 then
     return error(me, "Instance not found", #soundMachineDefined, #major)
   end if
-  if not tSoundMachine.Initialize() then
+  if not tSoundMachine.Initialize(tFurniID) then
     return 0
   end if
   tPlaylistManager = tSoundMachine.getPlaylistManager()
@@ -500,7 +500,7 @@ on jukeBoxDefined me, tFurniID
   if tSoundMachine = 0 then
     return error(me, "Instance not found", #soundMachineDefined, #major)
   end if
-  if not tSoundMachine.Initialize() then
+  if not tSoundMachine.Initialize(tFurniID) then
     return 0
   end if
   tPlaylistManager = tSoundMachine.getPlaylistManager()

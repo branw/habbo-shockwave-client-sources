@@ -1,4 +1,4 @@
-property pLoopPlaylist, pPlayStackIndex, pPlaylistManager, pSongList, pTimelineList, pFurniOn, pInitialized, pSongControllerID, pProcessSongTimer
+property pLoopPlaylist, pPlayStackIndex, pPlaylistManager, pSongList, pTimelineList, pFurniOn, pInitialized, pSongControllerID, pProcessSongTimer, pBubbleTimer, pFurniID, pBubbleSongName
 
 on construct me
   pPlaylistManager = createObject(#temp, getClassVariable("soundmachine.songlist.manager"))
@@ -9,6 +9,9 @@ on construct me
   pTimelineList = [:]
   pInitialized = 0
   pPlayStackIndex = VOID
+  pBubbleTimer = VOID
+  pFurniID = VOID
+  pBubbleSongName = EMPTY
   return 1
 end
 
@@ -17,14 +20,24 @@ on deconstruct me
   repeat with tTimeline in pTimelineList
     tTimeline.deconstruct()
   end repeat
+  if not voidp(pBubbleTimer) then
+    if timeoutExists(pBubbleTimer) then
+      removeTimeout(pBubbleTimer)
+    end if
+  end if
   return 1
 end
 
-on Initialize me
+on Initialize me, tID
   if pInitialized then
     return 0
   end if
   pInitialized = 1
+  pBubbleTimer = "jukebox_timer_" & tID
+  if not timeoutExists(pBubbleTimer) then
+    createTimeout(pBubbleTimer, 1000, #bubbleCheck, me.getID(), VOID, 0)
+  end if
+  pFurniID = tID
   return 1
 end
 
@@ -257,5 +270,29 @@ on createTimelineInstance me, tSong
     tSongLength = tTimeline.getSlotDuration()
   end if
   pSongList.add([#length: tSongLength, #id: tSong[#id]])
+  return 1
+end
+
+on bubbleCheck me
+  if pLoopPlaylist then
+    return 0
+  end if
+  tArray = [:]
+  tArray[#id] = pFurniID
+  executeMessage(#get_jukebox_song_info, tArray)
+  tNewName = EMPTY
+  if not voidp(tArray[#songName]) then
+    tNewName = tArray[#songName] & " "
+  end if
+  if not voidp(tArray[#author]) then
+    tNewName = tNewName & tArray[#author]
+  end if
+  if tNewName <> pBubbleSongName then
+    if tNewName <> EMPTY then
+      tMsg = [#command: "SHOUT", #id: pFurniID, #message: tNewName, #furni: 1]
+      executeMessage(#show_balloon, tMsg)
+    end if
+    pBubbleSongName = tNewName
+  end if
   return 1
 end

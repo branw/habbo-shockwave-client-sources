@@ -107,7 +107,7 @@ on adLoaded me
   if pAdError = 1 then
     return 0
   end if
-  if getMember(pMemberID).type = #empty then
+  if member(pMemberID).type = #empty then
     return me.adImportError()
   end if
   pAdLoaded = 1
