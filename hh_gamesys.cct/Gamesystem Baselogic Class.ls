@@ -114,7 +114,7 @@ on store_loungeinfo me, tdata
     return 0
   end if
   getObject(#session).set(#gamelounge_world_info, [#unitId: tWorldData[#port], #worldId: tWorldData[#door], #type: tWorldData[#type]])
-  getObject(#session).Remove(#gamespace_world_info)
+  getObject(#session).remove(#gamespace_world_info)
   return 1
 end
 
