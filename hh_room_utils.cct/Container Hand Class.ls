@@ -57,6 +57,7 @@ on open me, tStripInfo
       tConnection.send("GETSTRIP", "new")
     end if
   end if
+  executeMessage(#tutorial_hand_opened)
   return 1
 end
 

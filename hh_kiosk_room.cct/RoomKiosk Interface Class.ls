@@ -285,6 +285,7 @@ on eventProc me, tEvent, tSprID, tParm
     case tSprID of
       "roomatic_1_button_start":
         me.ChangeWindowView("roomatic2.window")
+        executeMessage(#tutorial_roommatic_start_ready)
       "roomatic_1_button_cancel":
         me.showHideRoomKiosk()
       "roomatic_choosecategory":
@@ -302,6 +303,7 @@ on eventProc me, tEvent, tSprID, tParm
         pRoomProps[#name] = tRoomName
         pRoomProps[#description] = getWindow(pWindowTitle).getElement("romatic_roomdescription_field").getText()
         me.ChangeWindowView("roomatic3.window")
+        executeMessage(#tutorial_roommatic_details_ready)
       "roomatic_namedisplayed_yes_check":
         pRoomProps[#showownername] = 1
         me.updateRadioButton("roomatic_namedisplayed_yes_check", ["roomatic_namedisplayed_no_check"])
@@ -322,6 +324,7 @@ on eventProc me, tEvent, tSprID, tParm
         me.setPageValues("roomatic3.window")
       "roomatic_3_button_next":
         me.ChangeWindowView("roomatic4.window")
+        executeMessage(#tutorial_roommatic_layout_ready)
       "roomatic_3_button_previous":
         me.ChangeWindowView("roomatic2.window")
       "roomatic_4_button_done":
@@ -337,6 +340,7 @@ on eventProc me, tEvent, tSprID, tParm
         end if
         me.createRoom()
         me.ChangeWindowView("roomatic6.window")
+        executeMessage(#tutorial_roommatic_security_ready)
       "roomatic_4_button_previous":
         me.ChangeWindowView("roomatic3.window")
       "goto_club_layouts":

@@ -95,6 +95,7 @@ on handleRoomListClicked me, tParm
   if tNodeInfo[#nodeType] = 0 then
     me.setLoadingCursor(1)
     me.getComponent().expandNode(tNodeInfo[#id])
+    executeMessage(#tutorial_roomcategory_expanded)
   else
     if the shiftDown then
       if tNodeInfo[#nodeType] = 1 then
@@ -358,6 +359,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
       "nav_tab_own":
         me.setLoadingCursor(1)
         me.ChangeWindowView("nav_gr_own")
+        executeMessage(#tutorial_ownrooms_tab_clicked)
       "nav_tab_fav":
         me.setLoadingCursor(1)
         me.ChangeWindowView("nav_gr_fav")

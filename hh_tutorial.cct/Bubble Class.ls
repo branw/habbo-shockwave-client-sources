@@ -179,6 +179,10 @@ on updatePosition me
     me.hide()
     return 1
   end if
+  if not tTargetElem.getProperty(#visible) then
+    me.hide()
+    return 1
+  end if
   tTargetSprite = tTargetElem.getProperty(#sprite)
   tTargetRect = tTargetSprite.rect
   tX = tTargetRect[1] + me.pOffsetX - me.pPointerX

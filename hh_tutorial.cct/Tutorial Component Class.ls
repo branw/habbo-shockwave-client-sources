@@ -1,4 +1,4 @@
-property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pStarted, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial
+property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pStarted, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial, pEnabledOnServer
 
 on construct me
   me.pEnabled = 0
@@ -7,7 +7,9 @@ on construct me
   me.pDefaultTutorial = "NUF"
   registerMessage(#userlogin, me.getID(), #getUserProperties)
   registerMessage(#restart_tutorial, me.getID(), #restartTutorial)
+  registerMessage(#updateAvailableFlatCategories, me.getID(), #startDefaultTutorial)
   registerMessage(#tutorial_send_console_message, me.getID(), #sendConsoleMessage)
+  registerMessage(#tutorial_open_guestrooms_tab, me.getID(), #openGuestroomsTab)
   return 1
 end
 
@@ -20,6 +22,7 @@ on getUserProperties me
   tSession = getObject(#session)
   me.pUserName = tSession.GET(#userName)
   me.pUserSex = tSession.GET(#user_sex)
+  me.pEnabledOnServer = tSession.GET(#tutorial_enabled, 1)
   me.getInterface().setUserSex(me.pUserSex)
 end
 
@@ -47,6 +50,9 @@ on setEnabled me, tBoolean
 end
 
 on startTutorial me, tTutorialName
+  if not me.pEnabledOnServer then
+    return 0
+  end if
   me.pStarted = 1
   if not voidp(tTutorialName) then
     me.pTutorialName = tTutorialName
@@ -103,6 +109,15 @@ on selectTopic me, tTopicID
     me.getInterface().showMenu()
     return 1
   end if
+  tTopicName = me.pTopics.getaProp(tTopicID)
+  tURLKey = tTopicName & "_url"
+  if textExists(tURLKey) then
+    tURL = getText(tURLKey)
+    openNetPage(tURL)
+    me.completeTopic(tTopicID)
+    me.getInterface().showMenu()
+    return 1
+  end if
   me.pCurrentTopicID = tTopicID
   me.pCurrentTopicNumber = me.pTopics.getPos(me.pTopics.getaProp(tTopicID))
   tConn = getConnection(getVariable("connection.info.id"))
@@ -120,6 +135,9 @@ on nextStep me
   if me.pCurrentStepNumber > me.pSteps.count then
     return 0
   end if
+  tTopicName = me.pTopics.getaProp(me.pTopicID)
+  tTrackMsg = "/client/tutorial/" & tTopicName & "/" & string(me.pCurrentStepNumber)
+  executeMessage(#sendTrackingPoint, tTrackMsg)
   me.pCurrentStepID = me.pSteps.getPropAt(me.pCurrentStepNumber)
   tTopic = me.pSteps[me.pCurrentStepNumber]
   me.clearTriggers()
@@ -139,13 +157,19 @@ on nextStep me
     end if
     tLinkList.setaProp(#menu, "Select another topic")
     tTutorList.setaProp(#links, tLinkList)
-    tConn = getConnection(getVariable("connection.info.id"))
-    if voidp(tConn) then
-      return error(me, "Connection not found.", #startTutorial, #major)
-    end if
-    tConn.send("COMPLETE_TUTORIAL_TOPIC", [#integer: me.pTopicID])
+    me.completeTopic(me.pTopicID)
   end if
   me.getInterface().setTutor(tTutorList)
+end
+
+on completeTopic me, tTopicID
+  me.pTopicStatuses.setaProp(tTopicID, 1)
+  tConn = getConnection(getVariable("connection.info.id"))
+  if voidp(tConn) then
+    return error(me, "Connection not found.", #startTutorial, #major)
+  end if
+  tConn.send("COMPLETE_TUTORIAL_TOPIC", [#integer: tTopicID])
+  tConn.send("GET_TUTORIAL_STATUS", [#integer: me.pTutorialID])
 end
 
 on executePrerequisites me, tPrerequisiteList
@@ -217,6 +241,13 @@ on sendConsoleMessage me, tTextKey
   tText = getText(tTextKey)
   tMsg = [#campaign: 1, #id: "3", #url: "http://www.fi", #message: tText]
   getObject("messenger_component").receive_Message(tMsg)
+end
+
+on openGuestroomsTab me
+  executeMessage(#show_navigator)
+  getObject(#navigator_interface).ChangeWindowView("nav_gr0")
+  getObject(#navigator_component).expandHistoryItem(1)
+  executeMessage(#hide_navigator)
 end
 
 on getTopics me

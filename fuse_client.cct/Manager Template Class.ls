@@ -33,7 +33,7 @@ on GET me, tID
 end
 
 on getIDList me
-  tIdList = []
+  tIDList = []
   tListMode = ilk(me.pItemList)
   repeat with i = 1 to me.pItemList.count
     if tListMode = #list then
@@ -41,9 +41,9 @@ on getIDList me
     else
       tID = me.pItemList.getPropAt(i)
     end if
-    tIdList.add(tID)
+    tIDList.add(tID)
   end repeat
-  return tIdList
+  return tIDList
 end
 
 on Remove me, tID

@@ -95,13 +95,6 @@ on eventHandler me, tEvent, tSpriteID, tParam
   if tSpriteID = "bubble_links" then
     tLineNum = tParam[2] / 16 + 1
     tTopicID = me.pLinkList.getPropAt(tLineNum)
-    tTopicName = me.pLinkList[tLineNum]
-    tURLKey = tTopicName & "_url"
-    if textExists(tURLKey) then
-      tURL = getText(tURLKey)
-      openNetPage(tURL)
-      return 1
-    end if
     getThread(#tutorial).getComponent().selectTopic(tTopicID)
   end if
 end
