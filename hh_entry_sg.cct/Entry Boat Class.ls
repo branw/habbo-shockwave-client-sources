@@ -1,7 +1,7 @@
 property pSprite, pOffset, pProps, pDirection, pmodel, pDelayCounter
 
-on define me, tSprite, ttype
-  pSprite = [tSprite]
+on define me, tsprite, ttype
+  pSprite = [tsprite]
   if ttype > 1 then
     tVisualID = getThread(#entry).getInterface().pEntryVisual
     tVisualizer = getVisualizer(tVisualID)

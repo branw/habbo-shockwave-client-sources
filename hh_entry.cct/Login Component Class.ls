@@ -25,7 +25,7 @@ on construct me
     if not voidp(getPref(getVariable("fuse.project.id", "fusepref"))) then
       tTemp = value(getPref(getVariable("fuse.project.id", "fusepref")))
       getObject(#session).set(#userName, tTemp[1])
-      getObject(#session).set(#password, tTemp[2])
+      getObject(#session).set(#Password, tTemp[2])
       pOkToLogin = 1
       return me.connect()
     end if
@@ -64,7 +64,7 @@ on deconstruct me
   end if
   unregisterMessage(#openConnection, me.getID())
   unregisterMessage(#closeConnection, me.getID())
-  if connectionExists(getVariable("connection.info.id", #info)) then
+  if connectionExists(getVariable("connection.info.id", #Info)) then
     return me.disconnect()
   else
     return 1
@@ -90,7 +90,7 @@ end
 on connect me
   tHost = getVariable("connection.info.host")
   tPort = getIntVariable("connection.info.port")
-  tConn = getVariable("connection.info.id", #info)
+  tConn = getVariable("connection.info.id", #Info)
   if voidp(tHost) or voidp(tPort) then
     return error(me, "Server port/host data not found!", #connect)
   end if
@@ -110,7 +110,7 @@ on connect me
 end
 
 on disconnect me
-  tConn = getVariable("connection.info.id", #info)
+  tConn = getVariable("connection.info.id", #Info)
   if connectionExists(tConn) then
     return removeConnection(tConn)
   else

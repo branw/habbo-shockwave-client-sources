@@ -61,7 +61,7 @@ on handle_error me, tMsg
       executeMessage(#leaveRoom)
     "Not owner":
       getObject(#session).set("room_controller", 0)
-      me.getInterface().hideInterface(#hide)
+      me.getInterface().hideInterface(#Hide)
   end case
 end
 
@@ -115,7 +115,7 @@ on handle_status me, tMsg
       repeat with tAction in tuser[#actions]
         call(symbol("action_" & tAction[#name]), [tUserObj], tAction[#params])
       end repeat
-      tUserObj.refresh(tuser[#x], tuser[#y], tuser[#h])
+      tUserObj.Refresh(tuser[#x], tuser[#y], tuser[#h])
     end if
   end repeat
 end
@@ -136,7 +136,7 @@ on handle_chat me, tMsg
       tMode = "SHOUT"
   end case
   if me.getComponent().userObjectExists(tuser) then
-    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #message: tChat])
+    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #Message: tChat])
   end if
 end
 
@@ -557,11 +557,11 @@ on handle_stripinfo me, tMsg
       tInventory.updateStripItems(tProps[#objects])
       tInventory.setStripItemCount(tProps[#count])
       tInventory.open(1)
-      tInventory.refresh()
+      tInventory.Refresh()
     98:
       tInventory.appendStripItem(tProps[#objects][1])
       tInventory.open(1)
-      tInventory.refresh()
+      tInventory.Refresh()
     108:
       return tProps
   end case
@@ -576,11 +576,11 @@ on handle_removestripitem me, tMsg
 end
 
 on handle_youarenotallowed me
-  executeMessage(#alert, [#msg: "trade_youarenotallowed", #id: "youarenotallowed"])
+  executeMessage(#alert, [#Msg: "trade_youarenotallowed", #id: "youarenotallowed"])
 end
 
 on handle_othernotallowed me
-  executeMessage(#alert, [#msg: "trade_othernotallowed", #id: "othernotallowed"])
+  executeMessage(#alert, [#Msg: "trade_othernotallowed", #id: "othernotallowed"])
 end
 
 on handle_idata me, tMsg
@@ -613,7 +613,7 @@ on handle_trade_items me, tMsg
     end if
     tMessage[tUserName] = tdata
   end repeat
-  return me.getInterface().getSafeTrader().refresh(tMessage)
+  return me.getInterface().getSafeTrader().Refresh(tMessage)
 end
 
 on handle_trade_close me, tMsg

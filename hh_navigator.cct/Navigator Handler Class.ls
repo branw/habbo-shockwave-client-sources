@@ -149,7 +149,7 @@ on handle_error me, tMsg
   error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
   case tErr of
     "Only 10 favorite rooms allowed!", "nav_error_toomanyfavrooms":
-      executeMessage(#alert, [#msg: getText("nav_error_toomanyfavrooms")])
+      executeMessage(#alert, [#Msg: getText("nav_error_toomanyfavrooms")])
   end case
   return 1
 end
@@ -255,7 +255,7 @@ on handle_cantconnect me, tMsg
     3:
       tError = "queue_set." & tConn.GetStrFrom() & ".alert"
   end case
-  return executeMessage(#alert, [#id: "nav_error", #msg: tError])
+  return executeMessage(#alert, [#id: "nav_error", #Msg: tError])
 end
 
 on handle_success me, tMsg
@@ -269,7 +269,7 @@ on handle_failure me, tMsg
   tMsgId = tConn.GetIntFrom()
   tErrorTxt = tConn.GetStrFrom()
   if tErrorTxt <> EMPTY then
-    executeMessage(#alert, [#msg: tErrorTxt])
+    executeMessage(#alert, [#Msg: tErrorTxt])
   end if
   return 1
 end
@@ -332,11 +332,11 @@ on regMsgList me, tBool
   tCmds.setaProp("REMOVEALLRIGHTS", 155)
   tCmds.setaProp("GETPARENTCHAIN", 156)
   if tBool then
-    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   end if
   return 1
 end

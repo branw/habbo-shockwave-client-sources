@@ -169,7 +169,7 @@ on handle_messenger_error me, tMsg
         return me.getInterface().openBuddyMassremoveWindow()
       else
         if tReason = 2 then
-          executeMessage(#alert, [#msg: "console_buddylimit_requester", #modal: 1])
+          executeMessage(#alert, [#Msg: "console_buddylimit_requester", #modal: 1])
         end if
       end if
     39:
@@ -302,7 +302,7 @@ on get_console_message me, tMsg
   end if
   tdata[#FigureData] = tConn.GetStrFrom()
   tdata[#time] = tConn.GetStrFrom()
-  tdata[#message] = tConn.GetStrFrom()
+  tdata[#Message] = tConn.GetStrFrom()
   return tdata
 end
 
@@ -315,7 +315,7 @@ on get_campaign_message me, tMsg
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#url] = tConn.GetStrFrom()
   tdata[#link] = tConn.GetStrFrom()
-  tdata[#message] = tConn.GetStrFrom()
+  tdata[#Message] = tConn.GetStrFrom()
   return tdata
 end
 

@@ -150,9 +150,9 @@ on parse_window me, tFieldName
           tElem[#scaleH] = #scale
         #strechV:
           tElem[#scaleV] = #scale
-        #centerh:
+        #centerH:
           tElem[#scaleH] = #center
-        #centerv:
+        #centerV:
           tElem[#scaleV] = #center
         #moveHV:
           tElem[#scaleH] = #move
@@ -311,7 +311,7 @@ on parse_visual me, tFieldName
       tElem[#bgColor] = "#FFFFFF"
     end if
     if tElem[#type] = "button" then
-      tElem[#active] = 1
+      tElem[#Active] = 1
     end if
   end repeat
   return [#name: tLayDefinition[#name], #roomdata: tLayDefinition[#roomdata], #rect: tLayDefinition[#rect], #elements: tLayDefinition[#elements]]

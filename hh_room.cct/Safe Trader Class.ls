@@ -126,7 +126,7 @@ on accept me, tuser, tValue
   return 1
 end
 
-on refresh me, tdata
+on Refresh me, tdata
   me.open(tdata)
   pMyStripItems = []
   tWndObj = getWindow(pTraderWndID)

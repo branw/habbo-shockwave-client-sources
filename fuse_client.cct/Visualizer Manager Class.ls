@@ -22,7 +22,7 @@ on create me, tid, tLayout, tLocX, tLocY
     tLocY = 0
   end if
   if me.exists(tid) then
-    me.remove(tid)
+    me.Remove(tid)
   end if
   tItem = getObjectManager().create(tid, pInstanceClass)
   if not tItem then
@@ -35,7 +35,7 @@ on create me, tid, tLayout, tLocX, tLocY
   tProps[#layout] = tLayout
   tProps[#boundary] = pBoundary
   if not tItem.define(tProps) then
-    getObjectManager().remove(tid)
+    getObjectManager().Remove(tid)
     return 0
   end if
   me.pItemList.add(tid)
@@ -43,7 +43,7 @@ on create me, tid, tLayout, tLocX, tLocY
   return 1
 end
 
-on remove me, tid
+on Remove me, tid
   if not me.exists(tid) then
     return 0
   end if
@@ -54,7 +54,7 @@ on remove me, tid
   if pActiveItem = tid then
     pActiveItem = me.pItemList.getLast()
   end if
-  getObjectManager().remove(tid)
+  getObjectManager().Remove(tid)
   me.Activate(me.pItemList.getLast())
   return 1
 end
@@ -82,7 +82,7 @@ on hideAll me
   repeat with tItem in me.pItemList
     tObj = me.get(tItem)
     if tObj.getProperty(#visible) then
-      tObj.hide()
+      tObj.Hide()
       pHideList.add(tItem)
     end if
   end repeat

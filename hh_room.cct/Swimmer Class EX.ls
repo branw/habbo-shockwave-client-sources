@@ -103,12 +103,12 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   me.pLocH = tH
   me.pRestingHeight = 0.0
   if me.pExtraObjs.count > 0 then
-    call(#refresh, me.pExtraObjs)
+    call(#Refresh, me.pExtraObjs)
   end if
   return 1
 end
 
-on refresh me, tX, tY, tH
+on Refresh me, tX, tY, tH
   me.arrangeParts()
   me.pSync = 0
   me.pChanges = 1

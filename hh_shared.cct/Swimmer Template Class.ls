@@ -57,7 +57,7 @@ on define me, tdata
     return error(me, "Couldn't create part lists!", #define)
   end if
   me.arrangeParts()
-  me.refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)
+  me.Refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)
   return 1
 end
 
@@ -69,7 +69,7 @@ on getFigure me
   return pFigure
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on Refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pMoving = 0
   me.pDancing = 0
   me.pTalking = 0
@@ -98,7 +98,7 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pDirection = tDirBody
   me.arrangeParts()
   if me.pExtraObjs.count > 0 then
-    call(#refresh, me.pExtraObjs)
+    call(#Refresh, me.pExtraObjs)
   end if
   me.pSync = 0
 end
