@@ -51,9 +51,9 @@ on create me, tid, tHost, tPort
   else
     tCmdPtr = pCommandsList[tid]
   end if
-  me.GET(tid).setProperty(#listener, tMsgPtr)
-  me.GET(tid).setProperty(#commands, tCmdPtr)
-  me.GET(tid).connect(tHost, tPort)
+  me.get(tid).setProperty(#listener, tMsgPtr)
+  me.get(tid).setProperty(#commands, tCmdPtr)
+  me.get(tid).connect(tHost, tPort)
   return 1
 end
 

@@ -63,7 +63,7 @@ on registerScroll me, tid
   end if
   tSourceRect = rect(pOffX, pOffY, pOffX + pOwnW, pOffY + pOwnH)
   tScrollList = []
-  tWndObj = getWindowManager().GET(me.pMotherId)
+  tWndObj = getWindowManager().get(me.pMotherId)
   repeat with tScrollId in pScrolls
     tScrollList.add(tWndObj.getElement(tScrollId))
   end repeat

@@ -23,7 +23,7 @@ on removeMultiuser tid
 end
 
 on getMultiuser tid
-  return getMultiuserManager().GET(tid)
+  return getMultiuserManager().get(tid)
 end
 
 on multiuserExists tid

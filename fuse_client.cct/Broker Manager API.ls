@@ -23,7 +23,7 @@ on removeBroker tMessage
 end
 
 on getBroker tMessage
-  return getBrokerManager().GET(tMessage)
+  return getBrokerManager().get(tMessage)
 end
 
 on brokerExists tMessage

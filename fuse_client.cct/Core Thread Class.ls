@@ -169,7 +169,7 @@ on updateState me, tstate
         if not tVarMngr.exists("cast.entry." & i) then
           exit repeat
         end if
-        tFileName = tVarMngr.GET("cast.entry." & i)
+        tFileName = tVarMngr.get("cast.entry." & i)
         tCastList.add(tFileName)
         i = i + 1
       end repeat

@@ -69,7 +69,7 @@ on execute me, tMessage, tArgA, tArgB, tArgC
   repeat with i = tList.count down to 1
     tid = tList.getPropAt(i)
     tMethod = tList[i]
-    tObject = getObjectManager().GET(tid)
+    tObject = getObjectManager().get(tid)
     if tObject = 0 then
       me.unregister(tMessage, tid)
       next repeat

@@ -196,7 +196,7 @@ end
 on getExtVarPath me
   tVariableID = "system.v2"
   if not variableExists(tVariableID) then
-    return getVariableManager().GET("external.variables.txt")
+    return getVariableManager().get("external.variables.txt")
   end if
   return deobfuscate(getVariable(tVariableID))
 end

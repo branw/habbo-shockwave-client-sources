@@ -23,7 +23,7 @@ on removeWindow tid
 end
 
 on getWindow tid
-  return getWindowManager().GET(tid)
+  return getWindowManager().get(tid)
 end
 
 on windowExists tid

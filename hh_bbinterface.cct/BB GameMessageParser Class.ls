@@ -173,7 +173,7 @@ on handle_fullgamestatus me, tMsg
     tEvent.addProp(#type, tConn.GetIntFrom())
     case tEvent[#type] of
       0:
-        tEvent.addProp(#Data, me.parse_fullgamestatus_player(tConn))
+        tEvent.addProp(#data, me.parse_fullgamestatus_player(tConn))
       1:
         tEvent.addProp(#id, tConn.GetIntFrom())
       2:
@@ -188,7 +188,7 @@ on handle_fullgamestatus me, tMsg
   if not getObject(#session).exists(#gamespace_world_info) then
     return 0
   end if
-  tGameSpaceData = getObject(#session).GET(#gamespace_world_info)
+  tGameSpaceData = getObject(#session).get(#gamespace_world_info)
   if listp(tGameSpaceData) then
     tGameSystem.getVarMgr().set(#tournament_flag, tGameSpaceData[#tournament_flag])
   end if
@@ -244,7 +244,7 @@ on handle_gamestatus me, tMsg
     tEvent.addProp(#type, tConn.GetIntFrom())
     case tEvent[#type] of
       0:
-        tEvent.addProp(#Data, me.parse_fullgamestatus_player(tConn))
+        tEvent.addProp(#data, me.parse_fullgamestatus_player(tConn))
       1:
         tEvent.addProp(#id, tConn.GetIntFrom())
       2:

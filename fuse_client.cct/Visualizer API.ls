@@ -23,7 +23,7 @@ on removeVisualizer tid
 end
 
 on getVisualizer tid
-  return getVisualizerManager().GET(tid)
+  return getVisualizerManager().get(tid)
 end
 
 on visualizerExists tid

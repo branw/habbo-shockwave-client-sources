@@ -23,7 +23,7 @@ on removeThread tid
 end
 
 on getThread tid
-  return getThreadManager().GET(tid)
+  return getThreadManager().get(tid)
 end
 
 on threadExists tid

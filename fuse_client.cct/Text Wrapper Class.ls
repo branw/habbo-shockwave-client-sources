@@ -96,7 +96,7 @@ on registerScroll me, tid
   end if
   tSourceRect = rect(me.pOffX, me.pOffY, me.pOffX + me.pOwnW, me.pOffY + me.pOwnH)
   tScrollList = []
-  tWndObj = getWindowManager().GET(me.pMotherId)
+  tWndObj = getWindowManager().get(me.pMotherId)
   repeat with tScrollId in me.pScrolls
     tScrollList.add(tWndObj.getElement(tScrollId))
   end repeat
@@ -140,7 +140,7 @@ on createImgFromTxt me
         pTextMem.text = string(getObject(me.pMotherId).getProperty(tKey))
       else
         if textExists(pFontData[#key]) then
-          pTextMem.text = getTextManager().GET(pFontData[#key])
+          pTextMem.text = getTextManager().get(pFontData[#key])
         else
           error(me, "Text not found:" && pFontData[#key], #createImgFromTxt)
           pTextMem.text = pFontData[#key]

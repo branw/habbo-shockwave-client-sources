@@ -71,7 +71,7 @@ on unregister me, tObjectOrID
     tid = tObjectOrID.getID()
   else
     if stringp(tObjectOrID) or symbolp(tObjectOrID) then
-      if not me.GET(tObjectOrID) then
+      if not me.get(tObjectOrID) then
         return error(me, "Object not found:" && tObjectOrID, #unregister)
       end if
       tid = tObjectOrID

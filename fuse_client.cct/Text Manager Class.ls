@@ -1,4 +1,4 @@
-on GET me, tKey, tDefault
+on get me, tKey, tDefault
   tText = me.pItemList[tKey]
   if voidp(tText) then
     tError = "Text not found:" && tKey
@@ -8,7 +8,7 @@ on GET me, tKey, tDefault
     else
       tText = tKey
     end if
-    error(me, tError, #GET)
+    error(me, tError, #get)
   end if
   return tText
 end

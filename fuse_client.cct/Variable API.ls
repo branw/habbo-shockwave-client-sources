@@ -27,7 +27,7 @@ on setVariable tid, tValue
 end
 
 on getVariable tid, tDefault
-  return getVariableManager().GET(tid, tDefault)
+  return getVariableManager().get(tid, tDefault)
 end
 
 on getIntVariable tid, tDefault

@@ -27,7 +27,7 @@ on setText tid, tValue
 end
 
 on getText tid, tDefault
-  return getTextManager().GET(tid, tDefault)
+  return getTextManager().get(tid, tDefault)
 end
 
 on textExists tid

@@ -21,5 +21,5 @@ on Refresh me, tTopic, tdata
         tAlertStr = "gs_error_" & tdata[#reason]
       end if
   end case
-  return executeMessage(#alert, [#id: "gs_error", #Msg: tAlertStr])
+  return executeMessage(#alert, [#id: "gs_error", #msg: tAlertStr])
 end

@@ -98,7 +98,7 @@ on initB me
   if tUseSSO = 0 then
     return me.getInterface().showLogin()
   else
-    executeMessage(#alert, [#Msg: "Alert_generic_login_error"])
+    executeMessage(#alert, [#msg: "Alert_generic_login_error"])
   end if
 end
 
@@ -112,13 +112,13 @@ on sendLogin me, tConnection
   if me.getComponent().isOkToLogin() then
     tSsoTicket = 0
     if getObject(#session).exists("SSO_ticket") then
-      tSsoTicket = getObject(#session).GET("SSO_ticket")
+      tSsoTicket = getObject(#session).get("SSO_ticket")
     end if
     if tSsoTicket <> 0 then
       return tConnection.send("SSO", [#string: tSsoTicket])
     else
-      tUserName = getObject(#session).GET(#userName)
-      tPassword = getObject(#session).GET(#password)
+      tUserName = getObject(#session).get(#userName)
+      tPassword = getObject(#session).get(#password)
       if not stringp(tUserName) or not stringp(tPassword) then
         return removeConnection(tConnection.getID())
       end if

@@ -47,7 +47,7 @@ on Remove me, tid
   if not me.exists(tid) then
     return 0
   end if
-  tItem = me.GET(tid)
+  tItem = me.get(tid)
   pAvailableLocZ = pAvailableLocZ - tItem.getProperty(#sprCount)
   pPosCache[tid] = [tItem.getProperty(#locX), tItem.getProperty(#locY)]
   me.pItemList.deleteOne(tid)
@@ -62,7 +62,7 @@ end
 on Activate me, tid
   if me.exists(tid) then
     pActiveItem = tid
-    me.GET(tid).setActive()
+    me.get(tid).setActive()
     return 1
   else
     return 0
@@ -71,7 +71,7 @@ end
 
 on deactivate me, tid
   if me.exists(tid) then
-    me.GET(tid).setDeactive()
+    me.get(tid).setDeactive()
     return 1
   else
     return 0
@@ -80,7 +80,7 @@ end
 
 on hideAll me
   repeat with tItem in me.pItemList
-    tObj = me.GET(tItem)
+    tObj = me.get(tItem)
     if tObj.getProperty(#visible) then
       tObj.hide()
       pHideList.add(tItem)
@@ -91,7 +91,7 @@ end
 
 on showAll me
   repeat with tItem in pHideList
-    tObj = me.GET(tItem)
+    tObj = me.get(tItem)
     if tObj <> 0 then
       tObj.show()
     end if

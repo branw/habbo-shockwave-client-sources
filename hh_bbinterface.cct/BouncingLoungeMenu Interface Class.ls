@@ -474,7 +474,7 @@ on showErrorMessage me, tErrorType, tRequestStr, tExtra
     6:
       me.ChangeWindowView(#gameList)
   end case
-  return executeMessage(#alert, [#id: "gs_error", #Msg: tAlertStr])
+  return executeMessage(#alert, [#id: "gs_error", #msg: tAlertStr])
 end
 
 on delayedMenuToBack me

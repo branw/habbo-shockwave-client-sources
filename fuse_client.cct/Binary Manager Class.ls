@@ -44,7 +44,7 @@ on checkConnection me
     return error(me, "MUS connection not found:" && pConnectionId, #checkConnection)
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
-    tUserID = getObject(#session).GET(#user_user_id)
+    tUserID = getObject(#session).get(#user_user_id)
     tMachineID = getSpecialServices().getMachineID()
     if pUseCrypto then
       tUserID = pCrypto.encipher(tUserID)

@@ -28,7 +28,7 @@ on Refresh me, tTopic, tdata
       repeat with tEvent in tdata
         case tEvent[#type] of
           0:
-            me.createRoomObject(tEvent[#Data])
+            me.createRoomObject(tEvent[#data])
           1:
             me.deleteRoomObject(tEvent[#id])
           2:
@@ -78,7 +78,7 @@ on createRoomObject me, tdata
   tAvatarStruct.addProp(#custom, tdata[#mission])
   tAvatarStruct.addProp(#sex, tdata[#sex])
   tAvatarStruct.addProp(#teamId, tdata[#teamId])
-  if tdata[#name] = getObject(#session).GET(#userName) then
+  if tdata[#name] = getObject(#session).get(#userName) then
     getObject(#session).set("user_index", tUserStrId)
   end if
   tFigure = pFigureSystemObj.parseFigure(tdata[#figure], tdata[#sex], "user")
@@ -164,7 +164,7 @@ on handleUserCreated me, tName, tUserStrId
   if me.getGameSystem().getSpectatorModeFlag() then
     return 1
   end if
-  if tUserStrId <> getObject(#session).GET("user_index") then
+  if tUserStrId <> getObject(#session).get("user_index") then
     return 0
   end if
   return getObject(#room_interface).showArrowHiliter(tUserStrId)

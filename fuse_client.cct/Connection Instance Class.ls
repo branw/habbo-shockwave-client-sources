@@ -421,7 +421,7 @@ on forwardMsg me, tSubject, tParams
   tObjMgr = getObjectManager()
   repeat with i = 1 to count(tCallbackList)
     tCallback = tCallbackList[i]
-    tObject = tObjMgr.GET(tCallback[1])
+    tObject = tObjMgr.get(tCallback[1])
     if tObject <> 0 then
       pMsgStruct.setaProp(#subject, tSubject)
       pMsgStruct.setaProp(#content, tParams)

@@ -1,4 +1,4 @@
-property pObjectList, pUpdateList, pPrepareList, pManagerList, pInstanceList, pEraseLock, pTimeout, pUpdatePause, pBaseClsMem
+property pObjectList, pUpdateList, pPrepareList, pManagerList, pInstanceList, pEraseLock, pTimeOut, pUpdatePause, pBaseClsMem
 
 on construct me
   pObjectList = [:]
@@ -7,7 +7,7 @@ on construct me
   pManagerList = []
   pInstanceList = []
   pEraseLock = 0
-  pTimeout = VOID
+  pTimeOut = VOID
   pUpdatePause = 0
   pBaseClsMem = script("Object Base Class")
   pObjectList.sort()
@@ -17,9 +17,9 @@ end
 
 on deconstruct me
   pEraseLock = 1
-  if objectp(pTimeout) then
-    pTimeout.forget()
-    pTimeout = VOID
+  if objectp(pTimeOut) then
+    pTimeOut.forget()
+    pTimeOut = VOID
   end if
   repeat with i = pInstanceList.count down to 1
     me.Remove(pInstanceList[i])
@@ -93,7 +93,7 @@ on create me, tid, tClassList
   return tObject
 end
 
-on GET me, tid
+on get me, tid
   tObj = pObjectList[tid]
   if voidp(tObj) then
     return 0
@@ -216,8 +216,8 @@ on receivePrepare me, tid
   end if
   pPrepareList.add(pObjectList[tid])
   if not pUpdatePause then
-    if voidp(pTimeout) then
-      pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
+    if voidp(pTimeOut) then
+      pTimeOut = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
     end if
   end if
   return 1
@@ -232,9 +232,9 @@ on removePrepare me, tid
   end if
   pPrepareList.deleteOne(pObjectList[tid])
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
-    if objectp(pTimeout) then
-      pTimeout.forget()
-      pTimeout = VOID
+    if objectp(pTimeOut) then
+      pTimeOut.forget()
+      pTimeOut = VOID
     end if
   end if
   return 1
@@ -249,8 +249,8 @@ on receiveUpdate me, tid
   end if
   pUpdateList.add(pObjectList[tid])
   if not pUpdatePause then
-    if voidp(pTimeout) then
-      pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
+    if voidp(pTimeOut) then
+      pTimeOut = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
     end if
   end if
   return 1
@@ -265,26 +265,26 @@ on removeUpdate me, tid
   end if
   pUpdateList.deleteOne(pObjectList[tid])
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
-    if objectp(pTimeout) then
-      pTimeout.forget()
-      pTimeout = VOID
+    if objectp(pTimeOut) then
+      pTimeOut.forget()
+      pTimeOut = VOID
     end if
   end if
   return 1
 end
 
 on pauseUpdate me
-  if objectp(pTimeout) then
-    pTimeout.forget()
-    pTimeout = VOID
+  if objectp(pTimeOut) then
+    pTimeOut.forget()
+    pTimeOut = VOID
   end if
   pUpdatePause = 1
   return 1
 end
 
 on resumeUpdate me
-  if pUpdateList.count > 0 and voidp(pTimeout) then
-    pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
+  if pUpdateList.count > 0 and voidp(pTimeOut) then
+    pTimeOut = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
   end if
   pUpdatePause = 0
   return 1
