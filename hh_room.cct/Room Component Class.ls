@@ -169,6 +169,9 @@ on enterDoor me, tdata
   getObject(#session).set("lastroom", pSaveData.duplicate())
   if me.getRoomScale(pSaveData[#marker]) = #small and tCurrentScale = #large and not pPrvRoomsReady then
     pSaveData[#casts] = tCurrentRoomCasts
+    if voidp(tCurrentRoomCasts) then
+      pSaveData[#casts] = ["hh_room_private"]
+    end if
     me.loadRoomCasts()
     pPrvRoomsReady = 1
     return 0

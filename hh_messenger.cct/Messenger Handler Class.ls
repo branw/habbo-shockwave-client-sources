@@ -127,15 +127,43 @@ end
 on handle_buddy_request_result me, tMsg
   tConn = tMsg.connection
   tFailureCount = tConn.GetIntFrom()
-  tErrorList = []
+  tErrorList = [:]
   repeat with tItemNo = 1 to tFailureCount
-    tRequestId = tConn.GetIntFrom()
-    tErrorID = tConn.GetIntFrom()
-    tErrorList.add([#tRequestId: tErrorID])
+    tSenderName = tConn.GetStrFrom()
+    tErrorCode = tConn.GetIntFrom()
+    tErrorList.setaProp(tSenderName, tErrorCode)
   end repeat
-  if tFailureCount > 0 then
-    executeMessage(#alert, [#Msg: getText("console_friend_request_error")])
+  if tFailureCount < 1 then
+    return 1
   end if
+  tNamesPerAlert = 10
+  tNames = RETURN
+  repeat with tNameNum = 1 to tErrorList.count
+    tNames = tNames & RETURN & tErrorList.getPropAt(tNameNum)
+    case tErrorList[tNameNum] of
+      1:
+        tReason = getText("console_fr_limit_exceeded_error")
+      2:
+        tReason = getText("console_target_friend_list_full")
+      3:
+        tReason = getText("console_target_does_not_accept")
+      4:
+        tReason = getText("console_friend_request_not_found")
+      42:
+        tReason = getText("console_concurrency_error")
+    end case
+    tNames = tNames & " - " & tReason
+    if tNameNum mod tNamesPerAlert = 0 then
+      tMessage = getText("console_friend_request_error") & tNames
+      executeMessage(#alert, [#Msg: tMessage])
+      tNames = RETURN
+    end if
+  end repeat
+  if tNames.line.count > 2 then
+    tMessage = getText("console_friend_request_error") & tNames
+    executeMessage(#alert, [#Msg: tMessage])
+  end if
+  return 1
 end
 
 on handle_campaign_message me, tMsg
