@@ -31,7 +31,7 @@ on exists me, tMemName
   return not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName])
 end
 
-on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
+on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType, tTarget
   if not ilk(tURL, #string) then
     return error(me, "Missing or invalid URL:" && tURL, #queue, #major)
   end if
@@ -85,6 +85,7 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
   tTempTask = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]
   tTempTask[#downloadMethod] = tDownloadMethod
   tTempTask[#redirectType] = tRedirectType
+  tTempTask[#target] = tTarget
   pTaskQueue[tMemName] = tTempTask
   me.updateQueue()
   return tMemNum

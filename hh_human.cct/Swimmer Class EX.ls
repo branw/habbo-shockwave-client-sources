@@ -255,6 +255,20 @@ on isInSwimsuit me
 end
 
 on fixSwimmerFigure me, tFigure
+  tPredefinedParts = ["rh", "lh", "ch", "bd"]
+  repeat with tPrePart in tPredefinedParts
+    tOccurrenceCount = 0
+    repeat with tItemNo = 1 to tFigure.count
+      tPartType = tFigure.getPropAt(tItemNo)
+      if tPartType = tPrePart then
+        tOccurrenceCount = tOccurrenceCount + 1
+        if tOccurrenceCount > 1 then
+          tFigure.deleteAt(tItemNo)
+          tItemNo = tItemNo - 1
+        end if
+      end if
+    end repeat
+  end repeat
   if me.pSex = "F" then
     tphModel = "s01"
   else

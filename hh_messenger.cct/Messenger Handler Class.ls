@@ -441,16 +441,16 @@ on handle_invitation me, tMsg
   tInvitationData = [:]
   tInvitationData.setaProp(#userID, tConn.GetStrFrom())
   tInvitationData.setaProp(#name, tConn.GetStrFrom())
-  me.getComponent().showInvitation(tInvitationData)
+  executeMessage(#showInvitation, tInvitationData)
   return 1
 end
 
 on handle_invitation_expired me, tMsg
-  me.getComponent().hideInvitation()
+  executeMessage(#hideInvitation)
 end
 
 on handle_invitation_follow_failed me, tMsg
-  me.getComponent().invitationFollowFailed()
+  executeMessage(#alert, "invitation_follow_failed")
 end
 
 on regMsgList me, tBool

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId, pIgnoreListID
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -13,6 +13,7 @@ on construct me
   pDoorBellID = "Room_doorbell"
   pPreviewObjID = "Preview_renderer"
   pInfoStandId = "Room_info_stand"
+  pIgnoreListID = "Room_ignore_list"
   pRoomGuiID = "Room_gui_program"
   pRoomSpaceId = "Room_visualizer"
   pInterfaceId = "Room_interface"
@@ -42,7 +43,7 @@ on construct me
   createObject(pDoorBellID, "Doorbell Class")
   createObject(pRoomGuiID, "Room GUI Class")
   createObject(pInfoStandId, "Info Stand Class")
-  pIgnoreListObj = createObject(#temp, "Ignore List Class")
+  createObject(pIgnoreListID, "Ignore List Class")
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
   registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   return 1
@@ -50,10 +51,10 @@ end
 
 on deconstruct me
   pClickAction = #null
-  pIgnoreListObj = VOID
   removeObject(pBadgeObjID)
   removeObject(pDoorBellID)
   removeObject(pInfoStandId)
+  removeObject(pIgnoreListID)
   removeObject(pRoomGuiID)
   return me.hideAll()
 end
@@ -136,6 +137,13 @@ on hideRoomBar me
   tGUI = getObject(pRoomGuiID)
   if not voidp(tGUI) and not tGUI = 0 then
     tGUI.hideRoomBar()
+  end if
+end
+
+on showVote me
+  tGUI = getObject(pRoomGuiID)
+  if not voidp(tGUI) and not tGUI = 0 then
+    tGUI.showVote()
   end if
 end
 
@@ -260,7 +268,7 @@ on showInterface me, tObjType
     if pModBadgeList.getOne(tBadge) > 0 then
       tButtonList.deleteOne("ignore")
     end if
-    if pIgnoreListObj.getIgnoreStatus(tUserInfo.name) then
+    if me.getIgnoreListObject().getIgnoreStatus(tUserInfo.name) then
       tButtonList.deleteOne("ignore")
     else
       tButtonList.deleteOne("unignore")
@@ -708,6 +716,10 @@ on getBadgeObject me
   return getObject(pBadgeObjID)
 end
 
+on getIgnoreListObject me
+  return getObject(pIgnoreListID)
+end
+
 on getObjectMover me
   return getObject(pObjMoverID)
 end
@@ -781,25 +793,27 @@ on notify me, ttype
 end
 
 on getIgnoreStatus me, tUserID, tName
-  if not objectp(pIgnoreListObj) then
+  tIgnoreListObj = me.getIgnoreListObject()
+  if not objectp(tIgnoreListObj) then
     return 0
   end if
   if not voidp(tName) then
-    return pIgnoreListObj.getIgnoreStatus(tName)
+    return tIgnoreListObj.getIgnoreStatus(tName)
   end if
-  if me.getComponent().userObjectExists(tUserID) and objectp(pIgnoreListObj) then
+  if me.getComponent().userObjectExists(tUserID) then
     tName = me.getComponent().getUserObject(tUserID).getName()
-    return pIgnoreListObj.getIgnoreStatus(tName)
+    return tIgnoreListObj.getIgnoreStatus(tName)
   else
     return 0
   end if
 end
 
 on unignoreAdmin me, tUserID, tBadge
+  tIgnoreListObj = me.getIgnoreListObject()
   if me.getComponent().userObjectExists(tUserID) and pModBadgeList.getOne(tBadge) > 0 then
     tName = me.getComponent().getUserObject(tUserID).getName()
-    if objectp(pIgnoreListObj) then
-      return pIgnoreListObj.setIgnoreStatus(tName, 0)
+    if objectp(tIgnoreListObj) then
+      return tIgnoreListObj.setIgnoreStatus(tName, 0)
     end if
   else
     return 0
@@ -1173,14 +1187,14 @@ on eventProcInterface me, tEvent, tSprID, tParam
     "ignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
-        pIgnoreListObj.setIgnoreStatus(tUserName, 1)
+        me.getIgnoreListObject().setIgnoreStatus(tUserName, 1)
       end if
       me.hideInterface(#hide)
       pSelectedObj = EMPTY
     "unignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
-        pIgnoreListObj.setIgnoreStatus(tUserName, 0)
+        me.getIgnoreListObject().setIgnoreStatus(tUserName, 0)
       end if
       me.hideInterface(#hide)
       pSelectedObj = EMPTY
@@ -1322,15 +1336,13 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tObject.getClass() = "user" and tEvent = #mouseDown then
       executeMessage(#tutorial_userClicked)
     end if
-    if pSelectedObj <> tSprID then
-      pSelectedObj = tSprID
-      pSelectedType = tObject.getClass()
-      if tParam <> #userEnters then
-        executeMessage(#showObjectInfo, pSelectedType)
-      end if
-      me.showInterface(pSelectedType)
-      me.showArrowHiliter(tSprID)
+    pSelectedObj = tSprID
+    pSelectedType = tObject.getClass()
+    if tParam <> #userEnters then
+      executeMessage(#showObjectInfo, pSelectedType)
     end if
+    me.showInterface(pSelectedType)
+    me.showArrowHiliter(tSprID)
     tloc = tObject.getLocation()
     if tParam = #userEnters then
       tloc[1] = tloc[1] + 4
@@ -1374,13 +1386,11 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
     return error(me, "Active object not found:" && tSprID, #eventProcActiveObj, #major)
   end if
   if me.getComponent().getRoomData().type = #private then
-    if pSelectedObj <> tSprID then
-      pSelectedObj = tSprID
-      pSelectedType = "active"
-      executeMessage(#showObjectInfo, pSelectedType)
-      me.showInterface(pSelectedType)
-      me.hideArrowHiliter()
-    end if
+    pSelectedObj = tSprID
+    pSelectedType = "active"
+    executeMessage(#showObjectInfo, pSelectedType)
+    me.showInterface(pSelectedType)
+    me.hideArrowHiliter()
   end if
   tIsController = getObject(#session).GET("room_controller")
   if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
@@ -1443,13 +1453,11 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
   end if
   if me.getComponent().getItemObject(tSprID).select() then
-    if pSelectedObj <> tSprID then
-      pSelectedObj = tSprID
-      pSelectedType = "item"
-      executeMessage(#showObjectInfo, pSelectedType)
-      me.showInterface(pSelectedType)
-      me.hideArrowHiliter()
-    end if
+    pSelectedObj = tSprID
+    pSelectedType = "item"
+    executeMessage(#showObjectInfo, pSelectedType)
+    me.showInterface(pSelectedType)
+    me.hideArrowHiliter()
   else
     pSelectedObj = tSprID
     pSelectedType = "item"

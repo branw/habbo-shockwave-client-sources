@@ -19,6 +19,7 @@ on dump me, tField, tDelimiter
     return error(me, "Field member expected:" && tField, #dump, #major)
   end if
   tRawStr = field(tField)
+  tRawStr = decodeUTF8(tRawStr)
   tStrServices = getStringServices()
   tSpecialChunks = ["\r": RETURN, "\t": TAB, "\s": SPACE, "<BR>": RETURN]
   tLineChunks = []

@@ -49,6 +49,16 @@ on define me, tProps
         if voidp(pLayerDataList) then
           pLayerDataList = [:]
         end if
+        tLayerDataList = [:]
+        repeat with i = 1 to pLayerDataList.count
+          tProp = string(pLayerDataList.getPropAt(i))
+          if charToNum(tProp) < charToNum("a") then
+            tProp = numToChar(charToNum("a") + (charToNum(tProp) - charToNum("A")))
+          end if
+          tLayerData = pLayerDataList[i]
+          tLayerDataList.addProp(tProp, tLayerData)
+        end repeat
+        pLayerDataList = tLayerDataList
         if voidp(pStateSequenceList) then
           pStateSequenceList = []
         end if

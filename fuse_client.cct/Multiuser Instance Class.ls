@@ -59,7 +59,11 @@ on send me, tMsg
     repeat while tLength.length < 4
       tLength = tLength & SPACE
     end repeat
-    pXtra.sendNetMessage("*", tMsg.word[1], tMsg.word[2..tMsg.word.count])
+    tPartOne = tMsg.word[1]
+    tPartTwo = tMsg.word[2..tMsg.word.count]
+    tPartOne = encodeUTF8(tPartOne)
+    tPartTwo = encodeUTF8(tPartTwo)
+    pXtra.sendNetMessage("*", tPartOne, tPartTwo)
   else
     return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if

@@ -365,6 +365,14 @@ on eventProc me, tEvent, tSprID, tParam
         end if
         tComponent.getRoomConnection().send("KICKUSER", tUserName)
         return me.clearWindowDisplayList()
+      "ban.button":
+        if tComponent.userObjectExists(tSelectedObj) then
+          tUserName = tComponent.getUserObject(tSelectedObj).getName()
+        else
+          tUserName = EMPTY
+        end if
+        tComponent.getRoomConnection().send("BANUSER", tUserName)
+        return me.clearWindowDisplayList()
       "give_rights.button":
         if tComponent.userObjectExists(tSelectedObj) then
           tUserName = tComponent.getUserObject(tSelectedObj).getName()
@@ -411,15 +419,17 @@ on eventProc me, tEvent, tSprID, tParam
         tInterface.getContainer().open()
         return 1
       "ignore.button":
-        tIgnoreListObj = tInterface.pIgnoreListObj
+        tIgnoreListObj = tInterface.getIgnoreListObject()
         if tComponent.userObjectExists(tSelectedObj) then
           tUserName = tComponent.getUserObject(tSelectedObj).getName()
           tIgnoreListObj.setIgnoreStatus(tUserName, 1)
+        else
+          tUserName = EMPTY
         end if
         me.clearWindowDisplayList()
         tSelectedObj = EMPTY
       "unignore.button":
-        tIgnoreListObj = tInterface.pIgnoreListObj
+        tIgnoreListObj = tInterface.getIgnoreListObject()
         if tComponent.userObjectExists(tSelectedObj) then
           tUserName = tComponent.getUserObject(tSelectedObj).getName()
           tIgnoreListObj.setIgnoreStatus(tUserName, 0)

@@ -224,7 +224,16 @@ end
 on eventProc me, tEvent, tSprID, tParm
   if tEvent = #mouseUp then
     if not voidp(pClickURL) then
-      queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
+      if variableExists("interstitial.target") then
+        tInterstitialTarget = getVariable("interstitial.target")
+      else
+        tInterstitialTarget = "external"
+      end if
+      if tInterstitialTarget = "external" then
+        queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
+      else
+        queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect, "habboMain")
+      end if
     end if
   else
     if tEvent = #mouseEnter or tEvent = #mouseWithin then

@@ -123,6 +123,7 @@ on send me, tCmd, tMsg
   if tMsg.ilk <> #string then
     tMsg = string(tMsg)
   end if
+  tMsg = encodeUTF8(tMsg)
   if tCmd.ilk <> #integer then
     tStr = tCmd
     tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
@@ -137,7 +138,7 @@ on send me, tCmd, tMsg
   tLength = 0
   repeat with tChar = 1 to length(tMsg)
     tCharNum = charToNum(char tChar of tMsg)
-    tLength = tLength + 1 + (tCharNum > 255)
+    tLength = tLength + 1 + (tCharNum > 255 and tCharNum mod 256)
   end repeat
   tL1 = numToChar(bitOr(bitAnd(tLength, 63), 64))
   tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
@@ -162,10 +163,11 @@ on sendNew me, tCmd, tParmArr
       tParm = tParmArr[i]
       case ttype of
         #string:
+          tParm = encodeUTF8(tParm)
           tLen = 0
           repeat with tChar = 1 to length(tParm)
             tNum = charToNum(char tChar of tParm)
-            tLen = tLen + 1 + (tNum > 255)
+            tLen = tLen + 1 + (tNum > 255 and tNum mod 256)
           end repeat
           tBy1 = numToChar(bitOr(64, tLen / 64))
           tBy2 = numToChar(bitOr(64, bitAnd(63, tLen)))
@@ -390,24 +392,24 @@ on msghandler me, tContent
     tContent = pLastContent & tContent
     pLastContent = EMPTY
   end if
-  if tContent.length < 3 then
-    pLastContent = pLastContent & tContent
-    return 
-  end if
-  tByte1 = bitAnd(charToNum(char 2 of tContent), 63)
-  tByte2 = bitAnd(charToNum(char 1 of tContent), 63)
-  tMsgType = bitOr(tByte2 * 64, tByte1)
-  tLength = offset(numToChar(1), tContent)
-  if tLength = 0 then
-    pLastContent = tContent
-    return 
-  end if
-  tParams = char 3 to tLength - 1 of tContent
-  tContent = char tLength + 1 to tContent.length of tContent
-  me.forwardMsg(tMsgType, tParams)
-  if tContent.length > 0 then
-    me.msghandler(tContent)
-  end if
+  repeat while tContent.length > 0
+    if tContent.length < 3 then
+      pLastContent = pLastContent & tContent
+      return 
+    end if
+    tByte1 = bitAnd(charToNum(char 2 of tContent), 63)
+    tByte2 = bitAnd(charToNum(char 1 of tContent), 63)
+    tMsgType = bitOr(tByte2 * 64, tByte1)
+    tLength = offset(numToChar(1), tContent)
+    if tLength = 0 then
+      pLastContent = tContent
+      return 
+    end if
+    tParams = char 3 to tLength - 1 of tContent
+    tContent = char tLength + 1 to tContent.length of tContent
+    tParams = decodeUTF8(tParams)
+    me.forwardMsg(tMsgType, tParams)
+  end repeat
 end
 
 on forwardMsg me, tSubject, tParams

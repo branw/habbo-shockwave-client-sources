@@ -82,3 +82,11 @@ end
 on getLocalFloat tStrFloat
   return getStringServices().getLocalFloat(tStrFloat)
 end
+
+on encodeUTF8 tStr
+  return getStringServices().encodeUTF8(tStr)
+end
+
+on decodeUTF8 tStr, tForceDecode
+  return getStringServices().decodeUTF8(tStr, tForceDecode)
+end

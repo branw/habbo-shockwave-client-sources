@@ -1,4 +1,4 @@
-property pWindowID, pData
+property pData, pWindowID
 
 on construct me
   pWindowID = #invitationWindowID
@@ -10,14 +10,44 @@ on construct me
 end
 
 on deconstruct me
+  pData = VOID
+  unregisterMessage(#hideInvitation, me.getID())
+  unregisterMessage(#enterRoom, me.getID())
+  unregisterMessage(#leaveRoom, me.getID())
+  unregisterMessage(#changeRoom, me.getID())
   if windowExists(pWindowID) then
     removeWindow(pWindowID)
   end if
-  return 1
 end
 
 on close me
   return removeObject(me.getID())
+end
+
+on show me, tdata, tWindowID, tElemID
+  if tdata.ilk <> #propList then
+    return 0
+  end if
+  if voidp(tdata.findPos(#name)) then
+    return 0
+  end if
+  pData = tdata
+  if not me.align(tWindowID, tElemID) then
+    return 0
+  end if
+  if not windowExists(pWindowID) then
+    return 0
+  end if
+  tWindow = getWindow(pWindowID)
+  tHeader = tdata[#name]
+  tWindow.getElement("invitation_header").setText(tHeader)
+  tText = getText("receive_invitation_text")
+  tWindow.getElement("invitation_text").setText(tText)
+  tYes = getText("yes")
+  tWindow.getElement("invitation_button_accept_text").setText(tYes)
+  tNo = getText("no")
+  tWindow.getElement("invitation_button_deny_text").setText(tNo)
+  tWindow.show()
 end
 
 on align me, tWindowID, tElemID
@@ -55,32 +85,6 @@ on align me, tWindowID, tElemID
   end if
   tInvitationWindow.moveTo(tLocX, tLocY)
   return 1
-end
-
-on show me, tdata, tWindowID, tElemID
-  if tdata.ilk <> #propList then
-    return 0
-  end if
-  if voidp(tdata.findPos(#name)) then
-    return 0
-  end if
-  pData = tdata
-  if not me.align(tWindowID, tElemID) then
-    return 0
-  end if
-  if not windowExists(pWindowID) then
-    return 0
-  end if
-  tWindow = getWindow(pWindowID)
-  tHeader = tdata[#name]
-  tWindow.getElement("invitation_header").setText(tHeader)
-  tText = getText("receive_invitation_text")
-  tWindow.getElement("invitation_text").setText(tText)
-  tYes = getText("yes")
-  tWindow.getElement("invitation_button_accept_text").setText(tYes)
-  tNo = getText("no")
-  tWindow.getElement("invitation_button_deny_text").setText(tNo)
-  tWindow.show()
 end
 
 on eventProcInvitation me, tEvent, tSprID

@@ -1,11 +1,15 @@
 property pDoorOpentimer, pProcessActive, pAnimActive, pAnimTime, pKickTime, pTargetData, pCloseDoorTimer
 
 on prepare me, tdata
+  if pProcessActive then
+    me.delay(500, #doorLogin)
+  else
+    pTargetData = [:]
+  end if
   pProcessActive = 0
   pAnimActive = 0
   pAnimTime = 10
   pKickTime = 0
-  pTargetData = [:]
   pDoorOpentimer = 0
   pCloseDoorTimer = 0
   if tdata.count > 0 then

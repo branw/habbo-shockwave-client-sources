@@ -121,6 +121,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tButtonList["ignore"] = #visible
     tButtonList["unignore"] = #visible
     tButtonList["kick"] = #visible
+    tButtonList["ban"] = #visible
     tButtonList["give_rights"] = #visible
     tButtonList["take_rights"] = #visible
     tWindowModel = "obj_disp_actions_peer.window"
@@ -149,7 +150,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tSelectedObj = tRoomInterface.getSelectedObject()
     tUserInfo = tRoomComponent.getUserObject(tSelectedObj).getInfo()
     tBadge = tUserInfo.getaProp(#badge)
-    tIgnoreListObj = getThread(#room).getInterface().pIgnoreListObj
+    tIgnoreListObj = getThread(#room).getInterface().getIgnoreListObject()
     if tIgnoreListObj.getIgnoreStatus(tUserInfo.name) then
       tButtonList["ignore"] = #hidden
     else
@@ -162,9 +163,13 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     if not tRoomOwner and not tAnyRoomController and not tRoomController then
       tButtonList["kick"] = #hidden
     end if
+    if not tRoomOwner and not tAnyRoomController then
+      tButtonList["ban"] = #hidden
+    end if
     tRoomData = tRoomComponent.getRoomData()
     if tRoomData.getaProp(#type) = #public then
       tButtonList["kick"] = #hidden
+      tButtonList["ban"] = #hidden
     end if
     if tRoomOwner then
       if tUserInfo.ctrl = 0 then

@@ -79,7 +79,9 @@ on encipher me, tdata
     a = charToNum(char e of tdata)
     if a > 255 then
       add(tBytes, (a - a mod 256) / 256)
-      add(tBytes, a mod 256)
+      if a mod 256 then
+        add(tBytes, a mod 256)
+      end if
       next repeat
     end if
     add(tBytes, a)

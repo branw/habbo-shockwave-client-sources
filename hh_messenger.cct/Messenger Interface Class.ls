@@ -84,6 +84,7 @@ on showMessenger me
     return 1
   end if
   me.getComponent().send_BuddylistUpdate()
+  executeMessage(#messengerOpened)
   if not windowExists(pWindowTitle) then
     me.ChangeWindowView("console_myinfo.window")
     return 1
@@ -94,6 +95,7 @@ end
 
 on hideMessenger me
   if windowExists(pWindowTitle) then
+    me.getComponent().clearRequests()
     pOpenWindow = EMPTY
     pLastOpenWindow = EMPTY
     return removeWindow(pWindowTitle)
@@ -126,6 +128,14 @@ on setMessengerActive me
   pMessengerInactive = 0
   me.getComponent().resume()
   return 1
+end
+
+on isMessengerOpen me
+  if pOpenWindow = EMPTY or voidp(pOpenWindow) then
+    return 0
+  else
+    return 1
+  end if
 end
 
 on isMessengerActive me

@@ -104,16 +104,7 @@ on handleLoginOK me, tMsg
     getObject(#session).set("userLoggedIn", 1)
   end if
   executeMessage(#userloggedin)
-  if not objectExists("loggertool") then
-    if memberExists("Debug System Class") then
-      createObject("loggertool", "Debug System Class")
-      if getIntVariable("client.debug.window", 0) = 3 then
-        getObject("loggertool").initDebug()
-      else
-        getObject("loggertool").tryAutoStart()
-      end if
-    end if
-  end if
+  executeMessage(#sendTrackingPoint, "/client/loggedin")
 end
 
 on handleUserObj me, tMsg

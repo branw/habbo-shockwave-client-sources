@@ -3,10 +3,12 @@ property pJumpButtonsWnd, pTicketCountWnd
 on construct me
   pJumpButtonsWnd = "pool_helpbuttons"
   pTicketCountWnd = "pool_ticketcount"
+  registerMessage(#sendVoteSign, me.getID(), #sendSign)
   return 1
 end
 
 on deconstruct me
+  unregisterMessage(#sendVoteSign, me.getID())
   if objectExists(#jumpingpelle_obj) then
     removeObject(#jumpingpelle_obj)
   end if

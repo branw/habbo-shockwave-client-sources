@@ -1,4 +1,4 @@
-property pMUXtra, pServer, pPort, pDestination, pData, pMaxBytes, pCRLF, pNetDone, pNetResult, pNetError, pNetRequest, pUserAgent, pHttpVersion, pResponseCbHandler, pResponseCbObj, pCookies, pType, pStatus, pMemName, pMemNum, pCallBack, pRedirectNetID, pRedirectUrl, pRedirectType
+property pMUXtra, pServer, pPort, pDestination, pData, pMaxBytes, pCRLF, pNetDone, pNetResult, pNetError, pNetRequest, pUserAgent, pHttpVersion, pResponseCbHandler, pResponseCbObj, pCookies, pType, pStatus, pMemName, pMemNum, pCallBack, pRedirectNetID, pRedirectUrl, pRedirectType, pTarget
 
 on define me, tMemName, tdata
   pStatus = #initializing
@@ -6,6 +6,7 @@ on define me, tMemName, tdata
   pMemNum = tdata[#memNum]
   pType = tdata[#type]
   pCallBack = tdata[#callback]
+  pTarget = tdata[#target]
   if voidp(tdata[#redirectType]) then
     pRedirectType = #follow
   else
@@ -324,7 +325,11 @@ on handleContentResponse me, tMsg, tContent
           end if
         end if
       else
-        openNetPage(tCompleteUrl, "_new")
+        if voidp(pTarget) then
+          openNetPage(tCompleteUrl, "_new")
+        else
+          openNetPage(tCompleteUrl, pTarget)
+        end if
         pNetDone = 1
       end if
     end if

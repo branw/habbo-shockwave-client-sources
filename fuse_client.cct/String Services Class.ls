@@ -1,9 +1,18 @@
-property pConvList, pDigits
+property pConvList, pDigits, pUsesUTF8, pUTF8ObjectName, pUTF8Object, pUnicodeDirector
 
 on construct me
   pConvList = [:]
   pDigits = "0123456789ABCDEF"
   me.initConvList()
+  pUsesUTF8 = VOID
+  pUTF8ObjectName = "Localized UTF8 converter"
+  if objectExists(pUTF8ObjectName) then
+    pUTF8Object = getObject(pUTF8ObjectName)
+    unregisterObject(pUTF8ObjectName)
+  else
+    pUTF8Object = VOID
+  end if
+  pUnicodeDirector = value(_player.productVersion) >= 11
   return 1
 end
 
@@ -241,6 +250,175 @@ on getLocalFloat me, tStrFloat
     put "," into char offset(".", tStrFloat) of tStrFloatLocal
   end if
   return float(tStrFloatLocal)
+end
+
+on encodeUTF8 me, tStr
+  if voidp(pUsesUTF8) then
+    tVar = "client.textdata.utf8"
+    if variableExists(tVar) then
+      pUsesUTF8 = getVariableValue(tVar)
+    else
+      pUsesUTF8 = VOID
+    end if
+  end if
+  if not pUsesUTF8 then
+    return tStr
+  end if
+  tUnicodeData = me.convertToUnicode(tStr)
+  tUTF8Data = []
+  repeat with i = 1 to tUnicodeData.count
+    tValue = tUnicodeData[i]
+    if tValue < 128 then
+      tUTF8Data.add(tValue)
+      next repeat
+    end if
+    if tValue < 2048 then
+      tUTF8Data.add(192 + bitAnd(tValue / 64, 31))
+      tUTF8Data.add(128 + bitAnd(tValue, 63))
+      next repeat
+    end if
+    if tValue < 65536 then
+      tUTF8Data.add(224 + bitAnd(tValue / (64 * 64), 15))
+      tUTF8Data.add(128 + bitAnd(tValue / 64, 63))
+      tUTF8Data.add(128 + bitAnd(tValue, 63))
+    end if
+  end repeat
+  tResult = me.generateStringFromUTF8(tUTF8Data)
+  return tResult
+end
+
+on decodeUTF8 me, tStr, tForceDecode
+  tVar = "client.textdata.utf8"
+  if variableExists(tVar) then
+    pUsesUTF8 = getVariableValue(tVar)
+  else
+    pUsesUTF8 = VOID
+  end if
+  if not pUsesUTF8 then
+    return tStr
+  end if
+  if pUnicodeDirector and not tForceDecode then
+    return tStr
+  end if
+  tBinData = []
+  tCutPos = 1000
+  repeat while tStr.length > 0
+    if tStr.length >= tCutPos then
+      tSubStr = tStr.char[1..tCutPos]
+      tStr = tStr.char[tCutPos + 1..tStr.length]
+    else
+      tSubStr = tStr
+      tStr = EMPTY
+    end if
+    tLength = tSubStr.length
+    repeat with i = 1 to tLength
+      tChar = tSubStr.char[i]
+      tValue = charToNum(tChar)
+      if tValue < 255 then
+        tBinData.add(tValue)
+        next repeat
+      end if
+      tBinData.add(tValue / 256)
+      tBinData.add(tValue mod 256)
+    end repeat
+  end repeat
+  if tBinData.count > 0 then
+    if tBinData[tBinData.count] = 0 then
+      tBinData.deleteAt(tBinData.count)
+    end if
+  end if
+  tUnicodeData = []
+  i = 1
+  repeat while i <= tBinData.count
+    tValue = tBinData[i]
+    if tValue < 128 then
+      tUnicodeData.add(tValue)
+    else
+      if tValue > 224 then
+        if i <= tBinData.count + 2 then
+          tValue2 = tBinData[i + 1]
+          tValue3 = tBinData[i + 2]
+          tResVal = (bitAnd(tValue, 15) * 64 + bitAnd(tValue2, 63)) * 64 + bitAnd(tValue3, 63)
+          tUnicodeData.add(tResVal)
+        end if
+        i = i + 2
+      else
+        if tValue > 192 then
+          if i <= tBinData.count + 1 then
+            tValue2 = tBinData[i + 1]
+            tResVal = bitAnd(tValue, 31) * 64 + bitAnd(tValue2, 63)
+            tUnicodeData.add(tResVal)
+          end if
+          i = i + 1
+        end if
+      end if
+    end if
+    i = i + 1
+  end repeat
+  tResult = me.convertFromUnicode(tUnicodeData)
+  return tResult
+end
+
+on convertToUnicode me, tStr
+  if not pUnicodeDirector then
+    if not voidp(pUTF8Object) then
+      tdata = call(#convertToUnicode, [pUTF8Object], tStr)
+      if ilk(tdata) = #list then
+        return tdata
+      end if
+    end if
+  end if
+  tUnicodeData = []
+  repeat with i = 1 to tStr.length
+    tChar = tStr.char[i]
+    tValue = charToNum(tChar)
+    tUnicodeData.add(tValue)
+  end repeat
+  return tUnicodeData
+end
+
+on generateStringFromUTF8 me, tUTF8Data
+  if not pUnicodeDirector then
+    if not voidp(pUTF8Object) then
+      tString = call(#generateStringFromUTF8, [pUTF8Object], tUTF8Data)
+      if ilk(tString) = #string then
+        return tString
+      end if
+    end if
+  end if
+  tResult = EMPTY
+  repeat with i = 1 to tUTF8Data.count
+    tResult = tResult & numToChar(tUTF8Data[i])
+  end repeat
+  return tResult
+end
+
+on convertFromUnicode me, tUnicodeData
+  if not pUnicodeDirector then
+    if not voidp(pUTF8Object) then
+      tdata = call(#convertFromUnicode, [pUTF8Object], tUnicodeData)
+      if ilk(tdata) = #string then
+        return tdata
+      end if
+    end if
+  end if
+  tResult = EMPTY
+  tCutPos = 1000
+  i = 0
+  repeat while i < tUnicodeData.count
+    if i + tCutPos <= tUnicodeData.count then
+      tCount = tCutPos
+    else
+      tCount = tUnicodeData.count - i
+    end if
+    tSubResult = EMPTY
+    repeat with j = 1 to tCount
+      tSubResult = tSubResult & numToChar(tUnicodeData[i + j])
+    end repeat
+    i = i + tCount
+    tResult = tResult & tSubResult
+  end repeat
+  return tResult
 end
 
 on initConvList me

@@ -67,6 +67,19 @@ on createFigurePrew me
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
   tFigure = getObject(#session).GET("user_figure").duplicate()
+  tPredefinedParts = ["rh", "lh", "ch"]
+  repeat with tPrePart in tPredefinedParts
+    tOccurrenceCount = 0
+    repeat with tItemNo = 1 to tFigure.count
+      tPartType = tFigure.getPropAt(tItemNo)
+      if tPartType = tPrePart then
+        tOccurrenceCount = tOccurrenceCount + 1
+        if tOccurrenceCount > 1 then
+          tFigure.deleteAt(tItemNo)
+        end if
+      end if
+    end repeat
+  end repeat
   if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else
@@ -174,9 +187,19 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
 end
 
 on showRoomBar me, tRoomData
+  tRoomInterface = getThread(#room).getInterface()
+  tRoomInterface.showRoomBar()
+  tRoomInterface.showVote()
+  return 1
   if not windowExists(pBottomBarId) then
-    createWindow(pBottomBarId, "room_pellehyppy_bar.window", 0, 486)
+    createWindow(pBottomBarId, "room_bar.window", 0, 486)
     tWndObj = getWindow(pBottomBarId)
+    if tWndObj.elementExists("chat_field_bg_long") then
+      tWidthLong = tWndObj.getElement("chat_field_bg_long").getProperty(#width)
+      tWidthShort = tWndObj.getElement("chat_field_bg_short").getProperty(#width)
+      tWndObj.getElement("chat_field").resizeBy(tWidthShort - tWidthLong, 0, 1)
+      tWndObj.getElement("chat_field_bg_long").hide()
+    end if
     tWndObj.lock(1)
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
@@ -195,6 +218,7 @@ on showRoomBar me, tRoomData
       pOldPosV = -1
       pSignImg = image(member(getmemnum("pelle_kyltti2")).width, member(getmemnum("pelle_kyltti2")).height, 16)
     end if
+    me.updateSoundButton()
     registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
     registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
     return 1
@@ -474,4 +498,40 @@ on flipImage me, tImg_a
   tQuad = [point(tImg_a.width, 0), point(0, 0), point(0, tImg_a.height), point(tImg_a.width, tImg_a.height)]
   tImg_b.copyPixels(tImg_a, tQuad, tImg_a.rect)
   return tImg_b
+end
+
+on updateSoundButton me
+  tWndObj = getWindow(pBottomBarId)
+  if tWndObj = 0 then
+    return 0
+  end if
+  tstate = getSoundState()
+  tElem = tWndObj.getElement("int_sound_image")
+  if tElem <> 0 then
+    if tstate then
+      tMemNum = getmemnum("sounds_on_icon")
+      if tMemNum > 0 then
+        tElem.feedImage(member(tMemNum).image)
+      end if
+    else
+      tMemNum = getmemnum("sounds_off_icon")
+      if tMemNum > 0 then
+        tElem.feedImage(member(tMemNum).image)
+      end if
+    end if
+  end if
+  tElem = tWndObj.getElement("int_sound_bg_image")
+  if tElem <> 0 then
+    if tstate then
+      tMemNum = getmemnum("sounds_on_icon_sd")
+      if tMemNum > 0 then
+        tElem.feedImage(member(tMemNum).image)
+      end if
+    else
+      tMemNum = getmemnum("sounds_off_icon_sd")
+      if tMemNum > 0 then
+        tElem.feedImage(member(tMemNum).image)
+      end if
+    end if
+  end if
 end

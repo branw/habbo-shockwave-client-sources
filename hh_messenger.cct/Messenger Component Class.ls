@@ -1,4 +1,4 @@
-property pState, pPaused, pTimeOutID, pReadyFlag, pBuddyList, pItemList, pUpdateBuddiesInterval, pLastBuddiesUpdateTime, pFriendRequestList, pFriendRequestUpdateRequired, pMessageUpdateRequired, pInvitationData
+property pState, pPaused, pTimeOutID, pReadyFlag, pBuddyList, pItemList, pUpdateBuddiesInterval, pLastBuddiesUpdateTime, pFriendRequestList, pFriendRequestUpdateRequired, pMessageUpdateRequired
 
 on construct me
   registerMessage(#enterRoom, me.getID(), #hideMessenger)
@@ -13,8 +13,6 @@ on construct me
   registerMessage(#pause_messeger_update, me.getID(), #pause)
   registerMessage(#resume_messeger_update, me.getID(), #resume)
   registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
-  registerMessage(#acceptInvitation, me.getID(), #acceptInvitation)
-  registerMessage(#rejectInvitation, me.getID(), #rejectInvitation)
   pState = VOID
   pPaused = 0
   pTimeOutID = #messenger_msg_poller
@@ -81,6 +79,29 @@ on deleteAllMessages me
   pItemList.msgCount = [:]
   me.tellMessageCount()
   return 1
+end
+
+on getNextPendingInstantBuddyRequest me
+  if threadExists(#room) then
+    tRoomComp = getThread(#room).getComponent()
+    if tRoomComp.getRoomID() = EMPTY then
+      return 0
+    end if
+  end if
+  if pFriendRequestList.count < 1 then
+    return 0
+  else
+    repeat with tItemNo = 1 to pFriendRequestList.count
+      tItem = pFriendRequestList[tItemNo]
+      if tItem[#state] = #pending then
+        tUserIndex = tRoomComp.getUsersRoomId(tItem[#name])
+        if tUserIndex <> -1 then
+          return tItem.duplicate()
+        end if
+      end if
+    end repeat
+  end if
+  return 0
 end
 
 on getRequestSet me, tSetIndex, tRequestsInSet
@@ -460,6 +481,7 @@ on setRequestState me, tRequestId, tstate
     end if
   end repeat
   me.getInterface().updateRequests()
+  me.tellRequestCount()
   if me.getPendingRequestCount() = 0 and me.getFriendRequestUpdateRequired() then
     me.getComponent().send_AskForFriendRequests()
   end if
@@ -536,14 +558,6 @@ end
 
 on getMyPersistenMsg me
   return pItemList[#persistenMsg]
-end
-
-on getNextBuddyRequest me
-  if pItemList[#newBuddyRequest].count < 1 then
-    return EMPTY
-  else
-    return pItemList[#newBuddyRequest][1]
-  end if
 end
 
 on getNextMessage me
@@ -628,42 +642,6 @@ on handleFriendlistConcurrency me
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
   end if
-end
-
-on showInvitation me, tInvitationData
-  pInvitationData = tInvitationData
-  executeMessage(#showInvitation, tInvitationData)
-end
-
-on hideInvitation me
-  pInvitationData = [:]
-  executeMessage(#hideInvitation)
-end
-
-on acceptInvitation me
-  tSenderId = pInvitationData.getaProp(#userID)
-  if voidp(tSenderId) then
-    return 0
-  end if
-  if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("MSG_ACCEPT_TUTOR_INVITATION", [#string: tSenderId])
-  end if
-  me.hideInvitation()
-end
-
-on rejectInvitation me
-  tSenderId = pInvitationData.getaProp(#userID)
-  if voidp(tSenderId) then
-    return 0
-  end if
-  if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("MSG_REJECT_TUTOR_INVITATION", [#string: tSenderId])
-  end if
-  me.hideInvitation()
-end
-
-on invitationFollowFailed me
-  executeMessage(#alert, "invitation_follow_failed")
 end
 
 on updateClubStatus me, tStatus

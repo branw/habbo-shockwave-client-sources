@@ -309,6 +309,12 @@ on getWallPartUnderRect me, tRect, tSlope
 end
 
 on renderWrappedParts me, tColor
+  if ilk(tColor) <> #color then
+    return 0
+  end if
+  if tColor.red + tColor.green + tColor.blue > 250 * 3 then
+    tColor = color(248, 248, 248)
+  end if
   repeat with tWrapper in pWrappedParts
     tWrapper.renderWithColor(tColor)
   end repeat
@@ -316,11 +322,12 @@ end
 
 on setDimmerColor me, tColor
   if ilk(tColor) <> #color then
-    return 
+    return 0
   end if
   tColor = rgb(255 - tColor.red, 255 - tColor.green, 255 - tColor.blue)
-  if member("room_dimmer_image").name = "room_dimmer_image" then
-    member("room_dimmer_image").image.setPixel(0, 0, tColor)
+  if memberExists("room_dimmer_image") then
+    tMem = getMember("room_dimmer_image")
+    tMem.image.setPixel(0, 0, tColor)
   end if
 end
 
@@ -516,18 +523,21 @@ on buildVisual me, tLayout
     tThread = getThread(#room)
     if tThread <> 0 then
       tSpr = sprite(getSpriteManager().reserveSprite(me.getID()))
-      tSpr.member = member("room_dimmer_image").number
-      tSpr.ink = 35
-      tSpr.locH = 0
-      tSpr.locV = 0
-      tSpr.width = 800
-      tSpr.height = 600
-      tSpr.blend = 100
-      tGeometry = tThread.getInterface().getGeometry()
-      tScreenLoc = tGeometry.getScreenCoordinate(2, 2, 0)
-      tSpr.locZ = tSpriteList[tSpriteList.count].locZ + 100 * 1000
-      tSpriteList.append(tSpr)
-      pSpriteData.append([:])
+      tmember = getMember("room_dimmer_image")
+      if tmember <> 0 then
+        tSpr.member = tmember.number
+        tSpr.ink = 35
+        tSpr.locH = 0
+        tSpr.locV = 0
+        tSpr.width = 800
+        tSpr.height = 600
+        tSpr.blend = 100
+        tGeometry = tThread.getInterface().getGeometry()
+        tScreenLoc = tGeometry.getScreenCoordinate(2, 2, 0)
+        tSpr.locZ = tSpriteList[tSpriteList.count].locZ + 100 * 1000
+        tSpriteList.append(tSpr)
+        pSpriteData.append([:])
+      end if
     end if
   end if
   repeat with tSpr in tSpriteList

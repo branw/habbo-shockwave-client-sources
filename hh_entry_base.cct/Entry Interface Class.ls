@@ -486,6 +486,8 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
       return executeMessage(#openGeneralDialog, "help")
     "get_credit_text", "purse_icon_image":
       return executeMessage(#openGeneralDialog, "purse")
+    "event_icon_image":
+      return executeMessage(#show_hide_roomevents)
     "nav_icon_image":
       return executeMessage(#show_hide_navigator)
     "messenger_icon_image":

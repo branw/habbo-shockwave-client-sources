@@ -236,6 +236,14 @@ on ChangeWindowView me, tWindowName
       if tWndObj.elementExists("nav_choosecategory") then
         me.prepareCategoryDropMenu(me.getProperty(#viewedNodeId))
       end if
+      if tWndObj.elementExists("nav_room_name") then
+        tElem = tWndObj.getElement("nav_room_name")
+        tName = me.getComponent().getNodeProperty(me.getProperty(#viewedNodeId), #name)
+        if not stringp(tName) then
+          tName = EMPTY
+        end if
+        tElem.setText(tName)
+      end if
   end case
   return 1
 end

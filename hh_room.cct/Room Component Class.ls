@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings, pEnterDoorData, pEnterDoorLocked
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings, pEnterDoorData, pEnterDoorLocked, pRoomEventBrowserID, pRoomEventTypeCount, pRoomEventList, pRoomEventCurrent
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -26,6 +26,8 @@ on construct me
   pFurniChooserID = "Furniture Chooser"
   pShadowManagerID = "Room Shadow Manager"
   pGroupInfoID = "Group_Info"
+  pRoomEventBrowserID = "RoomEvent Browser Window"
+  pRoomEventList = [:]
   pChatProps = [:]
   pChatProps["returnCount"] = 0
   pChatProps["timerStart"] = 0
@@ -52,6 +54,7 @@ on construct me
   registerMessage(#enterRoomDirect, me.getID(), #enterRoomDirect)
   registerMessage(#setEnterRoomAlert, me.getID(), #setEnterRoomAlert)
   registerMessage(#removeEnterRoomAlert, me.getID(), #removeEnterRoomAlert)
+  registerMessage(#show_hide_roomevents, me.getID(), #showHideRoomevents)
   pEnterDoorData = VOID
   pEnterDoorLocked = 0
   return 1
@@ -63,6 +66,7 @@ on deconstruct me
   unregisterMessage(#leaveRoom, me.getID())
   unregisterMessage(#changeRoom, me.getID())
   unregisterMessage(#enterRoomDirect, me.getID())
+  unregisterMessage(#show_hide_roomevents, me.getID())
   removeConnection(pRoomConnID)
   if listp(pUserObjList) then
     call(#deconstruct, pUserObjList)
@@ -223,9 +227,6 @@ on leaveRoom me, tJumpingToSubUnit
   end if
   if not pCacheFlag then
     getObject(#cache).Remove(pCacheKey)
-  end if
-  if objectp(me.getInterface().pIgnoreListObj) then
-    me.getInterface().pIgnoreListObj.reset()
   end if
   if objectExists(#furniChooser) then
     getObject(#furniChooser).close()
@@ -409,6 +410,50 @@ on getRoomRating me
   return pFlatRatings
 end
 
+on setRoomEvent me, tEventData
+  pRoomEventCurrent = tEventData
+  executeMessage(#roomEventInfoUpdated)
+end
+
+on getRoomEvent me
+  return pRoomEventCurrent
+end
+
+on setRoomEventList me, ttype, tEvents
+  pRoomEventList.setaProp(ttype, [#data: tEvents, #time: the milliSeconds])
+  executeMessage(#roomEventsUpdated)
+end
+
+on getRoomEventList me, ttype
+  if ttype = 0 then
+    return 0
+  end if
+  tEventList = pRoomEventList.getaProp(ttype)
+  if not voidp(tEventList) then
+    tAge = the milliSeconds - tEventList.getaProp(#time)
+  end if
+  tCache = getIntVariable("roomevent.cache", 10000)
+  if voidp(tEventList) or tAge > tCache then
+    me.getRoomConnection().send("GET_ROOMEVENTS_BY_TYPE", [#integer: integer(ttype)])
+    pRoomEventList.setaProp(ttype, [#data: [], #time: the milliSeconds])
+  end if
+  tEventList = pRoomEventList.getaProp(ttype)
+  return tEventList.getaProp(#data)
+end
+
+on setRoomEventTypeCount me, tCount
+  pRoomEventTypeCount = tCount
+  executeMessage(#roomEventTypeCountUpdated)
+end
+
+on getRoomEventTypeCount me
+  if voidp(pRoomEventTypeCount) then
+    me.getRoomConnection().send("GET_ROOMEVENT_TYPE_COUNT")
+    pRoomEventTypeCount = 0
+  end if
+  return pRoomEventTypeCount
+end
+
 on getRoomPrg me
   return getObject(pRoomPrgID)
 end
@@ -533,6 +578,13 @@ on sendChat me, tChat
           petcontrol()
           return 1
         end if
+      ":events":
+        if objectExists(pRoomEventBrowserID) then
+          removeObject(pRoomEventBrowserID)
+        else
+          createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
+        end if
+        return 1
     end case
   end if
   if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
@@ -768,6 +820,15 @@ on highlightUser me, tUserID
       exit repeat
     end if
   end repeat
+end
+
+on showHideRoomevents me
+  if objectExists(pRoomEventBrowserID) then
+    removeObject(pRoomEventBrowserID)
+  else
+    createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
+  end if
+  return 1
 end
 
 on loadRoomCasts me

@@ -31,7 +31,7 @@ on updateGroupInformation me, tGroupsArr
     if not voidp(pGroupData[tID]) then
       tCombinedData = pGroupData[tID]
     end if
-    tKeyList = [#id, #name, #desc, #logo]
+    tKeyList = [#id, #name, #desc, #logo, #roomid, #roomname]
     repeat with tKey in tKeyList
       if not voidp(tIncomingGroupData[tKey]) then
         tCombinedData[tKey] = tIncomingGroupData[tKey]
@@ -178,6 +178,15 @@ on showUsersInfo me, tUserIndex
   tWindowObj.getElement("group_privileges").setText(tPrivilegesTxt)
   tWindowObj.getElement("group_description").setText(tGroup[#desc])
   pCurrentShownGroupId = tGroupId
+  tRoomLinkElem = tWindowObj.getElement("group_room_link")
+  if tGroup[#roomid] < 0 then
+    tRoomLinkElem.hide()
+  else
+    tRoomNameTemplate = getText("group_room_link")
+    tRoomLinkText = replaceChunks(tRoomNameTemplate, "%room_name%", tGroup[#roomname])
+    tRoomLinkElem.setText(tRoomLinkText)
+    tRoomLinkElem.show()
+  end if
   me.updateGroupLogoToWindow(tGroupId)
 end
 
@@ -208,5 +217,9 @@ on eventProcInfoWindow me, tEvent, tSprID, tParams
       tGroupURL = getText("group_homepage_url")
       tGroupURL = replaceChunks(tGroupURL, "%groupid%", tGroupId)
       openNetPage(tGroupURL)
+    "group_room_link":
+      tForwardId = string(pGroupData[pCurrentShownGroupId][#roomid])
+      tForwardType = #private
+      executeMessage(#roomForward, tForwardId, tForwardType)
   end case
 end

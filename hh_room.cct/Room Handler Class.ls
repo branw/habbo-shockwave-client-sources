@@ -926,6 +926,8 @@ on handle_group_details me, tMsg
   end if
   tGroup[#name] = tConn.GetStrFrom()
   tGroup[#desc] = tConn.GetStrFrom()
+  tGroup[#roomid] = tConn.GetIntFrom()
+  tGroup[#roomname] = tConn.GetStrFrom()
   tGroupData.add(tGroup)
   me.getComponent().getGroupInfoObject().updateGroupInformation(tGroupData)
   executeMessage(#groupInfoRetrieved, tGroup[#id])
@@ -977,6 +979,69 @@ on handle_highlight_user me, tMsg
   tConn = tMsg.getaProp(#connection)
   tUserID = tConn.GetStrFrom()
   pHighlightUser = tUserID
+end
+
+on handle_roomevent_permission me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tCanCreate = tConn.GetIntFrom()
+  if tCanCreate then
+    executeMessage(#allowRoomeventCreation)
+  end if
+end
+
+on handle_roomevent_types me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tTypeCount = tConn.GetIntFrom()
+  me.getComponent().setRoomEventTypeCount(tTypeCount)
+end
+
+on handle_roomevent_list me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tTypeID = tConn.GetIntFrom()
+  tEventCount = tConn.GetIntFrom()
+  tEvents = []
+  repeat with tEventNum = 1 to tEventCount
+    tEvent = [:]
+    tEvent.setaProp(#flatId, tConn.GetStrFrom())
+    tEvent.setaProp(#hostName, tConn.GetStrFrom())
+    tEvent.setaProp(#name, tConn.GetStrFrom())
+    tEvent.setaProp(#desc, tConn.GetStrFrom())
+    tEvent.setaProp(#time, tConn.GetStrFrom())
+    tEvents.add(tEvent)
+  end repeat
+  me.getComponent().setRoomEventList(tTypeID, tEvents)
+end
+
+on handle_roomevent_info me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tEventInfo = [:]
+  tHostID = tConn.GetStrFrom()
+  tEventInfo.setaProp(#hostID, tHostID)
+  if tHostID > 0 then
+    tEventInfo.setaProp(#hostName, tConn.GetStrFrom())
+    tEventInfo.setaProp(#flatId, tConn.GetStrFrom())
+    tEventInfo.setaProp(#typeID, tConn.GetIntFrom())
+    tEventInfo.setaProp(#name, tConn.GetStrFrom())
+    tEventInfo.setaProp(#desc, tConn.GetStrFrom())
+    tEventInfo.setaProp(#time, tConn.GetStrFrom())
+  end if
+  me.getComponent().setRoomEvent(tEventInfo)
+end
+
+on handle_ignore_user_result me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tResult = tConn.GetIntFrom()
+  return executeMessage(#ignore_user_result, tResult)
+end
+
+on handle_ignore_list me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tCount = tConn.GetIntFrom()
+  tList = []
+  repeat with i = 1 to tCount
+    tList.append(tConn.GetIntFrom())
+  end repeat
+  return executeMessage(#save_ignore_list, tList)
 end
 
 on regMsgList me, tBool
@@ -1047,6 +1112,12 @@ on regMsgList me, tBool
   tMsgs.setaProp(350, #handle_user_tag_list)
   tMsgs.setaProp(361, #handle_user_typing_status)
   tMsgs.setaProp(362, #handle_highlight_user)
+  tMsgs.setaProp(367, #handle_roomevent_permission)
+  tMsgs.setaProp(368, #handle_roomevent_types)
+  tMsgs.setaProp(369, #handle_roomevent_list)
+  tMsgs.setaProp(370, #handle_roomevent_info)
+  tMsgs.setaProp(419, #handle_ignore_user_result)
+  tMsgs.setaProp(420, #handle_ignore_list)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1111,6 +1182,16 @@ on regMsgList me, tBool
   tCmds.setaProp("SET_RANDOM_STATE", 314)
   tCmds.setaProp("USER_START_TYPING", 317)
   tCmds.setaProp("USER_CANCEL_TYPING", 318)
+  tCmds.setaProp("IGNOREUSER", 319)
+  tCmds.setaProp("BANUSER", 320)
+  tCmds.setaProp("GET_IGNORE_LIST", 321)
+  tCmds.setaProp("UNIGNORE_USER", 322)
+  tCmds.setaProp("CAN_CREATE_ROOMEVENT", 345)
+  tCmds.setaProp("CREATE_ROOMEVENT", 346)
+  tCmds.setaProp("QUIT_ROOMEVENT", 347)
+  tCmds.setaProp("MODERATOR_QUIT_ROOMEVENT", 348)
+  tCmds.setaProp("GET_ROOMEVENT_TYPE_COUNT", 349)
+  tCmds.setaProp("GET_ROOMEVENTS_BY_TYPE", 350)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

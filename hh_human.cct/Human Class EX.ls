@@ -886,9 +886,7 @@ on getDefinedPartList me, tPartNameList
   repeat with tPartName in tPartNameList
     if not voidp(pPartIndex[tPartName]) then
       tPos = pPartIndex[tPartName]
-      if tPos > 0 and tPos <= pPartList.count then
-        tPartList.append(pPartList[tPos])
-      end if
+      tPartList.append(pPartList[tPos])
     end if
   end repeat
   return tPartList

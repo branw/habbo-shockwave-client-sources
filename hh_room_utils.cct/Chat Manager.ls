@@ -46,10 +46,6 @@ on handle_chat me, tMsg
   tConn = tMsg.getaProp(#connection)
   tuser = string(tConn.GetIntFrom())
   tChat = tConn.GetStrFrom()
-  tRoomInterface = getThread(#room).getInterface()
-  if tRoomInterface.getIgnoreStatus(tuser) then
-    return 0
-  end if
   case tMsg.getaProp(#subject) of
     24:
       tMode = "CHAT"

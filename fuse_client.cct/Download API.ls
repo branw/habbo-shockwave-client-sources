@@ -14,8 +14,8 @@ on getDownloadManager
   return tMgr.getManager(#download_manager)
 end
 
-on queueDownload tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType
-  return getDownloadManager().queue(tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType)
+on queueDownload tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType, tTarget
+  return getDownloadManager().queue(tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType, tTarget)
 end
 
 on abortDownLoad tMemNameOrNum

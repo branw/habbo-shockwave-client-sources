@@ -62,3 +62,10 @@ on showObjectInfo me, tObjType
   tObjDisp = getObject(pObjectDispID)
   tObjDisp.showObjectInfo(tObjType)
 end
+
+on showVote me
+  tRoomBarObj = getObject(pRoomBarID)
+  if not voidp(tRoomBarObj) and not tRoomBarObj = 0 then
+    tRoomBarObj.showVote()
+  end if
+end
