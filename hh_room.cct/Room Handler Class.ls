@@ -1176,7 +1176,7 @@ end
 
 on handle_highlight_user me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tUserID = tConn.GetStrFrom()
+  tUserID = string(tConn.GetIntFrom())
   pHighlightUser = tUserID
 end
 

@@ -644,7 +644,7 @@ on eventProc me, tEvent, tSprID, tParam
       "take_rights.button":
         if tComponent.userObjectExists(tSelectedObj) then
           tUserID = tComponent.getUserObject(tSelectedObj).getWebID()
-          tComponent.getRoomConnection().send("REMOVERIGHTS", [#integer: integer(tUserID)])
+          tComponent.getRoomConnection().send("REMOVERIGHTS", [#integer: 1, #integer: integer(tUserID)])
           tSelectedObj = EMPTY
         end if
         me.clearWindowDisplayList()

@@ -46,7 +46,7 @@ on setState me, tNewState
   tColor = tNewState.item[4]
   tLightness = tNewState.item[5]
   the itemDelimiter = tDelim
-  callAncestor(#setState, [me], tstate)
+  callAncestor(#setState, [me], tstate - 1)
   tLightness = max(integer(tLightness), 77)
   tStateData = [:]
   tStateData.setaProp(#dimmerID, me.getID())
