@@ -933,10 +933,10 @@ on fuseAction_carryd me, props
   if props contains "eat:" then
     carryItem = "food"
     food = " " & word 3 of props
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   else
     carryItem = "drink"
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   end if
 end
 
@@ -945,11 +945,11 @@ on fuseAction_drink me, props
     drinking = 1
     carryItem = "food"
     food = " " & word 3 of props
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   else
     drinking = 1
     carryItem = "drink"
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   end if
 end
 

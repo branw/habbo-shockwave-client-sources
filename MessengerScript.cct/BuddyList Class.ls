@@ -9,6 +9,15 @@ on new me
   return me
 end
 
+on getIsBuddy me, tName
+  repeat with tBuddy in pBuddies
+    if tBuddy.name = tName then
+      return 1
+    end if
+  end repeat
+  return 0
+end
+
 on handleFuseBuddyListMsg me, msg
   pBuddies = []
   i = 1

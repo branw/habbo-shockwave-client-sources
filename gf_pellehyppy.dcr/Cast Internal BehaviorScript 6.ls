@@ -1,3 +1,3 @@
 on exitFrame
-  go(the frame)
+  go(136)
 end

@@ -526,6 +526,11 @@ on handleMessengerMessages content
                           CrygDoor = (line 4 of content).item[2]
                           Cryprivate_gChosenFlatId = stringReplace((line 4 of content).item[4], TAB, "/")
                           the itemDelimiter = oldI
+                          put "---- CRY FOR HELP ----"
+                          put "Unit:" && CryUnit
+                          put "Door:" && CrygDoor
+                          put "Cryprivate_gChosenFlatId:" && Cryprivate_gChosenFlatId
+                          put "----------------------"
                           temp = []
                           repeat with f = 1 to count(CryHelp)
                             if CryHelp.getProp(CryHelp.getPropAt(f)).getProp("PickedCry") <> "<nobody>" then

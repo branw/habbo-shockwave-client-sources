@@ -1,4 +1,4 @@
-property location, data, owner, spr, id, myColor, postItClassName
+property location, data, owner, spr, id, myColor, postItClassName, origData
 global popUpOn, gOpenPostIt, gpObjects, gMyName, gPostitCounter
 
 on new me, towner, tlocation, tid, tdata, tPostItClassName
@@ -33,6 +33,7 @@ on updateItem me, tid, tlocation, tdata
     else
       myColor = word 1 of tdata
     end if
+    origData = tdata
   end if
 end
 
@@ -148,6 +149,9 @@ on deletePostit me
 end
 
 on savePostit me
-  data = field("post.it field_NoAdding") & RETURN & field("post.it field_Add")
-  sendFuseMsg("SETITEMDATA /" & id & "/" & myColor && data)
+  s = field("post.it field_Add")
+  data = field("post.it field_NoAdding") & RETURN & s
+  if length(s) > 0 then
+    sendFuseMsg("SETITEMDATA /" & id & "/" & myColor && data)
+  end if
 end

@@ -48,9 +48,9 @@ on OpenPickCryForHelp
   gHelpPlace = point(0, 40)
   sprite(870).locH = 2000
   if not (the movieName contains "entry") then
-    PurseAndHelpContext = new(script("PopUp Context Class"), 2130000000, 851, 870, gHelpPlace)
+    PurseAndHelpContext = new(script("PopUp Context Class"), 2130000000, 850, 870, gHelpPlace)
   else
-    PurseAndHelpContext = new(script("PopUp Context Class"), 2130000000, 851, 870, gHelpPlace)
+    PurseAndHelpContext = new(script("PopUp Context Class"), 2130000000, 850, 870, gHelpPlace)
   end if
   displayFrame(PurseAndHelpContext, "hobba_alert")
 end
