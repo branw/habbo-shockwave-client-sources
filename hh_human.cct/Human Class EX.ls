@@ -151,6 +151,11 @@ on changeFigureAndData me, tdata
   repeat with tPart in pPartList
     tPartId = tPart.getPartID()
     tNewModelItem = tmodels[tPartId]
+    if voidp(tNewModelItem) then
+      tNewModelItem = [:]
+      tNewModelItem["model"] = "000"
+      tNewModelItem["color"] = rgb("000000")
+    end if
     if ilk(tNewModelItem) = #propList then
       tmodel = tNewModelItem["model"]
       tColor = tNewModelItem["color"]

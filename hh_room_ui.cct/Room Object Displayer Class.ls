@@ -16,7 +16,7 @@ on construct me
   me.createBaseWindows()
   registerMessage(#groupLogoDownloaded, me.getID(), #groupLogoDownloaded)
   registerMessage(#hideInfoStand, me.getID(), #clearWindowDisplayList)
-  registerMessage(#updateInfostandAvatar, me.getID(), #updateAvatar)
+  registerMessage(#updateInfostandAvatar, me.getID(), #refreshView)
   registerMessage(#showObjectInfo, me.getID(), #showObjectInfo)
   registerMessage(#hideObjectInfo, me.getID(), #clearWindowDisplayList)
   registerMessage(#removeObjectInfo, me.getID(), #clearWindowDisplayList)
