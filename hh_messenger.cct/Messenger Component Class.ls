@@ -100,7 +100,7 @@ on receive_BuddyList me, ttype, tList
         tBuddy = tList.buddies[i]
         tCurrData = tTheBuddyList.buddies.getaProp(tBuddy.id)
         if voidp(tCurrData) then
-          error(me, "Buddy not found:" & tBuddy[#name] & " - Rejecting update.", #receive_BuddyList)
+          error(me, "Buddy not found:" & tBuddy[#id] & " - Rejecting update.", #receive_BuddyList)
           next repeat
         end if
         repeat with j = 1 to tBuddy.count
@@ -113,19 +113,19 @@ on receive_BuddyList me, ttype, tList
           tCurrData[#msgs] = tMsgList.count
         end if
         if tBuddy.online then
-          if tTheBuddyList.offline.getOne(tBuddy.name) then
-            tTheBuddyList.offline.deleteOne(tBuddy.name)
+          if tTheBuddyList.offline.getOne(tCurrData[#name]) then
+            tTheBuddyList.offline.deleteOne(tCurrData[#name])
           end if
-          if tTheBuddyList.online.getOne(tBuddy.name) = 0 then
-            tTheBuddyList.online.add(tBuddy.name)
+          if tTheBuddyList.online.getOne(tCurrData[#name]) = 0 then
+            tTheBuddyList.online.add(tCurrData[#name])
           end if
           next repeat
         end if
-        if tTheBuddyList.online.getOne(tBuddy.name) then
-          tTheBuddyList.online.deleteOne(tBuddy.name)
+        if tTheBuddyList.online.getOne(tCurrData[#name]) then
+          tTheBuddyList.online.deleteOne(tCurrData[#name])
         end if
-        if tTheBuddyList.offline.getOne(tBuddy.name) = 0 then
-          tTheBuddyList.offline.add(tBuddy.name)
+        if tTheBuddyList.offline.getOne(tCurrData[#name]) = 0 then
+          tTheBuddyList.offline.add(tCurrData[#name])
         end if
       end repeat
       tTheBuddyList.render = []

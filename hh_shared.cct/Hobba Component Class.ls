@@ -89,6 +89,7 @@ on send_cryPick me, tCryID, tGoHelp
     end if
     tdata[#id] = tdata[#room_id]
     executeMessage(#pickAndGoCFH, tdata[#sender])
+    tdata[#name] = tdata[#roomname]
     executeMessage(#executeRoomEntry, tdata[#id], tdata)
   end if
   return 1

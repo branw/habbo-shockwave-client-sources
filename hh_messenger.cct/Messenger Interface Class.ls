@@ -446,7 +446,6 @@ on renderMessage me, tMsgStruct
   tMsg = tMsgStruct[#Message]
   tTime = tMsgStruct[#time]
   tSenderId = tMsgStruct[#senderID]
-  tSenderSex = tMsgStruct[#sex]
   tWndObj = getWindow(pWindowTitle)
   if tMsgStruct[#campaign] = 1 then
     me.ChangeWindowView("console_officialmessage.window")
@@ -464,7 +463,7 @@ on renderMessage me, tMsgStruct
     tSenderName = "Unknown sender!"
   end if
   if objectExists("Figure_System") then
-    tFigure = getObject("Figure_System").parseFigure(tMsgStruct[#FigureData], tSenderSex)
+    tFigure = getObject("Figure_System").parseFigure(tdata[#FigureData], tdata[#sex])
     me.updateMyHeadPreview(tFigure, "console_getmessage_face_image")
   end if
   tFrom = getText("console_getmessage_sender", "From:") && tSenderName & RETURN & tTime

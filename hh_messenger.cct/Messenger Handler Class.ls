@@ -253,11 +253,15 @@ on get_buddy_info me, tMsg
   end if
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
-  tdata[#name] = string(tConn.GetStrFrom())
   tdata[#customText] = tConn.GetStrFrom()
   tdata[#online] = tConn.GetIntFrom()
-  tdata[#location] = tConn.GetStrFrom()
-  tdata[#lastAccess] = tConn.GetStrFrom()
+  if tdata[#online] then
+    tdata[#location] = tConn.GetStrFrom()
+    tdata[#lastAccess] = EMPTY
+  else
+    tdata[#location] = EMPTY
+    tdata[#lastAccess] = tConn.GetStrFrom()
+  end if
   return tdata
 end
 
@@ -295,12 +299,6 @@ on get_console_message me, tMsg
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#senderID] = string(tConn.GetIntFrom())
-  if tConn.GetIntFrom() = 0 then
-    tdata[#sex] = "F"
-  else
-    tdata[#sex] = "M"
-  end if
-  tdata[#FigureData] = tConn.GetStrFrom()
   tdata[#time] = tConn.GetStrFrom()
   tdata[#Message] = tConn.GetStrFrom()
   return tdata
