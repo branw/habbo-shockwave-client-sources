@@ -1,12 +1,12 @@
 on prepareMovie
-  clearGlobals()
   castLib(2).preloadMode = 1
   preloadNetThing(castLib(2).fileName)
   moveToFront(the stage)
   set the exitLock to 1
+  puppetTempo(15)
 end
 
 on stopMovie
   stopClient()
-  clearGlobals()
+  go(1)
 end
