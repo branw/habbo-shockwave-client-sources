@@ -488,7 +488,7 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
       "hobba_seelog":
         tUrlPrefix = getText("chatlog.url")
         if tUrlPrefix contains "http" then
-          return openNetPage(tUrlPrefix & pCurrCryData[#url_id])
+          return openNetPage(tUrlPrefix & pCurrCryData[#url_id], "_new")
         else
           return error(me, "CFH log url prefix not defined or illegal:" && tUrlPrefix, #eventProcCryWnd)
         end if
