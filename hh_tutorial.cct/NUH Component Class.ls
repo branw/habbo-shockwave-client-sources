@@ -22,6 +22,9 @@ on deconstruct me
 end
 
 on setHelpItemClosed me, tHelpItemId
+  if pHelpStatusData.getaProp(tHelpItemId) <> 1 then
+    return 0
+  end if
   pHelpStatusData[tHelpItemId] = 0
   tConn = getConnection(getVariableValue("connection.info.id"))
   tKey = EMPTY
