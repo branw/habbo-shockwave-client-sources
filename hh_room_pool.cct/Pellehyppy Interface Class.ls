@@ -71,17 +71,15 @@ on createFigurePrew me
   end if
   tWndObj = getWindow("uimakoppi")
   tFigure["ch"]["color"] = pSwimSuitColor
-  tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
-  tHumanImg = image(32, 60, 16)
-  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
-  tImgWidth = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#width)
-  tImgHeight = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#height)
-  tPrewImg = image(tImgWidth, tImgHeight, 16)
-  tMargins = rect(-11, 24, -11, 24)
-  tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
-  tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
-  tPrewImg = me.flipImage(tPrewImg)
+  tPartList = #swimmer
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 4, "sh")
   if tWndObj.elementExists("ph_swimsuit.preview.img") then
+    tImgWidth = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#width)
+    tImgHeight = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#height)
+    tPrewImg = image(tImgWidth, tImgHeight, 16)
+    tMargins = rect(19, 0, 19, 0)
+    tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
+    tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
     tWndObj.getElement("ph_swimsuit.preview.img").feedImage(tPrewImg)
   end if
   if tWndObj.elementExists("ph_swimsuit.preview") then

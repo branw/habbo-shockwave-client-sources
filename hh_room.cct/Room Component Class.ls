@@ -284,7 +284,8 @@ on getUsersRoomId me, tUserName
   tIndex = -1
   repeat with tPos = 1 to pUserObjList.count
     tuser = pUserObjList[tPos]
-    if tuser.getClass() = "user" then
+    tClass = tuser.getClass()
+    if tClass = "user" then
       if tuser.getName() = tUserName then
         tIndex = pUserObjList.getPropAt(tPos)
         exit repeat

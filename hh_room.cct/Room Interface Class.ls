@@ -811,9 +811,8 @@ on startObjectMover me, tObjID, tStripID, tProps
       pClickAction = "moveActive"
     "item":
       pClickAction = "moveItem"
-    "user":
-      return error(me, "Can't move user objects!", #startObjectMover, #minor)
   end case
+  return error(me, "Object type" && pSelectedType && "can't be moved.", #startObjectMover, #minor)
   return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType, tProps)
 end
 
@@ -1327,6 +1326,10 @@ on eventProcUserObj me, tEvent, tSprID, tParam
       me.showArrowHiliter(tSprID)
     end if
     tloc = tObject.getLocation()
+    if tObject.getClass() = "user" then
+      tUserID = integer(tObject.getWebID())
+      me.getComponent().getRoomConnection().send("GET_USER_TAGS", [#integer: tUserID])
+    end if
     if tParam = #userEnters then
       tloc = [5, 5]
     end if

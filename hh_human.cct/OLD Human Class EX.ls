@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pPartListSubSet, pPartOrderOld
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup
 
 on construct me
   pID = 0
@@ -50,19 +50,6 @@ on construct me
   pGroupId = VOID
   pStatusInGroup = VOID
   pBaseLocZ = 0
-  pPeopleSize = getVariable("human.size.64")
-  pPartOrderOld = EMPTY
-  tSubSetList = ["head", "speak", "gesture", "eye", "handRight", "handLeft", "walk", "sit", "itemRight"]
-  pPartListSubSet = [:]
-  repeat with tSubSet in tSubSetList
-    tSetName = "human.partset." & tSubSet & "." & pPeopleSize
-    if not variableExists(tSetName) then
-      pPartListSubSet[tSubSet] = []
-      error(me, tSetName && "not found!", #construct, #major)
-      next repeat
-    end if
-    pPartListSubSet[tSubSet] = getVariableValue(tSetName)
-  end repeat
   return 1
 end
 
@@ -70,15 +57,9 @@ on deconstruct me
   pGeometry = VOID
   pPartList = []
   pInfoStruct = [:]
-  if not voidp(pSprite) then
-    releaseSprite(pSprite.spriteNum)
-  end if
-  if not voidp(pMatteSpr) then
-    releaseSprite(pMatteSpr.spriteNum)
-  end if
-  if not voidp(pShadowSpr) then
-    releaseSprite(pShadowSpr.spriteNum)
-  end if
+  releaseSprite(pSprite.spriteNum)
+  releaseSprite(pMatteSpr.spriteNum)
+  releaseSprite(pShadowSpr.spriteNum)
   if memberExists(me.getCanvasName()) then
     removeMember(me.getCanvasName())
   end if
@@ -127,18 +108,10 @@ on define me, tdata
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
   pInfoStruct[#badge] = " "
-  tThread = getThread(#room)
-  if tThread <> 0 then
-    tInterface = tThread.getInterface()
-    if tInterface <> 0 then
-      tViz = tThread.getInterface().getRoomVisualizer()
-      if tViz <> 0 then
-        tPart = tViz.getPartAtLocation(tdata[#x], tdata[#y], [#wallleft, #wallright])
-        if not (tPart = 0) then
-          pBaseLocZ = tPart[#locZ] - 1000
-        end if
-      end if
-    end if
+  tViz = getThread(#room).getInterface().getRoomVisualizer()
+  tPart = tViz.getPartAtLocation(tdata[#x], tdata[#y], [#wallleft, #wallright])
+  if not (tPart = 0) then
+    pBaseLocZ = tPart[#locZ] - 1000
   end if
   return 1
 end
@@ -147,7 +120,6 @@ on changeFigureAndData me, tdata
   pSex = tdata[#sex]
   pCustom = tdata[#custom]
   tmodels = tdata[#figure]
-  tPartDefinition = me.getClearedFigurePartList(tmodels)
   repeat with tPart in pPartList
     tPartId = tPart.getPartID()
     tNewModelItem = tmodels[tPartId]
@@ -156,12 +128,6 @@ on changeFigureAndData me, tdata
       tColor = tNewModelItem["color"]
       if tColor.red + tColor.green + tColor.blue > 238 * 3 then
         tColor = rgb("EEEEEE")
-      end if
-      if tPartDefinition.findPos(tPartId) = 0 then
-        tmodel = "000"
-      end if
-      if voidp(tmodel) then
-        tmodel = "000"
       end if
       tPart.changePartData(tmodel, tColor)
       pColors[tPartId] = tColor
@@ -279,7 +245,7 @@ on Refresh me, tX, tY, tH
     pHeadDir = pDirection
   end if
   call(#defineDir, pPartList, pDirection)
-  call(#defineDirMultiple, pPartList, pHeadDir, pPartListSubSet["head"])
+  call(#defineDirMultiple, pPartList, pHeadDir, ["hd", "hr", "ey", "fc"])
   me.arrangeParts()
   pChanges = 1
 end
@@ -358,64 +324,20 @@ on getPartColor me, tPart
 end
 
 on getPicture me, tImg
-  return me.getPartialPicture(#Full, tImg, 4, "h")
-end
-
-on getPartialPicture me, tPartList, tImg, tDirection, tPeopleSize
-  if tPartList.ilk <> #list then
-    tPartName = EMPTY
-    if tPartList = #head then
-      tPartList = pPartListSubSet["head"]
-    else
-      if tPartList = #Full then
-        tPartName = "human.parts." & pPeopleSize
-      else
-        if tPartList = #swimmer then
-          tPartName = "swimmer.parts." & pPeopleSize
-        end if
-      end if
-      if variableExists(tPartName) then
-        tPartList = value(getVariable(tPartName))
-      end if
-    end if
-    if tPartList.ilk <> #list then
-      return tImg
-    end if
-  end if
   if voidp(tImg) then
     tCanvas = image(64, 102, 32)
   else
     tCanvas = tImg
   end if
-  if voidp(tDirection) then
-    tDirection = pDirection
-  end if
-  if voidp(tPeopleSize) then
-    tPeopleSize = pPeopleSize
-  end if
-  tDirData = "." & tDirection
+  tPartDefinition = getVariableValue("human.parts." & pPeopleSize)
   tTempPartList = []
-  tPartOrder = "human.parts." & pPeopleSize & tDirData
-  if not variableExists(tPartOrder) then
-    error(me, "No human part order found" && tPartOrder, #getPartialPicture, #major)
-    repeat with i = 1 to pPartIndex.count
-      tPartSymbol = pPartIndex.getPropAt(i)
-      if tPartList.findPos(tPartSymbol) > 0 then
-        tTempPartList.append(pPartList[pPartIndex[tPartSymbol]])
-      end if
-    end repeat
-  else
-    tPartDefinition = getVariableValue(tPartOrder)
-    repeat with tPartSymbol in tPartDefinition
-      if not voidp(pPartIndex[tPartSymbol]) then
-        if tPartList.findPos(tPartSymbol) > 0 then
-          tTempPartList.append(pPartList[pPartIndex[tPartSymbol]])
-        end if
-      end if
-    end repeat
-  end if
-  call(#copyPicture, tTempPartList, tCanvas, tDirection, tPeopleSize)
-  return tCanvas
+  repeat with tPartSymbol in tPartDefinition
+    if not voidp(pPartIndex[tPartSymbol]) then
+      tTempPartList.append(pPartList[pPartIndex[tPartSymbol]])
+    end if
+  end repeat
+  call(#copyPicture, tTempPartList, tCanvas)
+  return me.flipImage(tCanvas)
 end
 
 on getInfo me
@@ -486,9 +408,9 @@ end
 
 on closeEyes me
   if pMainAction = "lay" then
-    call(#defineActMultiple, pPartList, "ley", pPartListSubSet["eye"])
+    call(#defineActMultiple, pPartList, "ley", ["ey"])
   else
-    call(#defineActMultiple, pPartList, "eyb", pPartListSubSet["eye"])
+    call(#defineActMultiple, pPartList, "eyb", ["ey"])
   end if
   pEyesClosed = 1
   pChanges = 1
@@ -496,9 +418,9 @@ end
 
 on openEyes me
   if pMainAction = "lay" then
-    call(#defineActMultiple, pPartList, "lay", pPartListSubSet["eye"])
+    call(#defineActMultiple, pPartList, "lay", ["ey"])
   else
-    call(#defineActMultiple, pPartList, "std", pPartListSubSet["eye"])
+    call(#defineActMultiple, pPartList, "std", ["ey"])
   end if
   pEyesClosed = 0
   pChanges = 1
@@ -567,9 +489,9 @@ on prepare me
   end if
   if pTalking and random(3) > 1 then
     if pMainAction = "lay" then
-      call(#defineActMultiple, pPartList, "lsp", pPartListSubSet["speak"])
+      call(#defineActMultiple, pPartList, "lsp", ["hd", "hr", "fc"])
     else
-      call(#defineActMultiple, pPartList, "spk", pPartListSubSet["speak"])
+      call(#defineActMultiple, pPartList, "spk", ["hd", "hr", "fc"])
     end if
     pChanges = 1
   end if
@@ -582,7 +504,7 @@ on prepare me
     pChanges = 1
   end if
   if pWaving and pMainAction <> "lay" then
-    call(#doHandWorkLeft, me.getDefinedPartList(pPartListSubSet["handLeft"]), "wav")
+    call(#doHandWorkLeft, pPartList, "wav")
     pChanges = 1
   end if
   if pDancing then
@@ -629,12 +551,22 @@ on render me
     pMatteSpr.height = tSize[2]
     pBuffer = image(tSize[1], tSize[2], tSize[3])
   end if
-  pMember.regPoint = point(0, pMember.regPoint[2])
-  pShadowFix = 0
-  if pSprite.flipH then
-    pSprite.flipH = 0
-    pMatteSpr.flipH = 0
-    pShadowSpr.flipH = 0
+  if pFlipList[pDirection + 1] <> pDirection or pDirection = 3 and pHeadDir = 4 or pDirection = 7 and pHeadDir = 6 then
+    pMember.regPoint = point(pMember.image.width, pMember.regPoint[2])
+    pShadowFix = pXFactor
+    if not pSprite.flipH then
+      pSprite.flipH = 1
+      pMatteSpr.flipH = 1
+      pShadowSpr.flipH = 1
+    end if
+  else
+    pMember.regPoint = point(0, pMember.regPoint[2])
+    pShadowFix = 0
+    if pSprite.flipH then
+      pSprite.flipH = 0
+      pMatteSpr.flipH = 0
+      pShadowSpr.flipH = 0
+    end if
   end if
   if pCorrectLocZ then
     tOffZ = (pLocH + pRestingHeight) * 1000 + 2
@@ -664,49 +596,17 @@ on reDraw me
   pMember.image.copyPixels(pBuffer, pBuffer.rect, pBuffer.rect)
 end
 
-on getClearedFigurePartList me, tmodels
-  return me.getSpecificClearedFigurePartList(tmodels, "human.parts")
-end
-
-on getSpecificClearedFigurePartList me, tmodels, tListName
-  tPartList = getVariableValue(tListName & "." & pPeopleSize)
-  if tPartList.ilk <> #list then
-    return []
-  end if
-  if not objectExists("Figure_System") then
-    error("No figure system!", me.getID, #getSpecificClearedFigurePartList, #critical)
-    return tPartList
-  end if
-  tFigureSystem = getObject("Figure_System")
-  repeat with tmodel in tmodels
-    tSetID = tmodel["setid"]
-    tsex = pSex
-    if voidp(pSex) then
-      tsex = "M"
-    end if
-    tPreventedParts = tFigureSystem.getPreventedPartsBySetID(tsex, tSetID)
-    if tPreventedParts.count > 0 then
-      repeat with tPart in tPreventedParts
-        if tPartList.getOne(tPart) then
-          tPartList.deleteOne(tPart)
-        end if
-      end repeat
-    end if
-  end repeat
-  return tPartList
-end
-
 on setPartLists me, tmodels
   tAction = pMainAction
   pPartList = []
-  tPartDefinition = me.getClearedFigurePartList(tmodels)
+  tPartDefinition = getVariableValue("human.parts." & pPeopleSize)
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
     if voidp(tmodels[tPartSymbol]) then
       tmodels[tPartSymbol] = [:]
     end if
     if voidp(tmodels[tPartSymbol]["model"]) then
-      tmodels[tPartSymbol]["model"] = "000"
+      tmodels[tPartSymbol]["model"] = "001"
     end if
     if voidp(tmodels[tPartSymbol]["color"]) then
       tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
@@ -738,42 +638,78 @@ on setPartLists me, tmodels
 end
 
 on arrangeParts me
-  tPartOrder = EMPTY
-  tDirData = EMPTY
-  if not voidp(pDirection) then
-    tDirData = "." & pDirection
-  end if
-  tPartOrder = "human.parts." & pPeopleSize
-  tPartOrderAction = tPartOrder & "." & pMainAction
-  if variableExists(tPartOrderAction & tDirData) then
-    tPartOrder = tPartOrderAction
-  end if
-  if pWaving then
-    tPartOrderWave = tPartOrder & ".wave"
-    if variableExists(tPartOrderWave & tDirData) then
-      tPartOrder = tPartOrderWave
-    end if
-  end if
-  tPartOrder = tPartOrder & tDirData
-  if tPartOrder = pPartOrderOld then
-    return 1
-  end if
-  if not variableExists(tPartOrder) then
-    error(me, "No human part order found" && tPartOrder, #arrangeParts, #major)
+  if pPartIndex["lg"] < pPartIndex["sh"] then
+    tIndex1 = pPartIndex["lg"]
+    tIndex2 = pPartIndex["sh"]
   else
-    tPartDefinition = getVariableValue(tPartOrder)
-    tTempPartList = []
-    repeat with tPartSymbol in tPartDefinition
-      if not voidp(pPartIndex[tPartSymbol]) then
-        tTempPartList.append(pPartList[pPartIndex[tPartSymbol]])
-      end if
-    end repeat
-    if tTempPartList.count <> pPartList.count then
-      return error(me, "Invalid human part order" && tPartOrder, #arrangeParts, #major)
-    end if
-    pPartList = tTempPartList
-    pPartOrderOld = tPartOrder
+    tIndex1 = pPartIndex["sh"]
+    tIndex2 = pPartIndex["lg"]
   end if
+  tLG = pPartList[pPartIndex["lg"]]
+  tSH = pPartList[pPartIndex["sh"]]
+  case pMainAction of
+    "sit", "lay":
+      if pFlipList[pDirection + 1] = 0 then
+        pPartList[tIndex1] = tSH
+        pPartList[tIndex2] = tLG
+      else
+        pPartList[tIndex1] = tLG
+        pPartList[tIndex2] = tSH
+      end if
+    otherwise:
+      pPartList[tIndex1] = tSH
+      pPartList[tIndex2] = tLG
+  end case
+  tRS = pPartList[pPartIndex["rs"]]
+  tRH = pPartList[pPartIndex["rh"]]
+  tRI = pPartList[pPartIndex["ri"]]
+  pPartList.deleteAt(pPartIndex["rs"])
+  pPartList.deleteAt(pPartIndex["rh"])
+  pPartList.deleteAt(pPartIndex["ri"])
+  if tRH.pActionRh = "drk" and ([0, 6]).getPos(pDirection) <> 0 then
+    pPartList.addAt(1, tRI)
+    pPartList.append(tRH)
+    pPartList.append(tRS)
+  else
+    if pDirection = 7 then
+      pPartList.addAt(1, tRI)
+      pPartList.addAt(2, tRH)
+      pPartList.addAt(3, tRS)
+    else
+      if pDirection = 3 and pDancing > 0 then
+        pPartList.addAt(7, tRI)
+        pPartList.addAt(8, tRH)
+        pPartList.addAt(9, tRS)
+      else
+        pPartList.append(tRI)
+        pPartList.append(tRH)
+        pPartList.append(tRS)
+      end if
+    end if
+  end if
+  repeat with i = 1 to pPartList.count
+    pPartIndex[pPartList[i].pPart] = i
+  end repeat
+  if pLastDir = pDirection then
+    return 
+  end if
+  pLastDir = pDirection
+  tLS = pPartList[pPartIndex["ls"]]
+  tLH = pPartList[pPartIndex["lh"]]
+  tLI = pPartList[pPartIndex["li"]]
+  pPartList.deleteAt(pPartIndex["ls"])
+  pPartList.deleteAt(pPartIndex["lh"])
+  pPartList.deleteAt(pPartIndex["li"])
+  case pDirection of
+    3:
+      pPartList.addAt(8, tLI)
+      pPartList.addAt(9, tLH)
+      pPartList.addAt(10, tLS)
+    otherwise:
+      pPartList.addAt(1, tLI)
+      pPartList.addAt(2, tLH)
+      pPartList.addAt(3, tLS)
+  end case
   repeat with i = 1 to pPartList.count
     pPartIndex[pPartList[i].pPart] = i
   end repeat
@@ -787,18 +723,7 @@ on flipImage me, tImg_a
 end
 
 on getCanvasName me
-  return pClass && pName & me.getID() && "Canvas"
-end
-
-on getDefinedPartList me, tPartNameList
-  tPartList = []
-  repeat with tPartName in tPartNameList
-    if not voidp(pPartIndex[tPartName]) then
-      tPos = pPartIndex[tPartName]
-      tPartList.append(pPartList[tPos])
-    end if
-  end repeat
-  return tPartList
+  return pClass && pName && me.getID() && "Canvas"
 end
 
 on action_mv me, tProps
@@ -815,7 +740,7 @@ on action_mv me, tProps
   pMoveStart = the milliSeconds
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
-  call(#defineActMultiple, pPartList, "wlk", pPartListSubSet["walk"])
+  call(#defineActMultiple, pPartList, "wlk", ["bd", "lg", "lh", "rh", "ls", "rs", "sh"])
 end
 
 on action_sld me, tProps
@@ -841,7 +766,7 @@ on action_sld me, tProps
 end
 
 on action_sit me, tProps
-  call(#defineActMultiple, pPartList, "sit", pPartListSubSet["sit"])
+  call(#defineActMultiple, pPartList, "sit", ["bd", "lg", "sh"])
   pMainAction = "sit"
   pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
@@ -898,8 +823,8 @@ on action_carryd me, tProps
     else
       tCarryItm = "001"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
@@ -907,8 +832,8 @@ on action_carryd me, tProps
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -922,16 +847,17 @@ on action_cri me, tProps
     else
       tCarryItm = "075"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      tCarryItm = "001"
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -948,14 +874,14 @@ on action_usei me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -972,14 +898,14 @@ on action_drink me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -993,8 +919,8 @@ on action_carryf me, tProps
     else
       tCarryItm = "001"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, tItem)
     end if
@@ -1002,8 +928,8 @@ on action_carryf me, tProps
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "004"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -1020,14 +946,14 @@ on action_eat me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-    call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "004"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
-      call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
   end if
 end
@@ -1043,17 +969,19 @@ on action_gest me, tProps
   if pPeopleSize = "sh" then
     return 
   end if
+  tList = ["ey", "fc"]
   tGesture = tProps.word[2]
   if tGesture = "spr" then
     tGesture = "srp"
   end if
   if pMainAction = "lay" then
     tGesture = "l" & tGesture.char[1..2]
-    call(#defineActMultiple, pPartList, tGesture, pPartListSubSet["gesture"])
+    call(#defineActMultiple, pPartList, tGesture, tList)
   else
-    call(#defineActMultiple, pPartList, tGesture, pPartListSubSet["gesture"])
+    call(#defineActMultiple, pPartList, tGesture, tList)
     if tGesture = "ohd" then
-      call(#defineActMultiple, pPartList, "ohd", pPartListSubSet["head"])
+      pPartList[pPartIndex["hd"]].defineAct(tGesture)
+      pPartList[pPartIndex["hr"]].defineAct(tGesture)
     end if
   end if
 end
@@ -1073,8 +1001,8 @@ on action_dance me, tProps
 end
 
 on action_ohd me
-  call(#defineActMultiple, pPartList, "ohd", pPartListSubSet["head"])
-  call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "ohd")
+  call(#defineActMultiple, pPartList, "ohd", ["hd", "fc", "ey", "hr"])
+  call(#doHandWorkRight, pPartList, "ohd")
 end
 
 on action_trd me
@@ -1098,7 +1026,7 @@ on action_sign me, props
   if getmemnum(tSignMem) = 0 then
     return 0
   end if
-  call(#doHandWorkLeft, me.getDefinedPartList(pPartListSubSet["handLeft"]), "sig")
+  call(#doHandWorkLeft, me.pPartList, "sig")
   tSignObjID = "SIGN_EXTRA"
   if voidp(pExtraObjs[tSignObjID]) then
     pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))

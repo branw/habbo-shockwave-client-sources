@@ -172,15 +172,17 @@ on createFigurePrew me
   end if
   tWndObj = getWindow(pKoppiWndID)
   tFigure["ch"]["color"] = pSwimSuitColor
-  tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
-  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
-  tWidth = tWndObj.getElement("preview_img").getProperty(#width)
-  tHeight = tWndObj.getElement("preview_img").getProperty(#height)
-  tPrewImg = image(tWidth, tHeight, 16)
-  tMargins = rect(-11, 24, -11, 24)
-  tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
-  tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
-  tWndObj.getElement("preview_img").feedImage(tPrewImg)
+  tPartList = #swimmer
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 4, "sh")
+  if tWndObj.getElement("preview_img") <> 0 then
+    tWidth = tWndObj.getElement("preview_img").getProperty(#width)
+    tHeight = tWndObj.getElement("preview_img").getProperty(#height)
+    tPrewImg = image(tWidth, tHeight, 16)
+    tMargins = rect(39, 0, 39, 0)
+    tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
+    tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
+    tWndObj.getElement("preview_img").feedImage(tPrewImg)
+  end if
   tWndObj.getElement("preview_color").setProperty(#bgColor, pSwimSuitColor)
 end
 

@@ -197,13 +197,16 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           pFloodTimer = the milliSeconds
         else
           pFloodEnterCount = pFloodEnterCount + 1
-          if pFloodEnterCount > 2 then
-            if the milliSeconds < pFloodTimer + 3000 then
+          tFloodCountLimit = 2
+          tFloodTimerLimit = 3000
+          tFloodTimeout = 30000
+          if pFloodEnterCount > tFloodCountLimit then
+            if the milliSeconds < pFloodTimer + tFloodTimerLimit then
               tChatField.setText(EMPTY)
               createObject("FloodBlocking", "Flood Blocking Class")
-              getObject("FloodBlocking").Init(pBottomBarId, tSprID, 30000)
+              getObject("FloodBlocking").Init(pBottomBarId, tSprID, tFloodTimeout)
               pFloodblocking = 1
-              pFloodTimer = the milliSeconds + 30000
+              pFloodTimer = the milliSeconds + tFloodTimeout
             else
               pFloodEnterCount = VOID
             end if

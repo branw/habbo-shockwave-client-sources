@@ -1,8 +1,9 @@
-property pModBadgeList, pExtensionClosedID
+property pModBadgeList, pExtensionClosedID, pExtensionOpenedID
 
 on construct me
   pModBadgeList = getVariableValue("moderator.badgelist")
   pExtensionClosedID = "roomnfo_ext_right"
+  pExtensionOpenedID = "roomnfo_ext_close"
   return 1
 end
 
@@ -17,7 +18,6 @@ on initWindow me, tID, ttype
     tWndObj = getWindow(tID)
   else
     tWndObj = getWindow(tID)
-    tWndObj.unmerge()
   end if
   tWndObj.lock()
   mergeWindow(tID, ttype)
@@ -28,19 +28,31 @@ on createFurnitureWindow me, tID, tProps
   tWndObj = me.initWindow(tID, "obj_disp_furni.window")
   tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
-  tImage = member(getmemnum(tProps[#smallmember])).image
+  tImage = tProps.getaProp(#image)
+  if voidp(tImage) then
+    tImage = member(getmemnum(tProps[#smallmember])).image
+  end if
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tImage)
   tWndObj.lock()
   return 1
 end
 
-on createHumanWindow me, tID, tProps, tSelectedObj, tBadgeObjID
+on createHumanWindow me, tID, tProps, tSelectedObj, tBadgeObjID, tShowTags
   tWndObj = me.initWindow(tID, "obj_disp_human.window")
   tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tProps[#image])
   tBadgeObj = getObject(tBadgeObjID)
   tBadgeObj.updateInfoStandBadge(tID, tSelectedObj, tProps[#badge])
+  me.showHideTags(tID, tShowTags)
+  tWndObj.lock()
+  return 1
+end
+
+on createBotWindow me, tID, tProps
+  tWndObj = me.initWindow(tID, "obj_disp_bot.window")
+  tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
+  tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
   tWndObj.lock()
   return 1
 end
@@ -56,16 +68,24 @@ end
 
 on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
   tSessionObj = getObject(#session)
+  tUserRights = tSessionObj.GET("user_rights")
   if tTargetUserName = tSessionObj.GET("user_name") then
+    tOwnUser = getThread("room").getComponent().getOwnUser()
     tWindowModel = "obj_disp_actions_own.window"
     tButtonList = [:]
     tButtonList["wave"] = #visible
-    tButtonList["dance"] = #visible
-    tButtonList["hcdance"] = #visible
-    if tSessionObj.GET("hc") then
-      tButtonList["dance"] = #hidden
+    tButtonList["dance"] = #hidden
+    tButtonList["hcdance"] = #hidden
+    tMainAction = tOwnUser.getProperty(#mainAction)
+    tSwimming = tOwnUser.getProperty(#swimming)
+    tDanceButtonState = #visible
+    if tMainAction = "sit" or tMainAction = "lay" or tSwimming then
+      tDanceButtonState = #deactive
+    end if
+    if tUserRights.getOne("fuse_use_club_dance") then
+      tButtonList["hcdance"] = tDanceButtonState
     else
-      tButtonList["hcdance"] = #hidden
+      tButtonList["dance"] = tDanceButtonState
     end if
   else
     tButtonList = [:]
@@ -78,7 +98,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tButtonList["take_rights"] = #visible
     tWindowModel = "obj_disp_actions_peer.window"
     tRoomOwner = tSessionObj.GET("room_owner")
-    tAnyRoomController = tSessionObj.GET("user_rights").getOne("fuse_any_room_controller")
+    tAnyRoomController = tUserRights.getOne("fuse_any_room_controller")
     if threadExists(#messenger) then
       tBuddyData = getThread(#messenger).getComponent().getBuddyData()
       if tBuddyData.online.getPos(tTargetUserName) > 0 then
@@ -89,7 +109,6 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tNotPrivateRoom = tRoomComponent.getRoomID() <> "private"
     tNoTrading = tRoomComponent.getRoomData()[#trading] = 0
     tTradeTimeout = 0
-    tUserRights = getObject(#session).GET("user_rights")
     tTradeProhibited = not tUserRights.getOne("fuse_trade")
     if tTradeTimeout or tNotPrivateRoom or tNoTrading or tTradeProhibited then
       tButtonList["trade"] = #deactive
@@ -168,6 +187,24 @@ on createActionsFurniWindow me, tID, tClass, tShowButtons
   return tID
 end
 
+on showHideTags me, tID, tShowTags
+  tWndObj = getWindow(tID)
+  tArrowElem = tWndObj.getElement("object_displayer_toggle_tags_icon")
+  tTextElem = tWndObj.getElement("object_displayer_toggle_tags")
+  if voidp(tShowTags) then
+    tArrowElem.hide()
+    tTextElem.hide()
+  else
+    if tShowTags then
+      tArrowElem.setProperty(#member, pExtensionOpenedID)
+      tTextElem.setText(getText("object_displayer_hide_tags"))
+    else
+      tArrowElem.setProperty(#member, pExtensionClosedID)
+      tTextElem.setText(getText("object_displayer_show_tags"))
+    end if
+  end if
+end
+
 on scaleButtonWindow me, tID, tButtonList, tShowButtons
   tWndObj = getWindow(tID)
   if tShowButtons = 0 then
@@ -217,6 +254,13 @@ on createLinksWindow me, tID, tFormat
     #peer:
       tWindowModel = "obj_disp_links_peer.window"
   end case
+  tWndObj = me.initWindow(tID, tWindowModel)
+  tWndObj.lock()
+  return tID
+end
+
+on createUserTagsWindow me, tID
+  tWindowModel = "obj_disp_user_tags.window"
   tWndObj = me.initWindow(tID, tWindowModel)
   tWndObj.lock()
   return tID

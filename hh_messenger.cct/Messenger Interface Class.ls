@@ -1,4 +1,4 @@
-property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeight, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pBodyPartObjects, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text, pTimeOutID, pRequestRenderID, pSelectionIsInverted
+property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeight, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text, pTimeOutID, pRequestRenderID, pSelectionIsInverted
 
 on construct me
   pWindowTitle = getText("win_messenger", "Habbo Console")
@@ -15,7 +15,6 @@ on construct me
   pBuddyListPntr = VOID
   pBuddyDrawObjList = [:]
   pRemoveBuddy = [:]
-  pBodyPartObjects = [:]
   pBuddyDrawNum = 1
   pCurrProf = []
   pMsgsStr = getText("console_msgs", "msgs")
@@ -60,7 +59,6 @@ on deconstruct me
   removeWriter(pBuddyDrw_writerID_msgs)
   removeWriter(pBuddyDrw_writerID_last)
   removeWriter(pBuddyDrw_writerID_text)
-  pBodyPartObjects = [:]
   pBuddyDrawObjList = [:]
   removePrepare(me.getID())
   if timeoutExists(pTimeOutID) then
@@ -87,9 +85,6 @@ on showMessenger me
   end if
   me.getComponent().send_BuddylistUpdate()
   if not windowExists(pWindowTitle) then
-    if pBodyPartObjects.count = 0 then
-      me.createTemplateHead()
-    end if
     me.ChangeWindowView("console_myinfo.window")
     return 1
   else
@@ -135,6 +130,14 @@ end
 
 on isMessengerActive me
   return not pMessengerInactive
+end
+
+on getSelectedBuddiesCount me
+  if listp(pSelectedBuddies) then
+    return pSelectedBuddies.count
+  else
+    return 0
+  end if
 end
 
 on createBuddyList me, tBuddyListPntr
@@ -349,78 +352,13 @@ on updateRadioButton me, tElement, tListOfOthersElements
   end repeat
 end
 
-on createTemplateHead me
-  tTempFigure = getObject(#session).GET("user_figure")
-  if not listp(tTempFigure) then
-    return error(me, "Missing user figure data!", #createTemplateHead, #minor)
-  end if
-  pBodyPartObjects = [:]
-  if objectExists(#classes) then
-    tBodyPartClass = value(getObject(#classes).GET("bodypart"))
-  else
-    if memberExists("fuse.object.classes") then
-      tBodyPartClass = value(readValueFromField("fuse.object.classes", RETURN, "bodypart"))
-    else
-      return error(me, "Resources required to create character image not found!", #createTemplateHead, #major)
-    end if
-  end if
-  repeat with tPart in ["hd", "fc", "ey", "hr"]
-    tmodel = tTempFigure[tPart]["model"]
-    tColor = tTempFigure[tPart]["color"]
-    tDirection = 3
-    tAction = "std"
-    tAncestor = me
-    tTempPartObj = createObject(#temp, tBodyPartClass)
-    tTempPartObj.define(tPart, tmodel, tColor, tDirection, tAction, tAncestor)
-    pBodyPartObjects.addProp(tPart, tTempPartObj)
-  end repeat
-  return 1
-end
-
 on updateMyHeadPreview me, tFigure, tElement
-  if pBodyPartObjects.count = 0 then
-    return 0
-  end if
-  repeat with tPart in ["hd", "fc", "ey", "hr"]
-    if not voidp(tFigure[tPart]) then
-      tmodel = tFigure[tPart]["model"]
-      tColor = tFigure[tPart]["color"]
-      case length(tmodel) of
-        1:
-          tmodel = "00" & tmodel
-        2:
-          tmodel = "0" & tmodel
-      end case
-      call(#setColor, pBodyPartObjects[tPart], tColor)
-      call(#setModel, pBodyPartObjects[tPart], tmodel)
-    end if
-  end repeat
   me.createHeadPreview(tElement)
 end
 
 on createHeadPreview me, tElemID
-  tWndObj = getWindow(pWindowTitle)
-  if not tWndObj then
-    return 0
-  end if
-  if tWndObj.elementExists(tElemID) then
-    if pBodyPartObjects.count > 0 then
-      tTempImg = image(64, 102, 16)
-      repeat with tPart in ["hd", "fc", "ey", "hr"]
-        call(#copyPicture, pBodyPartObjects[tPart], tTempImg, 3)
-      end repeat
-      tTempImg = tTempImg.trimWhiteSpace()
-      tElement = tWndObj.getElement(tElemID)
-      tWidth = tElement.getProperty(#width)
-      tHeight = tElement.getProperty(#height)
-      tDepth = tElement.getProperty(#depth)
-      tPrewImg = image(tWidth, tHeight, tDepth)
-      tdestrect = tPrewImg.rect - tTempImg.rect
-      tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tTempImg.width + tdestrect.width / 2, tdestrect.height / 2 + tTempImg.height)
-      tPrewImg.copyPixels(tTempImg, tdestrect, tTempImg.rect, [#ink: 8])
-      tElement.clearImage()
-      tElement.feedImage(tPrewImg)
-    end if
+  if objectExists("Figure_Preview") then
+    getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, tElemID, #head)
   end if
 end
 
@@ -770,8 +708,7 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           tPosition = tClickLine + 1
           tpoint = tParm - [0, tClickLine * pBuddylistItemHeight]
           tName = tRenderList[tPosition]
-          pBuddyDrawObjList[tName].select(tpoint, pBuddyListBuffer, tClickLine)
-          pBuddyDrawObjList[tName].clickAt(tParm.locH, tParm.locV - tClickLine * pBuddylistItemHeight)
+          pBuddyDrawObjList[tName].clickAt(tpoint, pBuddyListBuffer, tClickLine)
           me.updateBuddyListImg()
           tElem = getWindow(pWindowTitle).getElement("console_select_friend_field")
           if tElem <> 0 then
@@ -1028,18 +965,10 @@ on eventProcMessenger me, tEvent, tElemID, tParm
               if voidp(pBuddyDrawObjList[tBuddyName]) then
                 return 0
               end if
-              if pBuddyDrawObjList[tBuddyName].atWebLinkIcon(tBuddyPoint) then
+              if pBuddyDrawObjList[tBuddyName].checkLinks(tBuddyPoint) then
                 tElemRef.setProperty(#cursor, "cursor.finger")
               else
-                if pBuddyDrawObjList[tBuddyName].atMessageCount(tBuddyPoint) then
-                  tElemRef.setProperty(#cursor, "cursor.finger")
-                else
-                  if pBuddyDrawObjList[tBuddyName].atFollowLink(tBuddyPoint) then
-                    tElemRef.setProperty(#cursor, "cursor.finger")
-                  else
-                    tElemRef.setProperty(#cursor, 0)
-                  end if
-                end if
+                tElemRef.setProperty(#cursor, 0)
               end if
             otherwise:
               nothing()

@@ -1,14 +1,17 @@
 on getInfo me
-  me.pInfoStruct[#image] = image(1, 1, 8)
   return me.pInfoStruct
 end
 
 on action_taked me
   me.pCarrying = 1
-  call(#doHandWorkRight, me.pPartList, "crr")
+  call(#doHandWorkRight, me.getDefinedPartList(me.pPartListSubSet["handRight"]), "crr")
 end
 
 on action_gived me
   me.pCarrying = 1
-  call(#doHandWorkRight, me.pPartList, "crr")
+  call(#doHandWorkRight, me.getDefinedPartList(me.pPartListSubSet["handRight"]), "crr")
+end
+
+on getClass me
+  return "bot"
 end

@@ -428,7 +428,7 @@ end
 
 on createMyHeadIcon me
   if objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pBottomBar, "ownhabbo_icon_image", ["hd", "fc", "ey", "hr"])
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBar, "ownhabbo_icon_image", #head)
   end if
 end
 

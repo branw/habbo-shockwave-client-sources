@@ -78,6 +78,11 @@ on getInfo me
   tInfo[#class] = pClass
   tInfo[#custom] = pCustom
   tInfo[#smallmember] = pClass & "_small"
+  tMemName = pClass && pType & "_small"
+  if pClass = "poster" and memberExists(tMemName) then
+    tInfo[#image] = member(getmemnum(tMemName)).image
+    return tInfo
+  end if
   if memberExists(pClass & "_small") then
     tInfo[#image] = member(getmemnum(pClass & "_small")).image
   else

@@ -9,6 +9,8 @@ on construct me
   pSelectableSetIDList = [:]
   setVariable("figurepartlist.loaded", 0)
   me.regMsgList(1)
+  me.loadPartSetXML()
+  me.loadActionSetXML()
   return 1
 end
 
@@ -35,7 +37,7 @@ on define me, tProps
       tProlist = tProps["source"]
       initializeValidPartLists(tProlist)
     otherwise:
-      error(me, "incorret source type, can«t run define ", #define, #major)
+      error(me, "incorrect source type, can«t run define ", #define, #major)
   end case
 end
 
@@ -62,6 +64,22 @@ on setAvailableSetList me, tList
     pAvailableSetListLoadedFlag = 1
     executeMessage(#figure_ready)
   end if
+end
+
+on getPreventedPartsBySetID me, tsex, tModelID
+  if tsex = "f" then
+    tsex = "F"
+  else
+    tsex = "M"
+  end if
+  tmodellist = pValidSetIDList[tsex]
+  tmodel = getaProp(tmodellist, integer(tModelID))
+  if ilk(tmodel) = #propList then
+    tHiddenParts = tmodel[#hideparts]
+  else
+    tHiddenParts = []
+  end if
+  return tHiddenParts
 end
 
 on GenerateFigureDataToServerMode me, tFigure, tsex
@@ -134,7 +152,7 @@ on generateFigureDataToOldServerMode me, tFigure, tsex, tCheckValidParts
         end if
         tColor = string(tColor)
         if tColor.item.count < 3 then
-          put "VIKAA SILMISSÄ"
+          put "VIKAA SILMISS€"
         else
           tR = value(tColor.item[1].char[5..length(tColor.item[1])])
           tG = value(tColor.item[2])
@@ -196,7 +214,7 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
   case tClass of
     "user", "pelle":
       tTempFigure = [:]
-      if tFigureData.char.count = 25 and integerp(integer(tFigureData)) then
+      if tFigureData.char.count mod 5 = 0 and integerp(integer(tFigureData)) then
         tFigureData = tFigureData.char[1..tFigureData.char.count]
         tPartCount = tFigureData.char.count / 5
         repeat with i = 0 to tPartCount - 1
@@ -244,7 +262,10 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
         tFigure[tProp] = tValue
         the itemDelimiter = "&"
       end repeat
-      tRequiredParts = ["hr", "hd", "ey", "fc", "bd", "lh", "rh", "ch", "ls", "rs", "lg", "sh"]
+      if voidp(tFigure["hrb"]) and not voidp(tFigure["hr"]) then
+        tFigure["hrb"] = tFigure["hr"]
+      end if
+      tRequiredParts = ["hr", "hrb", "hd", "ey", "fc", "bd", "lh", "rh", "ch", "ls", "rs", "lg", "sh", "fa", "ea", "he", "ca"]
       repeat with tItem in tRequiredParts
         if not listp(tFigure[tItem]) then
           tFigure[tItem] = [:]
@@ -253,7 +274,7 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
           tFigure[tItem]["color"] = rgb(238, 238, 238)
         end if
         if not stringp(tFigure[tItem]["model"]) then
-          tFigure[tItem]["model"] = "001"
+          tFigure[tItem]["model"] = "000"
         end if
       end repeat
   end case
@@ -284,13 +305,17 @@ on parseNewTypeFigure me, tFigure, tsex
         tchangeparts = pValidPartsList[tsex][tMainPart][tlocation]["p"]
         tColorList = pValidPartsList[tsex][tMainPart][tlocation]["c"]
       end if
-      if not voidp(tMainPart) then
-        tMainPartsList[tMainPart] = ["changeparts": tchangeparts, "setid": tSetID, "colorlist": tColorList, "colorID": tColorId]
+      if tMainPart = "hr" then
+        if voidp(tchangeparts["hrb"]) and not voidp(tchangeparts["hr"]) then
+          tchangeparts["hrb"] = tchangeparts["hr"]
+        end if
       end if
+      tMainPartsList[tMainPart] = ["changeparts": tchangeparts, "setid": tSetID, "colorlist": tColorList, "colorID": tColorId]
     end if
   end repeat
   tTempFigure = [:]
-  repeat with tMainPart in ["hr", "hd", "lg", "sh", "ch"]
+  repeat with k = 1 to tMainPartsList.count
+    tMainPart = tMainPartsList.getPropAt(k)
     if not voidp(tMainPartsList[tMainPart]) then
       tSetID = tMainPartsList[tMainPart]["setid"]
       tColorId = tMainPartsList[tMainPart]["colorID"]
@@ -458,14 +483,13 @@ end
 on loadFigurePartList me, tURL
   tMem = tURL
   tMemberCount = 0
-  tCastLib = castLib("hh_people_1")
-  if tCastLib <> 0 then
-    tMemberCount = tMemberCount + the number of castMembers of castLib "hh_people_1"
-    tCastLib = castLib("hh_people_2")
+  tCastList = ["hh_human_shirt", "hh_human_leg", "hh_human_shoe", "hh_human_body", "hh_human_face", "hh_human_hats", "hh_human_hair"]
+  repeat with tCastName in tCastList
+    tCastLib = castLib(tCastName)
     if tCastLib <> 0 then
-      tMemberCount = tMemberCount + the number of castMembers of castLib "hh_people_2"
+      tMemberCount = tMemberCount + the number of castMembers of castLib tCastName
     end if
-  end if
+  end repeat
   tSeparator = "?"
   if tURL contains "?" then
     tSeparator = "&"
@@ -491,9 +515,14 @@ on partListLoaded me
     error(me, "Failure while loading part list", #partListLoaded, #major)
   else
     try()
-    tValidpartList = value(member(getmemnum(tMemName)).text)
+    tContent = member(getmemnum(tMemName)).text
+    tContent = replaceChunks(tContent, RETURN, EMPTY)
+    tValidpartList = value(tContent)
     if catch() then
       tValidpartList = VOID
+    end if
+    if voidp(tValidpartList) then
+      outputList(tContent)
     end if
   end if
   me.initializeValidPartLists(tValidpartList)
@@ -575,6 +604,7 @@ on createValidPartList me, tmember
     tPartId = VOID
     tMainPart = VOID
     tMultiPartProps = VOID
+    tPartType = VOID
     ttempColor = []
     repeat with f = 1 to tFigureIds.line.count
       tLine = tFigureIds.line[f]
@@ -592,7 +622,7 @@ on createValidPartList me, tmember
           end if
         end if
         if not voidp(ttempProp) and ttempColor <> [:] then
-          pValidPartsList[tsex][tMainPart].add(["s": value(tPartId), "p": tMultiPartProps, "c": ttempColor])
+          pValidPartsList[tsex][tMainPart].add(["s": value(tPartId), "p": tMultiPartProps, "c": ttempColor, "t": tPartType])
           if voidp(pValidSetIDList[tsex]) then
             pValidSetIDList[tsex] = [:]
           end if
@@ -645,7 +675,11 @@ on initializeValidPartLists me, tPlist
       tDesc = pValidPartsList[tsex][tProp]
       repeat with tP = 1 to tDesc.count
         tSetID = tDesc[tP]["s"]
-        pValidSetIDList[tsex].addProp(tSetID, [#part: tProp, #location: tP])
+        tAffectedParts = tDesc[tP]["del"]
+        if tAffectedParts = VOID then
+          tAffectedParts = []
+        end if
+        pValidSetIDList[tsex].addProp(tSetID, [#part: tProp, #location: tP, #hideparts: tAffectedParts])
       end repeat
     end repeat
   end repeat
@@ -684,6 +718,152 @@ on initializeSelectablePartList me, tSetIDList
       end if
     end repeat
   end repeat
+end
+
+on loadPartSetXML me
+  tdata = member("partSets.XML").text
+  if not voidp(tdata) then
+    tPeopleSize = getVariable("human.size.64")
+    tPeopleSize50 = getVariable("human.size.32")
+    tParserObject = new(xtra("xmlparser"))
+    errCode = tParserObject.parseString(tdata)
+    errorString = tParserObject.getError()
+    if voidp(errorString) then
+      repeat with i = 1 to tParserObject.child.count
+        tName = tParserObject.child[i].name
+        if tName = "activePartSets" then
+          repeat with j = 1 to tParserObject.child[i].child.count
+            tElementPartSet = tParserObject.child[i].child[j]
+            if tElementPartSet.name = "partSet" then
+              tPartList = []
+              tID = VOID
+              repeat with l = 1 to tElementPartSet.attributeName.count
+                tName = tElementPartSet.attributeName[l]
+                tValue = tElementPartSet.attributeValue[l]
+                if tName = "id" then
+                  tID = tValue
+                end if
+              end repeat
+              if not voidp(tID) then
+                repeat with k = 1 to tElementPartSet.child.count
+                  tElementPart = tElementPartSet.child[k]
+                  if tElementPart.name = "part" then
+                    tSetType = VOID
+                    repeat with l = 1 to tElementPart.attributeName.count
+                      tName = tElementPart.attributeName[l]
+                      tValue = tElementPart.attributeValue[l]
+                      if tName = "set-type" then
+                        tSetType = tValue
+                      end if
+                    end repeat
+                    if not voidp(tSetType) then
+                      tPartList.add(tSetType)
+                    end if
+                  end if
+                end repeat
+                setVariable("human.partset." & tID & "." & tPeopleSize, tPartList)
+                setVariable("human.partset." & tID & "." & tPeopleSize50, tPartList)
+                next repeat
+              end if
+              error(me, "missing id attribute for partSet!", #loadPartSetXML, #major)
+            end if
+          end repeat
+        end if
+      end repeat
+    end if
+  end if
+end
+
+on loadActionSetXML me
+  tdata = member("actionSets.XML").text
+  if not voidp(tdata) then
+    tPeopleSize = getVariable("human.size.64")
+    tPeopleSize50 = getVariable("human.size.32")
+    tParserObject = new(xtra("xmlparser"))
+    errCode = tParserObject.parseString(tdata)
+    errorString = tParserObject.getError()
+    if voidp(errorString) then
+      repeat with i = 1 to tParserObject.child.count
+        tName = tParserObject.child[i].name
+        if tName = "actionSet" then
+          repeat with j = 1 to tParserObject.child[i].child.count
+            tElementAction = tParserObject.child[i].child[j]
+            if tElementAction.name = "action" then
+              tID = VOID
+              repeat with l = 1 to tElementAction.attributeName.count
+                tName = tElementAction.attributeName[l]
+                tValue = tElementAction.attributeValue[l]
+                if tName = "id" then
+                  tID = tValue
+                end if
+              end repeat
+              if not voidp(tID) then
+                repeat with k = 1 to tElementAction.child.count
+                  tElementDirection = tElementAction.child[k]
+                  if tElementDirection.name = "direction" then
+                    tDirection = VOID
+                    repeat with l = 1 to tElementDirection.attributeName.count
+                      tName = tElementDirection.attributeName[l]
+                      tValue = tElementDirection.attributeValue[l]
+                      if tName = "id" then
+                        tDirection = tValue
+                      end if
+                    end repeat
+                    if not voidp(tDirection) then
+                      tPartList = []
+                      repeat with l = 1 to tElementDirection.child.count
+                        tElementPartList = tElementDirection.child[l]
+                        if tElementPartList.name = "partList" then
+                          tPartList = me.parsePartListXML(tElementPartList)
+                        end if
+                      end repeat
+                      if tID = "std" then
+                        setVariable("human.parts." & tPeopleSize & "." & tDirection, tPartList)
+                        setVariable("human.parts." & tPeopleSize50 & "." & tDirection, tPartList)
+                      end if
+                      next repeat
+                    end if
+                  end if
+                end repeat
+                next repeat
+              end if
+              error(me, "missing id attribute for partSet!", #loadPartSetXML, #major)
+            end if
+          end repeat
+        end if
+      end repeat
+    end if
+  end if
+end
+
+on parsePartListXML me, tElement
+  tPartList = []
+  repeat with i = 1 to tElement.child.count
+    tElementPart = tElement.child[i]
+    if tElementPart.name = "part" then
+      tIndex = VOID
+      tSetType = VOID
+      repeat with l = 1 to tElementPart.attributeName.count
+        tName = tElementPart.attributeName[l]
+        tValue = tElementPart.attributeValue[l]
+        if tName = "index" then
+          tIndex = tValue
+          next repeat
+        end if
+        if tName = "set-type" then
+          tSetType = tValue
+        end if
+      end repeat
+      if not voidp(tIndex) and not voidp(tSetType) then
+        tIndex = value(tIndex)
+        if tIndex > 0 then
+          tPartList[tIndex] = tSetType
+        end if
+        next repeat
+      end if
+    end if
+  end repeat
+  return tPartList
 end
 
 on regMsgList me, tBool

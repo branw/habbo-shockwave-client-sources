@@ -82,59 +82,75 @@ on update me
 end
 
 on select me, tClickPoint, tBuffer, tPosition
-  if integer(pMsgCount.word[1]) > 0 and inside(tClickPoint, pMsgLinkRect) then
-    tMsgStruct = getThread(#messenger).getComponent().getMessageBySenderId(pID)
-    getThread(#messenger).getInterface().renderMessage(tMsgStruct)
+  tPos = tPosition * pheight
+  tRect = pCacheImage.rect + rect(0, 1, -4, -2) + [0, tPos, 0, tPos]
+  if pSelected then
+    pSelected = 0
+    tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#FFFFFF")])
   else
-    tPos = tPosition * pheight
-    tRect = pCacheImage.rect + rect(0, 1, -4, -2) + [0, tPos, 0, tPos]
-    if pSelected then
-      pSelected = 0
-      tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#FFFFFF")])
-    else
-      pSelected = 1
-      tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#EEEEEE")])
-    end if
-    getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected)
+    pSelected = 1
+    tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#EEEEEE")])
   end if
+  getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected)
+  return 1
 end
 
 on unselect me
   pSelected = 0
 end
 
-on clickAt me, locX, locY
-  tX1 = pwidth - 16
-  tX2 = tX1 + pCacheWebLinkImg.width
-  tY1 = 4
-  tY2 = tY1 + pCacheWebLinkImg.height
-  tDstRect = rect(tX1, tY1, tX2, tY2)
-  if point(locX, locY).inside(pWebLinkRect) then
+on clickAt me, tpoint, tBuffer, tPosition
+  if me.checkLink(tpoint, #messages) then
+    tMsgStruct = getThread(#messenger).getComponent().getMessageBySenderId(pID)
+    getThread(#messenger).getInterface().renderMessage(tMsgStruct)
+    return 1
+  end if
+  if me.checkLink(tpoint, #home) then
     if not voidp(pID) and variableExists("link.format.userpage") then
       tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(pID))
       openNetPage(tDestURL)
     end if
+    return 1
   end if
-  if point(locX, locY).inside(pFollowLinkRect) then
+  if me.checkLink(tpoint, #follow) then
     tID = integer(pData.id)
     tConn = getConnection(getVariable("connection.info.id"))
     tConn.send("FOLLOW_FRIEND", [#integer: tID])
+    return 1
   end if
+  me.select(tpoint, tBuffer, tPosition)
+  return 1
 end
 
-on atWebLinkIcon me, tpoint
-  return tpoint.inside(pWebLinkRect)
+on checkLinks me, tpoint
+  tLinks = [#home, #messages, #follow]
+  repeat with tLink in tLinks
+    if me.checkLink(tpoint, tLink) then
+      return 1
+    end if
+  end repeat
+  return 0
 end
 
-on atMessageCount me, tpoint
-  if pMsgCount = 0 then
+on checkLink me, tpoint, tLink
+  if tpoint.ilk <> #point then
+    return error(me, "Invalid point", #checkLink, #major)
+  end if
+  if getThread(#messenger).getInterface().getSelectedBuddiesCount() > 1 then
     return 0
   end if
-  return tpoint.inside(pMsgLinkRect)
-end
-
-on atFollowLink me, tpoint
-  return tpoint.inside(pFollowLinkRect)
+  case tLink of
+    #home:
+      return tpoint.inside(pWebLinkRect)
+    #messages:
+      if pMsgCount = 0 then
+        return 0
+      end if
+      return tpoint.inside(pMsgLinkRect)
+    #follow:
+      return tpoint.inside(pFollowLinkRect)
+  end case
+  return error(me, "Unknown link:" && tLink, #checkLink, #major)
 end
 
 on render me, tBuffer, tPosition
