@@ -1,4 +1,4 @@
-property pSprite, pOffset, pTurnPnt, pDirection
+property pSprite, pOffset, pTurnPnt, pDirection, pInitDelay
 
 on define me, tsprite, tDirection
   pSprite = tsprite
@@ -26,9 +26,14 @@ on reset me
   end if
   pSprite.width = pSprite.member.width
   pSprite.height = pSprite.member.height
+  pInitDelay = random(120)
 end
 
 on update me
+  pInitDelay = pInitDelay - 1
+  if pInitDelay > 0 then
+    return 0
+  end if
   pSprite.loc = pSprite.loc + pOffset
   if pSprite.locH = pTurnPnt then
     pOffset[2] = -pOffset[2]

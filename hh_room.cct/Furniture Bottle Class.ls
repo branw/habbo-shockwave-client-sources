@@ -2,24 +2,26 @@ property pChanges, pRolling, pRollDir, pRollingDirection, pRollingStartTime, pRo
 
 on prepare me, tdata
   if tdata.findPos(#stuffdata) then
-    pRollDir = integer(tdata[#stuffdata])
-    if pRollDir < 0 or pRollDir > 7 then
-      pRollDir = 0
+    me.pDirection[1] = integer(tdata[#stuffdata])
+    me.pDirection[2] = integer(tdata[#stuffdata])
+    if me.pDirection[1] < 0 or me.pDirection > 7 then
+      me.pDirection[1] = 0
     end if
   end if
-  pChanges = 1
+  pChanges = 0
   pRolling = 0
-  me.update()
+  pRollAnimDir = me.pDirection[1]
+  pRollingDirection = me.pDirection[1]
+  me.setDir(me.pDirection[1])
+  me.solveMembers()
+  me.moveBy(0, 0, 0)
   return 1
 end
 
 on diceThrown me, tValue
-  if tValue >= 0 then
-    pRollDir = tValue
-  else
-    me.startRolling()
-  end if
-  return 1
+  pRolling = 1
+  pChanges = 1
+  me.setDir(value(tValue))
 end
 
 on update me
@@ -41,11 +43,10 @@ on update me
     me.moveBy(0, 0, 0)
     pChanges = 0
   end if
-  return 1
 end
 
 on roll me
-  if pRolling and the milliSeconds - pRollingStartTime < 3300 or voidp(pRollDir) then
+  if pRolling and the milliSeconds - pRollingStartTime < 3300 then
     tTime = the milliSeconds - pRollingStartTime
     f = tTime * 1.0 / 3200.0 * 3.14158999999999988 * 0.5
     pRollAnimDir = pRollAnimDir + cos(f) * float(pRollingDirection)
@@ -53,27 +54,27 @@ on roll me
     me.pDirection[2] = abs(integer(pRollAnimDir) mod 8)
   else
     pRolling = 0
-    pChanges = 1
   end if
-  return 1
 end
 
-on startRolling me
-  pRollDir = VOID
-  pRollingStartTime = the milliSeconds
-  pRollAnimDir = me.pDirection[1]
-  if random(2) = 1 then
-    pRollingDirection = 1
-  else
-    pRollingDirection = -1
+on setDir me, tNewDir
+  if tNewDir < 0 or tNewDir > 7 then
+    tNewDir = 0
   end if
-  pRolling = 1
-  pChanges = 1
-  return 1
+  pRollDir = tNewDir
+  if pRolling then
+    pRollingStartTime = the milliSeconds
+    pRollAnimDir = me.pDirection[1]
+    if pRollDir mod 2 = 1 then
+      pRollingDirection = 1
+    else
+      pRollingDirection = -1
+    end if
+  end if
 end
 
 on select me
-  if the doubleClick and pRolling = 0 then
+  if the doubleClick then
     getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
   end if
   return 1

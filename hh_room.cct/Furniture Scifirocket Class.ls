@@ -1,15 +1,20 @@
-property pActive, pSync, pChanges, pSmokelist, pSmokeLocs, pInitializeSprites, pPause, pAnimFrame
+property pActive, pSync, pChanges, pSmokelist, pSmokeLocs, pInitializeSprites, pPause, pSizeMultiplier, pAnimFrame
 
 on construct me
-  me.pSmokelist = []
-  me.pSmokeLocs = []
-  me.pInitializeSprites = 0
+  pSmokelist = []
+  pSmokeLocs = []
+  pInitializeSprites = 0
+  if me.pXFactor = 32 then
+    pSizeMultiplier = 0.40000000000000002
+  else
+    pSizeMultiplier = 1.0
+  end if
   return callAncestor(#deconstruct, [me])
 end
 
 on deconstruct me
-  repeat with i = 1 to me.pSmokelist.count
-    releaseSprite(me.pSmokelist[i].spriteNum)
+  repeat with i = 1 to pSmokelist.count
+    releaseSprite(pSmokelist[i].spriteNum)
   end repeat
   return callAncestor(#deconstruct, [me])
 end
@@ -18,11 +23,11 @@ on prepareForMove me
   if pActive = 1 then
     return 1
   end if
-  repeat with i = 1 to me.pSmokelist.count
-    releaseSprite(me.pSmokelist[i].spriteNum)
+  repeat with i = 1 to pSmokelist.count
+    releaseSprite(pSmokelist[i].spriteNum)
   end repeat
-  me.pSmokelist = []
-  me.pChanges = 0
+  pSmokelist = []
+  pChanges = 0
   return 1
 end
 
@@ -31,35 +36,35 @@ on prepare me, tdata
     me.setOn()
   else
     me.setOff()
-    me.pChanges = 0
+    pChanges = 0
   end if
   if me.pSprList.count > 1 then
     removeEventBroker(me.pSprList[2].spriteNum)
   end if
-  me.pAnimFrame = 1
-  me.pSync = 1
-  if me.pSmokelist.count >= 2 then
-    me.pInitializeSprites = 1
+  pAnimFrame = 1
+  pSync = 1
+  if pSmokelist.count >= 2 then
+    pInitializeSprites = 1
   end if
   return 1
 end
 
 on createSmokeSprites me, tNumOf
-  if me.pSprList.count < 5 then
+  if me.pSprList.count < 4 then
     return 0
   end if
   repeat with i = 1 to tNumOf
-    me.pSmokelist.add(sprite(reserveSprite(me.getID())))
+    pSmokelist.add(sprite(reserveSprite(me.getID())))
   end repeat
   return me.initializeSmokeSprites()
 end
 
 on initializeSmokeSprites me
-  if me.pSprList.count < 5 then
+  if me.pSprList.count < 4 then
     return 0
   end if
   tStartLoc = me.pSprList[4].loc + point(28, -60)
-  tSmokeBig = me.pSmokelist[1]
+  tSmokeBig = pSmokelist[1]
   tSmokeBig.loc = tStartLoc
   tSmokeBig.ink = 8
   tSmokeBig.blend = 100
@@ -67,58 +72,58 @@ on initializeSmokeSprites me
   pSmokeLocs[1] = tSmokeBig.loc
   tSmokeBig.visible = 0
   tSmokeBig.locZ = me.pSprList[4].locZ + 2
-  repeat with i = 2 to me.pSmokelist.count
-    tSp = me.pSmokelist[i]
-    tSp.loc = tStartLoc + point(-3, -21) + point(random(6), random(4))
+  repeat with i = 2 to pSmokelist.count
+    tSp = pSmokelist[i]
+    tSp.loc = tStartLoc + (point(-3, -21) + point(random(6), random(4))) * pSizeMultiplier
     tSp.ink = 8
     tSp.locZ = me.pSprList[4].locZ + 1
     tSp.blend = 100
     tSp.visible = 0
-    me.pSmokeLocs[i] = tSp.loc
+    pSmokeLocs[i] = tSp.loc
     if random(3) = 1 then
       me.changeMember(tSp, "scifirocket_sm_tiny")
       next repeat
     end if
     me.changeMember(tSp, "scifirocket_sm_small")
   end repeat
-  me.pInitializeSprites = 0
+  pInitializeSprites = 0
   return 1
 end
 
 on animateSmallSmokes me, tVal
   case tVal of
     "move":
-      repeat with i = 2 to me.pSmokelist.count
+      repeat with i = 2 to pSmokelist.count
         case i of
           2:
             if random(2) = 2 then
-              me.pSmokeLocs[i][2] = me.pSmokeLocs[i][2] - 0.59999999999999998
+              pSmokeLocs[i][2] = pSmokeLocs[i][2] - 0.59999999999999998 * pSizeMultiplier
             end if
           3:
-            me.pSmokeLocs[i][1] = me.pSmokeLocs[i][1] + 0.59999999999999998 - random(6) / 12.0
+            pSmokeLocs[i][1] = pSmokeLocs[i][1] + (0.59999999999999998 - random(6) / 12.0) * pSizeMultiplier
           4:
-            me.pSmokeLocs[i][1] = me.pSmokeLocs[i][1] - random(6) / 12.0
+            pSmokeLocs[i][1] = pSmokeLocs[i][1] - random(6) / 12.0 * pSizeMultiplier
           5:
-            me.pSmokeLocs[i][1] = me.pSmokeLocs[i][1] + 1.0 - random(6) / 12.0
-            me.pSmokeLocs[i][2] = me.pSmokeLocs[i][2] + random(10) / 12.0
+            pSmokeLocs[i][1] = pSmokeLocs[i][1] + (1.0 - random(6) / 12.0) * pSizeMultiplier
+            pSmokeLocs[i][2] = pSmokeLocs[i][2] + random(10) / 12.0 * pSizeMultiplier
           6:
-            me.pSmokeLocs[i][1] = me.pSmokeLocs[i][1] - 0.5 - random(6) / 12.0
-            me.pSmokeLocs[i][2] = me.pSmokeLocs[i][2] + random(10) / 12.0
+            pSmokeLocs[i][1] = pSmokeLocs[i][1] - (0.5 + random(6) / 12.0) * pSizeMultiplier
+            pSmokeLocs[i][2] = pSmokeLocs[i][2] + random(10) / 12.0 * pSizeMultiplier
         end case
-        me.pSmokeLocs[i][2] = me.pSmokeLocs[i][2] - 0.69999999999999996 + random(6) / 11.0
-        me.pSmokeLocs[i][1] = me.pSmokeLocs[i][1] + sin(the timer)
-        me.pSmokelist[i].visible = 1
-        me.pSmokelist[i].loc = me.pSmokeLocs[i]
+        pSmokeLocs[i][2] = pSmokeLocs[i][2] - (0.69999999999999996 - random(6) / 12.0) * pSizeMultiplier
+        pSmokeLocs[i][1] = pSmokeLocs[i][1] + sin(the timer)
+        pSmokelist[i].visible = 1
+        pSmokelist[i].loc = pSmokeLocs[i]
       end repeat
     "make_smaller":
-      repeat with i = 2 to me.pSmokelist.count
+      repeat with i = 2 to pSmokelist.count
         if random(5) = 2 then
-          me.changeMember(me.pSmokelist[i], "scifirocket_sm_tiny")
+          me.changeMember(pSmokelist[i], "scifirocket_sm_tiny")
         end if
       end repeat
     "blend":
-      repeat with i = 2 to me.pSmokelist.count
-        me.pSmokelist[i].blend = me.pSmokelist[i].blend - 15
+      repeat with i = 2 to pSmokelist.count
+        pSmokelist[i].blend = pSmokelist[i].blend - 15
       end repeat
   end case
   return 1
@@ -130,58 +135,59 @@ on updateStuffdata me, tValue
   else
     me.setOff()
   end if
+  return 1
 end
 
 on update me
-  if me.pSprList.count < 5 then
+  if me.pSprList.count < 4 then
     return 0
   end if
   tlight = me.pSprList[2]
-  if me.pActive then
+  if pActive then
     tlight.blend = 100
   else
     tlight.blend = 0
   end if
   if pSync < 3 then
-    me.pSync = me.pSync + 1
+    pSync = pSync + 1
     return 0
   else
-    me.pSync = 1
+    pSync = 1
   end if
-  if not me.pChanges then
+  if not pChanges then
     return 0
   end if
-  if me.pSmokelist = [] then
+  if pSmokelist = [] then
     me.createSmokeSprites(4)
   end if
-  if me.pInitializeSprites then
+  if pInitializeSprites then
     me.initializeSmokeSprites()
   end if
-  if me.pAnimFrame = 1 then
+  if pAnimFrame = 1 then
     if random(8) <> 2 then
       return 1
     end if
   end if
-  tSmokeBig = me.pSmokelist[1]
-  if me.pAnimFrame <= 23 then
-    if me.pAnimFrame = 4 then
+  tSmokeBig = pSmokelist[1]
+  if pAnimFrame <= 23 then
+    if pAnimFrame = 4 then
       me.changeMember(tSmokeBig, "scifirocket_sm_small")
     end if
-    if me.pAnimFrame = 9 then
+    if pAnimFrame = 9 then
       me.changeMember(tSmokeBig, "scifirocket_sm_med")
     end if
-    if me.pAnimFrame = 14 then
+    if pAnimFrame = 14 then
       me.changeMember(tSmokeBig, "scifirocket_sm_big")
     end if
-    me.pSmokeLocs[1][2] = me.pSmokeLocs[1][2] - 0.90000000000000002
+    pSmokeLocs[1][2] = pSmokeLocs[1][2] - 0.90000000000000002 * pSizeMultiplier
     tSmokeBig.visible = 1
-    tSmokeBig.loc = me.pSmokeLocs[1]
+    tSmokeBig.loc = pSmokeLocs[1]
   else
     tSmokeBig.blend = tSmokeBig.blend - 20
-    if me.pAnimFrame > 52 then
+    if pAnimFrame > 52 then
       me.animateSmallSmokes("make_smaller")
     end if
-    if me.pAnimFrame > 60 then
+    if pAnimFrame > 60 then
       me.animateSmallSmokes("blend")
     end if
     if tSmokeBig.blend < 20 then
@@ -189,17 +195,20 @@ on update me
     end if
     me.animateSmallSmokes("move")
   end if
-  me.pAnimFrame = me.pAnimFrame + 1
-  if me.pAnimFrame > 66 then
+  pAnimFrame = pAnimFrame + 1
+  if pAnimFrame > 66 then
     me.initializeSmokeSprites()
-    me.pAnimFrame = 1
-    if me.pActive = 0 then
-      me.pChanges = 0
+    pAnimFrame = 1
+    if pActive = 0 then
+      pChanges = 0
     end if
   end if
 end
 
 on changeMember me, tSpr, tMemName
+  if me.pXFactor = 32 then
+    tMemName = "s_" & tMemName
+  end if
   tMem = getMember(tMemName)
   if tMem = VOID then
     return 0
@@ -211,14 +220,15 @@ on changeMember me, tSpr, tMemName
 end
 
 on setOn me
-  me.pChanges = 1
-  me.pActive = 1
+  pChanges = 1
+  pActive = 1
+  pSync = random(10) - 8
 end
 
 on setOff me
-  me.pChanges = 1
-  me.pActive = 0
-  me.pInitializeSprites = 0
+  pChanges = 1
+  pActive = 0
+  pInitializeSprites = 0
 end
 
 on select me

@@ -24,8 +24,7 @@ end
 
 on storePicture me, tmember, tText
   if not voidp(tText) then
-    tText = convertSpecialChars(tText, 1)
-    tText = replaceChunks(tText, "\", EMPTY)
+    tText = getStringServices().convertSpecialChars(tText, 1)
   end if
   tCS = me.countCS(tmember.image)
   tdata = [#image: tmember.media, #time: the date && the time, #cs: tCS]
@@ -106,7 +105,6 @@ on setFilm me, tFilm
   pFilm = tFilm
   me.getInterface().setButtonHilites()
   me.getInterface().updateFilm()
-  getObject(#session).set("user_photo_film", tFilm)
 end
 
 on getFilm me
@@ -153,7 +151,7 @@ on convertScandinavian me, tString
   if tString.length < 6 then
     return tString
   end if
-  tEncArray = ["&AUML;": "Ä", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
+  tEncArray = ["&AUML;": "€", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
   tOutputStr = EMPTY
   repeat with i = 1 to tString.length
     tChar = tString.char[i]

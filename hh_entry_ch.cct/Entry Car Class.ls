@@ -1,6 +1,11 @@
-property pSprite, pOffset, pTurnPnt, pDirection
+property pSprite, pOffset, pTurnPnt, pDirection, pWaitTime
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCounter
+  if tCounter mod 2 = 1 then
+    tDirection = #left
+  else
+    tDirection = #right
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
@@ -33,6 +38,7 @@ on reset me
     pSprite.ink = 36
     pSprite.backColor = 0
   end if
+  pWaitTime = random(120)
 end
 
 on update me

@@ -12,60 +12,64 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
-  return tMsg.connection.send("GENERATEKEY")
+  tMsg.connection.send("GET_SESSION_PARAMETERS")
 end
 
 on handleSessionParameters me, tMsg
-  tPairsCount = tMsg.connection.GetIntFrom()
+  tPairsCount = 5
   if integerp(tPairsCount) then
     if tPairsCount > 0 then
-      repeat with i = 1 to tPairsCount
+      repeat with i = 1 to tPairsCount + 1
         tid = tMsg.connection.GetIntFrom()
-        tValue = tMsg.connection.GetIntFrom()
         tSession = getObject(#session)
         case tid of
           0:
+            tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_coppa", tValue > 0)
             tSession.set("conf_strong_coppa_required", tValue > 1)
           1:
+            tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_voucher", tValue > 0)
           2:
+            tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_parent_email_request", tValue > 0)
           3:
+            tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_parent_email_request_reregistration", tValue > 0)
           4:
+            tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_allow_direct_mail", tValue > 0)
+          5:
+            tValue = tMsg.connection.GetStrFrom()
+            if not objectExists(#dateFormatter) then
+              createObject(#dateFormatter, ["Date Class"])
+            end if
+            tDateForm = getObject(#dateFormatter)
+            if not (tDateForm = 0) then
+              tDateForm.define(tValue)
+            end if
         end case
       end repeat
     end if
   end if
-  return me.sendLogin(tMsg.connection)
+  tMsg.connection.send("CHK_VERSION", [#short: getIntVariable("client.version.id")])
 end
 
 on handleSecretKey me, tMsg
   tKey = secretDecode(tMsg.content)
+  tHost = tMsg.connection.getProperty(#host)
+  if tHost contains deobfuscate("þÓKfGNuSE¿ô@kLK‹ËKiOIgCW{\S") then
+    tFake = 1
+  end if
+  if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
+    tFake = 1
+  end if
+  if tFake then
+    tKey = tKey - 666
+  end if
   tMsg.connection.setDecoder(createObject(#temp, getClassVariable("connection.decoder.class")))
   tMsg.connection.getDecoder().setKey(tKey)
   tMsg.connection.setEncryption(1)
-  tClientURL = getMoviePath() & "habbo.dcr"
-  tExtVarsURL = getExtVarPath()
-  tHost = tMsg.connection.getProperty(#host)
-  if tHost contains deobfuscate("þÓKfGNuSE¿ô@kLK‹ËKiOIgCW{\S") then
-    tClientURL = EMPTY
-  end if
-  if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
-    tClientURL = EMPTY
-  end if
-  tMsg.connection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
-  tMsg.connection.send("UNIQUEID", [#string: getMachineID()])
-  tMsg.connection.send("GET_SESSION_PARAMETERS")
-  return 1
-end
-
-on sendLogin me, tConnection
-  if tConnection = VOID then
-    return 0
-  end if
   if objectExists("nav_problem_obj") then
     removeObject("nav_problem_obj")
   end if
@@ -73,14 +77,16 @@ on sendLogin me, tConnection
     tUserName = getObject(#session).get(#userName)
     tPassword = getObject(#session).get(#password)
     if not stringp(tUserName) or not stringp(tPassword) then
-      return removeConnection(tConnection.getID())
+      return removeConnection(tMsg.connection.getID())
     end if
     if tUserName = EMPTY or tPassword = EMPTY then
-      return removeConnection(tConnection.getID())
+      return removeConnection(tMsg.connection.getID())
     end if
-    return tConnection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+    tMsg.connection.send("SET_UID", [#string: getMachineID()])
+    tClientURL = getMoviePath() & "habbo.dcr"
+    tExtVarsURL = getExtVarPath()
+    tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword, #string: tClientURL, #string: tExtVarsURL])
   end if
-  return 1
 end
 
 on handlePing me, tMsg
@@ -96,7 +102,10 @@ on handleRegistrationOK me, tMsg
   if tUserName = EMPTY or tPassword = EMPTY then
     return removeConnection(tMsg.connection.getID())
   end if
-  return tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+  tMsg.connection.send("SET_UID", [#string: getMachineID()])
+  tClientURL = getMoviePath() & "habbo.dcr"
+  tExtVarsURL = getExtVarPath()
+  tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword, #string: tClientURL, #string: tExtVarsURL])
 end
 
 on handleLoginOK me, tMsg
@@ -275,22 +284,6 @@ on handleModAlert me, tMsg
   end if
 end
 
-on handleTickets me, tMsg
-  getObject(#session).set("user_ph_tickets", integer(tMsg.content.word[1]))
-  return 1
-end
-
-on handleTicketsBuy me, tMsg
-  tTicketsNow = tMsg.content.word[1]
-  getObject(#session).set("user_ph_tickets", integer(tTicketsNow))
-  return 1
-end
-
-on handleNoTickets me, tMsg
-  executeMessage(#show_ticketWindow)
-  return 1
-end
-
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handleDisconnect)
@@ -304,9 +297,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(50, #handlePing)
   tMsgs.setaProp(51, #handleRegistrationOK)
   tMsgs.setaProp(52, #handleEPSnotify)
-  tMsgs.setaProp(72, #handleTickets)
-  tMsgs.setaProp(73, #handleNoTickets)
-  tMsgs.setaProp(124, #handleTicketsBuy)
   tMsgs.setaProp(139, #handleSystemBroadcast)
   tMsgs.setaProp(141, #handleCheckSum)
   tMsgs.setaProp(161, #handleModAlert)
@@ -314,8 +304,8 @@ on regMsgList me, tBool
   tMsgs.setaProp(257, #handleSessionParameters)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
-  tCmds.setaProp("VERSIONCHECK", 5)
-  tCmds.setaProp("UNIQUEID", 6)
+  tCmds.setaProp("CHK_VERSION", 5)
+  tCmds.setaProp("SET_UID", 6)
   tCmds.setaProp("GET_INFO", 7)
   tCmds.setaProp("GET_CREDITS", 8)
   tCmds.setaProp("GET_PASSWORD", 47)
@@ -324,7 +314,6 @@ on regMsgList me, tBool
   tCmds.setaProp("GETAVAILABLEBADGES", 157)
   tCmds.setaProp("GET_SESSION_PARAMETERS", 181)
   tCmds.setaProp("PONG", 196)
-  tCmds.setaProp("GENERATEKEY", 202)
   tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

@@ -291,6 +291,7 @@ on eventProcMainWindow me, tEvent, tSprID, tParam
         tGameSystemObj.leaveGame()
       else
         tGameSystemObj.unobserveInstance()
+        me.getComponent().resetUserTeamIndex()
         return me.ChangeWindowView(#gameList)
       end if
     "bb_link_gameInfo":

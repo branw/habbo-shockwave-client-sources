@@ -57,12 +57,11 @@ end
 
 on removeUnnecessaryFromBuddylist me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList.deleteProp(#msg)
-    pBuddyList.deleteProp(#emailOk)
+    pBuddyList.deleteProp(#customText)
     pBuddyList.deleteProp(#msgs)
     pBuddyList.deleteProp(#update)
     pBuddyList.deleteProp(#sex)
-    pBuddyList.deleteProp(#unit)
+    pBuddyList.deleteProp(#location)
     pBuddyList.deleteProp(#online)
   end repeat
   return 1
@@ -317,12 +316,12 @@ end
 
 on sendRemoveList me
   if pRemoveList = [] then
-    getConnection(getVariable("connection.info.id")).send("MESSENGER_SENDUPDATE", [#integer: 0])
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
     return me.endMassRemovalSession()
   end if
   tListSize = 400
   tCount = 0
-  tSendList = [#integer: 0, #integer: 0]
+  tSendList = [#integer: 0]
   repeat with i = 1 to tListSize
     tSendList.addProp(#integer, integer(pRemoveList[1]))
     pRemoveList.deleteAt(1)
@@ -331,7 +330,7 @@ on sendRemoveList me
       exit repeat
     end if
   end repeat
-  tSendList[2] = tCount
+  tSendList[1] = tCount
   getConnection(getVariable("connection.info.id")).send("MESSENGER_REMOVEBUDDY", tSendList)
   return 1
 end
@@ -351,7 +350,7 @@ on arrangeFriendList me, ttype
       #name:
         tNewList.addProp(pBuddyList[i].name, pBuddyList[i])
       #logintime:
-        tTime = pBuddyList[i].last_access_time.word[1]
+        tTime = pBuddyList[i].lastAccess.word[1]
         tArrangedTime = tTime.item[3] & tTime.item[2] & tTime.item[1]
         tNewList.addProp(tArrangedTime, pBuddyList[i])
     end case

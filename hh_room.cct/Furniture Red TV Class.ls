@@ -33,13 +33,18 @@ on update me
     return 
   end if
   if pActive then
+    if me.pXFactor = 32 then
+      tClass = "s_red_tv"
+    else
+      tClass = "red_tv"
+    end if
     pTimer = pTimer + 1
     if pTimer < pNextChange then
       return 
     end if
     pTimer = 0
     pNextChange = random(36) + 12
-    tNewName = "red_tv_b_0_1_1_2_" & random(8) - 1
+    tNewName = tClass & "_b_0_1_1_2_" & random(8) - 1
     if memberExists(tNewName) then
       tmember = member(getmemnum(tNewName))
       me.pSprList[2].castNum = tmember.number

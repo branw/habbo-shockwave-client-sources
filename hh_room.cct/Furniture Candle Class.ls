@@ -1,11 +1,19 @@
-property pActive, pSwitch, pTimer, pLastFrm, pKill
+property pActive, pTimer, pLastFrm, pItem, pPart, pData
 
 on prepare me, tdata
-  if me.pSprList.count < 3 then
-    return 0
-  end if
-  removeEventBroker(me.pSprList[2].spriteNum)
-  removeEventBroker(me.pSprList[3].spriteNum)
+  repeat with i = 2 to me.pSprList.count
+    removeEventBroker(me.pSprList[i].spriteNum)
+  end repeat
+  tDelim = the itemDelimiter
+  the itemDelimiter = "_"
+  tName = me.pSprList[1].member.name
+  pItem = tName.item[1..tName.item.count - 6]
+  pPart = tName.item[tName.item.count - 5]
+  pData = tName.item[tName.item.count - 4..tName.item.count - 1]
+  the itemDelimiter = tDelim
+  repeat with i = 2 to me.pSprList.count
+    me.pSprList[i].locZ = me.pSprList[i - 1].locZ + 2
+  end repeat
   if tdata[#stuffdata] = "ON" then
     me.setOn()
   else
@@ -26,79 +34,30 @@ end
 
 on update me
   if pActive then
-    if me.pSprList.count < 3 then
-      return 
-    end if
-    if not pKill then
-      pTimer = not pTimer
-      if pTimer then
-        tDelim = the itemDelimiter
-        the itemDelimiter = "_"
-        tName = me.pSprList[1].member.name
-        tItem = tName.item[1..tName.item.count - 6]
-        tPart = tName.item[tName.item.count - 5]
-        tdata = tName.item[tName.item.count - 4..tName.item.count - 1]
-        tRand = random(4)
-        if tRand = pLastFrm then
-          tRand = (tRand + 1) mod 4 + 1
-        end if
-        pLastFrm = tRand
-        tNewNameA = tItem & "_" & "b" & "_" & tdata & "_" & pLastFrm
-        tNewNameB = tItem & "_" & "c" & "_" & tdata & "_" & pSwitch
-        the itemDelimiter = tDelim
-        me.pSprList[2].locZ = me.pSprList[1].locZ + 2
-        me.pSprList[3].locZ = me.pSprList[2].locZ + 2
-        if memberExists(tNewNameA) then
-          tmember = member(getmemnum(tNewNameA))
-          me.pSprList[2].castNum = tmember.number
-          me.pSprList[2].width = tmember.width
-          me.pSprList[2].height = tmember.height
-          tmember = member(getmemnum(tNewNameB))
-          me.pSprList[3].castNum = tmember.number
-          me.pSprList[3].width = tmember.width
-          me.pSprList[3].height = tmember.height
-        end if
+    pTimer = not pTimer
+    if pTimer then
+      tRand = random(4)
+      if tRand = pLastFrm then
+        tRand = (tRand + 1) mod 4 + 1
       end if
-    else
-      tDelim = the itemDelimiter
-      the itemDelimiter = "_"
-      tName = me.pSprList[1].member.name
-      tItem = tName.item[1..tName.item.count - 6]
-      tPart = tName.item[tName.item.count - 5]
-      tdata = tName.item[tName.item.count - 4..tName.item.count - 1]
-      tNewNameA = tItem & "_" & "b" & "_" & tdata & "_" & 0
-      tNewNameB = tItem & "_" & "c" & "_" & tdata & "_" & 0
-      the itemDelimiter = tDelim
-      if memberExists(tNewNameA) then
-        tmember = member(getmemnum(tNewNameA))
-        me.pSprList[2].castNum = tmember.number
-        me.pSprList[2].width = tmember.width
-        me.pSprList[2].height = tmember.height
-        tmember = member(getmemnum(tNewNameB))
-        me.pSprList[3].castNum = tmember.number
-        me.pSprList[3].width = tmember.width
-        me.pSprList[3].height = tmember.height
-      end if
-      pActive = 0
+      pLastFrm = tRand
+      me.setAnimMembersToFrame(pLastFrm)
     end if
   end if
 end
 
 on setOn me
-  pSwitch = 1
-  pKill = 0
   pActive = 1
 end
 
 on setOff me
-  pSwitch = 0
-  pKill = 1
-  pActive = 1
+  me.setAnimMembersToFrame(0)
+  pActive = 0
 end
 
 on select me
   if the doubleClick then
-    if pSwitch then
+    if pActive then
       tStr = "OFF"
     else
       tStr = "ON"
@@ -106,4 +65,18 @@ on select me
     getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
+end
+
+on setAnimMembersToFrame me, tFrame
+  tCharNum = charToNum("a")
+  repeat with i = 2 to me.pSprList.count
+    tLayerChar = numToChar(tCharNum + i - 1)
+    tNewName = pItem & "_" & tLayerChar & "_" & pData & "_" & tFrame
+    if memberExists(tNewName) then
+      tmember = member(getmemnum(tNewName))
+      me.pSprList[i].castNum = tmember.number
+      me.pSprList[i].width = tmember.width
+      me.pSprList[i].height = tmember.height
+    end if
+  end repeat
 end

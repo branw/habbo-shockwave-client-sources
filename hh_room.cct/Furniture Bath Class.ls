@@ -27,10 +27,15 @@ on update me
   if me.pSprList.count < 8 then
     return 
   end if
-  tNewNameA = "bath_e_0_1_2_" & me.pDirection[1] & "_" & pActive
-  tNewNameB = "bath_f_0_1_2_" & me.pDirection[1] & "_" & pActive
-  tNewNameC = "bath_g_0_1_2_" & me.pDirection[1] & "_" & pActive
-  tNewNameD = "bath_h_0_1_2_" & me.pDirection[1] & "_" & pActive
+  if me.pXFactor = 32 then
+    tClass = "s_bath"
+  else
+    tClass = "bath"
+  end if
+  tNewNameA = tClass & "_e_0_1_2_" & me.pDirection[1] & "_" & pActive
+  tNewNameB = tClass & "_f_0_1_2_" & me.pDirection[1] & "_" & pActive
+  tNewNameC = tClass & "_g_0_1_2_" & me.pDirection[1] & "_" & pActive
+  tNewNameD = tClass & "_h_0_1_2_" & me.pDirection[1] & "_" & pActive
   if memberExists(tNewNameA) then
     tmember = member(abs(getmemnum(tNewNameA)))
     me.pSprList[5].castNum = tmember.number

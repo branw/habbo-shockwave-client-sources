@@ -17,6 +17,9 @@ on construct me
   return 1
 end
 
+on define me
+end
+
 on update me
   if the milliSeconds - pLastUpdate > 66 then
     if random(4) > 1 then

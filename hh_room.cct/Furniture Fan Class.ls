@@ -21,7 +21,7 @@ end
 
 on update me
   if pActive then
-    if me.pSprList.count < 5 then
+    if me.pSprList.count < 4 then
       return 
     end if
     if not pKill then

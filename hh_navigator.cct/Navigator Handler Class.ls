@@ -19,6 +19,8 @@ on handle_flatinfo me, tMsg
   tFlat[#showownername] = tConn.GetIntFrom()
   tFlat[#trading] = tConn.GetIntFrom()
   tFlat[#alert] = tConn.GetIntFrom()
+  tFlat[#maxVisitors] = tConn.GetIntFrom()
+  tFlat[#absoluteMaxVisitors] = tConn.GetIntFrom()
   tFlat[#nodeType] = 2
   case tFlat[#door] of
     0:
@@ -28,6 +30,12 @@ on handle_flatinfo me, tMsg
     2:
       tFlat[#door] = "password"
   end case
+  if tFlat[#maxVisitors] < 1 then
+    tFlat[#maxVisitors] = 25
+  end if
+  if tFlat[#absoluteMaxVisitors] < 1 then
+    tFlat[#absoluteMaxVisitors] = 50
+  end if
   if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).get(#user_name) then
     executeMessage(#setEnterRoomAlert, "alert_no_category")
   end if
@@ -53,8 +61,9 @@ on handle_flat_results me, tMsg
     tFlat[#door] = tLine.item[4]
     tFlat[#port] = tLine.item[5]
     tFlat[#usercount] = tLine.item[6]
-    tFlat[#Filter] = tLine.item[7]
-    tFlat[#description] = tLine.item[8]
+    tFlat[#maxUsers] = tLine.item[7]
+    tFlat[#Filter] = tLine.item[8]
+    tFlat[#description] = tLine.item[9]
     tFlat[#nodeType] = 2
     tList[tFlat[#id]] = tFlat
   end repeat
@@ -64,11 +73,30 @@ on handle_flat_results me, tMsg
       tResult[#id] = #own
     55:
       tResult[#id] = #src
-    61:
-      tResult[#id] = #fav
   end case
   the itemDelimiter = tDelim
   me.getComponent().saveFlatResults(tResult)
+end
+
+on handle_favouriteroomresults me, tMsg
+  tConn = tMsg.connection
+  tNodeMask = tConn.GetIntFrom()
+  tNodeId = tConn.GetIntFrom()
+  tNodeType = tConn.GetIntFrom()
+  tNodeInfo = [#id: string(tNodeId), #nodeType: tNodeType, #name: tConn.GetStrFrom(), #usercount: tConn.GetIntFrom(), #maxUsers: tConn.GetIntFrom(), #parentid: string(tConn.GetIntFrom())]
+  tResult = [#id: #fav, #children: [:]]
+  if tNodeType = 2 then
+    tResult[#children] = me.parseFlatCategoryNode(tMsg)
+  end if
+  repeat while tConn <> VOID
+    tNode = me.parseNode(tMsg)
+    if listp(tNode) then
+      tResult[#children].addProp(tNode[#id], tNode)
+      next repeat
+    end if
+    exit repeat
+  end repeat
+  return me.getComponent().saveFlatResults(tResult)
 end
 
 on handle_noflatsforuser me, tMsg
@@ -85,15 +113,15 @@ end
 
 on handle_navnodeinfo me, tMsg
   tConn = tMsg.connection
-  tNodeInfo = [:]
   tCategoryIndex = [:]
-  tNode = me.parseNode(tMsg)
-  if tNode = 0 then
+  tNodeMask = tConn.GetIntFrom()
+  tNodeInfo = me.parseNode(tMsg)
+  if tNodeInfo = 0 then
     return 0
   end if
-  tCategoryId = tNode[#id]
-  tNodeInfo = tNode
-  tCategoryIndex.setaProp(tCategoryId, [#name: tNode[#name], #parentid: tNode[#parentid], #children: []])
+  tNodeInfo.addProp(#nodeMask, tNodeMask)
+  tCategoryId = tNodeInfo[#id]
+  tCategoryIndex.setaProp(tCategoryId, [#name: tNodeInfo[#name], #parentid: tNodeInfo[#parentid], #children: []])
   repeat while tConn <> VOID
     tNode = me.parseNode(tMsg)
     if tNode = 0 then
@@ -120,7 +148,7 @@ on handle_error me, tMsg
   tErr = tMsg.content
   error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
   case tErr of
-    "Only 10 favorite rooms allowed!":
+    "Only 10 favorite rooms allowed!", "nav_error_toomanyfavrooms":
       executeMessage(#alert, [#msg: getText("nav_error_toomanyfavrooms")])
   end case
   return 1
@@ -133,8 +161,7 @@ on parseNode me, tMsg
     return 0
   end if
   tNodeType = tConn.GetIntFrom()
-  tNodeInfo = [#id: string(tNodeId), #nodeType: tNodeType, #name: tConn.GetStrFrom(), #percentFilled: tConn.GetIntFrom(), #parentid: string(tConn.GetIntFrom())]
-  tChildCount = tConn.GetIntFrom()
+  tNodeInfo = [#id: string(tNodeId), #nodeType: tNodeType, #name: tConn.GetStrFrom(), #usercount: tConn.GetIntFrom(), #maxUsers: tConn.GetIntFrom(), #parentid: string(tConn.GetIntFrom())]
   case tNodeType of
     0:
       tNodeInfo.addProp(#children, [:])
@@ -150,26 +177,35 @@ on parseNode me, tMsg
         tNodeInfo[#casts].add(tCasts.item[c])
       end repeat
       the itemDelimiter = tDelim
+      tNodeInfo.addProp(#usersInQueue, tConn.GetIntFrom())
+      tNodeInfo.addProp(#isVisible, tConn.GetBoolFrom())
     2:
       tNodeInfo[#nodeType] = 0
-      tFlatCount = tConn.GetIntFrom()
-      tFlatList = [:]
-      repeat with i = 1 to tFlatCount
-        tFlatID = string(tConn.GetIntFrom())
-        tFlatInfo = [:]
-        tFlatInfo[#id] = "f_" & tFlatID
-        tFlatInfo[#flatId] = tFlatID
-        tFlatInfo[#name] = tConn.GetStrFrom()
-        tFlatInfo[#owner] = tConn.GetStrFrom()
-        tFlatInfo[#door] = tConn.GetStrFrom()
-        tFlatInfo[#usercount] = tConn.GetIntFrom()
-        tFlatInfo[#description] = tConn.GetStrFrom()
-        tFlatInfo[#nodeType] = 2
-        tFlatList.addProp("f_" & tFlatID, tFlatInfo)
-      end repeat
+      tFlatList = me.parseFlatCategoryNode(tMsg)
       tNodeInfo.addProp(#children, tFlatList)
   end case
   return tNodeInfo
+end
+
+on parseFlatCategoryNode me, tMsg
+  tConn = tMsg.connection
+  tFlatCount = tConn.GetIntFrom()
+  tFlatList = [:]
+  repeat with i = 1 to tFlatCount
+    tFlatID = string(tConn.GetIntFrom())
+    tFlatInfo = [:]
+    tFlatInfo[#id] = "f_" & tFlatID
+    tFlatInfo[#flatId] = tFlatID
+    tFlatInfo[#name] = tConn.GetStrFrom()
+    tFlatInfo[#owner] = tConn.GetStrFrom()
+    tFlatInfo[#door] = tConn.GetStrFrom()
+    tFlatInfo[#usercount] = tConn.GetIntFrom()
+    tFlatInfo[#maxUsers] = tConn.GetIntFrom()
+    tFlatInfo[#description] = tConn.GetStrFrom()
+    tFlatInfo[#nodeType] = 2
+    tFlatList.addProp("f_" & tFlatID, tFlatInfo)
+  end repeat
+  return tFlatList
 end
 
 on handle_userflatcats me, tMsg
@@ -267,7 +303,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(55, #handle_flat_results)
   tMsgs.setaProp(57, #handle_noflatsforuser)
   tMsgs.setaProp(58, #handle_noflats)
-  tMsgs.setaProp(61, #handle_flat_results)
+  tMsgs.setaProp(61, #handle_favouriteroomresults)
   tMsgs.setaProp(130, #handle_flatpassword_ok)
   tMsgs.setaProp(220, #handle_navnodeinfo)
   tMsgs.setaProp(221, #handle_userflatcats)

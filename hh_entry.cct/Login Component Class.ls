@@ -5,6 +5,9 @@ on construct me
   if variableExists("stats.tracking.url") then
     createObject(#statsBroker, "Statistics Broker Class")
   end if
+  if not objectExists(#dateFormatter) then
+    createObject(#dateFormatter, ["Date Class"])
+  end if
   if not objectExists("Figure_System") then
     if createObject("Figure_System", ["Figure System Class"]) <> 0 then
       tURL = getVariable("external.figurepartlist.txt")

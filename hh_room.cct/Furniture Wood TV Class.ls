@@ -39,13 +39,13 @@ on update me
   if me.pSprList.count < 3 then
     return 
   end if
+  tName = me.pSprList[3].member.name
+  tDelim = the itemDelimiter
+  the itemDelimiter = "_"
+  tTmpName = tName.item[1..tName.item.count - 1] & "_"
+  the itemDelimiter = tDelim
   pTvFrame = pTvFrame + 1
   if pActive and pTvFrame mod 3 = 1 then
-    tName = me.pSprList[3].member.name
-    tDelim = the itemDelimiter
-    the itemDelimiter = "_"
-    tTmpName = tName.item[1..tName.item.count - 1] & "_"
-    the itemDelimiter = tDelim
     case pChannelNum of
       1:
         tNewName = tTmpName & random(10)
@@ -63,7 +63,10 @@ on update me
     pChanges = 1
   end if
   if not pActive then
-    tNewName = "wood_tv_c_0_1_2_0_0"
+    the itemDelimiter = "_"
+    tMemName = me.pSprList[3].member.name
+    tClass = tMemName.item[1..tMemName.item.count - 6]
+    tNewName = tTmpName & "0"
     if memberExists(tNewName) then
       tmember = member(getmemnum(tNewName))
       me.pSprList[3].castNum = tmember.number

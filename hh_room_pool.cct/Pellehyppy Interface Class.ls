@@ -321,11 +321,6 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
     end if
     return 0
   end if
-  if tEvent = #mouseDown then
-    getWindow(pBottomBarId).lock(0)
-    getWindowManager().Activate(pBottomBarId)
-    getWindow(pBottomBarId).lock(1)
-  end if
   if tEvent = #mouseUp then
     if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then
       case tSprID of
@@ -341,6 +336,11 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           executeMessage(#openGeneralDialog, #help)
       end case
     end if
+  end if
+  if tEvent = #mouseDown then
+    getWindow(pBottomBarId).lock(0)
+    getWindowManager().Activate(pBottomBarId)
+    getWindow(pBottomBarId).lock(1)
   end if
   if tSprID = "int_drop_vote" then
     if tEvent = #mouseDown then

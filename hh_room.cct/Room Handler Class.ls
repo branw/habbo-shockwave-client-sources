@@ -21,8 +21,13 @@ on handle_youaremod me, tMsg
 end
 
 on handle_flat_letin me, tMsg
-  executeMessage("flat_letin")
-  me.getComponent().roomConnected(VOID, "FLAT_LETIN")
+  tConn = tMsg.connection
+  tName = tConn.GetStrFrom()
+  me.getInterface().showDoorBellAccepted(tName)
+  if tName <> EMPTY then
+    return 1
+  end if
+  return me.getComponent().roomConnected(VOID, "FLAT_LETIN")
 end
 
 on handle_room_ready me, tMsg
@@ -61,7 +66,17 @@ on handle_error me, tMsg
 end
 
 on handle_doorbell_ringing me, tMsg
-  me.getInterface().showDoorBell(tMsg.content)
+  if tMsg.content = EMPTY then
+    return me.getInterface().showDoorBellWaiting()
+  else
+    return me.getInterface().showDoorBellDialog(tMsg.content)
+  end if
+end
+
+on handle_flatnotallowedtoenter me, tMsg
+  tConn = tMsg.connection
+  tName = tConn.GetStrFrom()
+  return me.getInterface().showDoorBellRejected(tName)
 end
 
 on handle_status me, tMsg
@@ -196,8 +211,10 @@ on handle_users me, tMsg
   else
     tName = getObject(#session).get(#userName)
     repeat with tuser in tList
-      me.getInterface().roomEnterDoorBell(tuser[#name])
       me.getComponent().validateUserObjects(tuser)
+      if me.getComponent().getPickedCryName() = tuser[#name] then
+        me.getComponent().showCfhSenderDelayed(tuser[#id])
+      end if
       if tuser[#name] = tName then
         getObject(#session).set("user_index", tuser[#id])
         me.getInterface().eventProcUserObj(#selection, tuser[#id], #userEnters)
@@ -308,9 +325,7 @@ on handle_activeobjects me, tMsg
     repeat with tObj in tList
       me.getComponent().validateActiveObjects(tObj)
     end repeat
-    if objectExists(#furniChooser) then
-      getObject(#furniChooser).update()
-    end if
+    executeMessage(#activeObjectsUpdated)
   else
     me.getComponent().validateActiveObjects(0)
   end if
@@ -332,9 +347,7 @@ on handle_activeobject_add me, tMsg
     return 0
   end if
   me.getComponent().validateActiveObjects(tObj)
-  if objectExists(#furniChooser) then
-    getObject(#furniChooser).update()
-  end if
+  executeMessage(#activeObjectsUpdated)
   return 1
 end
 
@@ -353,9 +366,7 @@ on handle_activeobject_update me, tMsg
     tActiveObj.define(tObj)
     tComponent.removeSlideObject(tObj[#id])
     call(#prepareForMove, [tActiveObj])
-    if objectExists(#furniChooser) then
-      getObject(#furniChooser).update()
-    end if
+    executeMessage(#activeObjectsUpdated)
   else
     return error(me, "Active object not found:" && tObj[#id], #handle_activeobject_update)
   end if
@@ -411,9 +422,7 @@ on handle_items me, tMsg
     repeat with tItem in tList
       me.getComponent().validateItemObjects(tItem)
     end repeat
-    if objectExists(#furniChooser) then
-      getObject(#furniChooser).update()
-    end if
+    executeMessage(#itemObjectsUpdated)
   else
     me.getComponent().validateItemObjects(0)
   end if
@@ -421,9 +430,7 @@ end
 
 on handle_removeitem me, tMsg
   me.getComponent().removeItemObject(tMsg.content)
-  if objectExists(#furniChooser) then
-    getObject(#furniChooser).update()
-  end if
+  executeMessage(#itemObjectRemoved)
   me.getInterface().stopObjectMover()
 end
 
@@ -601,6 +608,9 @@ on handle_trade_items me, tMsg
     if tUserName = EMPTY then
       return error(me, "No username from server", #handle_trade_items)
     end if
+    if me.getInterface().getIgnoreStatus(VOID, tUserName) then
+      return me.getComponent().getRoomConnection().send("TRADE_CLOSE")
+    end if
     tMessage[tUserName] = tdata
   end repeat
   return me.getInterface().getSafeTrader().refresh(tMessage)
@@ -670,13 +680,9 @@ end
 
 on handle_dice_value me, tMsg
   tid = tMsg.content.word[1]
-  if tMsg.content.word.count = 1 then
-    tValue = -1
-  else
-    tValue = integer(tMsg.content.word[2] - tid * 38)
-    if tValue > 6 then
-      tValue = 0
-    end if
+  tValue = integer(tMsg.content.word[2] - tid * 38)
+  if tValue > 6 then
+    tValue = 0
   end if
   if me.getComponent().activeObjectExists(tid) then
     me.getComponent().getActiveObject(tid).diceThrown(tValue)
@@ -737,7 +743,7 @@ on handle_userbadge me, tMsg
   tUserID = string(tMsg.connection.GetIntFrom())
   tBadge = tMsg.connection.GetStrFrom()
   tUserObj = me.getComponent().getUserObject(tUserID)
-  if tUserObj = 0 then
+  if not objectp(tUserObj) then
     return 0
   end if
   tUserObj.pBadge = tBadge
@@ -879,6 +885,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(110, #handle_trade_close)
   tMsgs.setaProp(112, #handle_trade_completed)
   tMsgs.setaProp(129, #handle_presentopen)
+  tMsgs.setaProp(131, #handle_flatnotallowedtoenter)
   tMsgs.setaProp(140, #handle_stripinfo)
   tMsgs.setaProp(208, #handle_roomad)
   tMsgs.setaProp(210, #handle_petstat)

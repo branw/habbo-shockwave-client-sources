@@ -11,8 +11,10 @@ end
 on updateStuffdata me, tValue
   if tValue = "TRUE" then
     pDoorTimer = 43
+    me.openCloseDoor(#open)
   else
     pDoorTimer = 0
+    me.openCloseDoor(#close)
   end if
 end
 
@@ -72,22 +74,32 @@ on getDrinkname me
   return pTokenList[random(pTokenList.count)]
 end
 
+on openCloseDoor me, tOpen
+  if tOpen = #open or tOpen = 1 then
+    tFrame = 1
+  else
+    tFrame = 0
+  end if
+  repeat with tsprite in me.pSprList
+    tCurName = tsprite.member.name
+    tNewName = tCurName.char[1..length(tCurName) - 1] & tFrame
+    if memberExists(tNewName) then
+      tMem = member(getmemnum(tNewName))
+      tsprite.member = tMem
+      tsprite.width = tMem.width
+      tsprite.height = tMem.height
+    end if
+  end repeat
+end
+
 on update me
   if pDoorTimer <> 0 then
     if me.pSprList.count < 1 then
       return 
     end if
-    tCurName = me.pSprList[1].member.name
-    tNewName = tCurName.char[1..length(tCurName) - 1] & 1
-    tmember = member(abs(getmemnum(tNewName)))
     pDoorTimer = pDoorTimer - 1
     if pDoorTimer = 0 then
-      tCurName = me.pSprList[1].member.name
-      tNewName = tCurName.char[1..length(tCurName) - 1] & 0
-      tmember = member(getmemnum(tNewName))
+      me.openCloseDoor(#close)
     end if
-    me.pSprList[1].castNum = tmember.number
-    me.pSprList[1].width = tmember.width
-    me.pSprList[1].height = tmember.height
   end if
 end

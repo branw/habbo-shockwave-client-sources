@@ -1,4 +1,4 @@
-property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pNewMsgCount, pNewBuddyRequests, pClubDaysCount, pWaterAnimConter, pFrameCounter, pCarObjList, pNextCarUpdateTime
+property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pNewMsgCount, pNewBuddyRequests, pClubDaysCount, pSwapAnimations
 
 on construct me
   pEntryVisual = "entry_view"
@@ -6,7 +6,6 @@ on construct me
   pSignSprList = []
   pSignSprLocV = 0
   pItemObjList = []
-  pCarObjList = []
   pUpdateTasks = []
   pViewMaxTime = 500
   pViewOpenTime = VOID
@@ -18,7 +17,7 @@ on construct me
   pClubDaysCount = 0
   pMessengerFlash = 0
   pFirstInit = 1
-  pFrameCounter = 0
+  pSwapAnimations = []
   registerMessage(#userlogin, me.getID(), #showEntryBar)
   registerMessage(#messenger_ready, me.getID(), #activateIcon)
   return 1
@@ -27,6 +26,9 @@ end
 on deconstruct me
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#messenger_ready, me.getID())
+  repeat with tAnim in pSwapAnimations
+    tAnim.deconstruct()
+  end repeat
   return me.hideAll()
 end
 
@@ -40,73 +42,45 @@ on showHotel me
     pSignSprList.add(tVisObj.getSprById("entry_sign"))
     pSignSprList.add(tVisObj.getSprById("entry_sign_sd"))
     pSignSprLocV = pSignSprList[1].locV
-    pItemObjList = []
-    pCarObjList = []
-    i = 1
-    repeat while 1
-      tSpr = tVisObj.getSprById("car" & i)
-      if tSpr <> 0 then
-        if i mod 2 then
-          tdir = #right
-        else
-          tdir = #left
+    tAnimations = tVisObj.getProperty(#swapAnims)
+    if tAnimations <> 0 then
+      repeat with tAnimation in tAnimations
+        tObj = createObject(#random, getVariableValue("swap.animation.class"))
+        if tObj = 0 then
+          error(me, "Error creating swwap animation", #showHotel)
+          next repeat
         end if
-        tObj = createObject(#temp, "Entry Car Class")
-        tObj.define(i, tSpr, tdir, me)
-        pCarObjList.add(tObj)
-        me.resetCarAfterDelay(i)
-      else
-        exit repeat
-      end if
-      i = i + 1
+        pSwapAnimations.add(tObj)
+        pSwapAnimations[pSwapAnimations.count].define(tAnimation)
+      end repeat
+    end if
+    pItemObjList = []
+    tAnimations = getVariableValue("hotel.view.animations", [])
+    repeat with i = 1 to tAnimations.count
+      j = 1
+      tAnimationType = tAnimations[i]
+      repeat while 1
+        tSpr = tVisObj.getSprById(tAnimationType[1] & j)
+        if tSpr <> 0 then
+          tObj = createObject(#temp, tAnimationType[2])
+          if tObj <> 0 then
+            tObj.define(tSpr, j)
+            pItemObjList.add(tObj)
+          else
+            error(me, "Error creating object:" && tAnimationType, #showHotel)
+          end if
+        else
+          exit repeat
+        end if
+        j = j + 1
+      end repeat
     end repeat
-    i = 1
-    repeat while 1
-      tSpr = tVisObj.getSprById("cloud" & i)
-      if tSpr <> 0 then
-        tObj = createObject(#temp, "Entry Cloud Class")
-        tObj.define(tSpr, i)
-        pItemObjList.add(tObj)
-      else
-        exit repeat
-      end if
-      i = i + 1
-    end repeat
-    me.remAnimTask(#closeView)
-    pViewOpenTime = the milliSeconds + 500
-    receivePrepare(me.getID())
-    me.delay(500, #addAnimTask, #openView)
   end if
+  me.remAnimTask(#closeView)
+  pViewOpenTime = the milliSeconds + 500
+  receivePrepare(me.getID())
+  me.delay(500, #addAnimTask, #openView)
   return 1
-end
-
-on resetCarAfterDelay me, tid
-  if pCarObjList.count < tid then
-    return 0
-  end if
-  if pItemObjList.findPos(pCarObjList[tid]) <> 0 then
-    pItemObjList.deleteOne(pCarObjList[tid])
-  end if
-  if voidp(pNextCarUpdateTime) then
-    pNextCarUpdateTime = the milliSeconds
-    tInterval = 10
-  else
-    if pNextCarUpdateTime < the milliSeconds then
-      pNextCarUpdateTime = the milliSeconds
-    end if
-    pNextCarUpdateTime = pNextCarUpdateTime + (15 + random(30)) * 100
-    tInterval = pNextCarUpdateTime - the milliSeconds
-  end if
-  createTimeout("carTimer" & tid, tInterval, #resetCar, me.getID(), tid, 1)
-end
-
-on resetCar me, tid
-  if pCarObjList.count >= tid then
-    if pItemObjList.findPos(pCarObjList[tid]) = 0 then
-      pItemObjList.add(pCarObjList[tid])
-    end if
-    pCarObjList[tid].reset()
-  end if
 end
 
 on hideHotel me
@@ -116,15 +90,17 @@ on hideHotel me
     me.remAnimTask(#openView)
     pViewCloseTime = the milliSeconds
   end if
-  pCarObjList = []
   pItemObjList = []
   removePrepare(me.getID())
+  repeat with tAnim in pSwapAnimations
+    tAnim.deconstruct()
+  end repeat
   return 1
 end
 
 on showEntryBar me
   if not windowExists(pBottomBar) then
-    if not createWindow(pBottomBar, "entry_bar.window", 0, 547) then
+    if not createWindow(pBottomBar, "entry_bar.window", 0, 535) then
       return 0
     end if
     tWndObj = getWindow(pBottomBar)
@@ -133,8 +109,8 @@ on showEntryBar me
     tWndObj.registerProcedure(#eventProcEntryBar, me.getID(), #mouseUp)
     me.addAnimTask(#animEntryBar)
   end if
-  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
+  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
   registerMessage(#updateFigureData, me.getID(), #updateEntryBar)
   registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
@@ -142,8 +118,8 @@ on showEntryBar me
 end
 
 on hideEntrybar me
-  unregisterMessage(#updateMessageCount, me.getID())
   unregisterMessage(#updateCreditCount, me.getID())
+  unregisterMessage(#updateMessageCount, me.getID())
   unregisterMessage(#updateBuddyrequestCount, me.getID())
   unregisterMessage(#updateFigureData, me.getID())
   unregisterMessage(#updateClubStatus, me.getID())
@@ -169,28 +145,6 @@ on prepare me
     if not tVisual then
       return removePrepare(me.getID())
     end if
-    tSpr = tVisual.getSprById("fountain")
-    tName = tSpr.member.name
-    tNum = integer(tName.char[length(tName)])
-    tNum = tNum mod 3 + 1
-    tMem = member(getmemnum("habbo ES fountain" & tNum))
-    tSpr.member = tMem
-    tSpr.width = tMem.width
-    tSpr.height = tMem.height
-    if voidp(pWaterAnimConter) then
-      pWaterAnimConter = 1
-    else
-      pWaterAnimConter = pWaterAnimConter + 1
-    end if
-    tFrameList = [0, 1, 2, 3, 4, 5, 6]
-    if pWaterAnimConter > tFrameList.count then
-      pWaterAnimConter = 1
-    end if
-    tFrame = tFrameList[pWaterAnimConter]
-    tSpr = tVisual.getSprById("fountain")
-    tMem = tSpr.member
-    tMem.paletteRef = member(getmemnum("ES front palette"))
-    pFrameCounter = 0
     call(#update, pItemObjList)
   end if
 end
@@ -316,9 +270,9 @@ on animEntryBar me
   if the platform contains "windows" then
     tWndObj.moveBy(0, -5)
   else
-    tWndObj.moveBy(0, -50)
+    tWndObj.moveTo(0, 485)
   end if
-  if tWndObj.getProperty(#locY) <= 478 then
+  if tWndObj.getProperty(#locY) <= 485 then
     me.remAnimTask(#animEntryBar)
   end if
 end
@@ -479,9 +433,9 @@ end
 on eventProcEntryBar me, tEvent, tSprID, tParam
   case tSprID of
     "help_icon_image":
-      return executeMessage(#openGeneralDialog, #help)
+      return executeMessage(#openGeneralDialog, "help")
     "get_credit_text", "purse_icon_image":
-      return executeMessage(#openGeneralDialog, #purse)
+      return executeMessage(#openGeneralDialog, "purse")
     "nav_icon_image":
       return executeMessage(#show_hide_navigator)
     "messenger_icon_image":

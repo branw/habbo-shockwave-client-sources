@@ -194,6 +194,9 @@ end
 
 on createItemImg me, tProps
   tImgProps = [#ink: 8]
+  if voidp(tProps[#props]) then
+    tProps[#props] = EMPTY
+  end if
   tClass = tProps[#class]
   if tProps[#class] contains "*" then
     tClass = tProps[#class].char[1..offset("*", tProps[#class]) - 1]
@@ -218,10 +221,14 @@ on createItemImg me, tProps
       if memberExists(tClass && tProps[#props] & "_small") then
         tMemStr = tClass && tProps[#props] & "_small"
       else
-        if memberExists("rightwall" && tClass && tProps[#props]) then
-          tMemStr = "rightwall" && tClass && tProps[#props]
+        if memberExists(tClass & "_small") then
+          tMemStr = tClass & "_small"
         else
-          error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+          if memberExists("rightwall" && tClass && tProps[#props]) then
+            tMemStr = "rightwall" && tClass && tProps[#props]
+          else
+            error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+          end if
         end if
       end if
     end if

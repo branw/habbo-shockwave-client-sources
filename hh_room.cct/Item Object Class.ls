@@ -1,4 +1,4 @@
-property pClass, pName, pCustom, pType, pSprList, pLocX, pLocY, pLocH, pLocZ, pWallX, pWallY, pLocalX, pLocalY, pFormatVer, pDirection
+property pClass, pName, pCustom, pType, pSprList, pLocX, pLocY, pLocH, pLocZ, pXFactor, pWallX, pWallY, pLocalX, pLocalY, pFormatVer, pDirection, pParentWallLocZ
 
 on construct me
   pClass = EMPTY
@@ -16,6 +16,7 @@ on construct me
   pLocalY = 0
   pFormatVer = 0
   pDirection = 0
+  pParentWallLocZ = VOID
   return 1
 end
 
@@ -23,6 +24,7 @@ on deconstruct me
   repeat with tSpr in pSprList
     releaseSprite(tSpr.spriteNum)
   end repeat
+  pParentWallLocZ = VOID
   pSprList = []
   return 1
 end
@@ -40,6 +42,7 @@ on define me, tProps
   pFormatVer = tProps[#formatVersion]
   pDirection = tProps[#direction]
   pType = tProps[#type]
+  pXFactor = getThread(#room).getInterface().getGeometry().pXFactor
   case pClass of
     "poster":
       pName = getText("poster_" & pType & "_name", "poster_" & pType & "_name")
@@ -113,6 +116,9 @@ on solveMembers me
       tMemName = pDirection && pClass
   end case
   return error(me, "Unknown item class:" && pClass, #solveMembers)
+  if pXFactor = 32 then
+    tMemName = "s_" & tMemName
+  end if
   tMemNum = getmemnum(tMemName)
   if tMemNum <> 0 then
     if pSprList.count = 0 then
@@ -174,32 +180,62 @@ on updateLocation me
       end repeat
     #new:
       tWallObjs = getThread(#room).getComponent().getPassiveObject(#list)
-      repeat with tWallObj in tWallObjs
-        if tWallObj.getLocation()[1] = pWallX and tWallObj.getLocation()[2] = pWallY then
-          tWallSprites = tWallObj.getSprites()
-          repeat with tSpr in pSprList
-            tSpr.locH = tWallSprites[1].locH - tWallSprites[1].member.regPoint[1] + pLocalX
-            tSpr.locV = tWallSprites[1].locV - tWallSprites[1].member.regPoint[2] + pLocalY
-          end repeat
-          exit repeat
-        end if
-      end repeat
-  end case
-  tObjMover = getThread(#room).getInterface().getObjectMover()
-  repeat with tSpr in pSprList
-    tItemRp = tSpr.member.regPoint
-    tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])
-    tPieceUnderSpr = tObjMover.getPassiveObjectIntersectingRect(tItemR)[1]
-    if objectp(tPieceUnderSpr) then
-      tlocz = tPieceUnderSpr.getSprites()[1].locZ
-      if tPieceUnderSpr.getSprites().count > 1 then
-        if tPieceUnderSpr.getSprites()[2].locZ > tPieceUnderSpr.getSprites()[1].locZ then
-          tlocz = tPieceUnderSpr.getSprites()[2].locZ
+      tWallObjFound = 0
+      if tWallObjs.count > 0 then
+        repeat with tWallObj in tWallObjs
+          if tWallObj.getLocation()[1] = pWallX and tWallObj.getLocation()[2] = pWallY then
+            tWallSprites = tWallObj.getSprites()
+            repeat with tSpr in pSprList
+              tSpr.locH = tWallSprites[1].locH - tWallSprites[1].member.regPoint[1] + pLocalX
+              tSpr.locV = tWallSprites[1].locV - tWallSprites[1].member.regPoint[2] + pLocalY
+            end repeat
+            tWallObjFound = 1
+            exit repeat
+          end if
+        end repeat
+      end if
+      if not tWallObjFound then
+        tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+        if not voidp(tVisualizer) then
+          case pDirection of
+            "leftwall":
+              tPartTypes = [#wallleft]
+            "rightwall":
+              tPartTypes = [#wallright]
+          end case
+          tPartProps = tVisualizer.getPartAtLocation(pWallX, pWallY, tPartTypes)
+          if ilk(tPartProps) = #propList then
+            repeat with tSpr in pSprList
+              tMem = member(getmemnum(tPartProps.member))
+              tSpr.locH = tPartProps.locH - tMem.regPoint[1] + pLocalX
+              tSpr.locV = tPartProps.locV - tMem.regPoint[2] + pLocalY
+            end repeat
+            pParentWallLocZ = tPartProps[#locZ]
+          end if
         end if
       end if
-      tSpr.locZ = tlocz + 2
-      next repeat
-    end if
-    tSpr.locZ = getIntVariable("window.default.locz") - 10000
-  end repeat
+  end case
+  tObjMover = getThread(#room).getInterface().getObjectMover()
+  if not voidp(pParentWallLocZ) then
+    repeat with i = 1 to pSprList.count
+      pSprList[i].locZ = pParentWallLocZ + 20000 + i
+    end repeat
+  else
+    repeat with tSpr in pSprList
+      tItemRp = tSpr.member.regPoint
+      tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])
+      tPieceUnderSpr = tObjMover.getPassiveObjectIntersectingRect(tItemR)[1]
+      if objectp(tPieceUnderSpr) then
+        tlocz = tPieceUnderSpr.getSprites()[1].locZ
+        if tPieceUnderSpr.getSprites().count > 1 then
+          if tPieceUnderSpr.getSprites()[2].locZ > tPieceUnderSpr.getSprites()[1].locZ then
+            tlocz = tPieceUnderSpr.getSprites()[2].locZ
+          end if
+        end if
+        tSpr.locZ = tlocz + 2
+        next repeat
+      end if
+      tSpr.locZ = getIntVariable("window.default.locz") - 10000
+    end repeat
+  end if
 end

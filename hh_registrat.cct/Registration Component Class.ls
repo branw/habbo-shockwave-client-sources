@@ -106,7 +106,7 @@ end
 
 on checkIsNameAvailable me, tNameStr
   if connectionExists(getVariable("connection.info.id", #info)) then
-    getConnection(getVariable("connection.info.id", #info)).send("FINDUSER", pCheckingName & TAB & "REGNAME")
+    getConnection(getVariable("connection.info.id", #info)).send("FINDUSER", [#string: pCheckingName, #string: "REGNAME"])
   end if
 end
 

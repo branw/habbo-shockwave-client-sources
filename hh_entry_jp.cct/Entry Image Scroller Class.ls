@@ -31,6 +31,9 @@ on deconstruct me
   return 1
 end
 
+on define me
+end
+
 on loadResources me
   if not variableExists("entry.scroll.frms") then
     return 0

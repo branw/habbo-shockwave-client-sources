@@ -27,9 +27,12 @@ on update me
   if me.pSprList.count < 4 then
     return 
   end if
-  tNewNameA = "hc_dsk_c_0_1_2_" & me.pDirection[1] & "_" & pActive
-  tNewNameB = "hc_dsk_d_0_1_2_" & me.pDirection[1] & "_" & pActive
-  tNewNameC = "hc_dsk_e_0_1_2_" & me.pDirection[1] & "_" & pActive
+  the itemDelimiter = "_"
+  tMemName = me.pSprList[3].member.name
+  tClass = tMemName.item[1..tMemName.item.count - 6]
+  tNewNameA = tClass & "_c_0_1_2_" & me.pDirection[1] & "_" & pActive
+  tNewNameB = tClass & "_d_0_1_2_" & me.pDirection[1] & "_" & pActive
+  tNewNameC = tClass & "_e_0_1_2_" & me.pDirection[1] & "_" & pActive
   if memberExists(tNewNameA) then
     tmember = member(abs(getmemnum(tNewNameA)))
     me.pSprList[3].castNum = tmember.number

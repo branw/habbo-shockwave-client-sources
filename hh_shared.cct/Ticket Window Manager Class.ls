@@ -1,8 +1,9 @@
-property pWndID, pChosenAmount
+property pWndID, pChosenAmount, pGiftActive
 
 on construct me
   pWndID = getText("ph_tickets_title")
   pChosenAmount = 1
+  pGiftActive = 0
   registerMessage(#show_ticketWindow, me.getID(), #showTicketWindow)
   registerMessage(#hide_ticketwindow, me.getID(), #hideTicketWindow)
   registerMessage(#enterRoom, me.getID(), #hideTicketWindow)
@@ -30,10 +31,10 @@ on showTicketWindow me
   createWindow(pWndID, "habbo_basic.window")
   tWndObj = getWindow(pWndID)
   if tWndObj = 0 then
-    return error(me, "Cannot open ticket purchase window", #showTicketWindow)
+    return error(me, "Cannot open tickets window", #showTicketWindow)
   end if
   if not tWndObj.merge("habbo_ph_tickets.window") then
-    return error(me, "Cannot open ticket purchase window", #showTicketWindow)
+    return error(me, "Cannot open tickets window", #showTicketWindow)
   end if
   tWndObj.center()
   tWndObj.registerClient(me.getID())
@@ -43,10 +44,7 @@ on showTicketWindow me
   tText = replaceChunks(getText("ph_tickets_txt"), "\x1", tTickets)
   tWndObj.getElement("ph_tickets_number").setText(string(tTickets))
   tWndObj.getElement("ph_tickets_txt").setText(string(tText))
-  tElem = tWndObj.getElement("ph_tickets_namefield")
-  if tElem <> 0 then
-    tElem.setText(getObject(#session).get("user_name"))
-  end if
+  me.activateGiftBox(pGiftActive)
   return me.setCheckBox(1)
 end
 
@@ -55,6 +53,7 @@ on hideTicketWindow me
     removeWindow(pWndID)
   end if
   pChosenAmount = 1
+  pGiftActive = 0
   return 1
 end
 
@@ -64,18 +63,26 @@ on eventProcTicketsWindow me, tEvent, tSprID, tParam, tWndID
       "close":
         me.hideTicketWindow()
       "ph_tickets_buy_button":
-        tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
-        if tName = EMPTY or tName = " " then
+        if pGiftActive then
+          tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
+        else
           tName = getObject(#session).get("user_name")
         end if
-        me.buyGameTickets(tName)
-        me.hideTicketWindow()
+        if tName <> EMPTY then
+          me.buyGameTickets(tName)
+          me.hideTicketWindow()
+        end if
       "tickets_checkbox_1":
         me.setCheckBox(1)
         pChosenAmount = 1
       "tickets_checkbox_2":
         me.setCheckBox(2)
         pChosenAmount = 2
+      "tickets_gift_check":
+        pGiftActive = not pGiftActive
+        me.activateGiftBox(pGiftActive)
+      "ph_tickets_cancel_button":
+        me.hideTicketWindow()
     end case
   end if
 end
@@ -104,4 +111,24 @@ on buyGameTickets me, tName
     getConnection(getVariable("connection.info.id")).send("BTCKS", tParams)
   end if
   return 1
+end
+
+on activateGiftBox me, tActive
+  if not windowExists(pWndID) then
+    return 0
+  end if
+  tWndObj = getWindow(pWndID)
+  tOnMember = "button.checkbox.on"
+  tOffMember = "button.checkbox.off"
+  tCheckElem = tWndObj.getElement("tickets_gift_check")
+  if tActive then
+    tCheckElem.setProperty(#member, tOnMember)
+    tWndObj.getElement("ph_tickets_gift_bg").setProperty(#visible, 1)
+    tWndObj.getElement("ph_tickets_namefield").setProperty(#visible, 1)
+    tWndObj.getElement("ph_tickets_namefield").setText(EMPTY)
+  else
+    tCheckElem.setProperty(#member, tOffMember)
+    tWndObj.getElement("ph_tickets_gift_bg").setProperty(#visible, 0)
+    tWndObj.getElement("ph_tickets_namefield").setProperty(#visible, 0)
+  end if
 end

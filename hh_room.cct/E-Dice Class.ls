@@ -1,13 +1,15 @@
-property pActive, pValue
+property pActive, pValue, pAnimStart
 
 on prepare me, tdata
   pActive = 1
-  pValue = integer(tdata[#stuffdata])
-  if not integerp(pValue) then
-    pValue = 1
+  pAnimStart = 0
+  if not voidp(tdata[#stuffdata]) then
+    pValue = tdata[#stuffdata]
+  else
+    pValue = 0
   end if
   if pValue > 6 then
-    pValue = 6
+    pValue = 0
   end if
   return 1
 end
@@ -34,13 +36,11 @@ on select me
           end repeat
         end repeat
       else
-        if pActive = 0 then
-          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
-        end if
+        getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
       end if
     end if
   else
-    if rollover(me.pSprList[1]) and the doubleClick and pActive = 0 then
+    if rollover(me.pSprList[1]) and the doubleClick then
       getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
       return 1
     end if
@@ -49,28 +49,30 @@ on select me
 end
 
 on diceThrown me, tValue
-  if tValue > 0 then
-    pValue = tValue
-  else
-    pActive = 1
-    pValue = tValue
+  pActive = 1
+  pValue = tValue
+  if pValue > 0 then
+    pAnimStart = the milliSeconds
   end if
 end
 
 on update me
   if pActive then
+    the itemDelimiter = "_"
+    tMemName = me.pSprList[2].member.name
+    tClass = tMemName.item[1..tMemName.item.count - 6]
     if me.pSprList.count < 2 then
       return 
     end if
     tsprite = me.pSprList[2]
-    if pValue < 0 then
-      if tsprite.castNum = getmemnum("edice_b_0_1_1_0_7") then
-        tmember = member(getmemnum("edice_b_0_1_1_0_0"))
+    if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
+      if tsprite.castNum = getmemnum(tClass & "_b_0_1_1_0_7") then
+        tmember = member(getmemnum(tClass & "_b_0_1_1_0_0"))
       else
-        tmember = member(getmemnum("edice_b_0_1_1_0_7"))
+        tmember = member(getmemnum(tClass & "_b_0_1_1_0_7"))
       end if
     else
-      tmember = member(getmemnum("edice_b_0_1_1_0_" & pValue))
+      tmember = member(getmemnum(tClass & "_b_0_1_1_0_" & pValue))
       pActive = 0
     end if
     tsprite.castNum = tmember.number

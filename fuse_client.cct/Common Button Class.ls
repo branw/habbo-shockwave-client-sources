@@ -21,6 +21,10 @@ on prepare me
     pFixedSize = 0
   end if
   me.UpdateImageObjects(VOID, #up)
+  return me.setButtonImage()
+end
+
+on setButtonImage me
   me.pimage = me.createButtonImg(pButtonText, #up)
   tTempOffset = me.pSprite.member.regPoint
   me.pBuffer.image = me.pimage
@@ -52,6 +56,12 @@ on deactivate me
   me.pSprite.blend = 50
   pBlend = 50
   return 1
+end
+
+on setText me, tText
+  pButtonText = tText
+  pCachedImgs = [:]
+  return me.setButtonImage()
 end
 
 on mouseDown me

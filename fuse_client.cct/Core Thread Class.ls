@@ -5,6 +5,7 @@ on construct me
   tSession.set("client_startdate", the date)
   tSession.set("client_starttime", the long time)
   tSession.set("client_version", getVariable("system.version"))
+  tSession.set("client_url", getMoviePath())
   tSession.set("client_lastclick", EMPTY)
   createObject(#headers, getClassVariable("variable.manager.class"))
   createObject(#classes, getClassVariable("variable.manager.class"))
@@ -46,15 +47,20 @@ on updateState me, tstate
       cursor(4)
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
-        the itemDelimiter = "="
-        repeat with i = 1 to 12
-          tParam = externalParamValue("sw" & i)
-          if not voidp(tParam) then
-            if tParam.item.count > 1 then
-              if tParam.item[1] = "external.variables.txt" then
-                getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
+        repeat with i = 1 to 9
+          tParamBundle = externalParamValue("sw" & i)
+          if not voidp(tParamBundle) then
+            the itemDelimiter = ";"
+            repeat with j = 1 to tParamBundle.item.count
+              tParam = tParamBundle.item[j]
+              the itemDelimiter = "="
+              if tParam.item.count > 1 then
+                if tParam.item[1] = "external.variables.txt" then
+                  getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
+                end if
               end if
-            end if
+              the itemDelimiter = ";"
+            end repeat
           end if
         end repeat
         the itemDelimiter = tDelim
@@ -81,13 +87,18 @@ on updateState me, tstate
       removeMember(getExtVarPath())
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
-        the itemDelimiter = "="
         repeat with i = 1 to 9
-          tParam = externalParamValue("sw" & i)
-          if not voidp(tParam) then
-            if tParam.item.count > 1 then
-              getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
-            end if
+          tParamBundle = externalParamValue("sw" & i)
+          if not voidp(tParamBundle) then
+            the itemDelimiter = ";"
+            repeat with j = 1 to tParamBundle.item.count
+              tParam = tParamBundle.item[j]
+              the itemDelimiter = "="
+              if tParam.item.count > 1 then
+                getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
+              end if
+              the itemDelimiter = ";"
+            end repeat
           end if
         end repeat
         the itemDelimiter = tDelim

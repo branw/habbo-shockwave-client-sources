@@ -21,6 +21,9 @@ on construct me
   registerMessage(#changeRoom, me.getID(), #close)
   registerMessage(#enterRoom, me.getID(), #update)
   registerMessage(#activeObjectRemoved, me.getID(), #update)
+  registerMessage(#itemObjectRemoved, me.getID(), #update)
+  registerMessage(#activeObjectsUpdated, me.getID(), #update)
+  registerMessage(#itemObjectsUpdated, me.getID(), #update)
   return 1
 end
 
@@ -35,6 +38,9 @@ on deconstruct me
   unregisterMessage(#changeRoom, me.getID())
   unregisterMessage(#enterRoom, me.getID())
   unregisterMessage(#activeObjectRemoved, me.getID())
+  unregisterMessage(#itemObjectRemoved, me.getID())
+  unregisterMessage(#activeObjectsUpdated, me.getID())
+  unregisterMessage(#itemObjectsUpdated, me.getID())
   return 1
 end
 
@@ -61,20 +67,27 @@ on update me
   tItemObjList = tRoomComponent.getItemObject(#list)
   pObjList = [:]
   pObjList.sort()
+  tClickAction = EMPTY
+  tMoverClientId = 0
+  tObjectMover = getThread(#room).getInterface().getObjectMover()
+  if objectp(tObjectMover) then
+    tMoverClientId = tObjectMover.getProperty(#clientID)
+    tClickAction = getThread(#room).getInterface().getProperty(#clickAction)
+  end if
   tAdminChooser = getObject(#session).get("user_rights").getOne("fuse_any_room_controller")
   repeat with tObj in tActiveObjList
     if tAdminChooser then
-      pObjList.setaProp(tObj.getID(), "Id:" & tObj.getID() && tObj.getLocation() && tObj.getInfo().name)
+      pObjList.setaProp("a" & tObj.getID(), "Id:" & tObj.getID() && tObj.getLocation() && tObj.getInfo().name)
       next repeat
     end if
-    pObjList.setaProp(tObj.getID(), tObj.getInfo().name)
+    pObjList.setaProp("a" & tObj.getID(), tObj.getInfo().name)
   end repeat
   repeat with tObj in tItemObjList
     if tAdminChooser then
-      pObjList.setaProp(tObj.getID(), "Id:" & tObj.getID() && tObj.getLocation() && tObj.getInfo().name)
+      pObjList.setaProp("i" & tObj.getID(), "Id:" & tObj.getID() && tObj.getLocation() && tObj.getInfo().name)
       next repeat
     end if
-    pObjList.setaProp(tObj.getID(), tObj.getInfo().name)
+    pObjList.setaProp("i" & tObj.getID(), tObj.getInfo().name)
   end repeat
   tObjStr = EMPTY
   repeat with i = 1 to pObjList.count
@@ -123,8 +136,16 @@ on eventProcChooser me, tEvent, tSprID, tParam
       if not tRoomComponent then
         return 0
       end if
-      tActiveObj = tRoomComponent.getActiveObject(tObjID)
-      tItemObj = tRoomComponent.getItemObject(tObjID)
+      tObjID = pObjList.getPropAt(tLineNum)
+      tObjType = tObjID.char[1]
+      tObjID = tObjID.char[2..tObjID.length]
+      if tObjType = "a" then
+        tActiveObj = tRoomComponent.getActiveObject(tObjID)
+      else
+        if tObjType = "i" then
+          tItemObj = tRoomComponent.getItemObject(tObjID)
+        end if
+      end if
       if not (objectp(tActiveObj) or objectp(tItemObj)) then
         return 0
       end if
@@ -134,6 +155,7 @@ on eventProcChooser me, tEvent, tSprID, tParam
       if objectp(tActiveObj) then
         ttype = "active"
       end if
+      tRoomInt.cancelObjectMover()
       tRoomInt.pSelectedObj = tObjID
       tRoomInt.pSelectedType = ttype
       tRoomInt.showObjectInfo(ttype)

@@ -41,12 +41,12 @@ on update me
     if pFrame > tAnim.count then
       pFrame = 1
     end if
-    tName = me.pSprList[1].member.name
+    tName = me.pSprList[2].member.name
     if tName <> EMPTY then
       tmember = member(getmemnum(tName.char[1..length(tName) - 1] & tAnim[pFrame]))
-      me.pSprList[1].castNum = tmember.number
-      me.pSprList[1].width = tmember.width
-      me.pSprList[1].height = tmember.height
+      me.pSprList[2].castNum = tmember.number
+      me.pSprList[2].width = tmember.width
+      me.pSprList[2].height = tmember.height
       if pFrame = tAnim.count then
         pLastUpdate = the milliSeconds + 4000
       else
@@ -57,12 +57,12 @@ on update me
     if pState = 2 then
       pState = 3
       pFrame = 0
-      tName = me.pSprList[1].member.name
+      tName = me.pSprList[2].member.name
       if tName <> EMPTY then
         tmember = member(getmemnum(tName.char[1..length(tName) - 1] & pFrame))
-        me.pSprList[1].castNum = tmember.number
-        me.pSprList[1].width = tmember.width
-        me.pSprList[1].height = tmember.height
+        me.pSprList[2].castNum = tmember.number
+        me.pSprList[2].width = tmember.width
+        me.pSprList[2].height = tmember.height
       end if
     end if
   end if

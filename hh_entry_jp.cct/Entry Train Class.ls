@@ -1,7 +1,7 @@
 property pMember, pTrainImg, pLastUpdate, pAnimPhase, pAnimStep
 
-on define me, tmember
-  pMember = tmember
+on define me, tsprite
+  pMember = tsprite.member
   pMember.image = image(314, 166, 32)
   pTrainImg = member(getmemnum("jp_train_gfx")).image.duplicate()
   pAnimStep = 4
