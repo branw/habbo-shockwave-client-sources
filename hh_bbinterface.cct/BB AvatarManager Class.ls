@@ -96,11 +96,11 @@ on createRoomObject me, tdata
   end if
 end
 
-on deleteRoomObject me, tID
+on deleteRoomObject me, tid
   if pRoomComponentObj = 0 then
     return 0
   end if
-  tUserStrId = string(tID)
+  tUserStrId = string(tid)
   pGoalLocationList.deleteProp(tUserStrId)
   pCurrentLocationList.deleteProp(tUserStrId)
   pExpectedLocationList.deleteProp(tUserStrId)

@@ -15,9 +15,9 @@ on deconstruct me
 end
 
 on createExitMenu me
-  tID = "Tutorial_buttons"
-  createWindow(tID, "habbo_simple.window")
-  me.pExitMenuWindow = getWindow(tID)
+  tid = "Tutorial_buttons"
+  createWindow(tid, "habbo_simple.window")
+  me.pExitMenuWindow = getWindow(tid)
   me.pExitMenuWindow.merge("tutorial_exit_menu_bg.window")
   me.pExitMenuWindow.merge("tutorial_exit_menu.window")
   me.pExitMenuWindow.hide()
@@ -84,7 +84,7 @@ on updateBubbles me
   tAttachedWindows = [:]
   repeat with tBubble in me.pBubbles
     tBubble.update()
-    tBubbleWindowID = tBubble.getProperty(#windowID)
+    tBubbleWindowID = tBubble.getProperty(#windowId)
     tPos = tWindowList.getPos(tBubbleWindowID)
     if tPos = 0 then
       next repeat
@@ -109,10 +109,10 @@ on updateBubbles me
     tWindowList.addAt(tPosRoombar, "Room_interface")
   end if
   tOrderList = []
-  repeat with tID in tWindowList
-    tOrderList.add(tID)
-    if not voidp(tAttachedWindows.getaProp(tID)) then
-      repeat with tAttached in tAttachedWindows[tID]
+  repeat with tid in tWindowList
+    tOrderList.add(tid)
+    if not voidp(tAttachedWindows.getaProp(tid)) then
+      repeat with tAttached in tAttachedWindows[tid]
         tOrderList.add(tAttached)
       end repeat
     end if

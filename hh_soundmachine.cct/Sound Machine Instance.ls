@@ -140,10 +140,10 @@ on parsePlaylist me, tMsg
     if tIndex = 0 then
       tIndex = tCount
     end if
-    tID = pTimelineList.getPropAt(tIndex)
-    if tDownloadList.findPos(tID) = 0 then
-      tDownloadList.add(tID)
-      pPlaylistManager.downloadSong(tID)
+    tid = pTimelineList.getPropAt(tIndex)
+    if tDownloadList.findPos(tid) = 0 then
+      tDownloadList.add(tid)
+      pPlaylistManager.downloadSong(tid)
     end if
   end repeat
   tSongController = getObject(pSongControllerID)
@@ -177,7 +177,7 @@ on updatePlaylist me
   end if
 end
 
-on insertPlaylistSong me, tID, tLength, tName, tAuthor
+on insertPlaylistSong me, tid, tLength, tName, tAuthor
   if voidp(pPlayStackIndex) then
     return 0
   end if
@@ -185,26 +185,26 @@ on insertPlaylistSong me, tID, tLength, tName, tAuthor
     return 0
   end if
   me.updatePlaylist()
-  if not pPlaylistManager.insertPlaylistSong(tID, tLength, tName, tAuthor) then
+  if not pPlaylistManager.insertPlaylistSong(tid, tLength, tName, tAuthor) then
     return 0
   end if
-  me.createTimelineInstance([#id: tID, #length: tLength])
+  me.createTimelineInstance([#id: tid, #length: tLength])
   if pTimelineList.count = 0 then
     return 0
   end if
   tTimeline = pTimelineList[1]
-  pPlaylistManager.downloadSong(tID)
+  pPlaylistManager.downloadSong(tid)
   tSongController = getObject(pSongControllerID)
   if tSongController <> 0 then
-    return tSongController.addPlaylistSong(pPlayStackIndex, tID, tLength * tTimeline.getSlotDuration())
+    return tSongController.addPlaylistSong(pPlayStackIndex, tid, tLength * tTimeline.getSlotDuration())
   end if
   return 0
 end
 
 on parseSongData me, tdata, tSongID, tSongName
   repeat with i = 1 to pTimelineList.count
-    tID = pTimelineList.getPropAt(i)
-    if tSongID = tID then
+    tid = pTimelineList.getPropAt(i)
+    if tSongID = tid then
       tTimeline = pTimelineList[i]
       tTimeline.parseSongData(tdata, tSongID, tSongName)
     end if
@@ -223,9 +223,9 @@ on processSongData me
     if pFurniOn then
       if tSongController <> 0 then
         tSongData = pTimelineList[i].getSongData()
-        tID = pTimelineList[i].getSongID()
+        tid = pTimelineList[i].getSongID()
         if tSongData <> 0 then
-          tSongController.updatePlaylistSong(tID, tSongData)
+          tSongController.updatePlaylistSong(tid, tSongData)
         end if
       end if
     end if

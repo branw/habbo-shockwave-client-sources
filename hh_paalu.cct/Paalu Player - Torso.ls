@@ -3,7 +3,7 @@ property pAction, pBalance, pDirection, pAnimFrm, pCounter, pBodyColor, pSuitCol
 on define me, tPart, tProps
   pAction = "std"
   pBalance = 2
-  pDirection = tProps[#Dir]
+  pDirection = tProps[#dir]
   pAnimFrm = 0
   pBodyColor = tProps[#figure]["bd"]["color"]
   pSuitColor = tProps[#figure]["ch"]["color"]

@@ -70,12 +70,12 @@ on initPlaylist me, tStackIndex, tSongList, tPlayTime, tLoop
   return getObject(pSongPlayer).initPlaylist(tStackIndex, tSongList, tPlayTime, tLoop)
 end
 
-on addPlaylistSong me, tStackIndex, tID, tLength
-  return getObject(pSongPlayer).addPlaylistSong(tStackIndex, tID, tLength)
+on addPlaylistSong me, tStackIndex, tid, tLength
+  return getObject(pSongPlayer).addPlaylistSong(tStackIndex, tid, tLength)
 end
 
-on updatePlaylistSong me, tID, tSongData
-  return getObject(pSongPlayer).updatePlaylistSong(tID, tSongData)
+on updatePlaylistSong me, tid, tSongData
+  return getObject(pSongPlayer).updatePlaylistSong(tid, tSongData)
 end
 
 on startSampleDownload me, tMemberName, tParentId

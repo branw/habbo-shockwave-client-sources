@@ -18,16 +18,16 @@ on startCastLoad tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing
   return getCastLoadManager().startCastLoad(tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing)
 end
 
-on registerCastloadCallback tID, tMethod, tClientObj, tArgument
-  return getCastLoadManager().registerCallback(tID, tMethod, tClientObj, tArgument)
+on registerCastloadCallback tid, tMethod, tClientObj, tArgument
+  return getCastLoadManager().registerCallback(tid, tMethod, tClientObj, tArgument)
 end
 
 on resetCastLibs tClean, tForced
   return getCastLoadManager().resetCastLibs(tClean, tForced)
 end
 
-on getCastLoadPercent tID
-  return getCastLoadManager().getLoadPercent(tID)
+on getCastLoadPercent tid
+  return getCastLoadManager().getLoadPercent(tid)
 end
 
 on FindCastNumber tCastName

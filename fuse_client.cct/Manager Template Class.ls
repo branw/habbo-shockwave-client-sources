@@ -17,19 +17,19 @@ on deconstruct me
   return 1
 end
 
-on create me, tID, tClass
-  if getObjectManager().exists(tID) then
-    return error(me, "Object already exists:" && tID, #create, #major)
+on create me, tid, tClass
+  if getObjectManager().exists(tid) then
+    return error(me, "Object already exists:" && tid, #create, #major)
   end if
-  if not getObjectManager().create(tID, tClass) then
+  if not getObjectManager().create(tid, tClass) then
     return 0
   end if
-  pItemList.add(tID)
+  pItemList.add(tid)
   return 1
 end
 
-on GET me, tID
-  return getObjectManager().GET(tID)
+on GET me, tid
+  return getObjectManager().GET(tid)
 end
 
 on getIDList me
@@ -37,40 +37,40 @@ on getIDList me
   tListMode = ilk(me.pItemList)
   repeat with i = 1 to me.pItemList.count
     if tListMode = #list then
-      tID = me.pItemList[i]
+      tid = me.pItemList[i]
     else
-      tID = me.pItemList.getPropAt(i)
+      tid = me.pItemList.getPropAt(i)
     end if
-    tIDList.add(tID)
+    tIDList.add(tid)
   end repeat
   return tIDList
 end
 
-on Remove me, tID
-  if not me.exists(tID) then
+on Remove me, tid
+  if not me.exists(tid) then
     return 0
   end if
-  pItemList.deleteOne(tID)
-  return getObjectManager().Remove(tID)
+  pItemList.deleteOne(tid)
+  return getObjectManager().Remove(tid)
 end
 
-on exists me, tID
-  return me.pItemList.getOne(tID) > 0
+on exists me, tid
+  return me.pItemList.getOne(tid) > 0
 end
 
 on print me
   tListMode = ilk(me.pItemList)
   repeat with i = 1 to me.pItemList.count
     if tListMode = #list then
-      tID = me.pItemList[i]
+      tid = me.pItemList[i]
     else
-      tID = me.pItemList.getPropAt(i)
+      tid = me.pItemList.getPropAt(i)
     end if
-    tObj = me.GET(tID)
-    if symbolp(tID) then
-      tID = "#" & tID
+    tObj = me.GET(tid)
+    if symbolp(tid) then
+      tid = "#" & tid
     end if
-    put tID && ":" && tObj
+    put tid && ":" && tObj
   end repeat
   return 1
 end

@@ -67,11 +67,11 @@ on execute me, tMessage, tArgA, tArgB, tArgC
     return 0
   end if
   repeat with i = tList.count down to 1
-    tID = tList.getPropAt(i)
+    tid = tList.getPropAt(i)
     tMethod = tList[i]
-    tObject = getObjectManager().GET(tID)
+    tObject = getObjectManager().GET(tid)
     if tObject = 0 then
-      me.unregister(tMessage, tID)
+      me.unregister(tMessage, tid)
       next repeat
     end if
     call(tMethod, [tObject], tArgA, tArgB, tArgC)

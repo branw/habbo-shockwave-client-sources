@@ -26,12 +26,12 @@ on registerDownloadCallback tMemNameOrNum, tMethod, tClientID, tArgument
   return getDownloadManager().registerCallback(tMemNameOrNum, tMethod, tClientID, tArgument)
 end
 
-on getDownLoadPercent tID
-  return getDownloadManager().getLoadPercent(tID)
+on getDownLoadPercent tid
+  return getDownloadManager().getLoadPercent(tid)
 end
 
-on downloadExists tID
-  return getDownloadManager().exists(tID)
+on downloadExists tid
+  return getDownloadManager().exists(tid)
 end
 
 on printDownloads

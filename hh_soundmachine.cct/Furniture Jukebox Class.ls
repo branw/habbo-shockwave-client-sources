@@ -1,5 +1,5 @@
-on setID me, tID
-  callAncestor(#setID, [me], tID)
+on setID me, tid
+  callAncestor(#setID, [me], tid)
   executeMessage(#sound_machine_created, me.getID(), 0)
   return 1
 end
@@ -19,15 +19,15 @@ on define me, tProps
 end
 
 on select me
-  towner = 0
+  tOwner = 0
   tSession = getObject(#session)
   if tSession <> 0 then
     if tSession.GET("room_owner") then
-      towner = 1
+      tOwner = 1
     end if
   end if
   if the doubleClick then
-    executeMessage(#jukebox_selected, [#id: me.getID(), #owner: towner])
+    executeMessage(#jukebox_selected, [#id: me.getID(), #owner: tOwner])
   else
     return callAncestor(#select, [me])
   end if

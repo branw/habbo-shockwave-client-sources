@@ -33,15 +33,15 @@ on deconstruct me
   return 1
 end
 
-on create me, tID, tClassList
-  if not symbolp(tID) and not stringp(tID) then
-    return error(me, "Symbol or string expected:" && tID, #create, #major)
+on create me, tid, tClassList
+  if not symbolp(tid) and not stringp(tid) then
+    return error(me, "Symbol or string expected:" && tid, #create, #major)
   end if
-  if objectp(pObjectList[tID]) then
-    return error(me, "Object already exists:" && tID, #create, #major)
+  if objectp(pObjectList[tid]) then
+    return error(me, "Object already exists:" && tid, #create, #major)
   end if
-  if tID = #random then
-    tID = getUniqueID()
+  if tid = #random then
+    tid = getUniqueID()
   end if
   if voidp(tClassList) then
     return error(me, "Class member name expected!", #create, #major)
@@ -54,9 +54,9 @@ on create me, tID, tClassList
   tTemp = VOID
   tBase = pBaseClsMem.new()
   tBase.construct()
-  if tID <> #temp then
-    tBase.id = tID
-    pObjectList[tID] = tBase
+  if tid <> #temp then
+    tBase.id = tid
+    pObjectList[tid] = tBase
   end if
   tClassList.addAt(1, tBase)
   repeat with tClass in tClassList
@@ -70,8 +70,8 @@ on create me, tID, tClassList
         tMemNum = member(tClass).number
       end if
       if tMemNum < 1 then
-        if tID <> #temp then
-          pObjectList.deleteProp(tID)
+        if tid <> #temp then
+          pObjectList.deleteProp(tid)
         end if
         return error(me, "Script not found:" && tMemNum, #create, #major)
       end if
@@ -82,9 +82,9 @@ on create me, tID, tClassList
       tObject[#ancestor] = tTemp
       tTemp = tObject
     end if
-    if tID <> #temp and tClassList.getLast() = tClass then
-      pObjectList[tID] = tObject
-      pInstanceList.append(tID)
+    if tid <> #temp and tClassList.getLast() = tClass then
+      pObjectList[tid] = tObject
+      pInstanceList.append(tid)
     end if
     if tInitFlag then
       tObject.construct()
@@ -93,8 +93,8 @@ on create me, tID, tClassList
   return tObject
 end
 
-on GET me, tID
-  tObj = pObjectList[tID]
+on GET me, tid
+  tObj = pObjectList[tid]
   if voidp(tObj) then
     return 0
   else
@@ -102,8 +102,8 @@ on GET me, tID
   end if
 end
 
-on Remove me, tID
-  tObj = pObjectList[tID]
+on Remove me, tid
+  tObj = pObjectList[tid]
   if voidp(tObj) then
     return 0
   end if
@@ -122,18 +122,18 @@ on Remove me, tID
   pPrepareList.deleteOne(tObj)
   tObj = VOID
   if not pEraseLock then
-    pObjectList.deleteProp(tID)
-    pInstanceList.deleteOne(tID)
-    pManagerList.deleteOne(tID)
+    pObjectList.deleteProp(tid)
+    pInstanceList.deleteOne(tid)
+    pManagerList.deleteOne(tid)
   end if
   return 1
 end
 
-on exists me, tID
-  if voidp(tID) then
+on exists me, tid
+  if voidp(tid) then
     return 0
   end if
-  return objectp(pObjectList[tID])
+  return objectp(pObjectList[tid])
 end
 
 on print me
@@ -147,74 +147,74 @@ on print me
   return 1
 end
 
-on registerObject me, tID, tObject
+on registerObject me, tid, tObject
   if not objectp(tObject) then
     return error(me, "Invalid object:" && tObject, #register, #major)
   end if
-  if not voidp(pObjectList[tID]) then
-    return error(me, "Object already exists:" && tID, #register, #minor)
+  if not voidp(pObjectList[tid]) then
+    return error(me, "Object already exists:" && tid, #register, #minor)
   end if
-  pObjectList[tID] = tObject
-  pInstanceList.append(tID)
+  pObjectList[tid] = tObject
+  pInstanceList.append(tid)
   return 1
 end
 
-on unregisterObject me, tID
-  if voidp(pObjectList[tID]) then
-    return error(me, "Referred object not found:" && tID, #unregister, #minor)
+on unregisterObject me, tid
+  if voidp(pObjectList[tid]) then
+    return error(me, "Referred object not found:" && tid, #unregister, #minor)
   end if
-  tObj = pObjectList[tID]
-  pObjectList.deleteProp(tID)
+  tObj = pObjectList[tid]
+  pObjectList.deleteProp(tid)
   pUpdateList.deleteOne(tObj)
   pPrepareList.deleteOne(tObj)
-  pInstanceList.deleteOne(tID)
+  pInstanceList.deleteOne(tid)
   tObj = VOID
   return 1
 end
 
-on registerManager me, tID
-  if not me.exists(tID) then
-    return error(me, "Referred object not found:" && tID, #registerManager, #major)
+on registerManager me, tid
+  if not me.exists(tid) then
+    return error(me, "Referred object not found:" && tid, #registerManager, #major)
   end if
-  if pManagerList.getOne(tID) <> 0 then
-    return error(me, "Manager already registered:" && tID, #registerManager, #minor)
+  if pManagerList.getOne(tid) <> 0 then
+    return error(me, "Manager already registered:" && tid, #registerManager, #minor)
   end if
-  pInstanceList.deleteOne(tID)
-  pManagerList.append(tID)
+  pInstanceList.deleteOne(tid)
+  pManagerList.append(tid)
   return 1
 end
 
-on unregisterManager me, tID
-  if not me.exists(tID) then
-    return error(me, "Referred object not found:" && tID, #unregisterManager, #minor)
+on unregisterManager me, tid
+  if not me.exists(tid) then
+    return error(me, "Referred object not found:" && tid, #unregisterManager, #minor)
   end if
-  if pInstanceList.getOne(tID) <> 0 then
-    return error(me, "Manager already unregistered:" && tID, #unregisterManager, #minor)
+  if pInstanceList.getOne(tid) <> 0 then
+    return error(me, "Manager already unregistered:" && tid, #unregisterManager, #minor)
   end if
-  pManagerList.deleteOne(tID)
-  pInstanceList.append(tID)
+  pManagerList.deleteOne(tid)
+  pInstanceList.append(tid)
   return 1
 end
 
-on getManager me, tID
-  if not pManagerList.getOne(tID) then
-    return error(me, "Manager not found:" && tID, #getManager, #major)
+on getManager me, tid
+  if not pManagerList.getOne(tid) then
+    return error(me, "Manager not found:" && tid, #getManager, #major)
   end if
-  return pObjectList[tID]
+  return pObjectList[tid]
 end
 
-on managerExists me, tID
-  return pManagerList.getOne(tID) <> 0
+on managerExists me, tid
+  return pManagerList.getOne(tid) <> 0
 end
 
-on receivePrepare me, tID
-  if voidp(pObjectList[tID]) then
+on receivePrepare me, tid
+  if voidp(pObjectList[tid]) then
     return 0
   end if
-  if pPrepareList.getPos(pObjectList[tID]) > 0 then
+  if pPrepareList.getPos(pObjectList[tid]) > 0 then
     return 0
   end if
-  pPrepareList.add(pObjectList[tID])
+  pPrepareList.add(pObjectList[tid])
   if not pUpdatePause then
     if voidp(pTimeout) then
       pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
@@ -223,14 +223,14 @@ on receivePrepare me, tID
   return 1
 end
 
-on removePrepare me, tID
-  if voidp(pObjectList[tID]) then
+on removePrepare me, tid
+  if voidp(pObjectList[tid]) then
     return 0
   end if
-  if pPrepareList.getOne(pObjectList[tID]) < 1 then
+  if pPrepareList.getOne(pObjectList[tid]) < 1 then
     return 0
   end if
-  pPrepareList.deleteOne(pObjectList[tID])
+  pPrepareList.deleteOne(pObjectList[tid])
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
     if objectp(pTimeout) then
       pTimeout.forget()
@@ -240,14 +240,14 @@ on removePrepare me, tID
   return 1
 end
 
-on receiveUpdate me, tID
-  if voidp(pObjectList[tID]) then
+on receiveUpdate me, tid
+  if voidp(pObjectList[tid]) then
     return 0
   end if
-  if pUpdateList.getPos(pObjectList[tID]) > 0 then
+  if pUpdateList.getPos(pObjectList[tid]) > 0 then
     return 0
   end if
-  pUpdateList.add(pObjectList[tID])
+  pUpdateList.add(pObjectList[tid])
   if not pUpdatePause then
     if voidp(pTimeout) then
       pTimeout = timeout("objectmanager" & the milliSeconds).new(60 * 1000 * 60, #null, me)
@@ -256,14 +256,14 @@ on receiveUpdate me, tID
   return 1
 end
 
-on removeUpdate me, tID
-  if voidp(pObjectList[tID]) then
+on removeUpdate me, tid
+  if voidp(pObjectList[tid]) then
     return 0
   end if
-  if pUpdateList.getOne(pObjectList[tID]) < 1 then
+  if pUpdateList.getOne(pObjectList[tid]) < 1 then
     return 0
   end if
-  pUpdateList.deleteOne(pObjectList[tID])
+  pUpdateList.deleteOne(pObjectList[tid])
   if pPrepareList.count = 0 and pUpdateList.count = 0 then
     if objectp(pTimeout) then
       pTimeout.forget()

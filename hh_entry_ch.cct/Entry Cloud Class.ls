@@ -1,7 +1,7 @@
 property pSprite, pTurnPoint, pVertDir, pImg, pLoc, pTurnPointList, pCurrentTurnPoint, pCloudDir, pMemName, pCloudMember
 
-on define me, tsprite, tCount
-  pSprite = tsprite
+on define me, tSprite, tCount
+  pSprite = tSprite
   if memberExists("entrycloud_" & tCount) then
     pCloudMember = member(getmemnum("entrycloud_" & tCount))
   else

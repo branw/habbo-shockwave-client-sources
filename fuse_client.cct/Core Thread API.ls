@@ -14,20 +14,20 @@ on getThreadManager
   return tMgr.getManager(#thread_manager)
 end
 
-on createThread tID, tInitField
-  return getThreadManager().create(tID, tInitField)
+on createThread tid, tInitField
+  return getThreadManager().create(tid, tInitField)
 end
 
-on removeThread tID
-  return getThreadManager().Remove(tID)
+on removeThread tid
+  return getThreadManager().Remove(tid)
 end
 
-on getThread tID
-  return getThreadManager().GET(tID)
+on getThread tid
+  return getThreadManager().GET(tid)
 end
 
-on threadExists tID
-  return getThreadManager().exists(tID)
+on threadExists tid
+  return getThreadManager().exists(tid)
 end
 
 on initThread tCastNumOrMemName

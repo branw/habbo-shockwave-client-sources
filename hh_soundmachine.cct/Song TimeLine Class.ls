@@ -36,7 +36,7 @@ on updateSongName me, tNewName
   pSongName = tNewName
 end
 
-on soundSetRemoved me, tID
+on soundSetRemoved me, tid
   repeat with tChannel in pTimeLineData
     repeat with tSlot = 1 to tChannel.count
       if not voidp(tChannel[tSlot]) then
@@ -44,7 +44,7 @@ on soundSetRemoved me, tID
         if tSampleID < 0 then
           tSampleID = -tSampleID
         end if
-        if me.getSampleSetID(tSampleID) = tID then
+        if me.getSampleSetID(tSampleID) = tid then
           pChanged = 1
           tChannel[tSlot] = VOID
         end if
@@ -56,7 +56,7 @@ on soundSetRemoved me, tID
       tSample = tChannel[tSlot]
       if not voidp(tSample) then
         tSampleID = tSample[#id]
-        if me.getSampleSetID(tSampleID) = tID then
+        if me.getSampleSetID(tSampleID) = tid then
           pChanged = 1
           tChannel[tSlot] = VOID
         end if
@@ -65,7 +65,7 @@ on soundSetRemoved me, tID
   end repeat
 end
 
-on checkSoundSetReferences me, tID
+on checkSoundSetReferences me, tid
   repeat with tChannel in pTimeLineData
     repeat with tSlot = 1 to tChannel.count
       if not voidp(tChannel[tSlot]) then
@@ -73,7 +73,7 @@ on checkSoundSetReferences me, tID
         if tSampleID < 0 then
           tSampleID = -tSampleID
         end if
-        if me.getSampleSetID(tSampleID) = tID then
+        if me.getSampleSetID(tSampleID) = tid then
           return 1
         end if
       end if
@@ -83,7 +83,7 @@ on checkSoundSetReferences me, tID
     repeat with tSample in tChannel
       if not voidp(tSample) then
         tSampleID = tSample[#id]
-        if me.getSampleSetID(tSampleID) = tID then
+        if me.getSampleSetID(tSampleID) = tid then
           return 1
         end if
       end if
@@ -174,7 +174,7 @@ on parseSongData me, tdata, tSongID, tSongName
       tSongChannel = pSongData[i]
       tSlot = 1
       repeat with tSample in tChannel
-        tID = tSample[#id]
+        tid = tSample[#id]
         tLength = tSample[#length]
         if tSlot <= tSongChannel.count then
           pSongData[i][tSlot] = tSample.duplicate()
@@ -210,22 +210,22 @@ on processSongData me
     repeat with j = 1 to tSongChannel.count
       tSample = tSongChannel[j]
       if not voidp(tSample) then
-        tID = tSample[#id]
+        tid = tSample[#id]
         tLength = tSample[#length]
-        if tLengthCache.findPos(tID) > 0 then
-          tSampleLength = tLengthCache.getProp(tID)
+        if tLengthCache.findPos(tid) > 0 then
+          tSampleLength = tLengthCache.getProp(tid)
         else
-          tSampleLength = me.getSampleLength(tID)
-          tLengthCache.addProp(tID, tSampleLength)
+          tSampleLength = me.getSampleLength(tid)
+          tLengthCache.addProp(tid, tSampleLength)
         end if
         tWasReady = 1
         if tSampleLength = 0 then
           tSampleLength = 1
-          tID = -tID
+          tid = -tid
           tReady = 0
           tWasReady = 0
         end if
-        if tID <> 0 then
+        if tid <> 0 then
           tIsFree = 1
           if not me.getIsFreeBlock(j, i, tLength) then
             tIsFree = 0
@@ -235,10 +235,10 @@ on processSongData me
             if tIsFree then
               tCanInsert = 1
             else
-              tCanInsert = me.getCanInsertSample(j + (k - 1) * tSampleLength, i, tID)
+              tCanInsert = me.getCanInsertSample(j + (k - 1) * tSampleLength, i, tid)
             end if
             if tCanInsert then
-              tTimeLineChannel[j + (k - 1) * tSampleLength] = tID
+              tTimeLineChannel[j + (k - 1) * tSampleLength] = tid
             end if
           end repeat
         end if
@@ -292,8 +292,8 @@ on resolveSongLength me
   return tLength
 end
 
-on getCanInsertSample me, tX, tY, tID
-  tLength = me.getSampleLength(tID)
+on getCanInsertSample me, tX, tY, tid
+  tLength = me.getSampleLength(tid)
   return me.getIsFreeBlock(tX, tY, tLength)
 end
 
@@ -384,11 +384,11 @@ on getSilentSongData me
   return [#offset: 0, #sounds: [[#name: "sound_machine_sample_0", #loops: 10, #channel: 1]]]
 end
 
-on insertSample me, tSlot, tChannel, tID
-  tInsert = me.getCanInsertSample(tSlot, tChannel, tID)
+on insertSample me, tSlot, tChannel, tid
+  tInsert = me.getCanInsertSample(tSlot, tChannel, tid)
   if tInsert then
     pChanged = 1
-    pTimeLineData[tChannel][tSlot] = tID
+    pTimeLineData[tChannel][tSlot] = tid
     return 1
   end if
   return 0

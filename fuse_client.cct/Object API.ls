@@ -26,7 +26,7 @@ on getObjectManager
   return gCore
 end
 
-on createObject tID
+on createObject tid
   tClassList = []
   repeat with i = 2 to the paramCount
     tParam = param(i)
@@ -38,34 +38,34 @@ on createObject tID
     end if
     tClassList.add(tParam)
   end repeat
-  return getObjectManager().create(tID, tClassList)
+  return getObjectManager().create(tid, tClassList)
 end
 
-on removeObject tID
-  return getObjectManager().Remove(tID)
+on removeObject tid
+  return getObjectManager().Remove(tid)
 end
 
-on getObject tID
-  return getObjectManager().GET(tID)
+on getObject tid
+  return getObjectManager().GET(tid)
 end
 
-on objectExists tID
-  return getObjectManager().exists(tID)
+on objectExists tid
+  return getObjectManager().exists(tid)
 end
 
 on printObjects
   return getObjectManager().print()
 end
 
-on registerObject tID, tObject
-  return getObjectManager().registerObject(tID, tObject)
+on registerObject tid, tObject
+  return getObjectManager().registerObject(tid, tObject)
 end
 
-on unregisterObject tID
-  return getObjectManager().unregisterObject(tID)
+on unregisterObject tid
+  return getObjectManager().unregisterObject(tid)
 end
 
-on createManager tID
+on createManager tid
   tClassList = []
   repeat with i = 2 to the paramCount
     tParam = param(i)
@@ -78,50 +78,50 @@ on createManager tID
     tClassList.add(tParam)
   end repeat
   tObjMngr = getObjectManager()
-  tObjInst = tObjMngr.create(tID, tClassList)
-  tObjMngr.registerManager(tID)
-  tObjMngr.setaProp(tID, tObjInst)
+  tObjInst = tObjMngr.create(tid, tClassList)
+  tObjMngr.registerManager(tid)
+  tObjMngr.setaProp(tid, tObjInst)
   return tObjInst
 end
 
-on removeManager tID
-  return getObjectManager().Remove(tID)
+on removeManager tid
+  return getObjectManager().Remove(tid)
 end
 
-on getManager tID
-  return getObjectManager().getManager(tID)
+on getManager tid
+  return getObjectManager().getManager(tid)
 end
 
-on managerExists tID
-  return getObjectManager().managerExists(tID)
+on managerExists tid
+  return getObjectManager().managerExists(tid)
 end
 
 on printManagers
   return getObjectManager().print()
 end
 
-on registerManager tID
-  return getObjectManager().registerManager(tID)
+on registerManager tid
+  return getObjectManager().registerManager(tid)
 end
 
-on unregisterManager tID
-  return getObjectManager().unregisterManager(tID)
+on unregisterManager tid
+  return getObjectManager().unregisterManager(tid)
 end
 
-on receivePrepare tID
-  return getObjectManager().receivePrepare(tID)
+on receivePrepare tid
+  return getObjectManager().receivePrepare(tid)
 end
 
-on removePrepare tID
-  return getObjectManager().removePrepare(tID)
+on removePrepare tid
+  return getObjectManager().removePrepare(tid)
 end
 
-on receiveUpdate tID
-  return getObjectManager().receiveUpdate(tID)
+on receiveUpdate tid
+  return getObjectManager().receiveUpdate(tid)
 end
 
-on removeUpdate tID
-  return getObjectManager().removeUpdate(tID)
+on removeUpdate tid
+  return getObjectManager().removeUpdate(tid)
 end
 
 on pauseUpdate

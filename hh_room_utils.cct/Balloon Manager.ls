@@ -208,11 +208,11 @@ on removeBalloons me
   end repeat
 end
 
-on removeVisibleBalloon me, tID
-  if not voidp(pVisibleBalloons[tID]) then
-    pAvailableBalloons[tID] = pVisibleBalloons[tID]
-    pAvailableBalloons[tID].set(#loc, point(0, -1000))
-    pVisibleBalloons.deleteProp(tID)
+on removeVisibleBalloon me, tid
+  if not voidp(pVisibleBalloons[tid]) then
+    pAvailableBalloons[tid] = pVisibleBalloons[tid]
+    pAvailableBalloons[tid].set(#loc, point(0, -1000))
+    pVisibleBalloons.deleteProp(tid)
     return 1
   end if
 end

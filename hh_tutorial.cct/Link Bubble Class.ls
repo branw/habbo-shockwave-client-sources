@@ -72,8 +72,8 @@ on setCheckmarks me, tStatusList
   tImage = image(tLinkImage.width + 11, tLinkImage.height, 8)
   tImage.copyPixels(tLinkImage, rect(12, 0, tImage.width, tImage.height), tLinkImage.rect)
   repeat with tLinkNum = 1 to me.pLinkList.count
-    tID = me.pLinkList.getPropAt(tLinkNum)
-    if not tStatusList.getaProp(tID) then
+    tid = me.pLinkList.getPropAt(tLinkNum)
+    if not tStatusList.getaProp(tid) then
       next repeat
     end if
     tY1 = 16 * (tLinkNum - 1) + 4

@@ -16,9 +16,9 @@ end
 
 on prepare me
   tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
-  repeat with tID in ["bus", "hubu_kiosk_1", "hubu_kiosk_2", "hubu_kiosk_3", "hubu_kiosk_4", "hubu_kiosk_5"]
-    tsprite = tRoomVis.getSprById(tID)
-    registerProcedure(tsprite, #parkAEventProc, me.getID(), #mouseDown)
+  repeat with tid in ["bus", "hubu_kiosk_1", "hubu_kiosk_2", "hubu_kiosk_3", "hubu_kiosk_4", "hubu_kiosk_5"]
+    tSprite = tRoomVis.getSprById(tid)
+    registerProcedure(tSprite, #parkAEventProc, me.getID(), #mouseDown)
   end repeat
 end
 
@@ -34,7 +34,7 @@ on showprogram me, tMsg
   end if
 end
 
-on busDoor me, tID, tCommand
+on busDoor me, tid, tCommand
   case tCommand of
     "open":
       tMem = member(getmemnum("park_bussioviopen"))
@@ -45,7 +45,7 @@ on busDoor me, tID, tCommand
   if tRoomVis = 0 then
     return 0
   end if
-  tRoomVis.getSprById(tID).setMember(tMem)
+  tRoomVis.getSprById(tid).setMember(tMem)
 end
 
 on parkAEventProc me, tEvent, tSprID, tParm

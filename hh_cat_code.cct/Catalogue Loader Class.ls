@@ -20,15 +20,15 @@ on showLoadingScreen me
     if not tWinObj.merge("ctlg_loading.window") then
       return tWinObj.close()
     end if
-    tID = "ctlg_loading_bg"
-    if tWinObj.elementExists(tID) then
-      tWinObj.getElement(tID).setProperty(#visible, 1)
-      tWinObj.getElement(tID).setProperty(#blend, 70)
+    tid = "ctlg_loading_bg"
+    if tWinObj.elementExists(tid) then
+      tWinObj.getElement(tid).setProperty(#visible, 1)
+      tWinObj.getElement(tid).setProperty(#blend, 70)
     end if
-    repeat with tID in ["ctlg_loading_box", "ctlg_loading_anim", "ctlg_loading_text"]
-      if tWinObj.elementExists(tID) then
-        tWinObj.getElement(tID).setProperty(#visible, 1)
-        tWinObj.getElement(tID).setProperty(#blend, 100)
+    repeat with tid in ["ctlg_loading_box", "ctlg_loading_anim", "ctlg_loading_text"]
+      if tWinObj.elementExists(tid) then
+        tWinObj.getElement(tid).setProperty(#visible, 1)
+        tWinObj.getElement(tid).setProperty(#blend, 100)
       end if
     end repeat
   end if
@@ -67,16 +67,16 @@ on update me
     if not tWinObj then
       removeUpdate(me.getID())
     end if
-    tID = "ctlg_loading_anim"
-    if tWinObj.elementExists(tID) then
+    tid = "ctlg_loading_anim"
+    if tWinObj.elementExists(tid) then
       t1 = pQuad[1]
       t2 = pQuad[2]
       t3 = pQuad[3]
       t4 = pQuad[4]
       pQuad = [t2, t3, t4, t1]
-      tImage = tWinObj.getElement(tID).getProperty(#image)
+      tImage = tWinObj.getElement(tid).getProperty(#image)
       tImage.copyPixels(pAnimImage, pQuad, pAnimImage.rect)
-      tWinObj.getElement(tID).feedImage(tImage)
+      tWinObj.getElement(tid).feedImage(tImage)
     end if
     pFrameCounter = 0
   end if

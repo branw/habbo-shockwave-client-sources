@@ -73,7 +73,7 @@ on releaseAllSprites me
   return 1
 end
 
-on setEventBroker me, tSprNum, tID
+on setEventBroker me, tSprNum, tid
   if pTotalSprList.getPos(tSprNum) < 1 then
     return error(me, "Sprite not marked as usable:" && tSprNum, #setEventBroker, #major)
   end if
@@ -82,7 +82,7 @@ on setEventBroker me, tSprNum, tID
   end if
   tsprite = sprite(tSprNum)
   tsprite.scriptInstanceList = [new(pEventBroker)]
-  tsprite.setID(tID)
+  tsprite.setID(tid)
   return 1
 end
 

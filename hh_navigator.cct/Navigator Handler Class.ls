@@ -291,17 +291,17 @@ on handle_parentchain me, tMsg
   tNodeName = tConn.GetStrFrom()
   tCategoryIndex = [:]
   repeat while tConn <> VOID
-    tID = tConn.GetIntFrom()
-    if tID <= 0 then
+    tid = tConn.GetIntFrom()
+    if tid <= 0 then
       exit repeat
     end if
-    tID = string(tID)
+    tid = string(tid)
     tName = tConn.GetStrFrom()
     if tCategoryIndex[tChildId] <> VOID then
-      tCategoryIndex[tChildId].setaProp(#parentid, tID)
+      tCategoryIndex[tChildId].setaProp(#parentid, tid)
     end if
-    tCategoryIndex.addProp(tID, [#name: tName, #parentid: tID, #children: [tChildId]])
-    tChildId = tID
+    tCategoryIndex.addProp(tid, [#name: tName, #parentid: tid, #children: [tChildId]])
+    tChildId = tid
   end repeat
   return me.getComponent().updateCategoryIndex(tCategoryIndex)
 end
@@ -363,11 +363,11 @@ on regMsgList me, tBool
   tCmds.setaProp("REMOVEALLRIGHTS", 155)
   tCmds.setaProp("GETPARENTCHAIN", 156)
   if tBool then
-    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   end if
   return 1
 end

@@ -198,20 +198,20 @@ on receive_RemoveBuddies me, tList
     end if
     return 1
   end if
-  repeat with tID in tList
-    me.getInterface().removeBuddy(tID)
+  repeat with tid in tList
+    me.getInterface().removeBuddy(tid)
     tTheBuddyList = pBuddyList.getaProp(#value)
     tTheBuddyList.sort()
-    tBuddy = tTheBuddyList.buddies.getaProp(tID)
+    tBuddy = tTheBuddyList.buddies.getaProp(tid)
     if voidp(tBuddy) then
-      return error(me, "Buddy not found:" && tID, #receive_RemoveBuddies, #minor)
+      return error(me, "Buddy not found:" && tid, #receive_RemoveBuddies, #minor)
     end if
     tBuddyName = tBuddy.name
-    tTheBuddyList.buddies.deleteProp(tID)
+    tTheBuddyList.buddies.deleteProp(tid)
     tTheBuddyList.online.deleteOne(tBuddyName)
     tTheBuddyList.offline.deleteOne(tBuddyName)
     tTheBuddyList.render.deleteOne(tBuddyName)
-    me.eraseMessagesBySenderID(tID)
+    me.eraseMessagesBySenderID(tid)
   end repeat
   return 1
 end

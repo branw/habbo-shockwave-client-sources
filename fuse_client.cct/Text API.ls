@@ -14,24 +14,24 @@ on getTextManager
   return tMgr.getManager(#text_manager)
 end
 
-on createText tID, tValue
-  return getTextManager().create(tID, tValue)
+on createText tid, tValue
+  return getTextManager().create(tid, tValue)
 end
 
-on removeText tID
-  return getTextManager().Remove(tID)
+on removeText tid
+  return getTextManager().Remove(tid)
 end
 
-on setText tID, tValue
-  return getTextManager().create(tID, tValue)
+on setText tid, tValue
+  return getTextManager().create(tid, tValue)
 end
 
-on getText tID, tDefault
-  return getTextManager().GET(tID, tDefault)
+on getText tid, tDefault
+  return getTextManager().GET(tid, tDefault)
 end
 
-on textExists tID
-  return getTextManager().exists(tID)
+on textExists tid
+  return getTextManager().exists(tid)
 end
 
 on printTexts

@@ -33,13 +33,13 @@ on storePicture me, tmember, tText
   pLastPhotoData = tdata
 end
 
-on binaryDataStored me, tID
+on binaryDataStored me, tid
   me.getInterface().saveOk()
-  pPhotoCache.setaProp(tID, pLastPhotoData)
+  pPhotoCache.setaProp(tid, pLastPhotoData)
   pLastPhotoData = VOID
 end
 
-on binaryDataReceived me, tdata, tID
+on binaryDataReceived me, tdata, tid
   if ilk(tdata) <> #propList then
     return 0
   end if
@@ -47,7 +47,7 @@ on binaryDataReceived me, tdata, tID
     return 0
   end if
   tText = pPhotoText
-  pPhotoCache.setaProp(tID, tdata)
+  pPhotoCache.setaProp(tid, tdata)
   if not windowExists(pWindowID) then
     return 0
   end if
@@ -140,9 +140,9 @@ on setItemData me, tMsg
   else
     me.binaryDataReceived(pPhotoCache.getaProp(pPhotoId), pPhotoId)
   end if
-  towner = getObject(#session).GET("room_owner")
-  tCanRemovePhotos = getObject(#session).GET("user_rights").getOne("fuse_remove_photos")
-  if not towner and not tCanRemovePhotos then
+  tOwner = getObject(#session).get("room_owner")
+  tCanRemovePhotos = getObject(#session).get("user_rights").getOne("fuse_remove_photos")
+  if not tOwner and not tCanRemovePhotos then
     tWndObj.getElement("photo_remove").setProperty(#visible, 0)
   end if
 end

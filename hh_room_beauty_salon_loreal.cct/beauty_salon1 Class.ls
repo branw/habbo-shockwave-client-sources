@@ -33,18 +33,18 @@ on update me
   return me.fullRotation(35, 35, 35, 35, 35, 35)
 end
 
-on fullRotation me, tGx, tGy, tYx, tYy, tRx, try, tGoffset, tYOffset, tRoffset
+on fullRotation me, tGx, tGy, tYx, tYy, tRx, try, tGoffset, tYoffset, tRoffset
   if tGoffset = VOID then
     tGoffset = point(0, 0)
   end if
-  if tYOffset = VOID then
-    tYOffset = point(0, 0)
+  if tYoffset = VOID then
+    tYoffset = point(0, 0)
   end if
   if tRoffset = VOID then
     tRoffset = point(0, 0)
   end if
   pSpriteList[1].loc = pOrigLocs[1] + tGoffset + point(sin(pSin2) * tGx, cos(pSin2) * tGy)
-  pSpriteList[2].loc = pOrigLocs[2] + tYOffset + point(cos(pSin) * tYx, sin(pSin) * tYy) * 1.69999999999999996
+  pSpriteList[2].loc = pOrigLocs[2] + tYoffset + point(cos(pSin) * tYx, sin(pSin) * tYy) * 1.69999999999999996
   pSpriteList[3].loc = pOrigLocs[3] + tRoffset + point(sin(pSin2 + 0.5) * tRx, cos(pSin2 - 0.29999999999999999) * try) * 1.30000000000000004
   return 1
 end

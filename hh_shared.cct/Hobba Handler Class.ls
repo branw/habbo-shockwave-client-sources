@@ -48,15 +48,15 @@ end
 
 on handle_delete_cry me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tID = tConn.GetStrFrom()
-  me.getComponent().deleteCry(tID)
+  tid = tConn.GetStrFrom()
+  me.getComponent().deleteCry(tid)
 end
 
 on handle_picked_cry me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tID = tConn.GetStrFrom()
+  tid = tConn.GetStrFrom()
   tPicker = tConn.GetStrFrom()
-  tProps = [#picker: tPicker, #cry_id: tID]
+  tProps = [#picker: tPicker, #cry_id: tid]
   me.getComponent().receive_pickedCry(tProps)
 end
 

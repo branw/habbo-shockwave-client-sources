@@ -1040,13 +1040,13 @@ on placeFurniture me, tObjID, tObjType
   return 0
 end
 
-on showCfhSenderDelayed me, tID
-  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tID, 1)
+on showCfhSenderDelayed me, tid
+  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tid, 1)
 end
 
-on highLightCfhSender me, tID
-  if not voidp(tID) then
-    me.showArrowHiliter(tID)
+on highLightCfhSender me, tid
+  if not voidp(tid) then
+    me.showArrowHiliter(tid)
   end if
   return 1
 end
@@ -1128,8 +1128,8 @@ on validateEvent me, tEvent, tSprID, tloc
   return 1
 end
 
-on objectFinalized me, tID
-  if pSelectedObj = tID then
+on objectFinalized me, tid
+  if pSelectedObj = tid then
     if objectExists(pInfoStandId) then
       getObject(pInfoStandId).showObjectInfo(pSelectedType)
     end if

@@ -14,19 +14,19 @@ on construct me
   return 1
 end
 
-on create me, tID, tLayout, tLocX, tLocY
+on create me, tid, tLayout, tLocX, tLocY
   if not integerp(tLocX) then
     tLocX = 0
   end if
   if not integerp(tLocY) then
     tLocY = 0
   end if
-  if me.exists(tID) then
-    me.Remove(tID)
+  if me.exists(tid) then
+    me.Remove(tid)
   end if
-  tItem = getObjectManager().create(tID, pInstanceClass)
+  tItem = getObjectManager().create(tid, pInstanceClass)
   if not tItem then
-    return error(me, "Item creation failed:" && tID, #create, #major)
+    return error(me, "Item creation failed:" && tid, #create, #major)
   end if
   tProps = [:]
   tProps[#locX] = tLocX
@@ -35,43 +35,43 @@ on create me, tID, tLayout, tLocX, tLocY
   tProps[#layout] = tLayout
   tProps[#boundary] = pBoundary
   if not tItem.define(tProps) then
-    getObjectManager().Remove(tID)
+    getObjectManager().Remove(tid)
     return 0
   end if
-  me.pItemList.add(tID)
+  me.pItemList.add(tid)
   pAvailableLocZ = pAvailableLocZ + tItem.getProperty(#sprCount)
   return 1
 end
 
-on Remove me, tID
-  if not me.exists(tID) then
+on Remove me, tid
+  if not me.exists(tid) then
     return 0
   end if
-  tItem = me.GET(tID)
+  tItem = me.GET(tid)
   pAvailableLocZ = pAvailableLocZ - tItem.getProperty(#sprCount)
-  pPosCache[tID] = [tItem.getProperty(#locX), tItem.getProperty(#locY)]
-  me.pItemList.deleteOne(tID)
-  if pActiveItem = tID then
+  pPosCache[tid] = [tItem.getProperty(#locX), tItem.getProperty(#locY)]
+  me.pItemList.deleteOne(tid)
+  if pActiveItem = tid then
     pActiveItem = me.pItemList.getLast()
   end if
-  getObjectManager().Remove(tID)
+  getObjectManager().Remove(tid)
   me.Activate(me.pItemList.getLast())
   return 1
 end
 
-on Activate me, tID
-  if me.exists(tID) then
-    pActiveItem = tID
-    me.GET(tID).setActive()
+on Activate me, tid
+  if me.exists(tid) then
+    pActiveItem = tid
+    me.GET(tid).setActive()
     return 1
   else
     return 0
   end if
 end
 
-on deactivate me, tID
-  if me.exists(tID) then
-    me.GET(tID).setDeactive()
+on deactivate me, tid
+  if me.exists(tid) then
+    me.GET(tid).setDeactive()
     return 1
   else
     return 0

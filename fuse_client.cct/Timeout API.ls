@@ -14,20 +14,20 @@ on getTimeoutManager
   return tMgr.getManager(#timeout_manager)
 end
 
-on createTimeout tID, tTime, tHandler, tClientID, tArguments, tIterations
-  return getTimeoutManager().create(tID, tTime, tHandler, tClientID, tArguments, tIterations)
+on createTimeout tid, tTime, tHandler, tClientID, tArguments, tIterations
+  return getTimeoutManager().create(tid, tTime, tHandler, tClientID, tArguments, tIterations)
 end
 
-on removeTimeout tID
-  return getTimeoutManager().Remove(tID)
+on removeTimeout tid
+  return getTimeoutManager().Remove(tid)
 end
 
-on getTimeout tID
-  return getTimeoutManager().GET(tID)
+on getTimeout tid
+  return getTimeoutManager().GET(tid)
 end
 
-on timeoutExists tID
-  return getTimeoutManager().exists(tID)
+on timeoutExists tid
+  return getTimeoutManager().exists(tid)
 end
 
 on printTimeouts

@@ -13,7 +13,7 @@ on Refresh me, tTopic, tdata
   case tTopic of
     #gameend:
       if getObject(#session).exists("user_game_index") then
-        me.getGameSystem().executeGameObjectEvent(getObject(#session).GET("user_game_index"), #gameend)
+        me.getGameSystem().executeGameObjectEvent(getObject(#session).get("user_game_index"), #gameend)
       end if
     #update_game_object:
       return me.updateGameObject(tdata)

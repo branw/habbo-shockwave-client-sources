@@ -102,9 +102,9 @@ on handleTutorialStatus me, tMsg
   tNumOfStatuses = tConn.GetIntFrom()
   tStatusList = [:]
   repeat with tStatusNum = 1 to tNumOfStatuses
-    tID = tConn.GetIntFrom()
+    tid = tConn.GetIntFrom()
     tStatus = tConn.GetIntFrom()
-    tStatusList.setaProp(tID, tStatus)
+    tStatusList.setaProp(tid, tStatus)
   end repeat
   me.getComponent().setTutorialStatus(tStatusList)
 end
@@ -130,11 +130,11 @@ on registerServerMessages me, tBool
   tCmds.setaProp("GET_TUTORIAL_STATUS", 252)
   tCmds.setaProp("COMPLETE_TUTORIAL_TOPIC", 253)
   if tBool then
-    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   end if
   return 1
 end

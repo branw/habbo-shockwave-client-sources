@@ -200,14 +200,14 @@ on print me
     tListMode = ilk(tList)
     repeat with i = 1 to tList.count
       if tListMode = #list then
-        tID = i
+        tid = i
       else
-        tID = tList.getPropAt(i)
+        tid = tList.getPropAt(i)
       end if
-      if symbolp(tID) then
-        tID = "#" & tID
+      if symbolp(tid) then
+        tid = "#" & tid
       end if
-      put tID && ":" && tList[i]
+      put tid && ":" && tList[i]
     end repeat
   end repeat
   return 1

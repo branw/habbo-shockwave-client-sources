@@ -47,17 +47,17 @@ on openPukukoppi me
     return error(me, "Figure system object not found", #openPukukoppi)
   end if
   pSwimSuitIndex = 1
-  if getObject(#session).GET("user_sex") = "F" then
+  if getObject(#session).get("user_sex") = "F" then
     pSwimSuitModel = "s01"
   else
     pSwimSuitModel = "s02"
   end if
-  if getObject(#session).GET("user_sex") = "F" then
+  if getObject(#session).get("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).GET("user_sex"))
+  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -94,7 +94,7 @@ on doTheDew me, tUserName
     return error(me, "Couldn't extract sprites from user object:" && tUserName, #doTheDew)
   end if
   pUserName = tUserName
-  tUserObj.Refresh(12, 21, tUserObj.pLocH, 4, 4)
+  tUserObj.refresh(12, 21, tUserObj.pLocH, 4, 4)
   tUserObj.fuseAction_wave()
   call(#doHandWorkRight, tUserObj.pPartList, "wav")
   tUserObj.prepare()
@@ -148,7 +148,7 @@ on executeReturn me
     pUserSpr.visible = 0
     pState = #ready
     removePrepare(me.getID())
-    if pUserName = getObject(#session).GET(#userName) then
+    if pUserName = getObject(#session).get(#userName) then
       executeMessage(#leaveRoom)
     end if
     pUserName = EMPTY
@@ -159,10 +159,10 @@ on createFigurePrew me
   if not objectExists("Figure_Preview") then
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
-  tFigure = getObject(#session).GET("user_figure").duplicate()
+  tFigure = getObject(#session).get("user_figure").duplicate()
   tFigure["hd"]["model"] = "001"
   tFigure["fc"]["model"] = "001"
-  if getObject(#session).GET("user_sex") = "F" then
+  if getObject(#session).get("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else
     tFigure["ch"]["model"] = pSwimSuitModel
@@ -188,12 +188,12 @@ on changeSwimSuitColor me, tPart, tButtonDir
   if not objectExists("Figure_System_Mountain") then
     return error(me, "Figure system Mountain object not found", #changeSwimSuitColor)
   end if
-  if getObject(#session).GET("user_sex") = "F" then
+  if getObject(#session).get("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tMaxValue = getObject("Figure_System_Mountain").getCountOfPartColors(tPart, tSetID, getObject(#session).GET("user_sex"))
+  tMaxValue = getObject("Figure_System_Mountain").getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
   if tButtonDir = 0 then
     pSwimSuitIndex = 1
   else
@@ -207,7 +207,7 @@ on changeSwimSuitColor me, tPart, tButtonDir
       end if
     end if
   end if
-  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).GET("user_sex"))
+  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -252,7 +252,7 @@ on eventProcDew me, tEvent, tSprID, tParam
   if tEvent = #mouseUp then
     case tSprID of
       "pool_teleport":
-        tName = getObject(#session).GET("user_name")
+        tName = getObject(#session).get("user_name")
         tObj = getThread(#room).getComponent().getUserObject(tName)
         if not tObj then
           return 0

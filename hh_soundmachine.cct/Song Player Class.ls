@@ -29,11 +29,11 @@ on startSong me, tStackIndex, tSongData, tLoop
   if not voidp(tSongData[#offset]) then
     tOffset = tSongData[#offset] / 100
   end if
-  tID = 1
-  if not me.initPlaylist(tStackIndex, [[#length: tSongLength, #id: tID]], tOffset, tLoop) then
+  tid = 1
+  if not me.initPlaylist(tStackIndex, [[#length: tSongLength, #id: tid]], tOffset, tLoop) then
     return 0
   end if
-  return me.updatePlaylistSong(tID, tSongData)
+  return me.updatePlaylistSong(tid, tSongData)
 end
 
 on stopSong me, tStackIndex, tResetPlaylist
@@ -105,8 +105,8 @@ on initPlaylist me, tStackIndex, tSongList, tPlayTime, tLoop
   return 1
 end
 
-on addPlaylistSong me, tStackIndex, tID, tLength
-  if voidp(tID) or voidp(tLength) then
+on addPlaylistSong me, tStackIndex, tid, tLength
+  if voidp(tid) or voidp(tLength) then
     return error(me, "Invalid data", #addPlaylistSong, #major)
   end if
   tPlaylistInstance = me.getPlaylistInstance(tStackIndex)
@@ -119,7 +119,7 @@ on addPlaylistSong me, tStackIndex, tID, tLength
     tPlaylistInstance[#loop] = 0
   end if
   me.removePlayedSongs(tStackIndex)
-  tPlaylistItem = [#length: tLength, #id: tID]
+  tPlaylistItem = [#length: tLength, #id: tid]
   tPlaylistInstance[#songList].add(tPlaylistItem)
   if tPlaylistInstance[#songList].count = 1 then
     tPlaylistInstance[#playTime] = 0
@@ -128,7 +128,7 @@ on addPlaylistSong me, tStackIndex, tID, tLength
   return 1
 end
 
-on updatePlaylistSong me, tID, tSongData
+on updatePlaylistSong me, tid, tSongData
   tUpdated = 0
   repeat with tIndex = 1 to me.getPlaylistInstanceCount()
     tPlaylistInstance = me.getPlaylistInstance(tIndex, 1)
@@ -137,7 +137,7 @@ on updatePlaylistSong me, tID, tSongData
     end if
     tSongList = tPlaylistInstance[#songList]
     repeat with i = 1 to tSongList.count
-      if tSongList[i][#id] = tID then
+      if tSongList[i][#id] = tid then
         if voidp(tSongList[i][#songData]) then
           tUpdated = 1
           tSongDataDuplicate = tSongData.duplicate()

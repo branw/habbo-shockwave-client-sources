@@ -38,12 +38,12 @@ on getID me
   return id
 end
 
-on setID me, tID
+on setID me, tid
   pSprite = sprite(me.spriteNum)
-  if not stringp(tID) then
-    return error(me, "String expected:" && tID, #setID, #major)
+  if not stringp(tid) then
+    return error(me, "String expected:" && tid, #setID, #major)
   end if
-  id = tID
+  id = tid
   return 1
 end
 
