@@ -1,7 +1,7 @@
 property pConnectionId, pDiskList, pSelectedDisk, pDiskListRenderList, pDiskListImage, pSongList, pSelectedSong, pSongListRenderList, pSongListImage, pPlaylist, pPlaylistLimit, pSelectedPlaylistSong, pEditorSongID, pPlaylistChanged, pPlayTime, pInitialPlaylistTime, pWriterID, pItemWidth, pItemHeight, pItemName, pItemNameSelected, pItemNameBurnTag, pArrowListWidth, pArrowUpName, pArrowUpNameDimmed, pArrowDownName, pArrowDownNameDimmed
 
 on construct me
-  pConnectionId = getVariableValue("connection.info.id", #info)
+  pConnectionId = getVariableValue("connection.info.id", #Info)
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#000000")]
@@ -53,11 +53,11 @@ on addPlaylistSong me
   return 1
 end
 
-on insertPlaylistSong me, tid, tLength, tName, tAuthor
-  if voidp(tid) or voidp(tLength) or voidp(tName) or voidp(tAuthor) then
+on insertPlaylistSong me, tID, tLength, tName, tAuthor
+  if voidp(tID) or voidp(tLength) or voidp(tName) or voidp(tAuthor) then
     return 0
   end if
-  pPlaylist[pPlaylist.count + 1] = [#id: tid, #length: tLength, #name: tName, #author: tAuthor]
+  pPlaylist[pPlaylist.count + 1] = [#id: tID, #length: tLength, #name: tName, #author: tAuthor]
   if pPlaylist.count = 1 then
     me.resetPlayTime()
   end if
@@ -398,15 +398,15 @@ on deleteSong me
       pSelectedSong = pSongList.count
     end if
     pSongListImage = VOID
-    tid = tSong[#id]
-    return getConnection(pConnectionId).send("DELETE_SONG", [#integer: tid])
+    tID = tSong[#id]
+    return getConnection(pConnectionId).send("DELETE_SONG", [#integer: tID])
   end if
   return 0
 end
 
-on downloadSong me, tid
+on downloadSong me, tID
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("GET_SONG_INFO", [#integer: tid])
+    return getConnection(pConnectionId).send("GET_SONG_INFO", [#integer: tID])
   end if
   return 0
 end
@@ -417,8 +417,8 @@ on burnSong me
   end if
   if getConnection(pConnectionId) <> 0 then
     tSong = pSongList[pSelectedSong]
-    tid = tSong[#id]
-    return getConnection(pConnectionId).send("BURN_SONG", [#integer: tid])
+    tID = tSong[#id]
+    return getConnection(pConnectionId).send("BURN_SONG", [#integer: tID])
   end if
   return 0
 end
@@ -438,19 +438,19 @@ on parseSongList me, tMsg
   pSelectedSong = 1
   tCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tLength = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
     tIslocked = tMsg.connection.GetIntFrom()
     tName = convertSpecialChars(tName, 0)
-    pSongList[pSongList.count + 1] = [#id: tid, #length: tLength, #name: tName, #locked: tIslocked, #author: EMPTY]
+    pSongList[pSongList.count + 1] = [#id: tID, #length: tLength, #name: tName, #locked: tIslocked, #author: EMPTY]
   end repeat
   if pPlaylistChanged then
     repeat with i = pPlaylist.count down to 1
       tFound = 0
-      tid = pPlaylist[i][#id]
+      tID = pPlaylist[i][#id]
       repeat with j = 1 to pSongList.count
-        if pSongList[j][#id] = tid then
+        if pSongList[j][#id] = tID then
           tFound = 1
           exit repeat
         end if
@@ -474,13 +474,13 @@ on parsePlaylist me, tMsg
   pInitialPlaylistTime = the milliSeconds
   tCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tLength = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
     tAuthor = tMsg.connection.GetStrFrom()
     tName = convertSpecialChars(tName, 0)
     tAuthor = convertSpecialChars(tAuthor, 0)
-    pPlaylist[pPlaylist.count + 1] = [#id: tid, #length: tLength, #name: tName, #author: tAuthor]
+    pPlaylist[pPlaylist.count + 1] = [#id: tID, #length: tLength, #name: tName, #author: tAuthor]
   end repeat
   pPlaylistChanged = 0
   return 1

@@ -82,18 +82,18 @@ on update me
   end case
 end
 
-on fullRotation me, tGx, tGy, tYx, tYy, tRx, try, tGoffset, tYoffset, tRoffset
+on fullRotation me, tGx, tGy, tYx, tYy, tRx, try, tGoffset, tYOffset, tRoffset
   if tGoffset = VOID then
     tGoffset = point(0, 0)
   end if
-  if tYoffset = VOID then
-    tYoffset = point(0, 0)
+  if tYOffset = VOID then
+    tYOffset = point(0, 0)
   end if
   if tRoffset = VOID then
     tRoffset = point(0, 0)
   end if
   pSpriteList[3].loc = pOrigLocs[1] + tGoffset + point(sin(pSin) * tGx, cos(pSin) * tGy)
-  pSpriteList[6].loc = pOrigLocs[2] + tYoffset + point(cos(pSin) * tYx, sin(pSin) * tYy)
+  pSpriteList[6].loc = pOrigLocs[2] + tYOffset + point(cos(pSin) * tYx, sin(pSin) * tYy)
   pSpriteList[9].loc = pOrigLocs[3] + tRoffset + point(sin(pSin) * tRx, cos(pSin) * try)
   tLocs = [pSpriteList[3].loc + point(pSpriteList[3].width / 2, 0), pSpriteList[6].loc + point(pSpriteList[6].width / 2, 0), pSpriteList[9].loc + point(pSpriteList[9].width / 2, 0)]
   pSpriteList[2].rect = rect(pSpriteList[2].rect[1], pSpriteList[2].rect[2], tLocs[1][1], tLocs[1][2])

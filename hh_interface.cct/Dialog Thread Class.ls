@@ -17,14 +17,14 @@ end
 
 on deconstruct me
   if pReadyFlag then
-    repeat with tid in pWindowList
-      if windowExists(tid) then
-        removeWindow(tid)
+    repeat with tID in pWindowList
+      if windowExists(tID) then
+        removeWindow(tID)
       end if
     end repeat
-    repeat with tid in pAlertList
-      if windowExists(tid) then
-        removeWindow(tid)
+    repeat with tID in pAlertList
+      if windowExists(tID) then
+        removeWindow(tID)
       end if
     end repeat
     if writerExists(pWriterPlain) then
@@ -302,7 +302,7 @@ on openPendingCFHWindow me, tMsg
   if voidp(tConn) then
     return error(me, "Invalid message.", #openPendingCFHWindow, #major)
   end if
-  tid = tConn.GetStrFrom()
+  tID = tConn.GetStrFrom()
   tTimestamp = tConn.GetStrFrom()
   tCFH = tConn.GetStrFrom()
   tWindowTitle = getText("win_callforhelp")

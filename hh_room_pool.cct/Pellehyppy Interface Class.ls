@@ -23,7 +23,7 @@ end
 
 on openUimakoppi me
   pSwimSuitIndex = 1
-  if getObject(#session).get("user_sex") = "F" then
+  if getObject(#session).GET("user_sex") = "F" then
     pSwimSuitModel = "s01"
   else
     pSwimSuitModel = "s02"
@@ -58,10 +58,10 @@ on createFigurePrew me
   if not objectExists("Figure_Preview") then
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
-  tFigure = getObject(#session).get("user_figure").duplicate()
+  tFigure = getObject(#session).GET("user_figure").duplicate()
   tFigure["hd"]["model"] = "001"
   tFigure["fc"]["model"] = "001"
-  if getObject(#session).get("user_sex") = "F" then
+  if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else
     tFigure["ch"]["model"] = pSwimSuitModel
@@ -93,12 +93,12 @@ on getDefaultSwimSuitColor me
   if not objectExists("Figure_System_Pool") then
     return error(me, "Figure system Pool object not found", #getDefaultSwimSuitColor)
   end if
-  if getObject(#session).get("user_sex") = "F" then
+  if getObject(#session).GET("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).GET("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -109,12 +109,12 @@ on changeSwimSuitColor me, tPart, tButtonDir
   if not objectExists("Figure_System_Pool") then
     return error(me, "Figure system Pool object not found", #changeSwimSuitColor)
   end if
-  if getObject(#session).get("user_sex") = "F" then
+  if getObject(#session).GET("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tMaxValue = getObject("Figure_System_Pool").getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
+  tMaxValue = getObject("Figure_System_Pool").getCountOfPartColors(tPart, tSetID, getObject(#session).GET("user_sex"))
   if tButtonDir = 0 then
     pSwimSuitIndex = 1
   else
@@ -128,12 +128,12 @@ on changeSwimSuitColor me, tPart, tButtonDir
       end if
     end if
   end if
-  if getObject(#session).get("user_sex") = "F" then
+  if getObject(#session).GET("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).GET("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -280,7 +280,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
   if tEvent = #keyDown and tSprID = "chat_field" then
     tChatField = tWndObj.getElement("chat_field")
     if the commandDown and (the keyCode = 8 or the keyCode = 9) then
-      if not getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+      if not getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
         tChatField.setText(EMPTY)
         return 1
       end if

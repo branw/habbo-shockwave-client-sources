@@ -91,7 +91,7 @@ on adjustScreenLoc me, tMoving
       8:
         tBounceLocV = [0.69999999999999996]
       7:
-        me.setEffectAnimationLocations([#screenloc: me.pScreenLoc])
+        me.setEffectAnimationLocations([#screenLoc: me.pScreenLoc])
         tBounceLocV = [0]
       3:
         tBounceLocV = [0, -1.0, -2.0, -2.39999999999999991, -2.0, -1.0, -0]
@@ -341,7 +341,7 @@ on clearEffectAnimation me
 end
 
 on setEffectAnimationLocations me, tlocation
-  if tlocation[#screenloc] = VOID then
+  if tlocation[#screenLoc] = VOID then
     tX = tlocation[#x]
     tY = tlocation[#y]
     tZ = tlocation[#z]
@@ -355,7 +355,7 @@ on setEffectAnimationLocations me, tlocation
     end if
     tScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tZ)
   else
-    tScreenLoc = tlocation[#screenloc]
+    tScreenLoc = tlocation[#screenLoc]
   end if
   repeat with tEffect in pActiveEffects
     tEffect.setLocation(tScreenLoc)

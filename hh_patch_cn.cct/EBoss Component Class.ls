@@ -30,7 +30,7 @@ end
 
 on partnerRegistrationRequired me, tArg
   tSession = getObject(#session)
-  tPartnerRegistration = tSession.get("conf_partner_integration")
+  tPartnerRegistration = tSession.GET("conf_partner_integration")
   if ilk(tArg) = #propList then
     tArg["retval"] = tPartnerRegistration
   end if

@@ -42,12 +42,12 @@ on update me
   if tPosTutor > 0 then
     tWindowList.deleteAt(tPosTutor)
   end if
-  tPosBubble = tWindowList.getPos(me.pBubble.getProperty(#windowId))
+  tPosBubble = tWindowList.getPos(me.pBubble.getProperty(#windowID))
   if tPosBubble > 0 then
     tWindowList.deleteAt(tPosBubble)
   end if
   tWindowList.add(me.pTutorWindowID)
-  tWindowList.add(me.pBubble.getProperty(#windowId))
+  tWindowList.add(me.pBubble.getProperty(#windowID))
   getWindowManager().reorder(tWindowList)
   me.pBubble.update()
 end

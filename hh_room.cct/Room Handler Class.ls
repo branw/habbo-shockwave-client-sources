@@ -621,11 +621,11 @@ end
 on handle_idata me, tMsg
   tDelim = the itemDelimiter
   the itemDelimiter = TAB
-  tid = integer(tMsg.content.line[1].item[1])
+  tID = integer(tMsg.content.line[1].item[1])
   ttype = tMsg.content.line[1].item[2]
   tText = tMsg.content.line[1].item[2] & RETURN & tMsg.content.line[2..tMsg.content.line.count]
   the itemDelimiter = tDelim
-  executeMessage(symbol("itemdata_received" & tid), [#id: tid, #text: tText, #type: ttype])
+  executeMessage(symbol("itemdata_received" & tID), [#id: tID, #text: tText, #type: ttype])
 end
 
 on handle_trade_items me, tMsg
@@ -714,17 +714,17 @@ on handle_doordeleted me, tMsg
 end
 
 on handle_dice_value me, tMsg
-  tid = tMsg.content.word[1]
+  tID = tMsg.content.word[1]
   if tMsg.content.word.count = 1 then
     tValue = -1
   else
-    tValue = integer(tMsg.content.word[2] - tid * 38)
+    tValue = integer(tMsg.content.word[2] - tID * 38)
     if tValue > 6 then
       tValue = 0
     end if
   end if
-  if me.getComponent().activeObjectExists(tid) then
-    call(#diceThrown, [me.getComponent().getActiveObject(tid)], tValue)
+  if me.getComponent().activeObjectExists(tID) then
+    call(#diceThrown, [me.getComponent().getActiveObject(tID)], tValue)
   end if
 end
 

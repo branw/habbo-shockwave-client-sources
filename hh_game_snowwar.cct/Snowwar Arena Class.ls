@@ -30,7 +30,7 @@ on prepare me
       tRoomInt.hideRoomBar()
     end if
   end if
-  getConnection(#info).send("G_OBJS")
+  getConnection(#Info).send("G_OBJS")
   return 1
 end
 
@@ -47,7 +47,7 @@ on handleUserCreated me, tName, tUserStrId
   if tRoomInt = 0 then
     return 0
   end if
-  if tName = getObject(#session).get(#userName) then
+  if tName = getObject(#session).GET(#userName) then
     tRoomInt.showArrowHiliter(tUserStrId)
   end if
   return 1

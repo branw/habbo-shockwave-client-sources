@@ -26,10 +26,10 @@ on updateGroupInformation me, tGroupsArr
     return 0
   end if
   repeat with tIncomingGroupData in tGroupsArr
-    tid = string(tIncomingGroupData[#id])
+    tID = string(tIncomingGroupData[#id])
     tCombinedData = [:]
-    if not voidp(pGroupData[tid]) then
-      tCombinedData = pGroupData[tid]
+    if not voidp(pGroupData[tID]) then
+      tCombinedData = pGroupData[tID]
     end if
     tKeyList = [#id, #name, #desc, #logo]
     repeat with tKey in tKeyList
@@ -40,10 +40,10 @@ on updateGroupInformation me, tGroupsArr
         end if
       end if
     end repeat
-    pGroupData[tid] = tCombinedData
-    if pLastPendingData[#groupid] = tid then
+    pGroupData[tID] = tCombinedData
+    if pLastPendingData[#groupid] = tID then
       me.showUsersInfo(pLastPendingData[#userindex])
-      pGroupData[tid][#download] = #done
+      pGroupData[tID][#download] = #done
       pLastPendingData = [:]
     end if
   end repeat

@@ -188,18 +188,18 @@ on prevPage me
   end if
 end
 
-on nameClicked me, tid
-  return me.checkBoxClicked(tid, #name)
+on nameClicked me, tID
+  return me.checkBoxClicked(tID, #name)
 end
 
-on checkBoxClicked me, tid, ttype
+on checkBoxClicked me, tID, ttype
   if not windowExists(pWindowTitle) then
     return 0
   end if
   if ttype = #name then
-    tNum = integer(tid.char[26..tid.char.count])
+    tNum = integer(tID.char[26..tID.char.count])
   else
-    tNum = integer(tid.char[22..tid.char.count])
+    tNum = integer(tID.char[22..tID.char.count])
   end if
   tStartNr = (pPageNr - 1) * pOnScreenNum
   tBoxID = "friendremove_checkbox" & tNum

@@ -57,7 +57,7 @@ end
 
 on getProperty me, tProp
   case tProp of
-    #windowId:
+    #windowID:
       return me.pWindowID
     #targetWindowID:
       return me.pTargetWindowID

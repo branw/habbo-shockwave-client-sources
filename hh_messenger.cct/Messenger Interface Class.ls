@@ -158,23 +158,23 @@ on appendBuddy me, tdata
   return me.buildBuddyListImg()
 end
 
-on removeBuddy me, tid
-  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tid)) then
-    return error(me, "Buddy data not found:" && tid, #removeBuddy, #minor)
+on removeBuddy me, tID
+  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tID)) then
+    return error(me, "Buddy data not found:" && tID, #removeBuddy, #minor)
   end if
   repeat with i = 1 to pSelectedBuddies.count
-    if pSelectedBuddies[i][#id] = tid then
+    if pSelectedBuddies[i][#id] = tID then
       pSelectedBuddies.deleteAt(i)
       exit repeat
     end if
   end repeat
-  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tid).name
+  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tID).name
   if voidp(pBuddyDrawObjList[tName]) then
-    return error(me, "Buddy renderer not found:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer not found:" && tID, #removeBuddy, #minor)
   end if
   tPos = pBuddyListPntr.getaProp(#value).render.getPos(tName)
   if tPos = 0 then
-    return error(me, "Buddy renderer was lost:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer was lost:" && tID, #removeBuddy, #minor)
   end if
   pBuddyDrawObjList.deleteProp(tName)
   tW = pBuddyListBuffer.width
@@ -424,8 +424,8 @@ on createHeadPreview me, tElemID
   end if
 end
 
-on buddySelectOrNot me, tName, tid, tstate
-  tdata = [#name: tName, #id: tid]
+on buddySelectOrNot me, tName, tID, tstate
+  tdata = [#name: tName, #id: tID]
   if tstate then
     pSelectedBuddies.add(tdata)
   else

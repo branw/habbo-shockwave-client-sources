@@ -1,7 +1,7 @@
 property pOwner, pConnectionId, pDiskList, pSelectedDisk, pSelectedEject, pSelectedLoad, pDiskListRenderList, pDiskListImage, pWriterID, pPlaylistWriterID, pItemWidth, pItemHeight, pItemMarginX, pItemMarginY, pDiskArrayWidth, pDiskArrayHeight, pPlaylistWidth, pPlaylistHeight, pPlaylistLimit, pItemName, pItemNameSelected, pItemNameEmpty, pItemNameEmptySelected, pEjectName, pEjectNameSelected, pTextEmpty, pTextLoadTrax
 
 on construct me
-  pConnectionId = getVariableValue("connection.info.id", #info)
+  pConnectionId = getVariableValue("connection.info.id", #Info)
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#000000")]
@@ -44,8 +44,8 @@ on deconstruct me
   end if
 end
 
-on setOwner me, tOwner
-  pOwner = tOwner
+on setOwner me, towner
+  pOwner = towner
 end
 
 on getOwner me
@@ -330,13 +330,13 @@ on parseDiskList me, tMsg
   tDiskCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tDiskCount
     tSlot = tMsg.connection.GetIntFrom()
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tLength = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
     tAuthor = tMsg.connection.GetStrFrom()
     tName = convertSpecialChars(tName, 0)
     tAuthor = convertSpecialChars(tAuthor, 0)
-    tDisk = [#id: tid, #name: tName, #author: tAuthor]
+    tDisk = [#id: tID, #name: tName, #author: tAuthor]
     if tSlot >= 1 and tSlot <= tSlotCount then
       pDiskList[tSlot] = tDisk
     end if
@@ -352,7 +352,7 @@ on showLoadDisk me
   end if
 end
 
-on insertDisk me, tid
+on insertDisk me, tID
   if pSelectedLoad < 1 or pSelectedLoad > pDiskList.count then
     return 0
   end if
@@ -360,7 +360,7 @@ on insertDisk me, tid
     return 0
   end if
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("ADD_JUKEBOX_DISC", [#integer: tid, #integer: pSelectedLoad])
+    return getConnection(pConnectionId).send("ADD_JUKEBOX_DISC", [#integer: tID, #integer: pSelectedLoad])
   end if
   return 0
 end
@@ -386,9 +386,9 @@ on addPlaylistDisk me
   if voidp(pDiskList[pSelectedDisk]) then
     return 0
   end if
-  tid = pDiskList[pSelectedDisk][#id]
+  tID = pDiskList[pSelectedDisk][#id]
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("JUKEBOX_PLAYLIST_ADD", [#integer: tid])
+    return getConnection(pConnectionId).send("JUKEBOX_PLAYLIST_ADD", [#integer: tID])
   end if
   return 0
 end

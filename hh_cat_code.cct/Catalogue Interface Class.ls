@@ -332,8 +332,8 @@ on ChangeWindowView me, tWindowName
   tFeedDataFlag = 1
   pProductPerPage = 0
   repeat with tProducts = 1 to 50
-    tid = "ctlg_small_img_" & tProducts
-    if tWndObj.elementExists(tid) then
+    tID = "ctlg_small_img_" & tProducts
+    if tWndObj.elementExists(tID) then
       pProductPerPage = pProductPerPage + 1
       next repeat
     end if
@@ -469,10 +469,10 @@ on feedPageData me
         end if
       else
         repeat with tNum = 1 to 25
-          tid = "ctlg_buy_" & tNum
-          if tWndObj.elementExists(tid) then
+          tID = "ctlg_buy_" & tNum
+          if tWndObj.elementExists(tID) then
             if tNum > pCurrentPageData["productList"].count then
-              tWndObj.getElement(tid).setProperty(#visible, 0)
+              tWndObj.getElement(tID).setProperty(#visible, 0)
             else
               tProduct = pCurrentPageData["productList"][tNum]
               if not voidp(tProduct["name"]) then
@@ -509,30 +509,30 @@ on feedPageData me
   if not voidp(pPageLinkList) then
     showSubPageCounter(me)
   else
-    tid = "ctlg_nextpage_button"
-    if tWndObj.elementExists(tid) then
-      tWndObj.getElement(tid).setProperty(#visible, 0)
+    tID = "ctlg_nextpage_button"
+    if tWndObj.elementExists(tID) then
+      tWndObj.getElement(tID).setProperty(#visible, 0)
     end if
-    tid = "ctlg_prevpage_button"
-    if tWndObj.elementExists(tid) then
-      tWndObj.getElement(tid).setProperty(#visible, 0)
+    tID = "ctlg_prevpage_button"
+    if tWndObj.elementExists(tID) then
+      tWndObj.getElement(tID).setProperty(#visible, 0)
     end if
   end if
-  tid = "ctlg_loading_bg"
-  if tWndObj.elementExists(tid) then
-    tWndObj.getElement(tid).setProperty(#visible, 0)
+  tID = "ctlg_loading_bg"
+  if tWndObj.elementExists(tID) then
+    tWndObj.getElement(tID).setProperty(#visible, 0)
   end if
-  tid = "ctlg_loading_box"
-  if tWndObj.elementExists(tid) then
-    tWndObj.getElement(tid).setProperty(#visible, 0)
+  tID = "ctlg_loading_box"
+  if tWndObj.elementExists(tID) then
+    tWndObj.getElement(tID).setProperty(#visible, 0)
   end if
-  tid = "ctlg_loading_anim"
-  if tWndObj.elementExists(tid) then
-    tWndObj.getElement(tid).setProperty(#visible, 0)
+  tID = "ctlg_loading_anim"
+  if tWndObj.elementExists(tID) then
+    tWndObj.getElement(tID).setProperty(#visible, 0)
   end if
-  tid = "ctlg_loading_text"
-  if tWndObj.elementExists(tid) then
-    tWndObj.getElement(tid).setProperty(#visible, 0)
+  tID = "ctlg_loading_text"
+  if tWndObj.elementExists(tID) then
+    tWndObj.getElement(tID).setProperty(#visible, 0)
   end if
 end
 
@@ -692,8 +692,8 @@ on showSubPageCounter me
   end if
   tWndObj = getWindow(pCatalogID)
   if not voidp(pPageLinkList) then
-    tid = pCurrentPageData["id"]
-    tPageNum = pPageLinkList.findPos(tid)
+    tID = pCurrentPageData["id"]
+    tPageNum = pPageLinkList.findPos(tID)
     if tPageNum < 1 then
       tPageNum = 1
     end if
@@ -719,9 +719,9 @@ on showSubPageCounter me
     tPage = getText("catalog_page", "page")
     tWndObj.getElement("ctlg_page_text").setText(tPage)
   end if
-  tid = "ctlg_nextpage_button"
-  if tWndObj.elementExists(tid) then
-    tElem = tWndObj.getElement(tid)
+  tID = "ctlg_nextpage_button"
+  if tWndObj.elementExists(tID) then
+    tElem = tWndObj.getElement(tID)
     if tNextButton then
       tElem.Activate(me)
       tElem.setProperty(#cursor, "cursor.finger")
@@ -730,9 +730,9 @@ on showSubPageCounter me
       tElem.setProperty(#cursor, 0)
     end if
   end if
-  tid = "ctlg_prevpage_button"
-  if tWndObj.elementExists(tid) then
-    tElem = tWndObj.getElement(tid)
+  tID = "ctlg_prevpage_button"
+  if tWndObj.elementExists(tID) then
+    tElem = tWndObj.getElement(tID)
     if tPrevButton then
       tElem.Activate(me)
       tElem.setProperty(#cursor, "cursor.finger")
@@ -756,9 +756,9 @@ on ShowSmallIcons me, tstate, tPram
         tLast = pCurrentPageData["productList"].count
       end if
       repeat with f = 1 to pProductPerPage
-        tid = "ctlg_small_img_" & f
-        if tWndObj.elementExists(tid) then
-          tElem = tWndObj.getElement(tid)
+        tID = "ctlg_small_img_" & f
+        if tWndObj.elementExists(tID) then
+          tElem = tWndObj.getElement(tID)
           tElem.clearImage()
           tElem.setProperty(#cursor, 0)
         end if
@@ -782,10 +782,10 @@ on ShowSmallIcons me, tstate, tPram
       tpartColors = pCurrentPageData["productList"][f]["partColors"]
       tDealNumber = pCurrentPageData["productList"][f]["dealNumber"]
       tDealList = pCurrentPageData["productList"][f]["dealList"]
-      tid = "ctlg_small_img_" & f - pProductOffset
+      tID = "ctlg_small_img_" & f - pProductOffset
       if tmember <> 0 or not voidp(tDealNumber) and listp(tDealList) then
-        if tWndObj.elementExists(tid) then
-          tElem = tWndObj.getElement(tid)
+        if tWndObj.elementExists(tID) then
+          tElem = tWndObj.getElement(tID)
           if not voidp(tstate) then
             if tstate = #hilite and memberExists("ctlg_small_active_bg") then
               tBgImage = getMember("ctlg_small_active_bg").image
@@ -1071,8 +1071,8 @@ end
 
 on changeLinkPage me, tDirection
   if not voidp(pPageLinkList) then
-    tid = pCurrentPageData["id"]
-    tPos = pPageLinkList.findPos(tid)
+    tID = pCurrentPageData["id"]
+    tPos = pPageLinkList.findPos(tID)
     if tPos > 0 then
       tPageNum = tPos + tDirection
       if tPageNum < 1 then

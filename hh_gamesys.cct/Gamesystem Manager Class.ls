@@ -16,25 +16,25 @@ on deconstruct me
   return 1
 end
 
-on getFacade me, tid
+on getFacade me, tID
   if not objectp(pSystemThread) then
-    me.createGamesystem(tid)
+    me.createGamesystem(tID)
   end if
-  if getObject(tid) = 0 then
-    createObject(tid, getClassVariable("gamesystem.facade.class"))
-    if getObject(tid) = 0 then
+  if getObject(tID) = 0 then
+    createObject(tID, getClassVariable("gamesystem.facade.class"))
+    if getObject(tID) = 0 then
       return 0
     end if
-    getObject(tid).defineClient(pSystemThread)
+    getObject(tID).defineClient(pSystemThread)
   end if
-  return getObject(tid)
+  return getObject(tID)
 end
 
-on removeFacade me, tid
-  if getObject(tid) = 0 then
+on removeFacade me, tID
+  if getObject(tID) = 0 then
     return 0
   else
-    if removeObject(tid) = 0 then
+    if removeObject(tID) = 0 then
       return 0
     end if
   end if

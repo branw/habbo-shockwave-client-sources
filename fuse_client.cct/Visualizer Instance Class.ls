@@ -111,35 +111,35 @@ on moveZ me, tZ
   pLocZ = tZ
 end
 
-on getSprite me, tid
-  return pActSprList[tid]
+on getSprite me, tID
+  return pActSprList[tID]
 end
 
-on getSprById me, tid
-  return pActSprList[tid]
+on getSprById me, tID
+  return pActSprList[tID]
 end
 
-on getSpriteByID me, tid
-  return pActSprList[tid]
+on getSpriteByID me, tID
+  return pActSprList[tID]
 end
 
-on spriteExists me, tid
-  return not voidp(pActSprList[tid])
+on spriteExists me, tID
+  return not voidp(pActSprList[tID])
 end
 
-on moveSprBy me, tid, tX, tY
-  tsprite = pActSprList[tid]
+on moveSprBy me, tID, tX, tY
+  tsprite = pActSprList[tID]
   if voidp(tsprite) then
-    return error(me, "Sprite not found:" && tid, #moveSprBy, #minor)
+    return error(me, "Sprite not found:" && tID, #moveSprBy, #minor)
   end if
   tsprite.loc = tsprite.loc + [tX, tY]
   return me.Refresh()
 end
 
-on moveSprTo me, tid, tX, tY
-  tsprite = pActSprList[tid]
+on moveSprTo me, tID, tX, tY
+  tsprite = pActSprList[tID]
   if voidp(tsprite) then
-    return error(me, "Sprite not found:" && tid, #moveSprTo, #minor)
+    return error(me, "Sprite not found:" && tID, #moveSprTo, #minor)
   end if
   tsprite.loc = point(tX, tY)
   return me.Refresh()

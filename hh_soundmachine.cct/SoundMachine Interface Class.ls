@@ -630,13 +630,13 @@ on updateSoundSetTabs me
   tHooveredTab = me.getComponent().getSoundSetHooveredTab()
   repeat with tIndex = me.getComponent().getSoundSetLimit() down to 1
     tVisible = 1
-    tid = me.getComponent().getSoundSetID(tIndex)
-    if tid <> 0 then
+    tID = me.getComponent().getSoundSetID(tIndex)
+    if tID <> 0 then
       tElem = tWndObj.getElement("sound_set_tab_text_" & tIndex)
       if tElem <> 0 then
         tElem.setProperty(#visible, 1)
         if tIndex <> tHooveredTab then
-          tText = me.getComponent().getSoundSetName(tid)
+          tText = me.getComponent().getSoundSetName(tID)
         else
           tText = getText("sound_machine_eject")
         end if
@@ -669,17 +669,17 @@ on updateSoundSetList me
   end if
   tSetsReady = 1
   repeat with tIndex = me.getComponent().getSoundSetListPageSize() down to 1
-    tid = me.getComponent().getSoundSetListID(tIndex)
-    if tid <> 0 then
+    tID = me.getComponent().getSoundSetListID(tIndex)
+    if tID <> 0 then
       tElem = tWndObj.getElement("set_list_text_" & tIndex)
       if tElem <> 0 then
-        tText = me.getComponent().getSoundSetName(tid)
+        tText = me.getComponent().getSoundSetName(tID)
         tElem.setText(tText)
       end if
       tElem = tWndObj.getElement("set_list_icon_" & tIndex)
       if tElem <> 0 then
         if objectExists("Preview_renderer") then
-          tSoundSetName = "sound_set_" & tid
+          tSoundSetName = "sound_set_" & tID
           tdata = [#class: tSoundSetName, #type: #Active]
           executeMessage(#downloadObject, tdata)
           if tdata[#ready] = 0 then
