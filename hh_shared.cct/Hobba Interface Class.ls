@@ -121,7 +121,7 @@ on showCryWnd me
   end if
   pCryWndMode = "browse"
   if getObject(#session).get("user_rights").getOne("fuse_see_chat_log_link") = 0 then
-    tWndObj.getElement("hobba_seelog").Hide()
+    tWndObj.getElement("hobba_seelog").hide()
   end if
   return me.fillCryData(pCurrCryNum)
 end

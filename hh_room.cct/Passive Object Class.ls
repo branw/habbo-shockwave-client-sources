@@ -315,7 +315,7 @@ on show me
   end repeat
 end
 
-on Hide me
+on hide me
   repeat with tSpr in pSprList
     tSpr.visible = 0
   end repeat

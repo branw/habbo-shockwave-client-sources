@@ -153,7 +153,7 @@ on setDeactive me
   return 1
 end
 
-on Hide me
+on hide me
   if pVisible = 1 then
     pVisible = 0
     me.moveX(10000)
@@ -236,7 +236,7 @@ on setProperty me, tProp, tValue
       if tValue then
         return me.show()
       else
-        return me.Hide()
+        return me.hide()
       end if
     #title:
       pTitle = tValue

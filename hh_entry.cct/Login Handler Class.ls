@@ -76,6 +76,10 @@ on handleSecretKey me, tMsg
   if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
     tClientURL = EMPTY
   end if
+  if not (the runMode contains "Plugin") then
+    tClientURL = EMPTY
+    tExtVarsURL = EMPTY
+  end if
   tMsg.connection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
   tMsg.connection.send("UNIQUEID", [#string: getMachineID()])
   tMsg.connection.send("GET_SESSION_PARAMETERS")

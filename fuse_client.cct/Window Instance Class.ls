@@ -103,7 +103,7 @@ on lock me, tBoolean
   return 1
 end
 
-on Hide me
+on hide me
   if pVisible = 1 then
     pVisible = 0
     me.moveX(10000)
@@ -298,7 +298,7 @@ on setProperty me, tProp, tValue
       if tValue then
         me.show()
       else
-        me.Hide()
+        me.hide()
       end if
     #otherwise:
       return 0
