@@ -82,8 +82,7 @@ on showTeamHighScore me, tGameRef
       return 0
     end if
     if tHighlight then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(i & ".")
@@ -92,8 +91,6 @@ on showTeamHighScore me, tGameRef
       return 0
     end if
     if tHighlight then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(tItem.getaProp(#score))
@@ -102,8 +99,6 @@ on showTeamHighScore me, tGameRef
       if tElem = 0 then
         return 0
       end if
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tText = EMPTY
@@ -156,8 +151,7 @@ on showPersonalHighScore me, tGameRef
       return 0
     end if
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(i & ".")
@@ -166,8 +160,6 @@ on showPersonalHighScore me, tGameRef
       return 0
     end if
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(tItem.getaProp(#name))
@@ -176,8 +168,6 @@ on showPersonalHighScore me, tGameRef
       return 0
     end if
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(tItem.getaProp(#score))
@@ -216,8 +206,7 @@ on setScoreWindowPlayer me, tWindowID, tPlayerPos, tPlayerInfo
     tElem.show()
     tElem.setText(tPlayerInfo.getaProp(#name))
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
   end if
@@ -231,8 +220,6 @@ on setScoreWindowPlayer me, tWindowID, tPlayerPos, tPlayerInfo
     tElem.show()
     tElem.setText(tPlayerInfo.getaProp(#score))
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
   end if

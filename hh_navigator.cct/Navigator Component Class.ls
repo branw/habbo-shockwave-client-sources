@@ -100,7 +100,7 @@ on getNodeInfo me, tNodeId, tCategoryId
   if tNodeId = VOID then
     return 0
   end if
-  if tCategoryId = #recom then
+  if tCategoryId = #recom or voidp(tCategoryId) and not voidp(pRecomNodeInfo) then
     if voidp(pRecomNodeInfo[#children]) then
       return 0
     end if
@@ -108,7 +108,9 @@ on getNodeInfo me, tNodeId, tCategoryId
     if not voidp(tNodeInfo) then
       return tNodeInfo
     else
-      return 0
+      if tCategoryId = #recom then
+        return 0
+      end if
     end if
   end if
   tNodeId = string(tNodeId)

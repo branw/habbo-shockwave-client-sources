@@ -57,7 +57,7 @@ on openIMWindow me
   else
     tWnd = getWindow(pWindowID)
     tWnd.show()
-    activateWindow(pWindowID)
+    activateWindowObj(pWindowID)
   end if
   if pChatRenderers.count = 0 then
     me.ChangeWindowView(#empty)
@@ -400,7 +400,7 @@ on showInvitationWindow me, tCount
     tWnd = getWindow(pInvitationWindowID)
     tWnd.registerProcedure(#eventProcInvitation, me.getID(), #mouseUp)
   end if
-  activateWindow(pInvitationWindowID)
+  activateWindowObj(pInvitationWindowID)
   tSummaryText = replaceChunks(getText("friend_invitation_summary"), "%count%", tCount)
   tWnd = getWindow(pInvitationWindowID)
   if not tWnd.elementExists("invitation.summary") then

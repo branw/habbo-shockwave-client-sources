@@ -151,10 +151,14 @@ on createStripItem me, tdata
             if tdata[#class] = "floor" then
               tdata[#member] = "floor_small"
             else
-              if memberExists(tdata[#class] & "_small") then
-                tIconClassStr = tdata[#class]
+              if tdata[#class] = "landscape" then
+                tdata[#member] = "landscape_small"
               else
-                tIconClassStr = tdata[#class]
+                if memberExists(tdata[#class] & "_small") then
+                  tIconClassStr = tdata[#class]
+                else
+                  tIconClassStr = tdata[#class]
+                end if
               end if
             end if
           end if
@@ -295,8 +299,18 @@ on placeItemToRoom me, tID
             me.removeStripItem(tID)
           end if
           return 1
-        "floor", "wallpaper":
-          getThread(#room).getComponent().getRoomConnection().send("FLATPROPBYITEM", tdata[#class] & "/" & tdata[#stripId])
+        "floor", "wallpaper", "landscape":
+          if not threadExists(#room) then
+            return error(me, "Room thread not found", #placeItemToRoom, #major)
+          end if
+          tRoomComp = getThread(#room).getComponent()
+          if tdata[#class] = "landscape" then
+            tPrivRoomEngine = tRoomComp.getRoomPrg()
+            if tPrivRoomEngine.getWallMaskCount() = 0 then
+              executeMessage(#alert, [#Msg: getText("landscape_no_windows")])
+            end if
+          end if
+          tRoomComp.getRoomConnection().send("FLATPROPBYITEM", tdata[#class] & "/" & tdata[#stripId])
           removeStripItem(me, tID)
           return 0
         "Chess":

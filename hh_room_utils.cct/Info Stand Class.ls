@@ -117,7 +117,7 @@ on hideObjectInfo me
   tWndObj.getElement("bg_darken").hide()
   tWndObj.getElement("info_name").hide()
   tWndObj.getElement("info_text").hide()
-  tWndObj.getElement("info_badge").clearImage()
+  tWndObj.getElement("info_badge_1").clearImage()
   tWndObj.getElement("info_group_badge").clearImage()
   pCurrentlySelectedUserId = VOID
   me.updateInfoStandGroup()
@@ -180,7 +180,6 @@ on eventProcInfoStand me, tEvent, tSprID, tParam
       tRoomInterface = getThread(#room).getInterface()
       tSelectedObj = tRoomInterface.getSelectedObject()
       if tSelectedObj = tSession.GET("user_index") then
-        tRoomInterface.getBadgeObject().toggleOwnBadgeVisibility()
       end if
     "info_group_badge":
       tRoomInterface = getThread(#room).getInterface()

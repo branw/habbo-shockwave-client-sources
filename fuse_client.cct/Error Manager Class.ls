@@ -163,20 +163,21 @@ on alertHook me, tErr, tMsgA, tMsgB
   return 1
 end
 
+on zeroPadToString tNumber, tCount
+  tOut = EMPTY
+  if string(tNumber).length < tCount then
+    repeat with i = 1 to tCount - string(tNumber).length
+      tOut = tOut & "0"
+    end repeat
+  end if
+  tOut = tOut & string(tNumber)
+  return tOut
+end
+
 on makeErrorId me
-  tSrc = chars(the date, 1, 5) & the milliSeconds
-  tDst = EMPTY
-  tAllowedChars = "0123456789"
-  tLength = 12
-  repeat with i = 1 to tSrc.length
-    tChar = tSrc.char[i]
-    if tAllowedChars contains tChar then
-      tDst = tDst & tChar
-    end if
-    if tDst.length >= tLength then
-      exit repeat
-    end if
-  end repeat
+  tSrc = integer(getObject(#session).GET("user_user_id")) mod 10000
+  tSrc2 = random(10000) mod 10000
+  tDst = zeroPadToString(tSrc, 4) & zeroPadToString(tSrc2, 4)
   return tDst
 end
 
@@ -188,16 +189,9 @@ on handleFatalError me, tErrorData
     tErrorData = [:]
   end if
   tErrorType = tErrorData["error"]
-  case tErrorType of
-    "socket_init":
-      if variableExists("client.connection.failed.url") then
-        tErrorUrl = getVariable("client.connection.failed.url")
-      end if
-    otherwise:
-      if variableExists("client.fatal.error.url") then
-        tErrorUrl = getVariable("client.fatal.error.url")
-      end if
-  end case
+  if variableExists("client.fatal.error.url") then
+    tErrorUrl = getVariable("client.fatal.error.url")
+  end if
   tConnection = getConnection(getVariable("connection.info.id", #Info))
   if tConnection <> VOID then
     tErrorData["host"] = tConnection.getProperty(#host)

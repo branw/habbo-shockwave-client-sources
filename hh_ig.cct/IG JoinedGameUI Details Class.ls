@@ -204,6 +204,8 @@ on renderNoPlayer me, tRequired, tTeamIndex, tPlayerIndex
   end if
   tElement = tWndObj.getElement("ig_name_team_player_" & tSuffix)
   if tElement <> 0 then
+    tFontStruct = getStructVariable("struct.font.plain")
+    tElement.setFont(tFontStruct)
     if tRequired then
       tElement.setText(getText("ig_player_needed"))
     else
@@ -235,11 +237,10 @@ on renderPlayer me, tInfo, tTeamIndex, tPlayerIndex, tOwnerFlag
   end if
   tElement = tWndObj.getElement("ig_name_team_player_" & tSuffix)
   if tElement <> 0 then
-    tFontStruct = tElement.getFont()
     if tOwnPlayer then
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
     else
-      tFontStruct.setaProp(#font, "v")
+      tFontStruct = getStructVariable("struct.font.plain")
     end if
     tElement.setFont(tFontStruct)
     tElement.setText(tInfo.getProp(#name))

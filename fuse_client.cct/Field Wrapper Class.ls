@@ -71,8 +71,6 @@ on setFocus me, tBool
 end
 
 on render me
-  me.pLocX = me.pSprite.locH
-  me.pLocY = me.pSprite.locV
   me.pwidth = me.pSprite.width
   me.pheight = me.pSprite.height
   me.pMember.rect = rect(0, 0, me.pwidth, me.pheight)

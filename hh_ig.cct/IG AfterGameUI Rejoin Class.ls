@@ -174,11 +174,10 @@ on setScoreWindowPlayer me, tWndID, tPlayerPos, tPlayerInfo, tPlayerActive
     tElem.setText("---")
   else
     tElem.setText(tPlayerInfo.getaProp(#name))
-    tFontStruct = tElem.getFont()
     if tOwnPlayer then
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
     else
-      tFontStruct.setaProp(#font, "v")
+      tFontStruct = getStructVariable("struct.font.plain")
     end if
     tElem.setFont(tFontStruct)
   end if

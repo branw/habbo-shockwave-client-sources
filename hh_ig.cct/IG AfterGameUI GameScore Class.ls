@@ -199,8 +199,7 @@ on setScoreWindowPlayer me, tTeamPos, tPlayerPos, tPlayerInfo, tPlayerActive
   else
     tElem.setText(tPlayerInfo.getaProp(#name))
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
   end if
@@ -214,8 +213,7 @@ on setScoreWindowPlayer me, tTeamPos, tPlayerPos, tPlayerInfo, tPlayerActive
     tElem.show()
     tElem.setText(tPlayerInfo.getaProp(#score))
     if tOwnUser then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
   end if

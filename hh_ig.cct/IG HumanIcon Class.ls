@@ -9,7 +9,9 @@ on construct me
 end
 
 on deconstruct me
-  releaseSprite(pSprite.spriteNum)
+  if pSprite.ilk = #sprite then
+    releaseSprite(pSprite.spriteNum)
+  end if
   return 1
 end
 
@@ -25,12 +27,16 @@ on show_ig_icon me, tParams
   pUserId = tParams.getaProp("userid")
   me.checkMemberName()
   if not (pSprite.ilk = #sprite) then
-    tSpriteNum = reserveSprite("HEHHOSPR_" & pUserId)
+    tMemNum = getmemnum(pMemberName & "0")
+    if tMemNum <= 0 then
+      return 0
+    end if
+    tSpriteNum = reserveSprite("IGBubble_" & pUserId)
     if tSpriteNum < 1 then
       return 0
     end if
     pSprite = sprite(tSpriteNum)
-    pSprite.member = member(pMemberName & "0")
+    pSprite.member = member(tMemNum)
     pSprite.blend = 80
     pSprite.ink = 8
     pSprite.locZ = tParams.getaProp("locz")

@@ -193,7 +193,16 @@ on handle_users me, tMsg
           tList[tuser][#class] = "pelle"
         end if
       "b":
-        tList[tuser][#badge] = tdata
+        tBadges = [:]
+        tDataPairs = explode(tdata, ",")
+        repeat with tPairNum = 1 to tDataPairs.count
+          tPair = explode(tDataPairs[tPairNum], ":")
+          if tPair.count < 2 then
+            next repeat
+          end if
+          tBadges.setaProp(integer(tPair[1]), tPair[2])
+        end repeat
+        tList[tuser][#badge] = tBadges
       "a":
         tList[tuser][#webID] = tdata
       "g":
@@ -772,15 +781,21 @@ on handle_userbadge me, tMsg
   if voidp(tMsg.connection) then
     return 0
   end if
-  tUserID = string(tMsg.connection.GetIntFrom())
-  tBadge = tMsg.connection.GetStrFrom()
-  tUserObj = me.getComponent().getUserObject(tUserID)
+  tUserID = tMsg.connection.GetStrFrom()
+  tChosenBadgeCount = tMsg.connection.GetIntFrom()
+  tBadges = [:]
+  repeat with i = 1 to tChosenBadgeCount
+    tBadgeIndex = tMsg.connection.GetIntFrom()
+    tBadgeID = tMsg.connection.GetStrFrom()
+    tBadges.setaProp(tBadgeIndex, tBadgeID)
+  end repeat
+  tUserObj = me.getComponent().getUserObjectByWebID(tUserID)
   if not objectp(tUserObj) then
     return 0
   end if
-  tUserObj.pBadge = tBadge
-  me.getInterface().unignoreAdmin(tUserID, tBadge)
-  executeMessage(#updateInfoStandBadge, tBadge, tUserID)
+  tUserObj.pBadges = tBadges
+  me.getInterface().unignoreAdmin(tUserID, tBadges)
+  executeMessage(#updateInfoStandBadge, tBadges, tUserID)
 end
 
 on handle_slideobjectbundle me, tMsg

@@ -224,7 +224,9 @@ on getFont me
 end
 
 on setProperty me, tKey, tValue
-  return me.define([#tKey: tValue])
+  tProps = [:]
+  tProps.setaProp(tKey, tValue)
+  return me.define(tProps)
 end
 
 on fakeAlphaRender me

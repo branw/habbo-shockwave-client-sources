@@ -51,7 +51,7 @@ on activateToolTip me
   if tWndObj = 0 then
     return 0
   end if
-  activateWindow(pWindowID)
+  activateWindowObj(pWindowID)
 end
 
 on createTooltipWindow me

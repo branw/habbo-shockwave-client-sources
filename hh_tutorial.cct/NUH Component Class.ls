@@ -102,7 +102,11 @@ on isChatHelpOn me
 end
 
 on initHelpOnRoomEntry me
-  me.showNewUserHelpItems()
+  tRoomData = getThread(#room).getComponent().pSaveData
+  tUserName = getObject(#session).GET(#userName)
+  if tRoomData[#owner] = tUserName then
+    me.showNewUserHelpItems()
+  end if
 end
 
 on removeHelp me

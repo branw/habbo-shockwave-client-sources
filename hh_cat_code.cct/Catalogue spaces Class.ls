@@ -1,4 +1,4 @@
-property pWallPatterns, pWallPattern, pWallModel, pWallThumbSpr, pWallPreviewIdList, pFloorPatterns, pFloorPattern, pFloorModel, pFloorThumbSpr, pFloorPreviewIdList, pWallProps, pFloorProps
+property pWallPatterns, pWallPattern, pWallModel, pWallThumbSpr, pWallPreviewIdList, pFloorPatterns, pFloorPattern, pFloorModel, pFloorThumbSpr, pFloorPreviewIdList, pLandscapePatterns, pLandscapeGradients, pLandscapeProducts, pLandscapePattern, pLandscapeGradient, pLandscapePreviewIdList, pLandscapeElement, pLandscapeBlockedCombos, pWallProps, pFloorProps, pLandscapeProps
 
 on construct me
   pWallPatterns = [:]
@@ -7,15 +7,42 @@ on construct me
   pFloorPatterns = field("catalog_floorpattern_patterns")
   pFloorPattern = 0
   pFloorModel = 0
+  pLandscapePattern = 1
+  pLandscapeGradient = 1
   pWallProps = [:]
   pFloorProps = [:]
+  pLandscapeProps = [:]
+  pLandscapeProducts = [:]
   pFloorPreviewIdList = []
-  pFloorPreviewIdList.add("catalog_thumb_floor_pattern")
   pFloorPreviewIdList.add("catalog_floor_preview_example")
   pWallPreviewIdList = []
-  pWallPreviewIdList.add("catalog_thumb_wall_pattern")
   pWallPreviewIdList.add("catalog_wall_preview_a_left")
   pWallPreviewIdList.add("catalog_wall_preview_b_right")
+  pLandscapeElement = "catalog_space_preview_window"
+  pLandscapePreviewIdList = []
+  pLandscapePreviewIdList.add("catalog_spaces_window")
+  pLandscapePreviewIdList.add("catalog_spaces_window_mask")
+  pLandscapePreviewIdList.add("catalog_landscape_preview_window_alpha")
+  tLandscapePatterns = field("catalog_landscape_patterns")
+  tLandscapeGradients = field("catalog_landscape_gradients")
+  pLandscapePatterns = []
+  pLandscapeGradients = []
+  repeat with i = 1 to tLandscapePatterns.line.count
+    pLandscapePatterns.add(tLandscapePatterns.line[i])
+  end repeat
+  repeat with i = 1 to tLandscapeGradients.line.count
+    pLandscapeGradients.add(tLandscapeGradients.line[i])
+  end repeat
+  pLandscapeBlockedCombos = []
+  if memberExists("catalog_landscape_blocked_combinations") then
+    tDelim = the itemDelimiter
+    the itemDelimiter = ","
+    tBlockList = field("catalog_landscape_blocked_combinations")
+    repeat with i = 1 to tBlockList.line.count
+      pLandscapeBlockedCombos.add([tBlockList.line[i].item[1], tBlockList.line[i].item[2]])
+    end repeat
+    the itemDelimiter = tDelim
+  end if
   return 1
 end
 
@@ -36,6 +63,9 @@ on define me, tPageProps
       end if
       if tWndObj.elementExists("ctlg_buy_floor") then
         tWndObj.getElement("ctlg_buy_floor").setProperty(#visible, 0)
+      end if
+      if tWndObj.elementExists("ctlg_buy_landscape") then
+        tWndObj.getElement("ctlg_buy_landscape").setProperty(#visible, 0)
       end if
       return 0
     end if
@@ -83,11 +113,27 @@ on define me, tPageProps
       end if
       if tClass = "floor" then
         pFloorProps = tProp
+        next repeat
+      end if
+      if tClassPrefix = "landscape" then
+        tPatternNo = tClassPostfix
+        if tPatternNo <= pLandscapePatterns.count then
+          if tPatternNo = 0 then
+            tPatternMemName = EMPTY
+          else
+            tPatternMemName = pLandscapePatterns[integer(tPatternNo)]
+          end if
+          tLandscapeProps = tProp.duplicate()
+          tLandscapeProps["extra_parm"] = "1." & tPatternNo
+          tLandscapeProps[#patternID] = tPatternNo
+          pLandscapeProducts[string(tPatternNo)] = tLandscapeProps
+        end if
       end if
     end repeat
   end if
   me.setWallPaper("pattern", 6)
   me.setFloorPattern("pattern", 3)
+  me.setLandscapePreview("pattern", 0)
 end
 
 on setWallPaper me, ttype, tChange
@@ -239,6 +285,150 @@ on setFloorPattern me, ttype, tChange
   return 1
 end
 
+on GetLsProductOffset me, tNumber
+  repeat with i = 1 to pLandscapeProducts.count
+    if string(tNumber) = pLandscapeProducts.getPropAt(i) then
+      return i
+    end if
+  end repeat
+  return VOID
+end
+
+on ComboIsBlocked me, tLandscape, tGradient
+  repeat with tCombo in pLandscapeBlockedCombos
+    if tLandscape = tCombo[1] and tGradient = tCombo[2] then
+      return 1
+    end if
+  end repeat
+  return 0
+end
+
+on availableGradientsCount me, tLandscape
+  tGradientsCount = pLandscapeGradients.count
+  repeat with tCombo in pLandscapeBlockedCombos
+    if tLandscape = tCombo[1] then
+      tGradientsCount = tGradientsCount - 1
+    end if
+  end repeat
+  return tGradientsCount
+end
+
+on setLandscapePreview me, ttype, tChange
+  tCurrent = me.GetLsProductOffset(pLandscapePattern)
+  if voidp(tCurrent) then
+    tCurrent = 1 - tChange
+  end if
+  if ttype = "pattern" then
+    tNext = tCurrent + tChange
+    if tNext > pLandscapeProducts.count then
+      tNext = 1
+    else
+      if tNext < 1 then
+        tNext = pLandscapeProducts.count
+      end if
+    end if
+    pLandscapePattern = integer(pLandscapeProducts.getPropAt(tNext))
+    if me.ComboIsBlocked(pLandscapePattern, pLandscapeGradient) then
+      tGradient = 1
+      repeat while me.ComboIsBlocked(pLandscapePattern, tGradient)
+        tGradient = tGradient + 1
+      end repeat
+      pLandscapeGradient = tGradient
+    end if
+  else
+    if ttype = "gradient" then
+      pLandscapeGradient = pLandscapeGradient + tChange
+      repeat while me.ComboIsBlocked(pLandscapePattern, pLandscapeGradient)
+        pLandscapeGradient = pLandscapeGradient + tChange
+        if pLandscapeGradient > pLandscapeGradients.count then
+          pLandscapeGradient = 1
+          next repeat
+        end if
+        if pLandscapeGradient < 1 then
+          pLandscapeGradient = pLandscapeGradients.count
+        end if
+      end repeat
+      if pLandscapeGradient > pLandscapeGradients.count then
+        pLandscapeGradient = 1
+      else
+        if pLandscapeGradient < 1 then
+          pLandscapeGradient = pLandscapeGradients.count
+        end if
+      end if
+    end if
+  end if
+  tWndObj = getThread(#catalogue).getInterface().getCatalogWindow()
+  if not tWndObj then
+    return error(me, "Couldn't access catalogue window!", #setLandscapePreview, #major)
+  end if
+  tElemPrev = tWndObj.getElement("ctlg_landscape_color_prev")
+  tElemNext = tWndObj.getElement("ctlg_landscape_color_next")
+  if me.availableGradientsCount(pLandscapePattern) < 2 then
+    tElemPrev.deactivate()
+    tElemNext.deactivate()
+  else
+    tElemPrev.Activate()
+    tElemNext.Activate()
+  end if
+  pLandscapeProps = pLandscapeProducts.getaProp(string(pLandscapePattern))
+  if not voidp(pLandscapeProps) then
+    pLandscapeProps = pLandscapeProps.duplicate()
+    pLandscapeProps["extra_parm"] = string(pLandscapeGradient) & "." & string(pLandscapePattern)
+    tPrice = pLandscapeProps["price"]
+  else
+    tPrice = 0
+  end if
+  tElemName = "ctlg_landscape_price"
+  if not voidp(tPrice) then
+    if tWndObj.elementExists(tElemName) then
+      if value(tPrice) > 0 then
+        tText = tPrice && getText("credits", "credits")
+        tWndObj.getElement(tElemName).setText(tText)
+      else
+        tText = "N/A"
+        tWndObj.getElement(tElemName).setText(tText)
+      end if
+    end if
+  end if
+  tElement = tWndObj.getElement(pLandscapeElement)
+  tBuffer = image(tElement.getProperty(#width), tElement.getProperty(#height), 32)
+  tBuffer.fill(tBuffer.rect, [#shapeType: #rect, #color: rgb("#FFFFFF")])
+  tRenderCount = 8
+  tRenderOffsetRect = rect(16, 4, 16, 4)
+  tSrc = getMember(pLandscapeGradients[pLandscapeGradient]).image
+  tClipAmount = 88
+  tdestrect = rect(0, 0, tSrc.width, tSrc.height)
+  repeat with i = 1 to tRenderCount
+    tSrcRect = rect(0, 0, tSrc.width, tSrc.height)
+    tOldDest = tdestrect.duplicate()
+    tdestrect.bottom = tdestrect.bottom - tClipAmount
+    tdestrect.top = tdestrect.top - tClipAmount
+    if tdestrect.top < 0 then
+      tdestrect.top = 0
+    end if
+    tSrcRect.top = tSrcRect.height - tdestrect.height
+    tBuffer.copyPixels(tSrc, tdestrect, tSrcRect, [#useFastQuads: 1, #ink: #copy])
+    tdestrect = tOldDest
+    tdestrect = tdestrect + tRenderOffsetRect
+    tClipAmount = tClipAmount - tRenderOffsetRect.top
+    if tClipAmount < 0 then
+      tClipAmount = 0
+    end if
+  end repeat
+  if pLandscapePattern <= pLandscapePatterns.count and pLandscapePattern > 0 then
+    tSrc = getMember(pLandscapePatterns[pLandscapePattern]).image
+    tdestrect = rect(0, 0, tBuffer.width, tBuffer.height)
+    tBuffer.copyPixels(tSrc, tdestrect, tdestrect, [#useFastQuads: 1, #ink: 36])
+  end if
+  tMask = createMask(getMember(pLandscapePreviewIdList[2]).image)
+  tBuffer.copyPixels(getMember(pLandscapePreviewIdList[1]).image, tdestrect, tdestrect, [#useFastQuads: 1, #ink: #copy, #maskImage: tMask])
+  tBuffer.setAlpha(getMember(pLandscapePreviewIdList[3]).image)
+  tBuffer.useAlpha = 1
+  tElement.pSprite.member.image = tBuffer
+  tElement.pSprite.member.useAlpha = 1
+  tElement.pSprite.member.regPoint = point(0, 0)
+end
+
 on eventProc me, tEvent, tSprID, tProp
   if tEvent = #mouseUp then
     if tSprID = "close" then
@@ -263,10 +453,20 @@ on eventProc me, tEvent, tSprID, tProp
         me.setFloorPattern("model", -1)
       "ctlg_floor_color_next":
         me.setFloorPattern("model", 1)
+      "ctlg_landscape_pattern_prev":
+        me.setLandscapePreview("pattern", -1)
+      "ctlg_landscape_pattern_next":
+        me.setLandscapePreview("pattern", 1)
+      "ctlg_landscape_color_prev":
+        me.setLandscapePreview("gradient", -1)
+      "ctlg_landscape_color_next":
+        me.setLandscapePreview("gradient", 1)
       "ctlg_buy_wall":
         getThread(#catalogue).getComponent().checkProductOrder(pWallProps)
       "ctlg_buy_floor":
         getThread(#catalogue).getComponent().checkProductOrder(pFloorProps)
+      "ctlg_buy_landscape":
+        getThread(#catalogue).getComponent().checkProductOrder(pLandscapeProps)
     end case
     return 0
   end if

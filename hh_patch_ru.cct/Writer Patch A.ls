@@ -3,6 +3,16 @@ on construct me
   me.pTxtRect = VOID
   me.pFntStru = VOID
   me.pMember = member(createMember("writer_" & getUniqueID(), #text))
+  if variableExists("text.render.compatibility.mode") then
+    pTextRenderMode = getVariable("text.render.compatibility.mode")
+  else
+    pTextRenderMode = 1
+  end if
+  if variableExists("text.underlining.disabled") then
+    pUnderliningDisabled = getVariable("text.underlining.disabled")
+  else
+    pUnderliningDisabled = 0
+  end if
   if me.pMember.number = 0 then
     return 0
   else

@@ -38,7 +38,6 @@ on construct me
   createObject(pClassContId, getClassVariable("variable.manager.class"))
   getObject(pClassContId).dump("fuse.object.classes", RETURN)
   createObject(pBalloonId, "Chat Manager")
-  createObject(pAdSystemID, "Ad Manager")
   pCastLoaded = 0
   pPrvRoomsReady = 0
   createObject(pInterstitialSystemID, "Interstitial Manager")
@@ -316,6 +315,15 @@ on getUserObject me, tID
   return tObj
 end
 
+on getUserObjectByWebID me, tWebID
+  repeat with tuser in pUserObjList
+    if tuser.getWebID() = tWebID then
+      return tuser
+    end if
+  end repeat
+  return 0
+end
+
 on getUsersRoomId me, tUserName
   tIndex = -1
   repeat with tPos = 1 to pUserObjList.count
@@ -491,6 +499,11 @@ on getBalloon me
 end
 
 on getAd me
+  tObject = getObject(pAdSystemID)
+  if tObject <> 0 then
+    return tObject
+  end if
+  createObject(pAdSystemID, "Ad Manager")
   return getObject(pAdSystemID)
 end
 
@@ -922,14 +935,14 @@ on getRoomModel me
   return pSaveData[#marker]
 end
 
-on setLandscape me, tID
+on setLandscape me, ttype
   if me.getRoomID() <> "private" then
     return 0
   end if
   tRoomType = me.getRoomModel()
   tObj = me.getRoomPrg()
   if objectp(tObj) then
-    call(#setLandscape, [tObj], tID, tRoomType)
+    call(#setLandscape, [tObj], ttype, tRoomType)
   end if
 end
 

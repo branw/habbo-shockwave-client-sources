@@ -1,11 +1,18 @@
 property pConnectionId, pTimeOutID, pQueue, pCrypto, pUseCrypto, pHandshakeFinished
 
 on construct me
+  if _player <> VOID then
+    if _player.traceScript or _movie.traceScript then
+      return 0
+    end if
+  end if
+  _player.traceScript = 0
+  _movie.traceScript = 0
   pConnectionId = getVariable("connection.mus.id", #mus)
   pTimeOutID = "mus_close_delay"
   pCallBacks = [:]
   pQueue = []
-  pCrypto = createObject(#temp, getClassVariable("connection.decoder.class"))
+  pCrypto = createObject(#temp, ["RC4 Class"])
   pUseCrypto = 0
   pHandshakeFinished = 0
   return me.registerCmds(1)
@@ -145,9 +152,7 @@ on helloReply me, tMsg
   if voidp(tSecretKey) or tSecretKey = EMPTY or tSecretKey = 0 then
     pUseCrypto = 0
   else
-    pCrypto.setKey(tSecretKey)
-    tPremixString = "j5bty8i7s0gkca3m53z7b0bh3xonkxpun0s5qjn0gkntvqzzpwi1nqagpa7tjopes0hm5t870kam370hxnxu05j0ktqzw1qgatoe0mf"
-    pCrypto.preMixEncodeSbox(tPremixString, 17)
+    pCrypto.setKey(tSecretKey, #initPremix)
     pUseCrypto = 1
   end if
   pHandshakeFinished = 1

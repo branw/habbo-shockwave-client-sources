@@ -116,10 +116,11 @@ on handleFriendListUpdate me, tMsg
     case tUpdateType of
       -1:
         tFriendID = tConn.GetIntFrom()
-        me.getComponent().removeFriend(tFriendID)
+        me.getComponent().removeFriend(tFriendID, 1)
       0:
         tFriend = [:]
         tFriend[#id] = tConn.GetIntFrom()
+        tFriend[#name] = tConn.GetStrFrom()
         tFriend[#sex] = tConn.GetIntFrom()
         tFriend[#online] = tConn.GetIntFrom()
         tFriend[#canfollow] = tConn.GetIntFrom()
@@ -132,14 +133,17 @@ on handleFriendListUpdate me, tMsg
           tFriend[#categoryId] = "-1"
         end if
         tFriend[#categoryId] = string(tFriend[#categoryId])
-        me.getComponent().updateFriend(tFriend)
+        tFriend[#mission] = tConn.GetStrFrom()
+        tFriend[#lastAccess] = tConn.GetStrFrom()
+        me.getComponent().updateFriend(tFriend, 1)
       1:
         tFriend = me.parseFriendData(tMsg)
-        me.getComponent().addFriend(tFriend)
+        me.getComponent().addFriend(tFriend, 1)
     end case
   end repeat
   if tFriendCount > 0 or tCategoryCount > 0 then
     me.getInterface().updateCategoryCounts()
+    me.getInterface().updateOpenCategoryPanel()
     callJavaScriptFunction("friendListUpdate")
   end if
 end
@@ -250,6 +254,22 @@ on handleMailCountNotification me, tMsg
   me.getComponent().setUnreadMailCount(tUnreadMailCount)
 end
 
+on handleHabboSearchResult me, tMsg
+  tConn = tMsg.connection
+  tResultFriendsCount = tConn.GetIntFrom()
+  tResultsFriends = []
+  repeat with tRequestNo = 1 to tResultFriendsCount
+    tResultsFriends.append(me.parseHabboSearchResult(tMsg))
+  end repeat
+  tResultHabbosCount = tConn.GetIntFrom()
+  tResultsHabbos = []
+  repeat with tRequestNo = 1 to tResultHabbosCount
+    tResultsHabbos.append(me.parseHabboSearchResult(tMsg))
+  end repeat
+  me.getComponent().setHabboSearchResults(tResultsFriends, tResultsHabbos)
+  me.getInterface().showHabboSearchResults()
+end
+
 on parseFriendRequest me, tMsg
   tConn = tMsg.connection
   if tConn = 0 then
@@ -283,7 +303,27 @@ on parseFriendData me, tMsg
     tFriend[#categoryId] = "-1"
   end if
   tFriend[#categoryId] = string(tFriend[#categoryId])
+  tFriend[#mission] = tConn.GetStrFrom()
+  tFriend[#lastAccess] = tConn.GetStrFrom()
   return tFriend
+end
+
+on parseHabboSearchResult me, tMsg
+  tConn = tMsg.connection
+  if tConn = 0 then
+    return 0
+  end if
+  tdata = [:]
+  tdata[#id] = tConn.GetIntFrom()
+  tdata[#name] = tConn.GetStrFrom()
+  tdata[#mission] = tConn.GetStrFrom()
+  tdata[#online] = tConn.GetIntFrom()
+  tdata[#canfollow] = tConn.GetIntFrom()
+  tdata[#roomname] = tConn.GetStrFrom()
+  tdata[#sex] = tConn.GetIntFrom()
+  tdata[#figure] = tConn.GetStrFrom()
+  tdata[#lastAccess] = tConn.GetStrFrom()
+  return tdata
 end
 
 on regMsgList me, tBool
@@ -298,10 +338,13 @@ on regMsgList me, tBool
   tMsgs.setaProp(349, #handleFollowFailed)
   tMsgs.setaProp(363, #handleMailNotification)
   tMsgs.setaProp(364, #handleMailCountNotification)
+  tMsgs.setaProp(435, #handleHabboSearchResult)
   tCmds = [:]
   tCmds.setaProp("FRIENDLIST_INIT", 12)
   tCmds.setaProp("FRIENDLIST_UPDATE", 15)
+  tCmds.setaProp("FRIENDLIST_GETOFFLINEFRIENDS", 32)
   tCmds.setaProp("FRIENDLIST_REMOVEFRIEND", 40)
+  tCmds.setaProp("MESSENGER_HABBOSEARCH", 41)
   tCmds.setaProp("FRIENDLIST_ACCEPTFRIEND", 37)
   tCmds.setaProp("FRIENDLIST_DECLINEFRIEND", 38)
   tCmds.setaProp("FRIENDLIST_FRIENDREQUEST", 39)

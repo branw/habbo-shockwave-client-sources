@@ -337,9 +337,12 @@ on copyMemberToBin me, tSourceMember, tTargetAssetClass
     if getmemnum(tSourceMember.name) = 0 then
       tSourceMemName = tSourceMember.name
       tTargetMemName = me.doAliasReplacing(tSourceMemName, tTargetAssetClass)
-      tTargetMemberNum = createMember(tTargetMemName, tSourceMember.type, 0)
+      tTargetMemberNum = getmemnum(tTargetMemName)
       if tTargetMemberNum = 0 then
-        return error(me, "Could not create a new member for copying: " & tTargetMemName, #copyMemberToBin, #major)
+        tTargetMemberNum = createMember(tTargetMemName, tSourceMember.type, 0)
+        if tTargetMemberNum = 0 then
+          return error(me, "Could not create a new member for copying: " & tTargetMemName, #copyMemberToBin, #major)
+        end if
       end if
       tTargetMember = member(tTargetMemberNum)
       tTargetMember.media = tSourceMember.media
@@ -354,6 +357,9 @@ end
 
 on doAliasReplacing me, tSourceString, tTargetAssetClass
   tAliasedSTring = tSourceString
+  if chars(tTargetAssetClass, 1, 2) = "s_" then
+    tTargetAssetClass = chars(tTargetAssetClass, 3, tTargetAssetClass.length)
+  end if
   if not voidp(pAliasList[tTargetAssetClass]) then
     tSourceAssetClass = pAliasList.getaProp(tTargetAssetClass)
     if not voidp(tSourceAssetClass) then

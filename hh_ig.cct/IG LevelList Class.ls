@@ -48,6 +48,7 @@ on createGame me
     return 0
   end if
   executeMessage(#sendTrackingPoint, "/game/created")
+  put pSelectedLevelId && tGameParams
   return me.getHandler().send_CREATE_GAME(string(pSelectedLevelId), tGameParams)
 end
 

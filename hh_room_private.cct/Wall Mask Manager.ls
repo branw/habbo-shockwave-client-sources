@@ -1,21 +1,12 @@
-property pMaskImage, pMaskList, pREquiresUpdate, pRenderNeeded, pMember
+property pMask, pMaskImage, pMaskList, pREquiresUpdate
 
 on construct me
-  tMemberName = "landscape_mask_test"
-  if memberExists(tMemberName) then
-    pMember = getMember(tMemberName)
-  else
-    createMember(tMemberName, #bitmap)
-    pMember = getMember(tMemberName)
-  end if
   pMaskList = [:]
   me.initMask()
-  receiveUpdate(me.getID())
   return 1
 end
 
 on deconstruct me
-  removeUpdate(me.getID())
   return 1
 end
 
@@ -24,8 +15,11 @@ on requiresUpdate me
 end
 
 on getMask me
+  if pREquiresUpdate then
+    me.renderMask()
+  end if
   pREquiresUpdate = 0
-  return pMaskImage.createMask()
+  return pMask
 end
 
 on insertWallMaskItem me, tID, tClassID, tloc, tdir, tSize
@@ -36,12 +30,12 @@ on insertWallMaskItem me, tID, tClassID, tloc, tdir, tSize
   tMaskProps.setaProp(#Dir, tdir)
   tMaskProps.setaProp(#size, tSize)
   pMaskList.setaProp(tID, tMaskProps)
-  pRenderNeeded = 1
+  pREquiresUpdate = 1
 end
 
 on removeWallMaskItem me, tID
   pMaskList.deleteProp(tID)
-  pRenderNeeded = 1
+  pREquiresUpdate = 1
 end
 
 on getItemCount me
@@ -54,13 +48,6 @@ on initMask me
   pMaskImage = image(tWidth, tHeight, 8)
   pMaskImage.fill(pMaskImage.rect, rgb("FFFFFF"))
   pIsChanged = 1
-end
-
-on update me
-  if not pRenderNeeded then
-    return 1
-  end if
-  me.renderMask()
 end
 
 on renderMask me
@@ -95,7 +82,7 @@ on renderMask me
     end if
     pMaskImage.copyPixels(tMaskImage, tQuad, tMaskImage.rect, [#ink: 36])
   end repeat
-  pMember.image = pMaskImage
-  pREquiresUpdate = 1
-  pRenderNeeded = 0
+  if ilk(pMaskImage) = #image then
+    pMask = pMaskImage.createMask()
+  end if
 end

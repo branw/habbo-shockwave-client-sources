@@ -139,6 +139,9 @@ end
 
 on removeEffect me, tEffectID
   tEffect = pEffects.getaProp(pAppliedEffectID)
+  if voidp(tEffect) then
+    return 0
+  end if
   executeMessage(tEffect, rgb(255, 255, 255))
   pAppliedEffectID = 0
 end
@@ -148,6 +151,9 @@ on applyEffect me, tEffectID, tColor, tLightness
     me.removeEffect(pAppliedEffectID)
   end if
   tEffect = pEffects.getaProp(tEffectID)
+  if voidp(tEffect) then
+    return 0
+  end if
   tHSL = RGBtoHSL(tColor)
   tHSL[3] = tLightness
   executeMessage(tEffect, HSLtoRGB(tHSL))

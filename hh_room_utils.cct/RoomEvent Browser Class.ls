@@ -74,7 +74,7 @@ on ChangeWindowView me, tView
       me.updateDropMenu()
       tWnd.getElement("roomevent.type").deactivate()
   end case
-  activateWindow(pWindowID)
+  activateWindowObj(pWindowID)
 end
 
 on askCreatePermission me

@@ -303,7 +303,7 @@ on moveItem me
     pSprList[i].locV = the mouseLoc[2]
   end repeat
   tClass = pClientObj.getClass()
-  if tClass <> "floor" and tClass <> "wallpaper" and tClass <> "chess" then
+  if tClass <> "floor" and tClass <> "wallpaper" and tClass <> "chess" and tClass <> "landscape" then
     tProps = [#insideWall: 0]
     tRoomInterface = getThread(#room).getInterface()
     if not voidp(tRoomInterface) then

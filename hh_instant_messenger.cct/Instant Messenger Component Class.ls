@@ -153,6 +153,10 @@ end
 
 on receiveError me, tChatID, ttype
   case ttype of
+    3:
+      tTextKey = "im_error_receiver_muted"
+    4:
+      tTextKey = "im_error_sender_muted"
     5:
       tTextKey = "im_error_offline"
     6:

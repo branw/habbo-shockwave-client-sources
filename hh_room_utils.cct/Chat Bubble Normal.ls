@@ -13,7 +13,7 @@ on construct me
   pMargins[#textleft] = 30
   pBgMemName = EMPTY
   pUserMemName = EMPTY
-  tVariations = ["CHAT": "plain", "SHOUT": "bold", "WHISPER": "italic", "OBJECT": "plain"]
+  tVariations = ["CHAT": "plain", "SHOUT": "bold", "WHISPER": "grey", "OBJECT": "plain"]
   pTextParams = [:]
   repeat with i = 1 to tVariations.count
     tFontStruct = getStructVariable("struct.font." & tVariations[i])
@@ -29,6 +29,7 @@ on construct me
     tmember.font = tFontStruct.getaProp(#font)
     tmember.fontSize = tFontStruct.getaProp(#fontSize)
     tmember.fontStyle = tFontStruct.getaProp(#fontStyle)
+    tmember.color = tFontStruct.getaProp(#color)
     pTextParams[tVariations.getPropAt(i)] = [#member: tmember, #font: tFontStruct.getaProp(#font), #fontStyle: tFontStruct.getaProp(#fontStyle)]
   end repeat
   pBalloonImg = [:]

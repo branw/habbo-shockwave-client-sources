@@ -1,4 +1,4 @@
-property pState, pLogoSpr, pFadingLogo, pLogoStartTime, pCrapFixing, pCrapFixSpr, pCrapFixRegionInvalidated
+property pState, pLogoSpr, pFadingLogo, pLogoStartTime, pCrapFixing, pCrapFixSpr, pCrapFixRegionInvalidated, pFullScreenRefreshSpr
 
 on construct me
   tSession = createObject(#session, getClassVariable("variable.manager.class"))
@@ -26,10 +26,22 @@ on construct me
   end if
   pCrapFixing = 0
   pCrapFixRegionInvalidated = 1
+  pFullScreenRefreshSpr = sprite(reserveSprite())
+  if ilk(pFullScreenRefreshSpr) = #sprite then
+    pFullScreenRefreshSpr.member = member("crap.fixer")
+    pFullScreenRefreshSpr.width = (the stage).image.width + 1
+    pFullScreenRefreshSpr.height = (the stage).image.height
+    pFullScreenRefreshSpr.locZ = -2000000000
+    pFullScreenRefreshSpr.loc = point(-1, 0)
+    pFullScreenRefreshSpr.visible = 0
+  end if
   return me.updateState("load_variables")
 end
 
 on deconstruct me
+  if timeoutExists("client.refresh.timeout") then
+    removeTimeout("client.refresh.timeout")
+  end if
   unregisterMessage(#invalidateCrapFixRegion, me.getID())
   releaseSprite(pCrapFixSpr.spriteNum)
   return me.hideLogo()
@@ -196,6 +208,9 @@ on updateState me, tstate
       if variableExists("text.crap.fixing") then
         pCrapFixing = getVariableValue("text.crap.fixing")
       end if
+      if variableExists("client.full.refresh.period") then
+        createTimeout("client.refresh.timeout", getIntVariable("client.full.refresh.period"), #fullScreenRefresh, me.getID(), VOID, 0)
+      end if
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
         repeat with i = 1 to 9
@@ -305,4 +320,18 @@ on updateState me, tstate
       return executeMessage(#Initialize, "initialize")
   end case
   return error(me, "Unknown state:" && tstate, #updateState, #major)
+end
+
+on fullScreenRefresh me
+  if ilk(pFullScreenRefreshSpr) = #sprite then
+    pFullScreenRefreshSpr.visible = 1
+    case pFullScreenRefreshSpr.loc.locH of
+      0:
+        pFullScreenRefreshSpr.loc = point(-1, 0)
+      -1:
+        pFullScreenRefreshSpr.loc = point(0, 0)
+      otherwise:
+        pFullScreenRefreshSpr.loc = point(0, 0)
+    end case
+  end if
 end

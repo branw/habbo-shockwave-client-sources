@@ -2,7 +2,7 @@ property pTagList, pWriter, pRectList, pwidth, pheight, pGapH
 
 on construct me
   tID = getUniqueID()
-  tLinkFont = getStructVariable("struct.font.link")
+  tLinkFont = getStructVariable("struct.font.plain")
   tLinkFont.setaProp(#lineHeight, 15)
   tLinkFont.color = rgb(240, 240, 240)
   createWriter(tID, tLinkFont)
@@ -45,7 +45,19 @@ on createTagList me, tTagList
     pRectList.setaProp(tTag, tTargetRect)
     tPosX = tPosX + tTagImage.width + pGapH
   end repeat
-  return tImage
+  if pRectList.count = 0 then
+    tHeight = 0
+  else
+    tLastRect = pRectList[pRectList.count]
+    if tLastRect.ilk <> #rect then
+      tHeight = 0
+    else
+      tHeight = tLastRect[4]
+    end if
+  end if
+  tTrimmed = image(pwidth, tHeight + pGapH, 8)
+  tTrimmed.copyPixels(tImage, tTrimmed.rect, tTrimmed.rect)
+  return tTrimmed
 end
 
 on getTagAt me, tpoint

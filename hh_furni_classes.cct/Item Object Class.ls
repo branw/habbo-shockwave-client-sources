@@ -116,6 +116,14 @@ on select me
   return 1
 end
 
+on hasURL me
+  return textExists("item_ad_url_" & pType)
+end
+
+on GetUrl me
+  return getText("item_ad_url_" & pType)
+end
+
 on prepare me, tdata
   return 1
 end

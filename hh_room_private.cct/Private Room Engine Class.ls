@@ -242,14 +242,20 @@ on removeWallMaskItem me, tID
   end if
 end
 
-on setLandscape me, tID, tScale
+on setLandscape me, ttype, tScale
   if objectp(pLandscapeMngr) then
-    pLandscapeMngr.setLandscape(tID, tScale)
+    pLandscapeMngr.setLandscape(ttype, tScale)
   end if
 end
 
 on setLandscapeAnimation me, tID, tScale
   if objectp(pLandscapeMngr) then
     pLandscapeMngr.setLandscapeAnimation(tID, tScale)
+  end if
+end
+
+on getWallMaskCount me
+  if objectp(pLandscapeMngr) then
+    return pLandscapeMngr.getWallMaskCount()
   end if
 end

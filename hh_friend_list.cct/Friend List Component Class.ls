@@ -1,4 +1,4 @@
-property pFriendDataContainer, pFriendRequestContainer, pUpdateIntervalId, pReadyFlag, pNewMail
+property pFriendDataContainer, pFriendRequestContainer, pUpdateIntervalId, pReadyFlag, pNewMail, pHabboSearchResults, pHabboSearchLastString, pSentFriendRequests
 
 on construct me
   tStamp = EMPTY
@@ -23,6 +23,9 @@ on construct me
   pFriendRequestContainer = createObject(getUniqueID(), "Friend Request List Container")
   pReadyFlag = 0
   pNewMail = 0
+  pHabboSearchResults = [#friends: [:], #habbos: [:]]
+  pHabboSearchLastString = EMPTY
+  pSentFriendRequests = []
   registerMessage(#externalFriendRequest, me.getID(), #externalFriendRequest)
   return 1
 end
@@ -58,11 +61,14 @@ on populateFriendData me, tdata
 end
 
 on addFriend me, tFriendData
+  if listp(tFriendData) then
+    pSentFriendRequests.deleteOne(tFriendData.getaProp(#name))
+  end if
   pFriendDataContainer.addFriend(tFriendData)
   me.getInterface().addFriend(tFriendData)
 end
 
-on updateFriend me, tFriendData
+on updateFriend me, tFriendData, tHoldRender
   if ilk(tFriendData) <> #propList then
     return 0
   end if
@@ -70,15 +76,22 @@ on updateFriend me, tFriendData
   if ilk(tOldFriendData) <> #propList then
     tOldFriendData = [:]
   end if
+  pSentFriendRequests.deleteOne(tFriendData.getaProp(#name))
   if tOldFriendData[#categoryId] <> tFriendData[#categoryId] then
     me.getInterface().removeFriend(tOldFriendData[#id], tOldFriendData[#categoryId])
     pFriendDataContainer.updateFriend(tFriendData)
     tFriendData = pFriendDataContainer.getFriendByID(tFriendData[#id])
-    me.getInterface().addFriend(tFriendData)
+    if tFriendData = 0 then
+      return 0
+    end if
+    me.getInterface().addFriend(tFriendData, tHoldRender)
   else
     pFriendDataContainer.updateFriend(tFriendData)
     tFriendData = pFriendDataContainer.getFriendByID(tFriendData[#id])
-    me.getInterface().updateFriend(tFriendData)
+    if tFriendData = 0 then
+      return 0
+    end if
+    me.getInterface().updateFriend(tFriendData, tHoldRender)
   end if
   executeMessage(#friendDataUpdated, tFriendData[#id])
 end
@@ -257,6 +270,10 @@ on getItemCountForcategory me, tCategoryId
   else
     if tCategoryId = -2 then
       tList = pFriendRequestContainer.getPendingRequests()
+    else
+      if tCategoryId = -3 then
+        return pHabboSearchResults[#friends].count + pHabboSearchResults[#habbos].count
+      end if
     end if
   end if
   if ilk(tList) = #propList then
@@ -285,6 +302,9 @@ on externalFriendRequest me, tTargetUserName
   tText = tText & RETURN
   tText = tText & getText("console_request_2")
   executeMessage(#alert, tText)
+  if not pSentFriendRequests.findPos(tTargetUserName) then
+    pSentFriendRequests.append(tTargetUserName)
+  end if
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("FRIENDLIST_FRIENDREQUEST", [#string: tTargetUserName])
   end if
@@ -297,12 +317,30 @@ on sendAskForFriendRequests me
   end if
 end
 
+on sendHabboSearch me, tSearchString
+  if not stringp(tSearchString) then
+    return error(me, "Search string must be stringp()", #sendHabboSearch)
+  end if
+  if tSearchString = EMPTY then
+    return 0
+  end if
+  if tSearchString = pHabboSearchLastString then
+    return 0
+  end if
+  pHabboSearchLastString = tSearchString
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_HABBOSEARCH", [#string: tSearchString])
+  end if
+end
+
 on setFriendRequestResult me, tdata
   tErrorList = [:]
   tNamesPerAlert = 10
   tNames = RETURN
   repeat with tNameNum = 1 to tErrorList.count
-    tNames = tNames & RETURN & tErrorList.getPropAt(tNameNum)
+    tName = tErrorList.getPropAt(tNameNum)
+    pSentFriendRequests.deleteOne(tName)
+    tNames = tNames & RETURN & tName
     case tErrorList[tNameNum] of
       1:
         tReason = getText("console_fr_limit_exceeded_error")
@@ -326,4 +364,23 @@ on setFriendRequestResult me, tdata
     tMessage = getText("console_friend_request_error") & tNames
     executeMessage(#alert, [#Msg: tMessage])
   end if
+end
+
+on setHabboSearchResults me, tResultsFriends, tResultsHabbos
+  pHabboSearchResults[#friends] = tResultsFriends
+  repeat with tItem in tResultsHabbos
+    if pSentFriendRequests.findPos(tItem.getaProp(#name)) then
+      tItem.setaProp(#fr_pending, 1)
+    end if
+  end repeat
+  pHabboSearchResults[#habbos] = tResultsHabbos
+  me.getInterface().updateCategoryCounts()
+end
+
+on getHabboSearchResults me
+  return pHabboSearchResults
+end
+
+on getHabboSearchLastString me
+  return pHabboSearchLastString
 end

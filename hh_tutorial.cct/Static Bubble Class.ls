@@ -1,7 +1,7 @@
 property pLocX, pLocY, pTargetX, pTargetY, pBubbleId
 
 on construct me
-  me.pWindowType = "bubble_static.window"
+  me.pWindowType = "bubble_text.window"
   me.pTextWidth = 160
   pLocX = -1000
   pLocY = 0
@@ -50,7 +50,6 @@ on setText me, tText
   if me.pWindow.elementExists(tCloseElemId) then
     tTextElem = me.pWindow.getElement("bubble_text")
     tCloseElem = me.pWindow.getElement(tCloseElemId)
-    tCloseElem.moveTo(tTextElem.getProperty(#width) + tTextElem.getProperty(#locX) + 5, tCloseElem.getProperty(#locY))
   end if
   me.selectPointerAndPosition(me.pDirection)
 end

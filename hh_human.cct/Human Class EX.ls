@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadges, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
 
 on construct me
   pFrozenAnimFrame = 0
@@ -32,7 +32,7 @@ on construct me
   pCtrlType = 0
   pAnimating = 0
   pSwim = 0
-  pBadge = SPACE
+  pBadges = [:]
   pCurrentAnim = EMPTY
   pAlphaColor = rgb(255, 255, 255)
   pSync = 1
@@ -146,7 +146,7 @@ on define me, tdata
   pInfoStruct[#custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
-  pInfoStruct[#badge] = " "
+  pInfoStruct[#badges] = [:]
   tThread = getThread(#room)
   if tThread <> 0 then
     tInterface = tThread.getInterface()
@@ -190,7 +190,7 @@ on setup me, tdata
   pLocX = tdata[#x]
   pLocY = tdata[#y]
   pLocH = tdata[#h]
-  pBadge = tdata[#badge]
+  pBadges = tdata[#badge]
   pGroupId = tdata[#groupID]
   pStatusInGroup = tdata[#groupstatus]
   pXP = tdata.getaProp(#xp)
@@ -407,13 +407,18 @@ on getInfo me
   else
     pInfoStruct[#ctrl] = pCtrlType
   end if
-  pInfoStruct[#badge] = me.pBadge
+  pInfoStruct[#badges] = me.pBadges
   pInfoStruct[#groupID] = me.pGroupId
+  if pCustom = EMPTY then
+    tPrefix = EMPTY
+  else
+    tPrefix = pCustom & RETURN & RETURN
+  end if
   if pTrading then
-    pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
+    pInfoStruct[#custom] = tPrefix & getText("human_trading", "Trading")
   else
     if pCarrying <> 0 then
-      pInfoStruct[#custom] = pCustom & RETURN & getText("human_carrying", "Carrying:") && pCarrying
+      pInfoStruct[#custom] = tPrefix & getText("human_carrying", "Carrying:") && pCarrying
     else
       pInfoStruct[#custom] = pCustom
     end if
@@ -446,8 +451,8 @@ on getProperty me, tPropID
       return pMainAction
     #moving:
       return me.pMoving
-    #badge:
-      return me.pBadge
+    #badges:
+      return me.pBadges
     #swimming:
       return me.pSwim
     #groupID:

@@ -47,6 +47,7 @@ on addFriend me, tFriendData
   if me.pContentList.findPos(tName) > 0 then
     return 0
   end if
+  me.pNeedsRender = 1
   me.pContentList[tName] = tFriendData.duplicate()
   tFriendImg = me.renderFriendItem(tFriendData, 0)
   tIndex = me.pContentList.findPos(tName)
@@ -63,7 +64,7 @@ on updateFriend me, tFriendData
   me.pContentList[tName] = tFriendData
   tFriendImg = me.renderFriendItem(tFriendData, 0)
   tPosV = (tIndex - 1) * me.pItemHeight
-  me.pListImg = me.updateImagePart(tFriendImg, me.pListImg.duplicate(), tPosV)
+  me.pListImg = me.updateImagePart(tFriendImg, me.pListImg, tPosV)
 end
 
 on removeFriend me, tFriendID
@@ -76,6 +77,7 @@ on removeFriend me, tFriendID
       me.pListImg = me.removeImagePart(me.pListImg.duplicate(), tStartPosV, tEndPosV)
       me.pContentList.deleteAt(tIndex)
       me.deselectFriend(tFriend[#name])
+      me.pNeedsRender = 1
       exit repeat
     end if
   end repeat

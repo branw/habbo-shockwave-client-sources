@@ -25,6 +25,7 @@ on getCreateDefaults me
   tParams = [:]
   tParams.addProp(#private, [#ilk: #integer, #default: 0])
   tParams.addProp(#number_of_teams, [#ilk: #integer, #min: 1, #max: 4, #default: 2])
+  tParams.addProp(#duration, [#ilk: #integer, #default: 120])
   return tParams
 end
 
@@ -65,6 +66,7 @@ end
 
 on parseLongData me, tdata, tConn
   tdata.setaProp(#level_name, getText("sw_fieldname_" & tdata.getaProp(#field_type)))
+  tdata.setaProp(#duration, tConn.GetIntFrom())
   return tdata
 end
 

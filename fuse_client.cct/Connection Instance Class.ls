@@ -176,7 +176,7 @@ on send me, tCmd, tMsg
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
   if pEncryptionOn and objectp(pEncoder) then
-    tMsg = pEncoder.encipher(tMsg)
+    tMsg = pEncoder.lzNP3UFWUtBTs1stvSHGgk(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -253,7 +253,7 @@ on sendNew me, tCmd, tParmArr
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
   if pEncryptionOn and objectp(pEncoder) then
-    tMsg = pEncoder.encipher(tMsg)
+    tMsg = pEncoder.lzNP3UFWUtBTs1stvSHGgk(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -436,7 +436,7 @@ on xtraMsgHandler me
   end if
   pConnectionEstablishing = 0
   if pEncryptionOn and pDecipherOn then
-    tContent = pDecoder.decipher(tContent)
+    tContent = pDecoder.TTF97D0LvibV6X(tContent)
   end if
   me.msghandler(tContent)
 end
@@ -525,4 +525,8 @@ on log me, tMsg
     3:
       executeMessage(#logdata, tMsg)
   end case
+end
+
+on handlers me
+  return []
 end

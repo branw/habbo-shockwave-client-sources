@@ -33,6 +33,7 @@ on open me
   tWndObj.merge("photo_camera.window")
   tWndObj.moveTo(100, 100)
   tWndObj.registerProcedure(#eventProcCameraMouseDown, me.getID(), #mouseDown)
+  tWndObj.registerProcedure(#eventProcCameraMouseUp, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcCameraMouseEnter, me.getID(), #mouseEnter)
   tWndObj.registerProcedure(#eventProcCameraMouseLeave, me.getID(), #mouseLeave)
   pmode = #live
@@ -139,8 +140,6 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
   end if
   tWndObj = getWindow(pWindowID)
   case tSprID of
-    "cam_close":
-      me.close()
     "cam_shoot":
       if pmode <> #live then
         return 
@@ -220,6 +219,18 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       end if
   end case
   me.setButtonHilites()
+end
+
+on eventProcCameraMouseUp me, tEvent, tSprID, tParam
+  if not getThread(#room).getComponent().roomExists(VOID) then
+    return 0
+  end if
+  tWndObj = getWindow(pWindowID)
+  case tSprID of
+    "cam_close":
+      me.close()
+      return 1
+  end case
 end
 
 on setButtonHilites me

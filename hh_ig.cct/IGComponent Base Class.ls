@@ -5,7 +5,11 @@ on construct me
   pTimeoutUpdates = 0
   pHiddenUpdates = 0
   pUpdateLastTimestamp = 0
-  pUpdateInterval = 10000
+  if variableExists("ig.update.interval") then
+    pUpdateInterval = getIntVariable("ig.update.interval")
+  else
+    pUpdateInterval = 5000
+  end if
   pFeederList = []
   pListenerList = []
   return 1
@@ -236,6 +240,9 @@ on setContentUpdatePollingTimeout me, tstate
   end if
   tUpdateTimeoutId = pIGComponentId & "_timer"
   if tstate = 1 or pHiddenUpdates then
+    if variableExists("ig." & pIGComponentId & ".update.interval") then
+      pUpdateInterval = getIntVariable("ig." & pIGComponentId & ".update.interval")
+    end if
     getObject(me.getID()).pollContentUpdate()
     if not timeoutExists(tUpdateTimeoutId) then
       createTimeout(tUpdateTimeoutId, pUpdateInterval, #pollContentUpdate, me.getID(), VOID, 0)

@@ -66,7 +66,24 @@ end
 
 on renderListImage me
   if pContentList.count = 0 then
-    pListImg = image(1, 1, 32)
+    me.pListImg = image(1, 1, 32)
+  end if
+  me.pFriendRenderQueue = []
+  tItemHeight = integer(getVariable("fr.online.item.height"))
+  tCurrentPosV = 0
+  repeat with tNo = 1 to pContentList.count
+    tFriend = pContentList[tNo]
+    tFriend.setaProp(#posV, tCurrentPosV)
+    me.pFriendRenderQueue.append(tFriend)
+    tCurrentPosV = tCurrentPosV + tItemHeight
+  end repeat
+  pListImg = me.renderBackgroundImage()
+end
+
+on renderFromQueue me, tContentElement
+  if tContentElement = 0 then
+    me.pFriendRenderQueue = []
+    return 1
   end if
   tItemHeight = integer(getVariable("fr.online.item.height"))
   tWidth = integer(getVariable("fr.list.panel.width"))
@@ -86,35 +103,35 @@ on renderListImage me
   tFollowIconRect = tFollowIconImg.rect
   tFollowIconPosH = integer(getVariable("fr.online.follow.offset.h"))
   tFollowIconPosV = (tItemHeight - tFollowIconImg.height) / 2
-  repeat with tNo = 1 to pContentList.count
-    tFriend = pContentList[tNo]
-    if me.isFriendselected(tFriend[#name]) then
-      tSelectedBg = rgb(string(getVariable("fr.online.bg.selected")))
-      tImage.fill(0, tCurrentPosV, tWidth, tCurrentPosV + tItemHeight, tSelectedBg)
+  repeat with i = 1 to me.pTasksPerUpdate
+    if me.pFriendRenderQueue.count > 0 then
+      tFriend = me.pFriendRenderQueue[1]
+      me.pFriendRenderQueue.deleteAt(1)
+      tCurrentPosV = tFriend[#posV]
+      if me.isFriendselected(tFriend[#name]) then
+        tSelectedBg = rgb(string(getVariable("fr.online.bg.selected")))
+        pListImg.fill(0, tCurrentPosV, tWidth, tCurrentPosV + tItemHeight, tSelectedBg)
+      end if
+      tParsedFigure = tFigureParser.parseFigure(tFriend[#figure], tFriend[#sex], "user")
+      tHeadImage = tPreviewObj.getHumanPartImg(tPartList, tParsedFigure, 2, "sh")
+      tSourceRect = tHeadImage.rect
+      tFacePosV = tCurrentPosV + (tItemHeight - tHeadImage.height) / 2
+      tdestrect = tSourceRect + rect(tFacePosH, tFacePosV, tFacePosH, tFacePosV)
+      pListImg.copyPixels(tHeadImage, tdestrect, tSourceRect, [#ink: 36])
+      tNameImage = tNameWriter.render(tFriend[#name])
+      tSourceRect = tNameImage.rect
+      tNamePosV = tCurrentPosV + (tItemHeight - tNameImage.height) / 2
+      tdestrect = tSourceRect + rect(tNamePosH, tNamePosV, tNamePosH, tNamePosV)
+      pListImg.copyPixels(tNameImage, tdestrect, tSourceRect, [#ink: 36])
+      tdestrect = tImIconRect + rect(tImIconPosH, tCurrentPosV + tImIconPosV, tImIconPosH, tCurrentPosV + tImIconPosV)
+      pListImg.copyPixels(tImIconImg, tdestrect, tImIconRect, [#ink: 36])
+      if tFriend[#canfollow] then
+        tdestrect = tFollowIconRect + rect(tFollowIconPosH, tCurrentPosV + tFollowIconPosV, tFollowIconPosH, tCurrentPosV + tFollowIconPosV)
+        pListImg.copyPixels(tFollowIconImg, tdestrect, tFollowIconRect, [#ink: 36])
+      end if
     end if
-    tParsedFigure = tFigureParser.parseFigure(tFriend[#figure], tFriend[#sex], "user")
-    tHeadImage = tPreviewObj.getHumanPartImg(tPartList, tParsedFigure, 2, "sh")
-    tSourceRect = tHeadImage.rect
-    tFacePosV = tCurrentPosV + (tItemHeight - tHeadImage.height) / 2
-    tdestrect = tSourceRect + rect(tFacePosH, tFacePosV, tFacePosH, tFacePosV)
-    tImage.copyPixels(tHeadImage, tdestrect, tSourceRect, [#ink: 36])
-    tNameImage = tNameWriter.render(tFriend[#name])
-    tSourceRect = tNameImage.rect
-    tNamePosV = tCurrentPosV + (tItemHeight - tNameImage.height) / 2
-    tdestrect = tSourceRect + rect(tNamePosH, tNamePosV, tNamePosH, tNamePosV)
-    tImage.copyPixels(tNameImage, tdestrect, tSourceRect, [#ink: 36])
-    tdestrect = tImIconRect + rect(tImIconPosH, tCurrentPosV + tImIconPosV, tImIconPosH, tCurrentPosV + tImIconPosV)
-    tImage.copyPixels(tImIconImg, tdestrect, tImIconRect, [#ink: 36])
-    if tFriend[#canfollow] then
-      tdestrect = tFollowIconRect + rect(tFollowIconPosH, tCurrentPosV + tFollowIconPosV, tFollowIconPosH, tCurrentPosV + tFollowIconPosV)
-      tImage.copyPixels(tFollowIconImg, tdestrect, tFollowIconRect, [#ink: 36])
-    end if
-    tCurrentPosV = tCurrentPosV + tItemHeight
   end repeat
-  tBgImage = me.renderBackgroundImage()
-  pListImg = image(tImage.width, tImage.height, 32)
-  pListImg.copyPixels(tBgImage, tBgImage.rect, tBgImage.rect)
-  pListImg.copyPixels(tImage, tImage.rect, tImage.rect, [#ink: 36])
+  tContentElement.feedImage(pListImg)
 end
 
 on renderBackgroundImage me
@@ -146,6 +163,7 @@ on relayEvent me, tEvent, tLocX, tLocY
     return tEventResult
   end if
   tFriend = pContentList[tListIndex]
+  tEventResult[#friend] = tFriend
   if tEvent = #mouseWithin then
     if tLocX > integer(getVariable("fr.online.im.offset.h")) then
       tEventResult[#element] = #im
@@ -156,9 +174,13 @@ on relayEvent me, tEvent, tLocX, tLocY
         tEventResult[#cursor] = "cursor.finger"
       end if
     end if
+    tEventResult[#item_y] = (tListIndex - 1) * me.pItemHeight
+    tEventResult[#item_height] = me.pItemHeight
     return tEventResult
   end if
-  tEventResult[#friend] = tFriend
+  if tEvent <> #mouseUp then
+    return 1
+  end if
   tListWidth = integer(getVariable("fr.list.panel.width"))
   if tLocX > integer(getVariable("fr.online.im.offset.h")) then
     tEventResult[#element] = #im

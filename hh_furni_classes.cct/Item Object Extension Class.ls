@@ -163,6 +163,14 @@ on update me
   return 1
 end
 
+on hasURL me
+  return textExists("item_ad_url_" & me.pClass)
+end
+
+on GetUrl me
+  return getText("item_ad_url_" & me.pClass)
+end
+
 on solveMembers me
   tMembersFound = 0
   tCount = 1

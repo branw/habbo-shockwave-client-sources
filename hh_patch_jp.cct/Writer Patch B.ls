@@ -35,5 +35,12 @@ on render me, tText, tRect
       end if
     end if
   end if
-  return me.pMember.image
+  executeMessage(#invalidateCrapFixRegion)
+  if me.pTextRenderMode = 1 then
+    return me.pMember.image
+  else
+    if me.pTextRenderMode = 2 then
+      return me.fakeAlphaRender()
+    end if
+  end if
 end

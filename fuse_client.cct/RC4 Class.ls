@@ -2,11 +2,6 @@ property pSbox, pKey, i, j, pLog
 global _player
 
 on setKey me, tMyKey, tMode
-  if _player <> VOID then
-    if _player.traceScript then
-      return 0
-    end if
-  end if
   pLog = VOID
   tMyKeyS = string(tMyKey)
   pSbox = []
@@ -178,4 +173,8 @@ on setLog me, tTextMember
 end
 
 on dumpState me
+end
+
+on handlers me
+  return []
 end

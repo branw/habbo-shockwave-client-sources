@@ -14,5 +14,6 @@ on initResources me, tFontProps
   else
     me.pTextMem = member(tMemNum)
   end if
+  executeMessage(#invalidateCrapFixRegion)
   return 1
 end

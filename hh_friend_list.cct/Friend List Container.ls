@@ -33,6 +33,11 @@ on populateCategoryData me, tdata
   tCat[#id] = tID
   tCat[#name] = getText("friend_list_friend_requests_category")
   pCategories[tID] = tCat
+  tCat = [:]
+  tID = "-3"
+  tCat[#id] = tID
+  tCat[#name] = getText("friend_list_search_category", "Search")
+  pCategories[tID] = tCat
 end
 
 on populateFriendData me, tFriends
@@ -68,7 +73,6 @@ on updateFriend me, tFriendData
         tFriendProps[tProp] = tValue
       end if
     end repeat
-    tName = tFriendProps[#name]
     pFriendList[tID] = tFriendProps.duplicate()
   end if
 end
@@ -103,7 +107,7 @@ on getFriendsInCategory me, tCategoryId
   repeat with tNo = 1 to pFriendList.count
     tFriend = pFriendList[tNo]
     if tFriend[#categoryId] = tCategoryId then
-      tList[tFriend[#name]] = tFriend
+      tList.setaProp(tFriend.getaProp(#name), tFriend)
     end if
   end repeat
   return tList

@@ -266,13 +266,18 @@ on update me
 end
 
 on eventProc me, tEvent, tSprID, tParm
+  if stringp(tParm) then
+    tClickURL = tParm
+  else
+    tClickURL = pClickURL
+  end if
   if tEvent = #mouseUp then
-    if not voidp(pClickURL) then
-      queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
+    if not voidp(tClickURL) then
+      queueDownload(tClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
     end if
   else
     if tEvent = #mouseEnter or tEvent = #mouseWithin then
-      if not voidp(pClickURL) then
+      if not voidp(tClickURL) then
         ShowToolTip(me)
       end if
     else

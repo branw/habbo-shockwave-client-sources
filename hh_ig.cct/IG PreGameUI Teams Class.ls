@@ -122,11 +122,10 @@ on displayPlayer me, tPlayerInfo, tTeamId, tPlayerPos
     return 0
   end if
   tOwnPlayer = tName = me.getOwnPlayerName()
-  tFontStruct = tElem.getFont()
   if tOwnPlayer then
-    tFontStruct.setaProp(#font, "vb")
+    tFontStruct = getStructVariable("struct.font.bold")
   else
-    tFontStruct.setaProp(#font, "v")
+    tFontStruct = getStructVariable("struct.font.plain")
   end if
   tElem.setFont(tFontStruct)
   tElem.setText(tName)

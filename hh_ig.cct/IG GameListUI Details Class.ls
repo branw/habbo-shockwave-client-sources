@@ -194,8 +194,7 @@ on renderPlayer me, tInfo, tTeamIndex, tPlayerIndex, tOwnerFlag
   tElement = tWndObj.getElement("ig_name_team_player_" & tSuffix)
   if tElement <> 0 then
     if tOwnPlayer = 1 then
-      tFontStruct = tElement.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElement.setFont(tFontStruct)
     end if
     tElement.setText(tInfo.getProp(#name))

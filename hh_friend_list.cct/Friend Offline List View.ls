@@ -1,9 +1,10 @@
-property pListImg, pWriterIdPlain, pContentList, pItemHeight, pItemWidth, pEmptyListText
+property pListImg, pWriterIdPlain, pContentList, pItemHeight, pItemWidth, pEmptyListText, pContentListState
 
 on construct me
   pListImg = image(1, 1, 32)
   pContentList = [:]
   pContentList.sort()
+  pContentListState = VOID
   pWriterIdPlain = getUniqueID()
   tPlain = getStructVariable("struct.font.plain")
   tMetrics = [#font: tPlain.getaProp(#font), #fontStyle: tPlain.getaProp(#fontStyle), #color: rgb("#888888")]
@@ -46,28 +47,52 @@ end
 
 on renderListImage me
   if pContentList.count = 0 then
-    return image(1, 1, 32)
+    me.pListImg = image(1, 1, 32)
+    return me.pListImg
   end if
+  me.pFriendRenderQueue = []
   pItemHeight = integer(getVariable("fr.offline.item.height"))
   pItemWidth = integer(getVariable("fr.list.panel.width"))
   tNamePosH = integer(getVariable("fr.offline.name.offset.h"))
   tSelectedBg = rgb(string(getVariable("fr.offline.bg.selected")))
-  tImage = image(pItemWidth, pItemHeight * pContentList.count, 32)
+  me.pListImg = image(pItemWidth, pItemHeight * pContentList.count, 32)
   tCurrentPosV = 0
   tNameWriter = getWriter(pWriterIdPlain)
   repeat with tFriend in pContentList
     tName = tFriend[#name]
     if me.isFriendselected(tName) then
-      tImage.fill(0, tCurrentPosV, pItemWidth, tCurrentPosV + pItemHeight, tSelectedBg)
+      me.pListImg.fill(0, tCurrentPosV, pItemWidth, tCurrentPosV + pItemHeight, tSelectedBg)
     end if
-    tNameImage = tNameWriter.render(tName)
-    tSourceRect = tNameImage.rect
-    tNamePosV = tCurrentPosV + (pItemHeight - tNameImage.height) / 2
-    tdestrect = tSourceRect + rect(tNamePosH, tNamePosV, tNamePosH, tNamePosV)
-    tImage.copyPixels(tNameImage, tdestrect, tNameImage.rect)
+    tFriend.setaProp(#posV, tCurrentPosV)
+    me.pFriendRenderQueue.append(tFriend)
     tCurrentPosV = tCurrentPosV + pItemHeight
   end repeat
-  pListImg = tImage.duplicate()
+end
+
+on renderFromQueue me, tContentElement
+  if tContentElement = 0 then
+    me.pFriendRenderQueue = []
+    return 1
+  end if
+  tNamePosH = integer(getVariable("fr.offline.name.offset.h"))
+  tNameWriter = getWriter(pWriterIdPlain)
+  repeat with i = 1 to me.pTasksPerUpdate
+    if me.pFriendRenderQueue.count > 0 then
+      tFriend = me.pFriendRenderQueue[1]
+      me.pFriendRenderQueue.deleteAt(1)
+      tCurrentPosV = tFriend[#posV]
+      tName = tFriend[#name]
+      if me.isFriendselected(tName) then
+        me.pListImg.fill(0, tCurrentPosV, pItemWidth, tCurrentPosV + pItemHeight, rgb(string(getVariable("fr.offline.bg.selected"))))
+      end if
+      tNameImage = tNameWriter.render(tName)
+      tSourceRect = tNameImage.rect
+      tNamePosV = tCurrentPosV + (pItemHeight - tNameImage.height) / 2
+      tdestrect = tSourceRect + rect(tNamePosH, tNamePosV, tNamePosH, tNamePosV)
+      pListImg.copyPixels(tNameImage, tdestrect, tNameImage.rect)
+    end if
+  end repeat
+  tContentElement.feedImage(pListImg)
 end
 
 on renderBackgroundImage me
@@ -93,16 +118,17 @@ on relayEvent me, tEvent, tLocX, tLocY
   tListIndex = tLocY / me.pItemHeight + 1
   tEventResult = [:]
   tEventResult[#Event] = tEvent
-  if tEvent = #mouseWithin then
-    return tEventResult
-  end if
   if tListIndex > me.pContentList.count then
     nothing()
   else
     tFriend = me.pContentList[tListIndex]
     tEventResult[#friend] = tFriend
     tEventResult[#element] = #name
-    me.userSelectionEvent(tFriend[#name])
+    tEventResult[#item_y] = (tListIndex - 1) * me.pItemHeight
+    tEventResult[#item_height] = me.pItemHeight
+    if tEvent = #mouseUp then
+      me.userSelectionEvent(tFriend[#name])
+    end if
     tEventResult[#update] = 1
   end if
   return tEventResult

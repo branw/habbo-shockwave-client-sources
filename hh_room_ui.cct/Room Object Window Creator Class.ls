@@ -1,4 +1,4 @@
-property pModBadgeList, pExtensionClosedID, pExtensionOpenedID, pWriterBold, pScroller
+property pModBadgeList, pExtensionClosedID, pExtensionOpenedID, pWriterBold, pWriterPlain, pScroller
 
 on construct me
   pModBadgeList = getVariableValue("moderator.badgelist")
@@ -12,6 +12,11 @@ on construct me
   tBold.setaProp(#color, rgb("#EEEEEE"))
   createWriter(tWriterId, tBold)
   pWriterBold = getWriter(tWriterId)
+  tWriterId = #infostand_desc_writer
+  tPlain = getStructVariable("struct.font.plain")
+  tPlain.setaProp(#color, rgb("#EEEEEE"))
+  createWriter(tWriterId, tPlain)
+  pWriterPlain = getWriter(tWriterId)
   return 1
 end
 
@@ -49,17 +54,59 @@ on createFurnitureWindow me, tID, tProps
   return 1
 end
 
+on createMottoWindow me, tID, tProps, tSelectedObj, tBadgeObjID, tShowTags
+  tWndObj = me.initWindow(tID, "obj_disp_motto.window")
+  if tWndObj.elementExists("room_obj_disp_name") then
+    tNameImage = pWriterBold.render(tProps[#name]).duplicate()
+    tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
+    pScroller.registerElement(tID, "room_obj_disp_name")
+    pScroller.setScroll(1)
+  end if
+  if tWndObj.elementExists("room_obj_disp_desc") then
+    tDescElem = tWndObj.getElement("room_obj_disp_desc")
+    tWidth = tDescElem.getProperty(#width)
+    tOrigHeight = tDescElem.getProperty(#height)
+    pWriterPlain.setProperty(#wordWrap, 1)
+    pWriterPlain.setProperty(#rect, rect(0, 0, tWidth, 0))
+    tDescImage = pWriterPlain.render(tProps[#custom]).duplicate()
+    tWndObj.getElement("room_obj_disp_desc").feedImage(tDescImage)
+    tDescHeight = tDescImage.height
+    if tProps[#custom] = EMPTY then
+      tDescHeight = 0
+    end if
+    tWndObj.resizeBy(0, tDescHeight - tOrigHeight)
+  end if
+  tWndObj.lock()
+  return 1
+end
+
 on createHumanWindow me, tID, tProps, tSelectedObj, tBadgeObjID, tShowTags
-  tWndObj = me.initWindow(tID, "obj_disp_human.window")
-  tNameImage = pWriterBold.render(tProps[#name]).duplicate()
-  tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
-  tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
-  pScroller.registerElement(tID, "room_obj_disp_name")
-  pScroller.setScroll(1)
-  tWndObj.getElement("room_obj_disp_avatar").feedImage(tProps[#image])
+  tWndObj = me.initWindow(tID, "obj_disp_avatar.window")
+  if not tWndObj.elementExists("room_obj_disp_avatar") then
+    return error(me, "Avatar element missing.", #createHumanWindow, #major)
+  end if
+  tAvatarElem = tWndObj.getElement("room_obj_disp_avatar")
+  tAvatarElem.feedImage(tProps[#image])
+  if tSelectedObj <> getObject(#session).GET("user_index") then
+    tAvatarElem.setProperty(#cursor, #arrow)
+  end if
+  tBadges = tProps[#badges]
+  if tBadges.ilk <> #propList then
+    tBadges = [:]
+  end if
+  tMaxBadgeIndex = 0
+  repeat with i = 1 to tBadges.count
+    tIndex = tBadges.getPropAt(i)
+    if tIndex > tMaxBadgeIndex then
+      tMaxBadgeIndex = tIndex
+    end if
+  end repeat
+  if tMaxBadgeIndex < 4 then
+    tOffsetV = tAvatarElem.getProperty(#height) - tWndObj.getProperty(#height)
+    tWndObj.resizeBy(0, tOffsetV)
+  end if
   tBadgeObj = getObject(tBadgeObjID)
-  tBadgeObj.updateInfoStandBadge(tID, tSelectedObj, tProps[#badge])
-  me.showHideTags(tID, tShowTags)
+  tBadgeObj.updateInfoStandBadge(tID, tSelectedObj, tBadges)
   tWndObj.lock()
   return 1
 end
@@ -97,6 +144,8 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tButtonList["wave"] = #visible
     tButtonList["dance"] = #hidden
     tButtonList["hcdance"] = #hidden
+    tButtonList["badges"] = #visible
+    tButtonList["outlook"] = #visible
     tMainAction = tOwnUser.getProperty(#mainAction)
     tSwimming = tOwnUser.getProperty(#swimming)
     tSitting = tMainAction = "sit"
@@ -189,6 +238,13 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
   end if
   tWndObj = me.initWindow(tID, tWindowModel)
   me.scaleButtonWindow(tID, tButtonList, tShowButtons)
+  if tTargetUserName = tSessionObj.GET("user_name") then
+    if tWndObj.elementExists("hcdance.button") then
+      tElem = tWndObj.getElement("hcdance.button")
+      tDance = tOwnUser.getProperty(#dancing)
+      tElem.setSelection(tDance + 2, 1)
+    end if
+  end if
   tWndObj.lock()
   return tID
 end
@@ -247,6 +303,12 @@ end
 
 on showHideTags me, tID, tShowTags
   tWndObj = getWindow(tID)
+  if not tWndObj.elementExists("object_displayer_toggle_tags_icon") then
+    return 0
+  end if
+  if not tWndObj.elementExists("object_displayer_toggle_tags") then
+    return 0
+  end if
   tArrowElem = tWndObj.getElement("object_displayer_toggle_tags_icon")
   tTextElem = tWndObj.getElement("object_displayer_toggle_tags")
   if voidp(tShowTags) then
@@ -277,9 +339,12 @@ on scaleButtonWindow me, tID, tButtonList, tShowButtons
     tTextElem.setText(tOpenText)
   end if
   tCurrentButtonTopPos = 0
+  tOffsetV = 0
   tButtonVertMargins = 3
   tButtonHeight = 15
-  tHiddenRowCount = 0
+  tLine = 1
+  tWindowWidth = tWndObj.getProperty(#width)
+  tMaxWidth = (the stage).rect.width
   repeat with tIndex = 1 to tButtonList.count
     tButtonID = tButtonList.getPropAt(tIndex)
     tButtonVisibility = tButtonList[tButtonID]
@@ -288,21 +353,31 @@ on scaleButtonWindow me, tID, tButtonList, tShowButtons
     if tIndex = 1 then
       tCurrentButtonTopPos = tElement.getProperty(#locY)
     end if
+    tElemWidth = tElement.getProperty(#width)
+    if tButtonVisibility <> #hidden then
+      if tOffsetV + tElemWidth <= tMaxWidth then
+        tLeftPos = tLeftPos + tOffsetV
+        tOffsetV = tOffsetV + tElemWidth + tButtonVertMargins
+      else
+        if tButtonVisibility <> #hidden and tIndex > 1 then
+          tCurrentButtonTopPos = tCurrentButtonTopPos + tButtonHeight + tButtonVertMargins
+          tLine = tLine + 1
+        end if
+        tOffsetV = tElemWidth + tButtonVertMargins
+      end if
+    end if
     case tButtonVisibility of
       #visible:
         tElement.moveTo(tLeftPos, tCurrentButtonTopPos)
-        tCurrentButtonTopPos = tCurrentButtonTopPos + tButtonHeight + tButtonVertMargins
       #deactive:
         tElement.moveTo(tLeftPos, tCurrentButtonTopPos)
         tElement.deactivate()
-        tCurrentButtonTopPos = tCurrentButtonTopPos + tButtonHeight + tButtonVertMargins
       #hidden:
         tElement.setProperty(#visible, 0)
-        tHiddenRowCount = tHiddenRowCount + 1
     end case
   end repeat
-  tNewHeight = tWndObj.getProperty(#height) - tHiddenRowCount * (tButtonHeight + tButtonVertMargins) - tButtonVertMargins
-  me.resizeWindowTo(tID, tWndObj.getProperty(#width), tNewHeight)
+  tStackHeight = tLine * (tButtonHeight + tButtonVertMargins) + 2 * tButtonVertMargins
+  me.resizeWindowTo(tID, tOffsetV, tStackHeight)
 end
 
 on createLinksWindow me, tID, tFormat

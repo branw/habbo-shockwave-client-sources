@@ -29,8 +29,7 @@ on showInfo me, tWindowList, tdata, tMode
       return 0
     end if
     if tHighlight then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
+      tFontStruct = getStructVariable("struct.font.bold")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(i & ".")
@@ -39,8 +38,6 @@ on showInfo me, tWindowList, tdata, tMode
       return 0
     end if
     if tHighlight then
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tElem.setText(tItem.getaProp(#score))
@@ -49,8 +46,6 @@ on showInfo me, tWindowList, tdata, tMode
       if tElem = 0 then
         return 0
       end if
-      tFontStruct = tElem.getFont()
-      tFontStruct.setaProp(#font, "vb")
       tElem.setFont(tFontStruct)
     end if
     tText = EMPTY

@@ -1,3 +1,35 @@
+property pFriendRenderQueue, pTasksPerUpdate, pNeedsRender
+
+on construct me
+  pFriendRenderQueue = []
+  pTasksPerUpdate = 6
+  pNeedsRender = 1
+  return me.ancestor.construct()
+end
+
+on hasQueue me
+  return pFriendRenderQueue.count > 0
+end
+
+on update me, tContentElem
+  if pFriendRenderQueue.count = 0 then
+    return 1
+  end if
+  me.renderFromQueue(tContentElem)
+end
+
+on renderListImage me
+  nothing()
+end
+
+on needsRender me
+  return pNeedsRender
+end
+
+on resetRenderFlag me
+  pNeedsRender = 0
+end
+
 on getViewImage me
   if me.pContentList.count = 0 then
     tID = getUniqueID()

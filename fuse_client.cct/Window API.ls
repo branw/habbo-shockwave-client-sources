@@ -42,14 +42,14 @@ on mergeWindow tID, tLayout
   end if
 end
 
-on activateWindow tID
+on activateWindowObj tID
   if voidp(tID) then
     return 0
   end if
   return getWindowManager().Activate(tID)
 end
 
-on deactivateWindow tID
+on deactivateWindowObj tID
   if voidp(tID) then
     return 0
   end if

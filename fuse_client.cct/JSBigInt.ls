@@ -209,3 +209,7 @@ end
 on BigInt_mont_
   -- unk26
 end
+
+on BigInt_printContent
+  -- unk26
+end

@@ -466,7 +466,6 @@ end
 
 on handle_stage_starting me, tMsg
   tConn = tMsg.connection
-  put "* received stage_starting"
   tdata = [:]
   tdata.setaProp(#game_type, tConn.GetIntFrom())
   tdata.setaProp(#room_marker, tConn.GetStrFrom())

@@ -10,8 +10,15 @@ on construct me
   pLastCursor = 0
   pUniqueSeed = 0
   pProcessList = []
-  pDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
-  pDecoder.setKey("sulake1Unique2Key3Generator")
+  if _player <> VOID then
+    if _player.traceScript or _movie.traceScript then
+      return 0
+    end if
+  end if
+  _player.traceScript = 0
+  _movie.traceScript = 0
+  pDecoder = createObject(#temp, ["tYy1rX5j7e4PLYJLER"])
+  pDecoder.qe2AkKOGGKDTTnd1Nei("sulake1Unique2Key3Generator")
   return 1
 end
 

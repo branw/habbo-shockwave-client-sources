@@ -216,6 +216,14 @@ on sendLatencyTest me
   return 0
 end
 
+on sendGetBadges me
+  if not connectionExists(getVariable("connection.info.id")) then
+    return 0
+  end if
+  tConnection = getConnection(getVariable("connection.info.id"))
+  return tConnection.send("GETSELECTEDBADGES")
+end
+
 on handleLatencyTest me, tID
   if voidp(pLatencyTestTimeStampList[string(tID)]) then
     return 0

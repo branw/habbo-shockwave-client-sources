@@ -66,7 +66,7 @@ on showRoom me, tRoomID
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then
-    activateWindow(pLoaderBarID)
+    activateWindowObj(pLoaderBarID)
   end if
   tRoomField = tRoomID & ".room"
   me.updateScreenOffset(tRoomID)
@@ -602,9 +602,16 @@ on getIgnoreStatus me, tUserID, tName
   end if
 end
 
-on unignoreAdmin me, tUserID, tBadge
+on unignoreAdmin me, tUserID, tBadges
   tIgnoreListObj = me.getIgnoreListObject()
-  if me.getComponent().userObjectExists(tUserID) and pModBadgeList.getOne(tBadge) > 0 then
+  tModBadgeFound = 0
+  repeat with tBadge in tBadges
+    if pModBadgeList.getOne(tBadge) > 0 then
+      tModBadgeFound = 1
+      exit repeat
+    end if
+  end repeat
+  if me.getComponent().userObjectExists(tUserID) and tModBadgeFound then
     tName = me.getComponent().getUserObject(tUserID).getName()
     if objectp(tIgnoreListObj) then
       return tIgnoreListObj.setIgnoreStatus(tName, 0)
@@ -869,11 +876,23 @@ on eventProcItemRollOver me, tEvent, tSprID, tProp
   if voidp(tGUI) or tGUI = 0 then
     return 0
   end if
+  tObject = me.getComponent().getItemObject(tSprID)
+  if tObject = 0 then
+    return tGUI.setRollOverInfo(EMPTY)
+  end if
   if tEvent = #mouseEnter then
-    tGUI.setRollOverInfo(me.getComponent().getItemObject(tSprID).getCustom())
+    tGUI.setRollOverInfo(tObject.getCustom())
   else
     if tEvent = #mouseLeave then
       tGUI.setRollOverInfo(EMPTY)
+    end if
+  end if
+  if not (getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller")) or the shiftDown and the optionDown then
+    if tObject.hasURL() then
+      tAdSystem = me.getComponent().getAd()
+      if tAdSystem <> 0 then
+        tAdSystem.eventProc(tEvent, tSprID, tObject.GetUrl())
+      end if
     end if
   end if
 end
@@ -1092,7 +1111,7 @@ on eventProcItemObj me, tEvent, tSprID, tParam
   end if
   if the shiftDown then
     if me.getComponent().itemObjectExists(tSprID) then
-      return me.outputObjectInfo(tSprID, "item", the rollover)
+      me.outputObjectInfo(tSprID, "item", the rollover)
     end if
   end if
   if pClickAction = "moveActive" or pClickAction = "placeActive" then
@@ -1108,7 +1127,8 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     me.hideArrowHiliter()
     return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
   end if
-  if me.getComponent().getItemObject(tSprID).select() then
+  tObject = me.getComponent().getItemObject(tSprID)
+  if tObject.select() then
     pSelectedObj = tSprID
     pSelectedType = "item"
     executeMessage(#showObjectInfo, pSelectedType)
@@ -1118,6 +1138,16 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     pSelectedType = "item"
     executeMessage(#showObjectInfo, pSelectedType)
     me.hideArrowHiliter()
+  end if
+  if not (getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller")) or the shiftDown and the optionDown then
+    if tObject.hasURL() then
+      executeMessage(#externalLinkClick, the mouseLoc)
+      openNetPage(tObject.GetUrl())
+      tAdSystem = me.getComponent().getAd()
+      if tAdSystem <> 0 then
+        tAdSystem.eventProc(#mouseLeave, tSprID, tObject.GetUrl())
+      end if
+    end if
   end if
 end
 

@@ -1,4 +1,4 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout, pBadgeDetailsWindowID
 
 on construct me
   pWindowList = []
@@ -8,10 +8,11 @@ on construct me
   pBadgeObjID = "room.obj.disp.badge.mngr"
   createObject(pBadgeObjID, "Badge Manager Class")
   pShowActions = 1
-  pShowUserTags = 0
+  pShowUserTags = 1
   pLastSelectedObjType = VOID
   pTagListObjID = "room.obj.disp.tags"
   createObject(pTagListObjID, "Tag List Class")
+  pBadgeDetailsWindowID = #badgeDetailsWindowID
   pBaseLocZ = 0
   pBaseWindowIds = getVariableValue("object.displayer.window.ids")
   me.createBaseWindows()
@@ -111,7 +112,11 @@ on showObjectInfo me, tObjType, tRefresh
   repeat with tPos = 1 to tWindowTypes.count
     tWindowType = tWindowTypes[tPos]
     case tWindowType of
-      "human":
+      "motto":
+        tID = pBaseWindowIds[#motto]
+        pWindowCreator.createMottoWindow(tID, tProps, tSelectedObj, pBadgeObjID, pShowUserTags)
+        me.pushWindowToDisplayList(tID)
+      "avatar":
         tID = pBaseWindowIds[#avatar]
         pWindowCreator.createHumanWindow(tID, tProps, tSelectedObj, pBadgeObjID, pShowUserTags)
         me.updateInfoStandGroup(tProps[#groupID])
@@ -130,21 +135,25 @@ on showObjectInfo me, tObjType, tRefresh
         me.pushWindowToDisplayList(tID)
       "tags_user":
         if pShowUserTags then
-          tID = pBaseWindowIds[#tags]
-          pWindowCreator.createUserTagsWindow(tID)
-          me.pushWindowToDisplayList(tID)
-          tTagsWindow = getWindow(tID)
-          tTagsElem = tTagsWindow.getElement("room_obj_disp_tags")
-          pTagListObj.setWidth(tTagsElem.getProperty(#width))
-          pTagListObj.setHeight(tTagsElem.getProperty(#height))
           tUserTagData = pTagLists.getaProp(tObj.getWebID())
           if not listp(tUserTagData) then
             tTagList = []
           else
             tTagList = tUserTagData[#tags]
           end if
-          tTagListImage = pTagListObj.createTagList(tTagList)
-          tTagsElem.feedImage(tTagListImage)
+          if tTagList.count > 0 then
+            tID = pBaseWindowIds[#tags]
+            pWindowCreator.createUserTagsWindow(tID)
+            me.pushWindowToDisplayList(tID)
+            tTagsWindow = getWindow(tID)
+            tTagsElem = tTagsWindow.getElement("room_obj_disp_tags")
+            pTagListObj.setWidth(tTagsElem.getProperty(#width))
+            pTagListObj.setHeight(tTagsElem.getProperty(#height))
+            tTagListImage = pTagListObj.createTagList(tTagList)
+            tTagsElem.feedImage(tTagListImage)
+            tOffset = tTagListImage.height - tTagsWindow.getProperty(#height)
+            tTagsWindow.resizeBy(0, tOffset)
+          end if
         end if
       "xp_user":
         tXP = tProps.getaProp(#xp)
@@ -173,7 +182,7 @@ on showObjectInfo me, tObjType, tRefresh
             next repeat
           end if
         end if
-        tID = pBaseWindowIds[#links]
+        tID = pBaseWindowIds[#actions]
         pWindowCreator.createActionsFurniWindow(tID, tObjType, pShowActions)
         me.pushWindowToDisplayList(tID)
       "bottom":
@@ -184,6 +193,7 @@ on showObjectInfo me, tObjType, tRefresh
     if windowExists(tID) then
       tWndObj = getWindow(tID)
       tWndObj.registerProcedure(#eventProc, me.getID(), #mouseUp)
+      tWndObj.registerProcedure(#eventProc, me.getID(), #mouseEnter)
       tWndObj.registerProcedure(#eventProc, me.getID(), #mouseWithin)
       tWndObj.registerProcedure(#eventProc, me.getID(), #mouseLeave)
     end if
@@ -245,20 +255,35 @@ on alignWindows me
   end if
   tDefLeftPos = getVariable("object.display.pos.left")
   tDefBottomPos = getVariable("object.display.pos.bottom")
+  tAlignments = getVariableValue("object.displayer.window.align", [:])
   tStageWidth = the stageRight - the stageLeft
   tDefLeftPos = tDefLeftPos + (tStageWidth - 720)
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     tWindowObj = getWindow(tWindowID)
     tWindowObj.moveZ(pBaseLocZ + (tIndex - 1) * 100)
-    if tIndex = pWindowList.count then
-      tWindowObj.moveTo(tDefLeftPos, tDefBottomPos - tWindowObj.getProperty(#height))
-      next repeat
+    tWindowType = pBaseWindowIds.getOne(tWindowID)
+    tAlignment = tAlignments.getaProp(tWindowType)
+    if voidp(tAlignment) then
+      tAlignment = #left
     end if
-    tPrevWindowID = pWindowList[tIndex + 1]
-    tPrevWindow = getWindow(tPrevWindowID)
-    tTopPos = tPrevWindow.getProperty(#locY) - tWindowObj.getProperty(#height)
-    tWindowObj.moveTo(tDefLeftPos, tTopPos)
+    tLeft = tDefLeftPos
+    if tIndex = pWindowList.count then
+      tNextWindowID = pWindowList[tIndex - 1]
+      tNextWindow = getWindow(tNextWindowID)
+      if tAlignment = #right then
+        tLeft = tDefLeftPos + tNextWindow.getProperty(#width) - tWindowObj.getProperty(#width)
+      end if
+      tTop = tDefBottomPos - tWindowObj.getProperty(#height)
+    else
+      tPrevWindowID = pWindowList[tIndex + 1]
+      tPrevWindow = getWindow(tPrevWindowID)
+      if tAlignment = #right then
+        tLeft = tDefLeftPos + tPrevWindow.getProperty(#width) - tWindowObj.getProperty(#width)
+      end if
+      tTop = tPrevWindow.getProperty(#locY) - tWindowObj.getProperty(#height)
+    end if
+    tWindowObj.moveTo(tLeft, tTop)
   end repeat
 end
 
@@ -318,14 +343,85 @@ on updateTagList me, tUserID, tTagList
   end if
 end
 
+on updateBadgeDetailsBubble me, tElemID
+  if not objectExists(#session) then
+    return 0
+  end if
+  tRoomThread = getThread(#room)
+  tSelectedObjID = tRoomThread.getInterface().getSelectedObject()
+  tSelectedObj = tRoomThread.getComponent().getUserObject(tSelectedObjID)
+  if not tSelectedObj then
+    return 0
+  end if
+  tBadges = tSelectedObj.getProperty(#badges)
+  if tBadges.ilk <> #propList then
+    tBadges = [:]
+  end if
+  tBadgeIndex = value(tElemID.char[tElemID.length])
+  if not integerp(tBadgeIndex) then
+    return 0
+  end if
+  tBadgeID = tBadges.getaProp(tBadgeIndex)
+  if voidp(tBadgeID) then
+    return 0
+  end if
+  tWindowID = pBaseWindowIds.getaProp(#avatar)
+  if not windowExists(tWindowID) then
+    return 0
+  end if
+  tWindow = getWindow(tWindowID)
+  if not tWindow.elementExists(tElemID) then
+    return 0
+  end if
+  if objectExists(pBadgeDetailsWindowID) then
+    removeObject(pBadgeDetailsWindowID)
+  end if
+  tElem = tWindow.getElement(tElemID)
+  tTargetRect = tElem.getProperty(#rect)
+  tBubble = createObject(pBadgeDetailsWindowID, "Details Bubble Class")
+  tBubble.createWithContent("badge_info.window", tTargetRect, #left)
+  tBubbleWindow = tBubble.getWindowObj()
+  tBubbleWindow.getElement("badge.info.name").setText(getText("badge_name_" & tBadgeID))
+  tBubbleWindow.getElement("badge.info.desc").setText(getText("badge_desc_" & tBadgeID))
+  return 1
+end
+
+on removeBadgeDetailsBubble me
+  if objectExists(pBadgeDetailsWindowID) then
+    removeObject(pBadgeDetailsWindowID)
+  end if
+end
+
 on eventProc me, tEvent, tSprID, tParam
   tComponent = getThread(#room).getComponent()
   tOwnUser = tComponent.getOwnUser()
   tInterface = getThread(#room).getInterface()
   tSelectedObj = tInterface.pSelectedObj
   tSelectedType = tInterface.pSelectedType
+  tSession = getObject(#session)
+  if tSprID contains "info_badge" then
+    case tEvent of
+      #mouseEnter:
+        if not me.updateBadgeDetailsBubble(tSprID) then
+          me.removeBadgeDetailsBubble()
+        end if
+      #mouseLeave:
+        me.removeBadgeDetailsBubble()
+      #mouseUp:
+        tSelectedObj = tInterface.getSelectedObject()
+        if tSelectedObj = tSession.GET("user_index") then
+          if objectExists(pBadgeObjID) then
+            getObject(pBadgeObjID).openBadgeWindow()
+          end if
+        end if
+    end case
+  end if
   if tEvent = #mouseUp then
     case tSprID of
+      "badges.button":
+        if objectExists(pBadgeObjID) then
+          getObject(pBadgeObjID).openBadgeWindow()
+        end if
       "dance.button":
         tCurrentDance = tOwnUser.getProperty(#dancing)
         if tCurrentDance > 0 then
@@ -450,7 +546,7 @@ on eventProc me, tEvent, tSprID, tParam
         if objectExists(pBadgeObjID) then
           getObject(pBadgeObjID).openBadgeWindow()
         end if
-      "room_obj_disp_home", "room_obj_disp_icon_home":
+      "room_obj_disp_home", "room_obj_disp_icon_home", "room_obj_disp_name":
         if variableExists("link.format.userpage") then
           tWebID = tComponent.getUserObject(tSelectedObj).getWebID()
           if not voidp(tWebID) then
@@ -458,13 +554,6 @@ on eventProc me, tEvent, tSprID, tParam
             executeMessage(#externalLinkClick, the mouseLoc)
             openNetPage(tDestURL)
           end if
-        end if
-      "info_badge":
-        tSession = getObject(#session)
-        tSelectedObj = tInterface.getSelectedObject()
-        if tSelectedObj = tSession.GET("user_index") then
-          tBadgeObj = getObject(pBadgeObjID)
-          tBadgeObj.toggleOwnBadgeVisibility()
         end if
       "info_group_badge":
         tSelectedObj = tInterface.getSelectedObject()
@@ -487,18 +576,20 @@ on eventProc me, tEvent, tSprID, tParam
       "room_obj_disp_close":
         pClosed = 1
         me.clearWindowDisplayList()
-      "room_obj_disp_looks", "room_obj_disp_icon_avatar":
-        tAllowModify = 1
-        if getObject(#session).exists("allow_profile_editing") then
-          tAllowModify = getObject(#session).GET("allow_profile_editing")
-        end if
-        if tAllowModify then
-          if threadExists(#registration) then
-            getThread(#registration).getComponent().openFigureUpdate()
+      "room_obj_disp_looks", "room_obj_disp_icon_avatar", "room_obj_disp_avatar", "outlook.button":
+        if tSelectedObj = tSession.GET("user_index") then
+          tAllowModify = 1
+          if getObject(#session).exists("allow_profile_editing") then
+            tAllowModify = getObject(#session).GET("allow_profile_editing")
           end if
-        else
-          executeMessage(#externalLinkClick, the mouseLoc)
-          openNetPage(getText("url_figure_editor"))
+          if tAllowModify then
+            if threadExists(#registration) then
+              getThread(#registration).getComponent().openFigureUpdate()
+            end if
+          else
+            executeMessage(#externalLinkClick, the mouseLoc)
+            openNetPage(getText("url_figure_editor"))
+          end if
         end if
       "room_obj_disp_tags":
         tTag = pTagListObj.getTagAt(tParam)
