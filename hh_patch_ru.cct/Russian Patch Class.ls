@@ -6,7 +6,11 @@ on construct me
     tSize = getIntVariable("win.font.size", 11)
     tLine = getIntVariable("win.font.line", 11)
   else
-    tFont = getVariable("mac.font.name", "Lucida Grande CY")
+    if value(_player.productVersion) >= 11 then
+      tFont = getVariable("mac.font.unicode.name", "Lucida Grande")
+    else
+      tFont = getVariable("mac.font.name", "Lucida Grande CY")
+    end if
     tSize = getIntVariable("mac.font.size", 11)
     tLine = getIntVariable("mac.font.line", 11)
   end if

@@ -590,6 +590,9 @@ on sendChat me, tChat
           createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
         end if
         return 1
+      ":ig":
+        executeMessage(#toggle_ig)
+        return 1
     end case
   end if
   if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then

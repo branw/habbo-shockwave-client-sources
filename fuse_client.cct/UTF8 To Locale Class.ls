@@ -26,8 +26,12 @@ on convertToUnicode me, tStr
     tValue = charToNum(tChar)
     tUnicodeValue = 0
     tIndex = tValue + 1
-    if tIndex <= pUnicodeValues.count then
-      tUnicodeValue = pUnicodeValues[tIndex]
+    if tValue < 128 then
+      tUnicodeValue = tValue
+    else
+      if tIndex <= pUnicodeValues.count then
+        tUnicodeValue = pUnicodeValues[tIndex]
+      end if
     end if
     if tUnicodeValue > 0 then
       tUnicodeData.add(tUnicodeValue)
@@ -46,8 +50,12 @@ on convertFromUnicode me, tUnicodeData
     tUnicodeValue = tUnicodeData[i]
     tlocalevalue = 0
     tIndex = tUnicodeValue + 1
-    if tIndex <= plocalevalues.count then
-      tlocalevalue = plocalevalues[tIndex]
+    if tUnicodeValue < 128 then
+      tlocalevalue = tUnicodeValue
+    else
+      if tIndex <= plocalevalues.count then
+        tlocalevalue = plocalevalues[tIndex]
+      end if
     end if
     if tlocalevalue > 0 then
       tResult = tResult & numToChar(tlocalevalue)
