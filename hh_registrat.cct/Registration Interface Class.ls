@@ -18,8 +18,8 @@ on construct me
   if not variableExists("permitted.name.chars") then
     setVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
   end if
-  if not variableExists("permitted.pwd.chars") then
-    setVariable("permitted.pwd.chars", getVariable("permitted.name.chars"))
+  if not variableExists("permitted.password.chars") then
+    setVariable("permitted.password.chars", getVariable("permitted.name.chars"))
   end if
   if not variableExists("denied.name.chars") then
     setVariable("denied.name.chars", "_")
@@ -1637,7 +1637,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
             return 0
           end if
         "char_pw_field", "char_pwagain_field":
-          tValidKeys = getVariable("permitted.pwd.chars")
+          tValidKeys = getVariable("permitted.password.chars")
           if pNameChecked = 0 then
             if not me.checkName() then
               return 1
@@ -1667,7 +1667,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
               getWindow(tWndID).getElement(tSprID).setText(EMPTY)
               pTempPassword[tSprID] = EMPTY
             otherwise:
-              tValidKeys = getVariable("permitted.pwd.chars")
+              tValidKeys = getVariable("permitted.password.chars")
               tTheKey = the key
               if not (tValidKeys = EMPTY) then
                 if not (tValidKeys contains tTheKey) then
@@ -1758,7 +1758,7 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
           if the keyCode > 122 and the keyCode < 127 then
             return 1
           end if
-          tValidKeys = getVariable("permitted.pwd.chars")
+          tValidKeys = getVariable("permitted.password.chars")
           tTheKey = the key
           if not (tValidKeys = EMPTY) then
             if not (tValidKeys contains tTheKey) then
