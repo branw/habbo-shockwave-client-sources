@@ -184,6 +184,13 @@ on handle_fullgamestatus me, tMsg
   end repeat
   tdata.addProp(#events, tList)
   tGameSystem = me.getGameSystem()
+  if not getObject(#session).exists(#gamespace_world_info) then
+    return 0
+  end if
+  tGameSpaceData = getObject(#session).get(#gamespace_world_info)
+  if listp(tGameSpaceData) then
+    tGameSystem.getVarMgr().set(#tournament_flag, tGameSpaceData[#tournament_flag])
+  end if
   tGameSystem.sendGameSystemEvent(#fullgamestatus_time, tdata[#time])
   tGameSystem.sendGameSystemEvent(#fullgamestatus_players, tdata[#players])
   tGameSystem.sendGameSystemEvent(#fullgamestatus_tiles, tdata[#flood])

@@ -26,9 +26,6 @@ end
 on deconstruct me
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#messenger_ready, me.getID())
-  repeat with tAnim in pSwapAnimations
-    tAnim.deconstruct()
-  end repeat
   return me.hideAll()
 end
 
@@ -95,6 +92,7 @@ on hideHotel me
   repeat with tAnim in pSwapAnimations
     tAnim.deconstruct()
   end repeat
+  pSwapAnimations = []
   return 1
 end
 

@@ -53,9 +53,6 @@ on deconstruct me
   pIgnoreListObj = VOID
   removeObject(pBadgeObjID)
   removeObject(pDoorBellID)
-  repeat with tAnim in pSwapAnimations
-    tAnim.deconstruct()
-  end repeat
   return me.hideAll()
 end
 
@@ -97,7 +94,7 @@ on showRoom me, tRoomID
     repeat with tAnimation in tAnimations
       tObj = createObject(#random, getVariableValue("swap.animation.class"))
       if tObj = 0 then
-        error(me, "Error creating swwap animation", #showRoom)
+        error(me, "Error creating swap animation", #showRoom)
         next repeat
       end if
       pSwapAnimations.add(tObj)
@@ -116,6 +113,10 @@ on hideRoom me
   pSelectedObj = EMPTY
   me.hideArrowHiliter()
   me.hideTrashCover()
+  repeat with tAnim in pSwapAnimations
+    tAnim.deconstruct()
+  end repeat
+  pSwapAnimations = []
   if visualizerExists(pRoomSpaceId) then
     removeVisualizer(pRoomSpaceId)
   end if
@@ -854,7 +855,7 @@ on getIgnoreStatus me, tUserID, tName
   end if
 end
 
-on uningoreAdmin me, tUserID, tBadge
+on unignoreAdmin me, tUserID, tBadge
   if me.getComponent().userObjectExists(tUserID) and pModBadgeList.getOne(tBadge) > 0 then
     tName = me.getComponent().getUserObject(tUserID).getName()
     if objectp(pIgnoreListObj) then
@@ -1553,7 +1554,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tParam = #userEnters then
       tloc = [5, 5]
     end if
-    if tObject <> me.getComponent().getOwnUser() or tParam = #userEnters then
+    if tObject = me.getComponent().getOwnUser() and tObject.getProperty(#moving) or tParam = #userEnters then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
     end if
   else

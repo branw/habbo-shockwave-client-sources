@@ -189,6 +189,7 @@ on store_gamelocation me, tParamList
   if getObject(#session) = 0 then
     return 0
   end if
+  tParamList.addProp(#tournament_flag, me.getVariableManager().get(#tournament_flag))
   getObject(#session).set(#gamespace_world_info, tParamList)
   me.getMessageSender().setInstanceListUpdates(0)
   tUnitId = tParamList[#unitId]

@@ -104,12 +104,6 @@ on checkUserName me, tNameStr
   return 1
 end
 
-on checkIsNameAvailable me, tNameStr
-  if connectionExists(getVariable("connection.info.id", #info)) then
-    getConnection(getVariable("connection.info.id", #info)).send("FINDUSER", [#string: pCheckingName, #string: "REGNAME"])
-  end if
-end
-
 on sendNewFigureDataToServer me, tPropList
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found", #sendNewFigureDataToServer)

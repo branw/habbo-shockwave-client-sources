@@ -42,6 +42,11 @@ on showCard me, tloc
     return 0
   end if
   tWndObj = getWindow(pCardWndID)
+  tUserRights = getObject(#session).get("user_rights")
+  tUserCanOpen = getObject(#session).get("room_owner") or tUserRights.findPos("fuse_pick_up_any_furni")
+  if not tUserCanOpen and tWndObj.getElement("open_package") <> 0 then
+    tWndObj.getElement("open_package").hide()
+  end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcCard, me.getID(), #mouseUp)
   tWndObj.getElement("package_msg").setText(pMessage)

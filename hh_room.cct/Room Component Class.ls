@@ -407,10 +407,10 @@ on sendChat me, tChat
         if getObject(#session).get("user_rights").getOne("fuse_performance_panel") then
           return performance()
         end if
-      ":tyhmadebug", ":tyhmalog", ":tyhmaloggertool":
+      ":debug", ":log", ":usestaffrights":
         if getObject(#session).get("user_rights").getOne("fuse_debug_window") then
           if not (the runMode contains "Author") then
-            me.sendChat(":tyhmalog")
+            me.sendChat(":log")
           end if
         end if
       ":editcatalogue":

@@ -40,9 +40,11 @@ on send_changeCfhType me, tCryID, tCategoryNum
   end if
   if tCategoryNum = 2 then
     tNewCategory = 1
+    executeMessage(#alert, [#msg: "hobba_sent_to_helpers"])
   else
     if tCategoryNum = 1 then
       tNewCategory = 2
+      executeMessage(#alert, [#msg: "hobba_sent_to_moderators"])
     else
       return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType)
     end if

@@ -1,4 +1,4 @@
-property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetType, pPetTemplateObj, pPetRacesList
+property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetType, pPetTemplateObj, pPetRacesList, pNameCheckPending
 
 on construct me
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
@@ -51,14 +51,12 @@ on construct me
     end if
     i = i + 1
   end repeat
-  registerMessage(#petapproved, me.getID(), #petNameApproved)
-  registerMessage(#petunacceptable, me.getID(), #petNameUnacceptable)
+  me.regMsgList(1)
   return 1
 end
 
 on deconstruct me
-  unregisterMessage(#petapproved, me.getID())
-  unregisterMessage(#petunacceptable, me.getID())
+  me.regMsgList(0)
   return 1
 end
 
@@ -245,6 +243,7 @@ on eventProc me, tEvent, tSprID, tProp
       tPet = numToChar(2) & pSelectedProduct["petRace"] & numToChar(2) & pSelectedProduct["petColor"]
       pSelectedProduct["extra_parm"] = tText & tPet
       if connectionExists(getVariable("connection.info.id", #info)) then
+        pNameCheckPending = 1
         getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tText, #short: 1])
       end if
     else
@@ -262,6 +261,34 @@ on eventProc me, tEvent, tSprID, tProp
         end if
       end if
     end if
+  end if
+  return 1
+end
+
+on handle_nameapproved me, tMsg
+  if not pNameCheckPending then
+    return 1
+  end if
+  pNameCheckPending = 0
+  tParm = tMsg.connection.GetIntFrom(tMsg)
+  if tParm = 0 then
+    me.petNameApproved()
+  else
+    me.petNameUnacceptable()
+  end if
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(36, #handle_nameapproved)
+  tCmds = [:]
+  tCmds.setaProp("APPROVENAME", 42)
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
   end if
   return 1
 end

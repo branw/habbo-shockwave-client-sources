@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pCanvasName, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
 
 on construct me
   pName = EMPTY
@@ -56,8 +56,8 @@ on deconstruct me
   releaseSprite(pSprite.spriteNum)
   releaseSprite(pMatteSpr.spriteNum)
   releaseSprite(pShadowSpr.spriteNum)
-  if memberExists(pCanvasName) and pCanvasName <> VOID then
-    removeMember(pCanvasName)
+  if memberExists(me.getCanvasName()) then
+    removeMember(me.getCanvasName())
   end if
   call(#deconstruct, pExtraObjs)
   pExtraObjs = VOID
@@ -69,12 +69,11 @@ end
 
 on define me, tdata
   me.setup(tdata)
-  pCanvasName = pClass && pName && me.getID() && "Canvas"
-  if not memberExists(pCanvasName) then
-    createMember(pCanvasName, #bitmap)
+  if not memberExists(me.getCanvasName()) then
+    createMember(me.getCanvasName(), #bitmap)
   end if
   tSize = pCanvasSize[#std]
-  pMember = member(getmemnum(pCanvasName))
+  pMember = member(getmemnum(me.getCanvasName()))
   pMember.image = image(tSize[1], tSize[2], tSize[3])
   pMember.regPoint = point(0, pMember.image.height + tSize[4])
   pBuffer = pMember.image.duplicate()
@@ -338,6 +337,8 @@ on getProperty me, tPropID
       return [pLocX, pLocY, pLocH]
     #mainAction:
       return pMainAction
+    #moving:
+      return me.pMoving
     #swimming:
       return me.pSwim
   end case
@@ -657,6 +658,10 @@ on flipImage me, tImg_a
   tQuad = [point(tImg_a.width, 0), point(0, 0), point(0, tImg_a.height), point(tImg_a.width, tImg_a.height)]
   tImg_b.copyPixels(tImg_a, tQuad, tImg_a.rect)
   return tImg_b
+end
+
+on getCanvasName me
+  return pClass && pName & me.getID() && "Canvas"
 end
 
 on action_mv me, tProps
