@@ -12,6 +12,9 @@ on deconstruct me
 end
 
 on getPreviewMember me, tImage
+  if tImage = VOID then
+    return 0
+  end if
   tMemNum = getmemnum("preview_rendered")
   member(tMemNum).image = tImage
   return tMemNum
