@@ -110,7 +110,7 @@ on send_cryPick me, tCryID, tGoHelp
       end if
     end if
     executeMessage(#pickAndGoCFH, tdata[#sender])
-    executeMessage(#roomForward, tdata, tdata[#type])
+    getConnection(getVariable("connection.info.id")).send("FOLLOW_CRYFORHELP", [#string: tCryID])
   end if
   return 1
 end

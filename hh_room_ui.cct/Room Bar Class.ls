@@ -1,13 +1,10 @@
-property pBottomBarId, pBottomBarExtensionsID, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID, pPopupControllerID, pTypingTimeoutName, pDisableRoomevents, pSignImg, pSignState, pOldPosH, pOldPosV
+property pBottomBarId, pFloodblocking, pFloodTimer, pMessengerFlash, pFloodEnterCount, pTextIsHelpTExt, pBouncerID, pPopupControllerID, pTypingTimeoutName, pDisableRoomevents, pSignImg, pSignState, pOldPosH, pOldPosV
 
 on construct me
   pBottomBarId = "RoomBarID"
-  pBottomBarExtensionsID = "RoomBarExtension"
   pFloodblocking = 0
   pMessengerFlash = 0
   pFloodTimer = 0
-  pNewMsgCount = 0
-  pNewBuddyReq = 0
   pFloodEnterCount = 0
   pTextIsHelpTExt = 0
   pBouncerID = #roombar_messenger_icon_bouncer
@@ -19,8 +16,9 @@ on construct me
   end if
   registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
-  registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
+  registerMessage(#updateFriendListIcon, me.getID(), #updateFriendListIcon)
   registerMessage(#soundSettingChanged, me.getID(), #updateSoundButton)
+  registerMessage(#IMStateChanged, me.getID(), #updateIMIcon)
   return 1
 end
 
@@ -28,15 +26,12 @@ on deconstruct me
   if timeoutExists(pTypingTimeoutName) then
     removeTimeout(pTypingTimeoutName)
   end if
-  if objectExists(pBottomBarExtensionsID) then
-    removeObject(pBottomBarExtensionsID)
-  end if
+  getThread(#room).getComponent().removeIconBarManager()
   unregisterMessage(#notify, me.getID())
   unregisterMessage(#updateMessageCount, me.getID())
-  unregisterMessage(#updateBuddyrequestCount, me.getID())
-  unregisterMessage(#objectFinalized, me.getID())
+  unregisterMessage(#updateFriendListIcon, me.getID())
   unregisterMessage(#soundSettingChanged, me.getID())
-  unregisterMessage(#showInvitation, me.getID())
+  unregisterMessage(#IMStateChanged, me.getID())
   return 1
 end
 
@@ -44,11 +39,8 @@ on showRoomBar me
   if not windowExists(pBottomBarId) then
     createWindow(pBottomBarId, "empty.window", 0, 487)
   end if
-  if not objectExists(pBottomBarExtensionsID) then
-    createObject(pBottomBarExtensionsID, "Room Bar Extensions Manager")
-    tObj = getObject(pBottomBarExtensionsID)
-    tObj.define(pBottomBarId)
-  end if
+  tManager = getThread(#room).getComponent().getIconBarManager()
+  tManager.define(pBottomBarId)
   tWndObj = getWindow(pBottomBarId)
   if tWndObj = 0 then
     return 0
@@ -67,6 +59,7 @@ on showRoomBar me
     tEventsIcon = tWndObj.getElement("int_event_image")
     tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
   end if
+  me.updateIMIcon()
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #keyDown)
@@ -76,8 +69,6 @@ on showRoomBar me
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseWithin)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUpOutSide)
   me.updateSoundButton()
-  executeMessage(#messageUpdateRequest)
-  executeMessage(#buddyUpdateRequest)
   return 1
 end
 
@@ -91,10 +82,8 @@ on hideRoomBar me
   if objectExists(pBouncerID) then
     removeObject(pBouncerID)
   end if
-  if objectExists(pBottomBarExtensionsID) then
-    tObj = getObject(pBottomBarExtensionsID)
-    tObj.hideExtensions()
-  end if
+  tManager = getThread(#room).getComponent().getIconBarManager()
+  tManager.hideExtensions()
 end
 
 on applyChatHelpText me
@@ -133,29 +122,31 @@ on setRollOverInfo me, tInfo
   end if
 end
 
-on updateMessageCount me, tMsgCount
-  if windowExists(pBottomBarId) then
-    if value(tMsgCount) > pNewMsgCount then
-      me.bounceMessengerIcon(1)
-    end if
-    pNewMsgCount = value(tMsgCount)
-    me.flashMessengerIcon()
+on updateMessageCount me, tCount
+  if tCount > 0 then
+    me.updateFriendListIcon(1)
+  else
+    me.updateFriendListIcon(0)
   end if
-  return 1
 end
 
-on updateBuddyrequestCount me, tReqCount
-  if windowExists(pBottomBarId) then
-    if value(tReqCount) > pNewBuddyReq then
-      me.bounceMessengerIcon(1)
-    end if
-    pNewBuddyReq = value(tReqCount)
-    me.flashMessengerIcon()
+on updateFriendListIcon me, tActive
+  tWndObj = getWindow(pBottomBarId)
+  if tWndObj = 0 then
+    return 0
   end if
-  return 1
+  tIconElem = tWndObj.getElement("friend_list_icon")
+  if not tIconElem then
+    return 0
+  end if
+  if tActive then
+    tIconElem.setProperty(#member, "friend_list_icon_notification")
+  else
+    tIconElem.setProperty(#member, "friend_list_icon")
+  end if
 end
 
-on bounceMessengerIcon me, tstate
+on bounceIMIcon me, tstate
   if variableExists("bounce.messenger.icon") then
     if not getVariable("bounce.messenger.icon") then
       return 0
@@ -169,48 +160,11 @@ on bounceMessengerIcon me, tstate
     return 1
   end if
   if tstate then
-    tBouncer.registerElement(pBottomBarId, ["int_messenger_image", "messenger_icon_shadow"])
+    tBouncer.registerElement(pBottomBarId, ["im_icon"])
     tBouncer.setBounce(1)
   else
     tBouncer.setBounce(0)
   end if
-end
-
-on flashMessengerIcon me
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj = 0 then
-    return 0
-  end if
-  if not tWndObj.elementExists("int_messenger_image") then
-    return 0
-  end if
-  if pMessengerFlash then
-    tmember = "mes_lite_icon"
-    pMessengerFlash = 0
-  else
-    tmember = "mes_dark_icon"
-    pMessengerFlash = 1
-  end if
-  if pNewMsgCount = 0 and pNewBuddyReq = 0 then
-    me.bounceMessengerIcon(0)
-    tmember = "mes_dark_icon"
-    if timeoutExists(#flash_messenger_icon) then
-      removeTimeout(#flash_messenger_icon)
-    end if
-  else
-    if pNewMsgCount > 0 then
-      if not timeoutExists(#flash_messenger_icon) then
-        createTimeout(#flash_messenger_icon, 500, #flashMessengerIcon, me.getID(), VOID, 0)
-      end if
-    else
-      tmember = "mes_lite_icon"
-      if timeoutExists(#flash_messenger_icon) then
-        removeTimeout(#flash_messenger_icon)
-      end if
-    end if
-  end if
-  tWndObj.getElement("int_messenger_image").getProperty(#sprite).setMember(member(getmemnum(tmember)))
-  return 1
 end
 
 on updateSoundButton me
@@ -273,6 +227,41 @@ on showVote me
     pOldPosV = -1
     pSignImg = image(member(getmemnum("pelle_kyltti2")).width, member(getmemnum("pelle_kyltti2")).height, 16)
   end if
+end
+
+on updateIMIcon me
+  if not windowExists(pBottomBarId) then
+    return 0
+  end if
+  if not threadExists("instant_messenger") then
+    return 0
+  end if
+  tstate = getThread("instant_messenger").getInterface().getState()
+  if voidp(tstate) then
+    tstate = #inactive
+  end if
+  tWnd = getWindow(pBottomBarId)
+  tElem = tWnd.getElement("im_icon")
+  if tElem = 0 then
+    return 0
+  end if
+  case tstate of
+    #Active:
+      tmember = getMember("im.icon.active")
+      tElem.setProperty(#cursor, "cursor.finger")
+      me.bounceIMIcon(0)
+    #highlighted:
+      tmember = getMember("im.icon.highlighted")
+      tElem.setProperty(#cursor, "cursor.finger")
+      me.bounceIMIcon(1)
+    #inactive:
+      tmember = getMember("im.icon.inactive")
+      tElem.setProperty(#cursor, 0)
+      me.bounceIMIcon(0)
+  end case
+  return 0
+  tElem.setProperty(#member, tmember)
+  return 1
 end
 
 on eventProcRoomBar me, tEvent, tSprID, tParam
@@ -428,19 +417,6 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
             me.setRollOverInfo(EMPTY)
           end if
         end if
-      "int_messenger_image":
-        if tEvent = #mouseUp then
-          me.bounceMessengerIcon(0)
-          executeMessage(#show_hide_messenger)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_messenger", "interface_icon_messenger")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
       "int_hand_image":
         if tEvent = #mouseUp then
           getThread(#room).getInterface().getContainer().openClose()
@@ -481,6 +457,28 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         end if
       "int_drop_vote":
         me.eventProcVote(tEvent, tSprID, tParam)
+      "im_icon":
+        case tEvent of
+          #mouseUp:
+            return executeMessage(#toggle_im)
+          #mouseEnter:
+            me.setRollOverInfo(getText("im_tooltip"))
+          #mouseLeave:
+            me.setRollOverInfo(EMPTY)
+        end case
+      "friend_list_icon":
+        if tEvent = #mouseUp then
+          executeMessage(#toggle_friend_list)
+        else
+          if tEvent = #mouseEnter then
+            tInfo = getText("friend_list_title")
+            me.setRollOverInfo(tInfo)
+          else
+            if tEvent = #mouseLeave then
+              me.setRollOverInfo(EMPTY)
+            end if
+          end if
+        end if
     end case
   end if
   if tEvent = #mouseEnter or tEvent = #mouseLeave then
@@ -532,6 +530,9 @@ on eventProcVote me, tEvent, tSprID, tParam
         else
           if tEvent = #mouseWithin then
             if voidp(pSignState) then
+              return 
+            end if
+            if voidp(pSignImg) then
               return 
             end if
             w = 40

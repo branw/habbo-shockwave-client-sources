@@ -18,7 +18,7 @@ on reset me
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(744, 479)
+    pSprite.loc = point(804, 509)
     pOffset = [-2, -1]
     pTurnPnt = 488
   else

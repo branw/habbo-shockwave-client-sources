@@ -18,13 +18,13 @@ on reset me
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(750, 483)
+    pSprite.loc = point(786, 501)
     pOffset = [-2, -1]
     pTurnPnt = 470
   else
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 1
-    pSprite.loc = point(208, 493)
+    pSprite.loc = point(192, 501)
     pOffset = [2, -1]
     pTurnPnt = 464
   end if
@@ -49,7 +49,7 @@ on update me
     tMemName = tMemName.char[1..length(tMemName) - 1] & tDirNum
     pSprite.castNum = getmemnum(tMemName)
   end if
-  if pSprite.locV > 492 then
+  if pSprite.locV > 500 then
     return me.reset()
   end if
 end

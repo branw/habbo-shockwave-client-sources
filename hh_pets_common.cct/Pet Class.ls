@@ -147,6 +147,10 @@ on update me
   end if
 end
 
+on getWebID me
+  return 0
+end
+
 on setUserTypingStatus me, tStatus
   nothing()
 end

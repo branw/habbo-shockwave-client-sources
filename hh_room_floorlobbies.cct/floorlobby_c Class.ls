@@ -18,10 +18,12 @@ on construct me
     tSpr.member.paletteRef = member(getmemnum("floorlobby_c palette"))
     i = i + 1
   end repeat
+  tsprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("lobby_pipe")
+  tLocH = tsprite.locH
   pBubbleList = []
   repeat with i = 1 to 15
     tObj = createObject(#temp, "Floor Bubble Bottom Class")
-    tObj.define(tRoomVis.getSprById("bubble" & i))
+    tObj.define(tRoomVis.getSprById("bubble" & i), tLocH)
     pBubbleList.add(tObj)
   end repeat
   receiveUpdate(me.getID())

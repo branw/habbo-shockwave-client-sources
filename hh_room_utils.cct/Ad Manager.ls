@@ -110,6 +110,9 @@ on Init me, tSourceURL, tClickURL, tRegisteredLayout
 end
 
 on adLoaded me
+  if timeoutExists(pTimeOutID) then
+    removeTimeout(pTimeOutID)
+  end if
   createTimeout(pTimeOutID, 5000, #adReady, me.getID(), VOID, 1)
 end
 
@@ -275,7 +278,7 @@ on eventProc me, tEvent, tSprID, tParm
     else
       if tEvent = #mouseLeave then
         if pToolTipSpr.ilk = #sprite then
-          pToolTipSpr.locH = 1000
+          pToolTipSpr.locH = the stageRight + 1000
         end if
       end if
     end if

@@ -1,10 +1,10 @@
 property pSprite, pAreaWidth, pAreaHeight, pLocV, pOffV, pMuutos, pMuutos2, pMiddle, pMaksimi, pFromLeft, pDivPi
 
-on define me, tsprite
+on define me, tsprite, tLocH
   pSprite = tsprite
   pAreaWidth = 185
   pAreaHeight = 234
-  pFromLeft = 326
+  pFromLeft = tLocH - pAreaWidth / 2
   pDivPi = PI / 180
   me.replace()
   return 1

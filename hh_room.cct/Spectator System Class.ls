@@ -106,7 +106,6 @@ end
 on showSpectatorView me
   tRoomInt = getObject(#room_interface)
   if objectp(tRoomInt) then
-    tRoomInt.hideInterface(#Remove)
     executeMessage(#removeObjectInfo)
     tRoomInt.showRoomBar()
     if tRoomInt.getHiliter() <> 0 then
@@ -117,7 +116,11 @@ on showSpectatorView me
   if visualizerExists(pVisualizerId) then
     return 1
   end if
-  createVisualizer(pVisualizerId, "habbo_tv.visual")
+  if (the stage).rect.width <= 720 then
+    createVisualizer(pVisualizerId, "habbo_tv.visual")
+  else
+    createVisualizer(pVisualizerId, "habbo_tv_wide.visual")
+  end if
   tVisObj = getVisualizer(pVisualizerId)
   tRoomVis = tRoomInt.getRoomVisualizer()
   if tRoomVis = 0 then

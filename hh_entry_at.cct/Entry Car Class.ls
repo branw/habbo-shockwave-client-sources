@@ -28,8 +28,8 @@ on reset me
     pSprite.flipH = 0
     pHAdv = -2
     pVAdv = 1
-    pSprite.locV = 327
-    pSprite.locH = 730
+    pSprite.locV = 330
+    pSprite.locH = 724
   end if
   pSprite.ink = 41
   pSprite.backColor = random(150) + 20

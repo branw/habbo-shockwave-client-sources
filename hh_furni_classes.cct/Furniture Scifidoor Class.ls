@@ -1,4 +1,4 @@
-property pChanges, pActive, pLastActive, pScifiDoorSpeed, pScifiDoorLocs, pScifiDoorTimer, pScifiDoorTimeOut, pDoubleClick, pSizeMultiplier
+property pChanges, pActive, pLastActive, pScifiDoorSpeed, pScifiDoorLocs, pScifiDoorTimer, pScifiDoorTimeOut, pDoubleClick, pSizeMultiplier, pStopped
 
 on construct me
   pLastActive = -1
@@ -7,6 +7,7 @@ on construct me
   pScifiDoorLocs = [0, 0, 0]
   pScifiDoorTimer = 0
   pDoubleClick = 0
+  pStopped = 1
   if me.pXFactor = 32 then
     pSizeMultiplier = 0.5
   else
@@ -37,6 +38,7 @@ on updateStuffdata me, tValue
     me.setOff()
   end if
   pScifiDoorTimer = the timer
+  pStopped = 0
   pChanges = 1
   pDoubleClick = 0
 end
@@ -61,13 +63,13 @@ on updateScifiDoor me
   if pLastActive = 0 and pActive = 0 then
     pScifiDoorLocs = [tTopSp.locV, tMidSp1.locV, tMidSp2.locV]
   end if
-  if pActive = 0 and pLastActive = -1 then
+  if pStopped and pActive = 0 and pLastActive = -1 then
     pScifiDoorLocs = [tTopSp.locV, tMidSp1.locV, tMidSp2.locV]
     pLastActive = 0
     pChanges = 0
     return 1
   end if
-  if pLastActive = 1 and pActive = 1 or pLastActive = -1 then
+  if pStopped and (pLastActive = 1 and pActive = 1 or pLastActive = -1) then
     pScifiDoorLocs = [tTopSp.locV, tMidSp1.locV, tMidSp2.locV]
     return me.SetScifiDoor("down")
   end if
@@ -127,6 +129,7 @@ on SetScifiDoor me, tdir
   end if
   pChanges = 0
   pLastActive = pActive
+  pStopped = 1
   return 1
 end
 

@@ -34,6 +34,7 @@ on prepare me
   tProps[#startFrame] = 0
   tProps[#MemberName] = "splash_"
   tProps[#id] = "Splash0"
+  tProps[#loc] = point(the stageRight + 1000, 0)
   pSplashs["Splash0"].setData(tProps)
   if not objectExists(#waterripples) then
     createObject(#waterripples, "Water Ripple Effects Class")

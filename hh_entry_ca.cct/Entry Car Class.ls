@@ -1,6 +1,7 @@
-property pSprite, pOffset, pTurnPnt, pDirection, pPausedTime
+property pSprite, pOffset, pTurnPnt, pDirection, pPausedTime, pIndex
 
 on define me, tsprite, tCount
+  pIndex = tCount - 1
   if tCount mod 2 then
     tdir = #right
   else
@@ -19,13 +20,13 @@ on reset me
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(732, 477)
+    pSprite.loc = point(782, 497)
     pOffset = [-2, -1]
-    pTurnPnt = 488
+    pTurnPnt = 494
   else
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 1
-    pSprite.loc = point(213, 505)
+    pSprite.loc = point(217, 505)
     pOffset = [2, -1]
     pTurnPnt = 487
   end if
@@ -33,7 +34,7 @@ on reset me
   pSprite.height = pSprite.member.height
   pSprite.ink = 41
   pSprite.backColor = random(150) + 20
-  pPausedTime = random(150)
+  pPausedTime = pIndex * 30 + random(50)
 end
 
 on update me
@@ -51,6 +52,11 @@ on update me
     pSprite.castNum = getmemnum(tMemName)
   end if
   if pSprite.locV > 510 then
+    if random(2) = 1 then
+      pDirection = #left
+    else
+      pDirection = #right
+    end if
     return me.reset()
   end if
 end

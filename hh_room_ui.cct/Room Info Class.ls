@@ -136,8 +136,10 @@ on showEventInfo me
   tCanQuit = tUserRights.getOne("fuse_cancel_roomevent") <> 0
   if tRoomOwner or tCanQuit then
     tWnd.getElement("room_info_event_details_quit").show()
+    tWnd.getElement("room_info_event_details_edit").show()
   else
     tWnd.getElement("room_info_event_details_quit").hide()
+    tWnd.getElement("room_info_event_details_edit").hide()
   end if
 end
 
@@ -148,6 +150,11 @@ end
 on quitEvent me
   tConn = getConnection(getVariable("connection.info.id", #Info))
   tConn.send("QUIT_ROOMEVENT")
+  me.removeEventInfo()
+end
+
+on editEvent me
+  executeMessage(#editRoomevent)
   me.removeEventInfo()
 end
 
@@ -171,5 +178,7 @@ on eventProcEventInfo me, tEvent, tSprID, tParam
       me.removeEventInfo()
     "room_info_event_details_quit":
       me.quitEvent()
+    "room_info_event_details_edit":
+      me.editEvent()
   end case
 end

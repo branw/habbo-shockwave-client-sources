@@ -183,10 +183,11 @@ on showGameScoreWindows me
   if not windowExists(pTeamScoreWindowId) then
     if createWindow(pTeamScoreWindowId, "team_stats.window") then
       tWndObj = getWindow(pTeamScoreWindowId)
+      tLocH = (the stage).rect.width - 54
       if me.getGameSystem().getSpectatorModeFlag() then
-        tWndObj.moveTo(636, 40)
+        tWndObj.moveTo(tLocH - 30, 40)
       else
-        tWndObj.moveTo(666, 70)
+        tWndObj.moveTo(tLocH, 70)
       end if
       tWndObj.lock()
       repeat with tTeamId = 1 to 4
@@ -200,7 +201,8 @@ on showGameScoreWindows me
   if not windowExists(pOwnScoreWindowId) and not me.getGameSystem().getSpectatorModeFlag() then
     if createWindow(pOwnScoreWindowId, "personal_stats.window") then
       tWndObj = getWindow(pOwnScoreWindowId)
-      tWndObj.moveTo(666, 10)
+      tLocH = (the stage).rect.width - 54
+      tWndObj.moveTo(tLocH, 10)
       tWndObj.lock()
       me.renderPersonalScores(me.getOwnScore())
     else

@@ -1,10 +1,10 @@
 property pSprite, pAreaWidth, pAreaHeight, v, vm, pMuutos, pMuutos2, pMiddle, pMaksimi, pFromLeft, pDivPi
 
-on define me, tIndex
+on define me, tIndex, tLocH
   pSprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("bubble" & tIndex)
   pAreaWidth = 20
   pAreaHeight = 220
-  pFromLeft = 310
+  pFromLeft = tLocH - pAreaWidth / 2
   pDivPi = PI / 180
   me.replace()
   return 1

@@ -49,6 +49,15 @@ on showLogin me
       tElem.pMember.fontSize = getIntVariable("username_input.font.size")
     end if
   end if
+  if variableExists("xxx.username") and variableExists("xxx.password") then
+    tUserName = getVariable("xxx.username")
+    tPassword = getVariable("xxx.password")
+    pTempPassword = tPassword
+    tWndObj.getElement("login_username").setText(tUserName)
+    setVariable("xxx.username", EMPTY)
+    setVariable("xxx.password", EMPTY)
+    me.tryLogin()
+  end if
   return 1
 end
 

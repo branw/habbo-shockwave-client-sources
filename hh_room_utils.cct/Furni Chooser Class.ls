@@ -160,14 +160,5 @@ on eventProcChooser me, tEvent, tSprID, tParam
       tRoomInt.pSelectedType = ttype
       executeMessage(#showObjectInfo, ttype)
       tRoomInt.hideArrowHiliter()
-      if ttype = "item" then
-        if tItemObj.select() then
-          tRoomInt.showInterface(ttype)
-        else
-          tRoomInt.hideInterface(#hide)
-        end if
-      else
-        tRoomInt.showInterface(ttype)
-      end if
   end case
 end

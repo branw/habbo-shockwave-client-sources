@@ -1,4 +1,4 @@
-property pAnimThisUpdate, pSin, pSpriteList, pOrigLocs, pWallLightSprites, pWallLightValues, pWallLightCount, pTileSprites
+property pAnimThisUpdate, pSin, pSpriteList, pOrigLocs, pWallLightSprites, pWallLightValues, pWallLightCount, pTileSprites, pWallLeft, pWallRight, pWallCenter
 
 on construct me
   pSin = 0.0
@@ -57,6 +57,10 @@ on getSpriteList me
   if tObj = 0 then
     return 0
   end if
+  tsprite = tObj.getSprById("disco_wall")
+  pWallLeft = tsprite.locH - tsprite.member.regPoint.locH
+  pWallRight = pWallLeft + tsprite.member.width
+  pWallCenter = pWallLeft + 288
   repeat with i = 1 to 2
     tSp1 = tObj.getSprById("disco_bulb_" & i)
     tSp2 = tObj.getSprById("disco_light_" & i)
@@ -100,7 +104,7 @@ on createWallLights me
     pWallLightSprites[i] = sprite(tSpriteChannel)
     pWallLightSprites[i].ink = 32
     pWallLightSprites[i].blend = random(70)
-    pWallLightSprites[i].locH = 64 + random(608 - 65)
+    pWallLightSprites[i].locH = pWallLeft + random(pWallRight - pWallLeft)
     pWallLightSprites[i].member = getMember("lightspot_1")
   end repeat
   return 1
@@ -116,16 +120,16 @@ on rotateWallLights me
     pWallLightValues[i][2] = tDimValue
     tLocH = pWallLightSprites[i].locH
     tLocH = tLocH + 2
-    if tLocH > 608 then
-      tLocH = 65
+    if tLocH > pWallRight then
+      tLocH = pWallLeft
       pWallLightSprites[i].flipH = 0
       pWallLightValues[i][1] = random(155)
     end if
-    if tLocH > 353 then
+    if tLocH > pWallCenter then
       pWallLightSprites[i].flipH = 1
-      tLocV = 38 + (tLocH - 353) * 0.5 + pWallLightValues[i][1]
+      tLocV = 38 + (tLocH - pWallCenter) * 0.5 + pWallLightValues[i][1]
     else
-      tLocV = 38 + (353 - tLocH) * 0.5 + pWallLightValues[i][1]
+      tLocV = 38 + (pWallCenter - tLocH) * 0.5 + pWallLightValues[i][1]
     end if
     pWallLightSprites[i].loc = point(tLocH, tLocV)
     pWallLightSprites[i].blend = max(0, sin(tDimValue) * 60)

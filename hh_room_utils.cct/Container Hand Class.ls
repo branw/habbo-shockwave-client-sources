@@ -43,8 +43,9 @@ on open me, tStripInfo
     if not createVisualizer(pHandVisID, "habbo_hand.visual") then
       return 0
     end if
+    tScreenWidth = the stageRight - the stageLeft
     tHandVisualizer = getVisualizer(pHandVisID)
-    tHandVisualizer.moveTo(694, -137)
+    tHandVisualizer.moveTo(tScreenWidth - 26, -137)
     tHandVisualizer.setProperty(#locZ, -1000)
     tSprList = tHandVisualizer.getProperty(#spriteList)
     call(#registerProcedure, tSprList, #eventProcContainer, me.getID(), #mouseDown)

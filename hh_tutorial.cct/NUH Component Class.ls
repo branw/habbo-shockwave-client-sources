@@ -118,15 +118,17 @@ on tryToShowHelp me, tHelpId
   end if
   case tHelpId of
     "messenger":
-      if not threadExists("messenger") then
+      if not threadExists(#friend_list) then
         return 0
       end if
-      tMessengerComponent = getThread("messenger").getComponent()
-      tMsgCount = tMessengerComponent.getNumOfMessages()
-      tRequestCount = tMessengerComponent.getPendingRequestCount()
-      if tMsgCount > 0 or tRequestCount > 0 then
-        me.getInterface().showGenericHelp(tHelpId)
-        pOpenHelps.add(tHelpId)
+      tFriendListComponent = getThread(#friend_list).getComponent()
+      tRequests = tFriendListComponent.getPendingFriendRequests()
+      if ilk(tRequests) = #propList then
+        tRequestCount = tRequests.count
+        if tRequestCount > 0 then
+          me.getInterface().showGenericHelp(tHelpId)
+          pOpenHelps.add(tHelpId)
+        end if
       end if
     "navigator":
       me.getInterface().showGenericHelp(tHelpId)

@@ -128,15 +128,14 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tRoomOwner = tSessionObj.GET("room_owner")
     tAnyRoomController = tUserRights.getOne("fuse_any_room_controller")
     tRoomController = tSessionObj.GET("room_controller")
-    if threadExists(#messenger) then
-      tBuddyData = getThread(#messenger).getComponent().getBuddyData()
-      tBuddyList = tBuddyData.getaProp(#buddies)
-      repeat with tBuddy in tBuddyList
-        if tBuddy.name = tTargetUserName then
-          tButtonList["friend"] = #deactive
-          exit repeat
-        end if
-      end repeat
+    if threadExists(#friend_list) then
+      tComponent = getThread(#friend_list).getComponent()
+      tFriendData = tComponent.getFriendByName(tTargetUserName)
+      if ilk(tFriendData) = #propList then
+        tButtonList["friend"] = #deactive
+      end if
+    else
+      tButtonList["friend"] = #deactive
     end if
     tRoomComponent = getThread(#room).getComponent()
     tNotPrivateRoom = tRoomComponent.getRoomID() <> "private"

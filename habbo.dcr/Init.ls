@@ -1,6 +1,6 @@
 on exitFrame me
   if netDone() then
-    startClient()
+    initCore()
   else
     go(the frame)
   end if

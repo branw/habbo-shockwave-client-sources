@@ -28,11 +28,11 @@ on showHideRoomKiosk me
 end
 
 on ChangeWindowView me, tWindowName
-  createWindow(pWindowTitle)
+  createWindow(pWindowTitle, VOID, VOID, VOID, #modal)
   if windowExists(pWindowTitle) then
     tWndObj = getWindow(pWindowTitle)
     tWndObj.merge(tWindowName)
-    tWndObj.moveTo(0, -4)
+    tWndObj.moveTo(((the stage).rect.width - tWndObj.getProperty(#width)) / 2, (the stage).rect.height - tWndObj.getProperty(#height))
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProc, me.getID(), #mouseUp)
     tWndObj.registerProcedure(#eventProc, me.getID(), #keyDown)

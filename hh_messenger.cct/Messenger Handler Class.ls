@@ -7,10 +7,11 @@ on deconstruct me
 end
 
 on handle_ok me, tMsg
-  return tMsg.connection.send("MESSENGERINIT")
 end
 
 on handle_messenger_init me, tMsg
+  me.getComponent().send_AskForFriendRequests()
+  return me.getComponent().receive_MessengerReady("MESSENGERREADY")
   tConn = tMsg.connection
   if tConn = 0 then
     return 0
@@ -52,6 +53,7 @@ on handle_buddylist me, tMsg
 end
 
 on handle_console_update me, tMsg
+  return 
   tConn = tMsg.connection
   if tConn = 0 then
     return 0
@@ -201,7 +203,6 @@ on handle_messenger_message me, tMsg
   if tdata <> 0 then
     me.getComponent().receive_Message(tdata)
   end if
-  playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   return 1
 end
 
@@ -218,7 +219,6 @@ on handle_messenger_messages me, tMsg
     end if
   end repeat
   if tMessageCount > 1 then
-    playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   end if
   return 1
 end
@@ -229,6 +229,7 @@ on handle_add_buddy me, tMsg
 end
 
 on handle_remove_buddy me, tMsg
+  return 
   tdata = me.get_user_list(tMsg)
   return me.getComponent().receive_RemoveBuddies(tdata)
 end
@@ -343,15 +344,15 @@ on get_buddy_info me, tMsg
   end if
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
-  tdata[#customText] = tConn.GetStrFrom()
-  tdata[#online] = tConn.GetIntFrom()
-  if tdata[#online] then
-    tdata[#location] = tConn.GetStrFrom()
-    tdata[#lastAccess] = EMPTY
-  else
-    tdata[#location] = EMPTY
-    tdata[#lastAccess] = tConn.GetStrFrom()
-  end if
+  tdata[#name] = string(tConn.GetStrFrom())
+  tdata[#gender] = tConn.GetIntFrom()
+  tdata[#null] = tConn.GetStrFrom()
+  tdata[#online] = tConn.GetBoolFrom()
+  tdata[#canfollow] = tConn.GetIntFrom()
+  tdata[#location] = EMPTY
+  tdata[#lastAccess] = tConn.GetStrFrom()
+  tdata[#figure] = tConn.GetStrFrom()
+  tdata[#category] = tConn.GetIntFrom()
   return tdata
 end
 
@@ -373,11 +374,13 @@ on get_user_info me, tMsg
   end if
   tdata[#customText] = tConn.GetStrFrom()
   tdata[#online] = tConn.GetIntFrom()
-  tdata[#location] = tConn.GetStrFrom()
+  tdata[#canfollow] = tConn.GetIntFrom()
+  tdata[#location] = EMPTY
   tdata[#lastAccess] = tConn.GetStrFrom()
   tdata[#FigureData] = tConn.GetStrFrom()
   tdata[#msgs] = 0
   tdata[#update] = 1
+  tCategoryId = tConn.GetIntFrom()
   return tdata
 end
 
@@ -454,14 +457,13 @@ on handle_invitation_follow_failed me, tMsg
 end
 
 on regMsgList me, tBool
+  return 
   tMsgs = [:]
   tMsgs.setaProp(3, #handle_ok)
   tMsgs.setaProp(12, #handle_messenger_init)
   tMsgs.setaProp(13, #handle_console_update)
   tMsgs.setaProp(128, #handle_memberinfo)
   tMsgs.setaProp(132, #handle_buddy_request)
-  tMsgs.setaProp(133, #handle_campaign_message)
-  tMsgs.setaProp(134, #handle_messenger_message)
   tMsgs.setaProp(137, #handle_add_buddy)
   tMsgs.setaProp(138, #handle_remove_buddy)
   tMsgs.setaProp(147, #handle_mypersistentmessage)

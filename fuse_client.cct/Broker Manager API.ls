@@ -43,5 +43,5 @@ on unregisterMessage tMessage, tClientID
 end
 
 on executeMessage tMessage, tArgA, tArgB, tArgC
-  return getBrokerManager().execute(tMessage, tArgA, tArgB, tArgC)
+  return getBrokerManager().Execute(tMessage, tArgA, tArgB, tArgC)
 end

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings, pEnterDoorData, pEnterDoorLocked, pRoomEventBrowserID, pRoomEventTypeCount, pRoomEventList, pRoomEventCurrent
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings, pEnterDoorData, pEnterDoorLocked, pRoomEventBrowserID, pRoomEventTypeCount, pRoomEventList, pRoomEventCurrent, pIconBarManagerID
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -27,6 +27,7 @@ on construct me
   pShadowManagerID = "Room Shadow Manager"
   pGroupInfoID = "Group_Info"
   pRoomEventBrowserID = "RoomEvent Browser Window"
+  pIconBarManagerID = "Icon Bar Manager"
   pRoomEventList = [:]
   pChatProps = [:]
   pChatProps["returnCount"] = 0
@@ -55,6 +56,7 @@ on construct me
   registerMessage(#setEnterRoomAlert, me.getID(), #setEnterRoomAlert)
   registerMessage(#removeEnterRoomAlert, me.getID(), #removeEnterRoomAlert)
   registerMessage(#show_hide_roomevents, me.getID(), #showHideRoomevents)
+  registerMessage(#editRoomevent, me.getID(), #editRoomevent)
   pEnterDoorData = VOID
   pEnterDoorLocked = 0
   return 1
@@ -67,6 +69,7 @@ on deconstruct me
   unregisterMessage(#changeRoom, me.getID())
   unregisterMessage(#enterRoomDirect, me.getID())
   unregisterMessage(#show_hide_roomevents, me.getID())
+  unregisterMessage(#editRoomevent, me.getID())
   removeConnection(pRoomConnID)
   if listp(pUserObjList) then
     call(#deconstruct, pUserObjList)
@@ -590,6 +593,11 @@ on sendChat me, tChat
           createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
         end if
         return 1
+      ":im":
+        tName = tChat.word[2]
+        tMsg = tChat.word[3..tChat.word.count]
+        executeMessage(#startIMChat, tName, tMsg)
+        return 1
       ":ig":
         executeMessage(#toggle_ig)
         return 1
@@ -837,6 +845,26 @@ on showHideRoomevents me
     createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
   end if
   return 1
+end
+
+on editRoomevent me
+  if not objectExists(pRoomEventBrowserID) then
+    createObject(pRoomEventBrowserID, "RoomEvent Browser Class")
+  end if
+  getObject(pRoomEventBrowserID).editEvent(pRoomEventCurrent)
+end
+
+on getIconBarManager me
+  if not objectExists(pIconBarManagerID) then
+    createObject(pIconBarManagerID, "Room Bar Extensions Manager")
+  end if
+  return getObject(pIconBarManagerID)
+end
+
+on removeIconBarManager me
+  if objectExists(pIconBarManagerID) then
+    removeObject(pIconBarManagerID)
+  end if
 end
 
 on loadRoomCasts me

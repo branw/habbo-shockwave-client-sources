@@ -235,6 +235,8 @@ on alignWindows me
   end if
   tDefLeftPos = getVariable("object.display.pos.left")
   tDefBottomPos = getVariable("object.display.pos.bottom")
+  tStageWidth = the stageRight - the stageLeft
+  tDefLeftPos = tDefLeftPos + (tStageWidth - 720)
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     tWindowObj = getWindow(tWindowID)
@@ -401,7 +403,7 @@ on eventProc me, tEvent, tSprID, tParam
         else
           tUserName = EMPTY
         end if
-        executeMessage(#externalBuddyRequest, tUserName)
+        executeMessage(#externalFriendRequest, tUserName)
         return 1
       "trade.button":
         tList = [:]

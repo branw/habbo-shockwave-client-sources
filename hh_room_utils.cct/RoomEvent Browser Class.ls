@@ -1,4 +1,4 @@
-property pWindowID, pDetailsWindowID, pEventListObj, pLineHeight, pEventID, pTypeCount, pTypeTextKeyBody, pSelectedType
+property pWindowID, pDetailsWindowID, pEventListObj, pLineHeight, pEventID, pTypeCount, pTypeTextKeyBody, pSelectedType, pEditedEventData
 
 on construct me
   pWindowID = #eventBrowserWindow
@@ -33,6 +33,11 @@ on Remove me
   removeObject(me.getID())
 end
 
+on editEvent me, tEventData
+  pEditedEventData = tEventData
+  me.ChangeWindowView(#edit)
+end
+
 on ChangeWindowView me, tView
   if windowExists(pWindowID) then
     removeWindow(pWindowID)
@@ -56,7 +61,19 @@ on ChangeWindowView me, tView
       me.updateDropMenu()
       tWnd.getElement("roomevent.create.name").setText(getText("roomevent_default_name"))
       tWnd.getElement("roomevent.create.description").setText(getText("roomevent_default_desc"))
+    #edit:
+      tWnd.merge("roomevent_create.window")
+      tWnd.registerProcedure(#eventProcEdit, me.getID(), #mouseUp)
+      tName = pEditedEventData.getaProp(#name)
+      tDesc = pEditedEventData.getaProp(#desc)
+      tWnd.getElement("roomevent.create.name").setText(tName)
+      tWnd.getElement("roomevent.create.description").setText(tDesc)
+      tWnd.getElement("roomevent.create.create").setText(getText("roomevent_edit"))
+      pSelectedType = pEditedEventData.getaProp(#typeID)
+      me.updateDropMenu()
+      tWnd.getElement("roomevent.type").deactivate()
   end case
+  activateWindow(pWindowID)
 end
 
 on askCreatePermission me
@@ -175,7 +192,7 @@ on selectEvent me, tpoint
   executeMessage(#roomForward, tFlatID, #private)
 end
 
-on createEvent me
+on createEvent me, tOperation
   if not windowExists(pWindowID) then
     return 0
   end if
@@ -202,7 +219,11 @@ on createEvent me
   end if
   tEvent = [#integer: tTypeID, #string: tName, #string: tDesc]
   tConn = getConnection(getVariable("connection.info.id", #Info))
-  tConn.send("CREATE_ROOMEVENT", tEvent)
+  if tOperation = #edit then
+    tConn.send("EDIT_ROOMEVENT", tEvent)
+  else
+    tConn.send("CREATE_ROOMEVENT", tEvent)
+  end if
   return 1
 end
 
@@ -244,6 +265,28 @@ on eventProcCreate me, tEvent, tElemID, tParam
     "roomevent.cancel.icon", "roomevent.cancel.text":
       me.ChangeWindowView(#browse)
     "roomevent.close":
+      me.Remove()
+    "roomevent.create.name":
+      tWnd = getWindow(pWindowID)
+      tElem = tWnd.getElement(tElemID)
+      if tElem.getText() = getText("roomevent_default_name") then
+        tElem.setText(EMPTY)
+      end if
+    "roomevent.create.description":
+      tWnd = getWindow(pWindowID)
+      tElem = tWnd.getElement(tElemID)
+      if tElem.getText() = getText("roomevent_default_desc") then
+        tElem.setText(EMPTY)
+      end if
+  end case
+end
+
+on eventProcEdit me, tEvent, tElemID, tParam
+  case tElemID of
+    "roomevent.create.create":
+      me.createEvent(#edit)
+      me.Remove()
+    "roomevent.cancel.icon", "roomevent.cancel.text", "roomevent.close":
       me.Remove()
   end case
 end

@@ -359,6 +359,7 @@ on redrawCryWindow me
   tTime = pCurrCryData[#time]
   tCategory = pCurrCryData[#category]
   tRoomID = pCurrCryData[#room_id]
+  ttype = pCurrCryData[#type]
   if tRoomID <> VOID and getObject(#session).GET("user_rights").getOne("fuse_see_flat_ids") <> 0 then
     tShowRoomID = "(id: " & tRoomID & ")"
   else
@@ -382,6 +383,12 @@ on redrawCryWindow me
     tWndObj.getElement("hobba_change_cfh_type").deactivate()
   else
     tWndObj.getElement("hobba_change_cfh_type").Activate()
+  end if
+  tGoButton = tWndObj.getElement("hobba_pickup_go")
+  if ttype = #instantMessage then
+    tGoButton.deactivate()
+  else
+    tGoButton.Activate()
   end if
   tWndObj.getElement("hobba_cry_text").setText(tPlace && tShowRoomID & RETURN & RETURN & tMsg)
   tWndObj.getElement("page_num").setText(pCurrCryNum & "/" & tCryCount)

@@ -25,6 +25,7 @@ on prepare me
 end
 
 on setButtonImage me
+  tOrigWidth = me.pwidth
   me.pimage = me.createButtonImg(pButtonText, #up)
   tTempOffset = me.pSprite.member.regPoint
   me.pBuffer.image = me.pimage
@@ -35,9 +36,9 @@ on setButtonImage me
   me.pLocY = me.pSprite.locV
   case pAlignment of
     #center:
-      me.pLocX = me.pLocX - (me.pwidth - pOrigWidth) / 2
+      me.pLocX = me.pLocX - (me.pwidth - tOrigWidth) / 2
     #right:
-      me.pLocX = me.pLocX - (me.pwidth - pOrigWidth)
+      me.pLocX = me.pLocX - (me.pwidth - tOrigWidth)
   end case
   me.pSprite.loc = point(me.pLocX, me.pLocY)
   me.pSprite.width = me.pwidth

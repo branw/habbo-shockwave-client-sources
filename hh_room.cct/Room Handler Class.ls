@@ -67,7 +67,6 @@ on handle_error me, tMsg
       executeMessage(#leaveRoom)
     "Not owner":
       getObject(#session).set("room_controller", 0)
-      me.getInterface().hideInterface(#hide)
   end case
 end
 
@@ -1189,7 +1188,7 @@ on regMsgList me, tBool
   tCmds.setaProp("CAN_CREATE_ROOMEVENT", 345)
   tCmds.setaProp("CREATE_ROOMEVENT", 346)
   tCmds.setaProp("QUIT_ROOMEVENT", 347)
-  tCmds.setaProp("MODERATOR_QUIT_ROOMEVENT", 348)
+  tCmds.setaProp("EDIT_ROOMEVENT", 348)
   tCmds.setaProp("GET_ROOMEVENT_TYPE_COUNT", 349)
   tCmds.setaProp("GET_ROOMEVENTS_BY_TYPE", 350)
   if tBool then

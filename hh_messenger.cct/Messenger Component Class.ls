@@ -9,7 +9,6 @@ on construct me
   registerMessage(#show_hide_messenger, me.getID(), #showhidemessenger)
   registerMessage(#messageUpdateRequest, me.getID(), #tellMessageCount)
   registerMessage(#buddyUpdateRequest, me.getID(), #tellRequestCount)
-  registerMessage(#externalBuddyRequest, me.getID(), #externalBuddyRequest)
   registerMessage(#pause_messeger_update, me.getID(), #pause)
   registerMessage(#resume_messeger_update, me.getID(), #resume)
   registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
@@ -304,6 +303,7 @@ on receive_PersistentMsg me, tMsg
 end
 
 on receive_Message me, tMsg
+  return 1
   if voidp(pItemList[#messages].getaProp(tMsg[#senderID])) then
     pItemList[#messages].setaProp(tMsg[#senderID], [:])
   end if
@@ -399,7 +399,6 @@ on send_Message me, tReceivers, tMsg
   if not listp(tReceivers) then
     return 0
   end if
-  playSound("con_message_sent", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
   tMsg = getStringServices().convertSpecialChars(tMsg, 1)
   tdata = [#integer: tReceivers.count]
   repeat with tReceiver in tReceivers
@@ -526,7 +525,6 @@ on send_BuddylistUpdate me
     end if
     pLastBuddiesUpdateTime = the milliSeconds
     if connectionExists(getVariable("connection.info.id")) then
-      getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE")
     end if
   end if
 end
@@ -617,7 +615,7 @@ on tellMessageCount me
 end
 
 on tellRequestCount me
-  return executeMessage(#updateBuddyrequestCount, me.getPendingRequestCount())
+  return executeMessage(#updateFriendRequestCount, me.getPendingRequestCount())
 end
 
 on externalBuddyRequest me, tTargetUser

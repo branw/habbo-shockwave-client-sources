@@ -1,6 +1,11 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pmodel, pDelayCounter
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCounter
+  if tCounter mod 2 = 1 then
+    tDirection = #left
+  else
+    tDirection = #right
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pDirection = tDirection
@@ -15,7 +20,7 @@ on reset me
   pTurnPnt = 464
   if pDirection = #left then
     pSprite.flipH = 0
-    pSprite.loc = point(734, 466)
+    pSprite.loc = point(794, 496)
     pOffset = [-2, -1]
   else
     pSprite.flipH = 1

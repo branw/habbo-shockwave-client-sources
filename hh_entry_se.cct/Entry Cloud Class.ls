@@ -114,7 +114,7 @@ on turn me
     tWidth = tImg.width - tWidth
     tHeigth = -tWidth / 2
     tSource = rect(tWidth, 0, tImg.width, tImg.height)
-    tDest = tSource + rect(0, pImg.height / 2 - tSource.height / 2 + tHeigth, 0, pImg.height / 2 - tSource.height / 2 + tHeigth)
+    tDest = tSource + rect(0, pImg.height / 2 - tSource.height / 2 + tHeigth - 1, 0, pImg.height / 2 - tSource.height / 2 + tHeigth - 1)
     pImg.copyPixels(tImg, tDest, tSource, [#ink: 8])
   else
     pImg.fill(pImg.rect, rgb(255, 255, 255))

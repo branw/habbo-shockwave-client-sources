@@ -1,4 +1,4 @@
-on startClient
+on initCore
   if not constructObjectManager() then
     return 0
   end if
@@ -38,7 +38,6 @@ end
 on resetClient
   if the runMode contains "Author" then
     stopClient()
-    startClient()
   else
     tURL = getMoviePath()
     if objectExists(#session) then

@@ -162,7 +162,8 @@ on ChangeWindowView me, tWindowName
     end if
     tWndObj.unmerge()
   else
-    if not createWindow(pWindowTitle, "habbo_basic.window", 345, 20) then
+    tStageWidth = the stageRight - the stageLeft
+    if not createWindow(pWindowTitle, "habbo_basic.window", tStageWidth - 375, 20) then
       return error(me, "Failed to create window for Navigator!", #ChangeWindowView, #major)
     end if
     tWndObj = getWindow(pWindowTitle)

@@ -51,9 +51,10 @@ on changeUimakoppiWindow me, tWindowName, tWindowTitle
   if voidp(tWindowTitle) then
     tWindowTitle = pWindowTitle
   end if
-  createWindow(tWindowTitle, tWindowName)
+  createWindow(tWindowTitle, tWindowName, VOID, VOID, #modal)
   tWndObj = getWindow(tWindowTitle)
   tWndObj.center()
+  tWndObj.moveBy(0, -40)
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcUimakoppi, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcUimakoppi, me.getID(), #mouseDown)
@@ -76,6 +77,7 @@ on createFigurePrew me
         tOccurrenceCount = tOccurrenceCount + 1
         if tOccurrenceCount > 1 then
           tFigure.deleteAt(tItemNo)
+          tItemNo = tItemNo - 1
         end if
       end if
     end repeat

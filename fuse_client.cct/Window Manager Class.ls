@@ -224,9 +224,9 @@ end
 on registerWindowEvent me, tTitle, tSprID, tEvent
   pLastEventData[#title] = tTitle
   pLastEventData[#sprite] = tSprID
-  pLastEventData[#event] = tEvent
+  pLastEventData[#Event] = tEvent
 end
 
 on getLastEvent me
-  return pLastEventData[#title] & "-" & pLastEventData[#sprite] & "-" & pLastEventData[#event]
+  return pLastEventData[#title] & "-" & pLastEventData[#sprite] & "-" & pLastEventData[#Event]
 end

@@ -79,6 +79,7 @@ on toggleWindowMode me
       tWndObj.moveTo(25, 26)
     end if
   end if
+  tWndObj.center()
   tWndObj.lock()
   tWndObj.registerProcedure(#eventProc, me.getID(), #mouseUp)
   me.showJoinedPlayersNum()

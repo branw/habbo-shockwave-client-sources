@@ -14,8 +14,8 @@ on getVisualizerManager
   return tMgr.getManager(#visualizer_manager)
 end
 
-on createVisualizer tID, tLayout
-  return getVisualizerManager().create(tID, tLayout)
+on createVisualizer tID, tLayout, tLocX, tLocY
+  return getVisualizerManager().create(tID, tLayout, tLocX, tLocY)
 end
 
 on removeVisualizer tID

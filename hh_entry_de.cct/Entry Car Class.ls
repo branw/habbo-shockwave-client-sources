@@ -1,6 +1,12 @@
-property pSprite, pOffset, pTurnPnt, pDirection
+property pSprite, pOffset, pTurnPnt, pDirection, pPauseTime, pIndex
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCounter
+  pIndex = tCounter - 1
+  if tCounter mod 2 = 1 then
+    tDirection = #left
+  else
+    tDirection = #right
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
@@ -10,11 +16,15 @@ on define me, tsprite, tDirection
 end
 
 on reset me
-  tmodel = "car2"
+  if random(2) = 1 then
+    tmodel = "car2"
+  else
+    tmodel = "car_b2"
+  end if
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(738, 477)
+    pSprite.loc = point(798, 507)
     pOffset = [-2, -1]
     pTurnPnt = 488
   else
@@ -33,9 +43,14 @@ on reset me
     pSprite.ink = 36
     pSprite.backColor = 0
   end if
+  pPauseTime = pIndex * 30 + random(50)
 end
 
 on update me
+  if pPauseTime > 0 then
+    pPauseTime = pPauseTime - 1
+    return 0
+  end if
   pSprite.loc = pSprite.loc + pOffset
   if pSprite.locH = pTurnPnt then
     pOffset[2] = -pOffset[2]
@@ -46,6 +61,11 @@ on update me
     pSprite.castNum = getmemnum(tMemName)
   end if
   if pSprite.locV > 510 then
+    if random(2) = 1 then
+      tDirection = #left
+    else
+      tDirection = #right
+    end if
     return me.reset()
   end if
 end

@@ -18,15 +18,15 @@ on reset me
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(720, 457)
+    pSprite.loc = point(766, 501)
     pOffset = [-2, -1]
-    pTurnPnt = 494
+    pTurnPnt = 496
   else
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 1
-    pSprite.loc = point(214, 501)
+    pSprite.loc = point(180, 501)
     pOffset = [2, -1]
-    pTurnPnt = 490
+    pTurnPnt = 494
   end if
   pSprite.width = pSprite.member.width
   pSprite.height = pSprite.member.height

@@ -62,7 +62,7 @@ on unregister me, tMessage, tClientID
   return 1
 end
 
-on execute me, tMessage, tArgA, tArgB, tArgC
+on Execute me, tMessage, tArgA, tArgB, tArgC
   tList = me.pItemList[tMessage]
   if voidp(tList) then
     return 0

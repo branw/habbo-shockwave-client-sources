@@ -1,4 +1,4 @@
-property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pNewMsgCount, pNewBuddyRequests, pClubDaysCount, pSwapAnimations, pBouncerID, pDisableRoomevents
+property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pClubDaysCount, pSwapAnimations, pBouncerID, pDisableRoomevents
 
 on construct me
   pEntryVisual = "entry_view"
@@ -12,34 +12,31 @@ on construct me
   pViewCloseTime = VOID
   pAnimUpdate = 0
   pInActiveIconBlend = 40
-  pNewMsgCount = 0
-  pNewBuddyRequests = 0
   pClubDaysCount = 0
   pMessengerFlash = 0
   pFirstInit = 1
   pSwapAnimations = []
-  pBouncerID = #entry_messenger_icon_bouncer
+  pBouncerID = #entry_im_icon_bouncer
   pDisableRoomevents = 0
   if variableExists("disable.roomevents") then
     pDisableRoomevents = getIntVariable("disable.roomevents")
   end if
   registerMessage(#userlogin, me.getID(), #showEntryBar)
-  registerMessage(#messenger_ready, me.getID(), #activateIcon)
   registerMessage(#showHotelView, me.getID(), #showHotel)
-  registerMessage(#showInvitation, me.getID(), #showInvitation)
+  registerMessage(#IMStateChanged, me.getID(), #updateIMIcon)
   executeMessage(#requestHotelView)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#userlogin, me.getID())
-  unregisterMessage(#messenger_ready, me.getID())
   unregisterMessage(#showHotelView, me.getID())
-  unregisterMessage(#showInvitation, me.getID())
+  unregisterMessage(#IMStateChanged, me.getID())
   repeat with tAnimation in pSwapAnimations
     tAnimation.deconstruct()
   end repeat
   pSwapAnimations = []
+  tManager = getThread(#room).getComponent().removeIconBarManager()
   return me.hideAll()
 end
 
@@ -116,6 +113,7 @@ on showEntryBar me
       return 0
     end if
     tWndObj = getWindow(pBottomBar)
+    tWndObj.setProperty(#boundary, rect(-100, -100, 1000, 1000))
     tWndObj.lock(1)
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcEntryBar, me.getID(), #mouseUp)
@@ -126,9 +124,11 @@ on showEntryBar me
     tEventsIcon = tWndObj.getElement("event_icon_image")
     tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
   end if
+  me.updateIMIcon()
+  tManager = getThread(#room).getComponent().getIconBarManager()
+  tManager.define(pBottomBar)
   registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
-  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
-  registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
+  registerMessage(#updateFriendListIcon, me.getID(), #updateFriendListIcon)
   registerMessage(#updateFigureData, me.getID(), #updateEntryBar)
   registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
   return me.updateEntryBar()
@@ -136,8 +136,7 @@ end
 
 on hideEntrybar me
   unregisterMessage(#updateCreditCount, me.getID())
-  unregisterMessage(#updateMessageCount, me.getID())
-  unregisterMessage(#updateBuddyrequestCount, me.getID())
+  unregisterMessage(#updateFriendListIcon, me.getID())
   unregisterMessage(#updateFigureData, me.getID())
   unregisterMessage(#updateClubStatus, me.getID())
   if timeoutExists(#flash_messenger_icon) then
@@ -149,6 +148,8 @@ on hideEntrybar me
   if objectExists(pBouncerID) then
     removeObject(pBouncerID)
   end if
+  tManager = getThread(#room).getComponent().getIconBarManager()
+  tManager.hideExtensions()
   return 1
 end
 
@@ -340,55 +341,23 @@ on updateClubStatus me, tStatus
   return 1
 end
 
-on updateMessageCount me, tCount
+on updateFriendListIcon me, tActive
   tWndObj = getWindow(pBottomBar)
-  if tWndObj <> 0 then
-    me.activateIcon(#messenger)
-    if value(tCount) > pNewMsgCount then
-      me.bounceMessengerIcon(1)
-    end if
-    pNewMsgCount = value(tCount)
-    tText = tCount && getText("int_newmessages")
-    tElem = tWndObj.getElement("new_messages_text")
-    tFont = tElem.getFont()
-    if pNewMsgCount > 0 then
-      tFont.setaProp(#fontStyle, [#underline])
-      tElem.setProperty(#cursor, "cursor.finger")
-    else
-      tFont.setaProp(#fontStyle, [#plain])
-      tElem.setProperty(#cursor, 0)
-    end if
-    tElem.setFont(tFont)
-    tElem.setText(tText)
-    me.flashMessengerIcon()
+  if tWndObj = 0 then
+    return 0
+  end if
+  tIconElem = tWndObj.getElement("friend_list_icon")
+  if not tIconElem then
+    return 0
+  end if
+  if tActive then
+    tIconElem.setProperty(#member, "friend_list_icon_notification")
+  else
+    tIconElem.setProperty(#member, "friend_list_icon")
   end if
 end
 
-on updateBuddyrequestCount me, tCount
-  tWndObj = getWindow(pBottomBar)
-  if tWndObj <> 0 then
-    me.activateIcon(#messenger)
-    if value(tCount) > pNewBuddyRequests then
-      me.bounceMessengerIcon(1)
-    end if
-    pNewBuddyRequests = value(tCount)
-    tText = tCount && getText("int_newrequests")
-    tElem = tWndObj.getElement("friendrequests_text")
-    tFont = tElem.getFont()
-    if pNewBuddyRequests > 0 then
-      tFont.setaProp(#fontStyle, [#underline])
-      tElem.setProperty(#cursor, "cursor.finger")
-    else
-      tFont.setaProp(#fontStyle, [#plain])
-      tElem.setProperty(#cursor, 0)
-    end if
-    tElem.setFont(tFont)
-    tElem.setText(tText)
-    me.flashMessengerIcon()
-  end if
-end
-
-on bounceMessengerIcon me, tstate
+on bounceIMIcon me, tstate
   if variableExists("bounce.messenger.icon") then
     if not getVariable("bounce.messenger.icon") then
       return 0
@@ -402,48 +371,10 @@ on bounceMessengerIcon me, tstate
     return 1
   end if
   if tstate then
-    tBouncer.registerElement(pBottomBar, ["messenger_icon_image"])
+    tBouncer.registerElement(pBottomBar, ["im_icon"])
     tBouncer.setBounce(1)
   else
     tBouncer.setBounce(0)
-  end if
-end
-
-on flashMessengerIcon me
-  if not windowExists(pBottomBar) then
-    return 0
-  end if
-  tWndObj = getWindow(pBottomBar)
-  if not tWndObj.elementExists("messenger_icon_image") then
-    return 0
-  end if
-  if tWndObj <> 0 then
-    if pMessengerFlash then
-      tmember = "mes_lite_icon"
-      pMessengerFlash = 0
-    else
-      tmember = "mes_dark_icon"
-      pMessengerFlash = 1
-    end if
-    if pNewMsgCount = 0 and pNewBuddyRequests = 0 then
-      me.bounceMessengerIcon(0)
-      tmember = "mes_dark_icon"
-      if timeoutExists(#flash_messenger_icon) then
-        removeTimeout(#flash_messenger_icon)
-      end if
-    else
-      if pNewMsgCount > 0 then
-        if not timeoutExists(#flash_messenger_icon) then
-          createTimeout(#flash_messenger_icon, 500, #flashMessengerIcon, me.getID(), VOID, 0)
-        end if
-      else
-        tmember = "mes_lite_icon"
-        if timeoutExists(#flash_messenger_icon) then
-          removeTimeout(#flash_messenger_icon)
-        end if
-      end if
-    end if
-    tWndObj.getElement("messenger_icon_image").setProperty(#image, member(getmemnum(tmember)).image.duplicate())
   end if
 end
 
@@ -452,8 +383,6 @@ on activateIcon me, tIcon
     case tIcon of
       #navigator:
         getWindow(pBottomBar).getElement("nav_icon_image").setProperty(#blend, 100)
-      #messenger:
-        getWindow(pBottomBar).getElement("messenger_icon_image").setProperty(#blend, 100)
     end case
   end if
 end
@@ -463,14 +392,12 @@ on deActivateIcon me, tIcon
     case tIcon of
       #navigator:
         getWindow(pBottomBar).getElement("nav_icon_image").setProperty(#blend, pInActiveIconBlend)
-      #messenger:
-        getWindow(pBottomBar).getElement("messenger_icon_image").setProperty(#blend, pInActiveIconBlend)
     end case
   end if
 end
 
 on deActivateAllIcons me
-  tIcons = ["messenger"]
+  tIcons = []
   if windowExists(pBottomBar) then
     repeat with tIcon in tIcons
       getWindow(pBottomBar).getElement(tIcon & "_icon_image").setProperty(#blend, pInActiveIconBlend)
@@ -484,9 +411,36 @@ on createMyHeadIcon me
   end if
 end
 
-on showInvitation me, tInvitationData
-  tInvitation = createObject(#random, "Invitation Class")
-  tInvitation.show(tInvitationData, pBottomBar, "messenger_icon_image")
+on updateIMIcon me
+  if not windowExists(pBottomBar) then
+    return 0
+  end if
+  if not threadExists(#instant_messenger) then
+    return 0
+  end if
+  tstate = getThread(#instant_messenger).getInterface().getState()
+  if voidp(tstate) then
+    tstate = #inactive
+  end if
+  tWnd = getWindow(pBottomBar)
+  tElem = tWnd.getElement("im_icon")
+  case tstate of
+    #Active:
+      tmember = getMember("im.icon.active")
+      tElem.setProperty(#cursor, "cursor.finger")
+      me.bounceIMIcon(0)
+    #highlighted:
+      tmember = getMember("im.icon.highlighted")
+      tElem.setProperty(#cursor, "cursor.finger")
+      me.bounceIMIcon(1)
+    #inactive:
+      tmember = getMember("im.icon.inactive")
+      tElem.setProperty(#cursor, 0)
+      me.bounceIMIcon(0)
+  end case
+  return 0
+  tElem.setProperty(#member, tmember)
+  return 1
 end
 
 on eventProcEntryBar me, tEvent, tSprID, tParam
@@ -502,17 +456,8 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
       return 1
     "nav_icon_image":
       return executeMessage(#show_hide_navigator)
-    "messenger_icon_image":
-      me.bounceMessengerIcon(0)
-      return executeMessage(#show_hide_messenger)
-    "new_messages_text":
-      if pNewMsgCount > 0 then
-        return executeMessage(#show_hide_messenger)
-      end if
-    "friendrequests_text":
-      if pNewBuddyRequests > 0 then
-        return executeMessage(#show_hide_messenger)
-      end if
+    "friend_list_icon":
+      return executeMessage(#toggle_friend_list)
     "update_habboid_text", "ownhabbo_icon_image":
       tAllowModify = 1
       if getObject(#session).exists("allow_profile_editing") then
@@ -527,5 +472,7 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
       end if
     "club_icon_image", "club_bottombar_text2":
       return executeMessage(#show_clubinfo)
+    "im_icon":
+      return executeMessage(#toggle_im)
   end case
 end

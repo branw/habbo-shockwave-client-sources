@@ -48,6 +48,7 @@ on show me, tdata, tWindowID, tElemID
   tNo = getText("no")
   tWindow.getElement("invitation_button_deny_text").setText(tNo)
   tWindow.show()
+  return 1
 end
 
 on align me, tWindowID, tElemID

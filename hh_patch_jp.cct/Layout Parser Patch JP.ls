@@ -130,6 +130,10 @@ on parse_window me, tFieldName
             tElem[#locV] = tElem[#locV] - 2
           end if
         end if
+      else
+        if tElem[#height] < tElem[#fontSize] + 2 then
+          tElem[#height] = tElem[#fontSize] + 2
+        end if
       end if
     end if
     if not voidp(tElem[#strech]) then

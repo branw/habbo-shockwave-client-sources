@@ -105,9 +105,6 @@ on update me
     pSpeed = abs(pSpeed)
     if integer(pSpeed) = 0 then
       me.setBounce(0)
-      if not timeoutExists(pTimeOutID) then
-        createTimeout(pTimeOutID, 3000, #setBounce, me.getID(), 1, 1)
-      end if
     end if
   end if
   repeat with tElemID in pElemIdList

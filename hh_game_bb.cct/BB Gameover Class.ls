@@ -58,10 +58,12 @@ on toggleWindowMode me
     me.renderFinalScoresText()
     me.showJoinedPlayers()
     tWndObj = getWindow(pWindowID)
+    tStageWidth = the stageRight - the stageLeft
+    tWindowWidth = tWndObj.getProperty(#width)
     if me.getGameSystem().getSpectatorModeFlag() then
-      tWndObj.moveTo(124, 74)
+      tWndObj.moveTo((tStageWidth - tWindowWidth) / 2, 74)
     else
-      tWndObj.moveTo(124, 50)
+      tWndObj.moveTo((tStageWidth - tWindowWidth) / 2, 50)
     end if
   else
     pOpenWindow = "bb_score_tiny.window"

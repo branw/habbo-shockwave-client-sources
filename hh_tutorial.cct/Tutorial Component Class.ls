@@ -391,6 +391,7 @@ on tryExit me
 end
 
 on sendConsoleMessage me, tTextKey
+  return 0
   if not objectExists(#messenger_component) then
     return error(me, "Messenger component not found", #sendConsoleMessage, #major)
   end if

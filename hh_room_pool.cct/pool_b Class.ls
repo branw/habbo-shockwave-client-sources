@@ -2,15 +2,12 @@ property pAnimCounter, pAnimList, pCurrentFrame, pCurtainsLocZ, pSplashs, pArrow
 
 on construct me
   pSplashs = [:]
-  pBalloonRightMargin = getIntVariable("balloons.rightmargin", 720)
-  createVariable("balloons.rightmargin", 597)
   initThread("thread.pelle")
   return 1
 end
 
 on deconstruct me
   closeThread(#pellehyppy)
-  createVariable("balloons.rightmargin", pBalloonRightMargin)
   removeUpdate(me.getID())
   if objectExists(#waterripples) then
     removeObject(#waterripples)
@@ -39,6 +36,7 @@ on prepare me
     tProps[#startFrame] = 0
     tProps[#MemberName] = "splash_"
     tProps[#id] = "Splash" & f
+    tProps[#loc] = point(the stageRight + 1000, 0)
     pSplashs["Splash" & f].setData(tProps)
   end repeat
   if not objectExists(#waterripples) then

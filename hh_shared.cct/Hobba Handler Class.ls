@@ -18,26 +18,29 @@ on handle_cryforhelp me, tMsg
   tProps[#url_id] = tConn.GetStrFrom()
   tProps[#roomname] = tConn.GetStrFrom()
   ttype = tConn.GetIntFrom()
-  tMarker = tConn.GetStrFrom()
-  if ttype = 0 then
-    tProps[#type] = #public
-    tProps[#casts] = tMarker
-    tProps[#port] = tConn.GetIntFrom()
-    tProps[#door] = tConn.GetIntFrom()
-    tProps[#room_id] = tProps[#door]
+  if ttype = -1 then
+    tProps[#type] = #instantMessage
   else
-    if ttype = 1 then
-      tProps[#type] = #private
-      tProps[#marker] = tMarker
-      tProps[#room_id] = string(tConn.GetIntFrom())
-      tProps[#owner] = string(tConn.GetStrFrom())
+    if ttype = 0 then
+      tProps[#type] = #public
+      tProps[#casts] = tConn.GetStrFrom()
+      tProps[#port] = tConn.GetIntFrom()
+      tProps[#door] = tConn.GetIntFrom()
+      tProps[#room_id] = tProps[#door]
     else
-      if ttype = 2 then
-        tProps[#type] = #game
-        tProps[#casts] = tMarker
-        tProps[#port] = tConn.GetIntFrom()
-        tProps[#door] = tConn.GetIntFrom()
-        tProps[#room_id] = tProps[#door]
+      if ttype = 1 then
+        tProps[#type] = #private
+        tProps[#marker] = tConn.GetStrFrom()
+        tProps[#room_id] = string(tConn.GetIntFrom())
+        tProps[#owner] = string(tConn.GetStrFrom())
+      else
+        if ttype = 2 then
+          tProps[#type] = #game
+          tProps[#casts] = tConn.GetStrFrom()
+          tProps[#port] = tConn.GetIntFrom()
+          tProps[#door] = tConn.GetIntFrom()
+          tProps[#room_id] = tProps[#door]
+        end if
       end if
     end if
   end if
@@ -80,6 +83,7 @@ on regMsgList me, tBool
   tCmds.setaProp("CHANGECALLCATEGORY", 198)
   tCmds.setaProp("MESSAGETOCALLER", 199)
   tCmds.setaProp("MODERATIONACTION", 200)
+  tCmds.setaProp("FOLLOW_CRYFORHELP", 323)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
