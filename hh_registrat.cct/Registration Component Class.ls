@@ -99,7 +99,7 @@ on checkUserName me, tNameStr
   end if
   pCheckingName = tNameStr
   if connectionExists(getVariable("connection.info.id", #info)) then
-    getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tNameStr, #short: 0])
+    getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tNameStr, #integer: 0])
   end if
   return 1
 end
@@ -461,15 +461,15 @@ on updateState me, tstate, tProps
       tCoppaFlag = getObject(#session).get("conf_coppa")
       tParentEmailFlag = getObject(#session).get("conf_parent_email_request_reregistration")
       if tCoppaFlag = 1 and tParentEmailFlag = 0 then
-        me.getInterface().showHideFigureCreator("coppa_forced")
+        me.getInterface().showHideFigureCreator("coppa_forced", 1)
       else
         if tCoppaFlag = 1 and tParentEmailFlag = 1 then
-          me.getInterface().showHideFigureCreator("parent_email_coppa_forced")
+          me.getInterface().showHideFigureCreator("parent_email_coppa_forced", 1)
         else
           if tCoppaFlag = 0 and tParentEmailFlag = 1 then
-            me.getInterface().showHideFigureCreator("parent_email_forced")
+            me.getInterface().showHideFigureCreator("parent_email_forced", 1)
           else
-            me.getInterface().showHideFigureCreator("forced")
+            me.getInterface().showHideFigureCreator("forced", 1)
           end if
         end if
       end if

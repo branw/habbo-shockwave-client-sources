@@ -1203,6 +1203,8 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
         tGiftProps["gift"] = 1
         tGiftProps["gift_receiver"] = tWndObj.getElement("shopping_gift_target").getText()
         tGiftProps["gift_msg"] = tWndObj.getElement("shopping_greeting_field").getText()
+        if tGiftProps["gift_msg"].length > 150 then
+        end if
         if tGiftProps["gift_receiver"] = EMPTY then
           return error(me, "User name missing!", #eventProcInfoWnd)
         end if
