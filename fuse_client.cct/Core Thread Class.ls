@@ -5,6 +5,7 @@ on construct me
   tSession.set("client_startdate", the date)
   tSession.set("client_starttime", the long time)
   tSession.set("client_version", getVariable("system.version"))
+  tSession.set("client_url", getMoviePath())
   tSession.set("client_lastclick", EMPTY)
   createObject(#headers, getClassVariable("variable.manager.class"))
   createObject(#classes, getClassVariable("variable.manager.class"))
@@ -21,9 +22,9 @@ on showLogo me
   if memberExists("Logo") then
     tmember = member(getmemnum("Logo"))
     pLogoSpr = sprite(reserveSprite(me.getID()))
-    pLogoSpr.ink = 36
-    pLogoSpr.blend = 60
     pLogoSpr.member = tmember
+    pLogoSpr.ink = 0
+    pLogoSpr.blend = 90
     pLogoSpr.locZ = -20000001
     pLogoSpr.loc = point((the stage).rect.width / 2, (the stage).rect.height / 2 - tmember.height)
   end if
@@ -46,15 +47,20 @@ on updateState me, tstate
       cursor(4)
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
-        the itemDelimiter = "="
-        repeat with i = 1 to 12
-          tParam = externalParamValue("sw" & i)
-          if not voidp(tParam) then
-            if tParam.item.count > 1 then
-              if tParam.item[1] = "external.variables.txt" then
-                getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
+        repeat with i = 1 to 9
+          tParamBundle = externalParamValue("sw" & i)
+          if not voidp(tParamBundle) then
+            the itemDelimiter = ";"
+            repeat with j = 1 to tParamBundle.item.count
+              tParam = tParamBundle.item[j]
+              the itemDelimiter = "="
+              if tParam.item.count > 1 then
+                if tParam.item[1] = "external.variables.txt" then
+                  getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
+                end if
               end if
-            end if
+              the itemDelimiter = ";"
+            end repeat
           end if
         end repeat
         the itemDelimiter = tDelim
@@ -81,13 +87,18 @@ on updateState me, tstate
       removeMember(getExtVarPath())
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
-        the itemDelimiter = "="
         repeat with i = 1 to 9
-          tParam = externalParamValue("sw" & i)
-          if not voidp(tParam) then
-            if tParam.item.count > 1 then
-              getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
-            end if
+          tParamBundle = externalParamValue("sw" & i)
+          if not voidp(tParamBundle) then
+            the itemDelimiter = ";"
+            repeat with j = 1 to tParamBundle.item.count
+              tParam = tParamBundle.item[j]
+              the itemDelimiter = "="
+              if tParam.item.count > 1 then
+                getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
+              end if
+              the itemDelimiter = ";"
+            end repeat
           end if
         end repeat
         the itemDelimiter = tDelim
@@ -158,7 +169,7 @@ on updateState me, tstate
         if not tVarMngr.exists("cast.entry." & i) then
           exit repeat
         end if
-        tFileName = tVarMngr.get("cast.entry." & i)
+        tFileName = tVarMngr.GET("cast.entry." & i)
         tCastList.add(tFileName)
         i = i + 1
       end repeat
@@ -186,5 +197,5 @@ on updateState me, tstate
       getThreadManager().initAll()
       return executeMessage(#Initialize, "initialize")
   end case
-  return error(me, "Unknown state:" && tstate, #updateState)
+  return error(me, "Unknown state:" && tstate, #updateState, #major)
 end

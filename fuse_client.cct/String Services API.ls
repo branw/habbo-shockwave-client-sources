@@ -51,6 +51,14 @@ on convertHexToInt tHex
   return getStringServices().convertHexToInt(tHex)
 end
 
+on explode tString, tDelimiter, tLimit
+  return getStringServices().explode(tString, tDelimiter, tLimit)
+end
+
+on implode tList, tDelimiter
+  return getStringServices().implode(tList, tDelimiter)
+end
+
 on replaceChars tString, tCharA, tCharB
   return getStringServices().replaceChars(tString, tCharA, tCharB)
 end

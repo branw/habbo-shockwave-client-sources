@@ -673,7 +673,7 @@ on PokerListMyCards me, tMsg
 end
 
 on PokerHandleOpponents me, tMsg
-  pMyName = getObject(#session).get(#userName)
+  pMyName = getObject(#session).GET(#userName)
   if voidp(pPokerOpponentChange) then
     pPokerOpponentChange = [[], [], []]
   end if

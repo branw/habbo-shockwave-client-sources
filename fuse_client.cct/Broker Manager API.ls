@@ -19,11 +19,11 @@ on createBroker tMessage
 end
 
 on removeBroker tMessage
-  return getBrokerManager().remove(tMessage)
+  return getBrokerManager().Remove(tMessage)
 end
 
 on getBroker tMessage
-  return getBrokerManager().get(tMessage)
+  return getBrokerManager().GET(tMessage)
 end
 
 on brokerExists tMessage

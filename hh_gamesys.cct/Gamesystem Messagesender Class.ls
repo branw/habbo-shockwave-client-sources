@@ -18,7 +18,7 @@ on setInstanceListUpdates me, tBoolean
     tVarMgrObj.set(#instancelist_timestamp, 0)
   end if
   if tBoolean then
-    if tVarMgrObj.get(#instancelist_timestamp) < the milliSeconds + pUpdateInterval then
+    if abs(the milliSeconds - tVarMgrObj.GET(#instancelist_timestamp)) > pUpdateInterval then
       me.getMessageSender().sendGetInstanceList()
     end if
     if timeoutExists(tTimeOutId) then
@@ -42,11 +42,11 @@ on sendGetInstanceList me
   return getConnection(pConnectionId).send("GETINSTANCELIST")
 end
 
-on sendObserveInstance me, tid
+on sendObserveInstance me, tID
   if not connectionExists(pConnectionId) then
     return error(me, "Connection not found:" && pConnectionId, #sendObserveInstance)
   end if
-  return getConnection(pConnectionId).send("OBSERVEINSTANCE", [#integer: tid])
+  return getConnection(pConnectionId).send("OBSERVEINSTANCE", [#integer: tID])
 end
 
 on sendUnobserveInstance me
@@ -61,7 +61,7 @@ end
 
 on sendInitiateCreateGame me, tTeamId
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendInitiateCreateGame)
   end if
   me.setInstanceListUpdates(0)
   me.getVariableManager().set(#game_status, #none)
@@ -74,29 +74,24 @@ on sendInitiateCreateGame me, tTeamId
 end
 
 on sendGameParameterValues me, tParamList, tTeamId
-  if me.getBaseLogic().getGameStatus() = #create_requested then
+  if me.getBaseLogic().getGamestatus() = #create_requested then
     return 0
   end if
   tTeamId = tTeamId - 1
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendGameParameterValues)
   end if
   me.setInstanceListUpdates(0)
-  tStruct = me.getVariableManager().get(#gameparametervalues_format)
+  tStruct = me.getVariableManager().GET(#gameparametervalues_format)
   tOutput = [#integer: tStruct.count]
   repeat with i = 1 to tStruct.count
     tValueData = tStruct[i]
-    tValue = tParamList[tValueData[#name]]
-    if tValue = VOID then
+    if tParamList.findPos(tValueData[#name]) = 0 then
       return error(me, "Invalid game parameter values!", #sendGameParameterValues)
     end if
+    tValue = tParamList[tValueData[#name]]
     tOutput.addProp(#string, tValueData[#name])
     if tValueData[#type] = #integer then
-      tValue = integer(tValue)
-      if tValue < tValueData[#min] or tValue > tValueData[#max] then
-        error(me, "Invalid game parameter value:" && tValueData[#name], #sendGameParameterValues)
-        return error(me, "Invalid game parameter values!", #sendGameParameterValues)
-      end if
       tOutput.addProp(#integer, 0)
       tOutput.addProp(#integer, tValue)
       next repeat
@@ -113,7 +108,7 @@ end
 
 on sendDeleteGame me
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendDeleteGame)
   end if
   me.getVariableManager().set(#observed_instance_data, [:])
   me.getVariableManager().set(#game_status, #none)
@@ -123,9 +118,9 @@ end
 
 on sendInitiateJoinGame me, tInstanceId, tTeamId
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendInitiateJoinGame)
   end if
-  tdata = me.getVariableManager().get(#observed_instance_data)
+  tdata = me.getVariableManager().GET(#observed_instance_data)
   if tdata.findPos(#id) = 0 then
     return 0
   end if
@@ -142,13 +137,13 @@ on sendInitiateJoinGame me, tInstanceId, tTeamId
 end
 
 on sendJoinParameterValues me, tInstanceId, tTeamId, tParamList
-  if me.getBaseLogic().getGameStatus() = #join_requested then
+  if me.getBaseLogic().getGamestatus() = #join_requested then
     return 0
   end if
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendJoinParameterValues)
   end if
-  tdata = me.getVariableManager().get(#observed_instance_data)
+  tdata = me.getVariableManager().GET(#observed_instance_data)
   if tInstanceId = VOID then
     tInstanceId = tdata[#id]
   end if
@@ -177,7 +172,7 @@ end
 
 on sendLeaveGame me
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendLeaveGame)
   end if
   me.getVariableManager().set(#game_status, #none)
   return getConnection(pConnectionId).send("LEAVEGAME")
@@ -196,7 +191,7 @@ end
 
 on sendWatchGame me, tInstanceId
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendWatchGame)
   end if
   me.setInstanceListUpdates(0)
   me.getVariableManager().set(#game_status, #watch_requested)
@@ -205,31 +200,41 @@ end
 
 on sendStartGame me
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendStartGame)
   end if
   return getConnection(pConnectionId).send("STARTGAME")
 end
 
-on sendMoveGoal me, tLocX, tLocY
-  if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
-  end if
-  tGameState = me.getBaseLogic().getGameStatus()
-  tLastClick = me.getVariableManager().get(#last_clicked_loc)
-  if tLastClick = [tLocX, tLocY, tGameState] then
-    return 1
-  end if
-  me.getVariableManager().set(#last_clicked_loc, [tLocX, tLocY, tGameState])
-  if tGameState = #game_started then
-    return getConnection(pConnectionId).send("GAMEEVENT", [#integer: tLocX, #integer: tLocY])
-  else
-    return getConnection(pConnectionId).send("MOVE", [#short: tLocX, #short: tLocY])
-  end if
-end
-
 on sendRejoinGame me
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+    return error(me, "Connection not found:" && pConnectionId, #sendRejoinGame)
   end if
   return getConnection(pConnectionId).send("REJOINGAME")
+end
+
+on sendRequestFullStatusUpdate me
+  if not connectionExists(pConnectionId) then
+    return error(me, "Connection not found:" && pConnectionId, #sendRequestFullStatusUpdate)
+  end if
+  return getConnection(pConnectionId).send("REQUESTFULLSTATUSUPDATE")
+end
+
+on sendGameEventMessage me, tdata
+  if not connectionExists(pConnectionId) then
+    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
+  end if
+  if not listp(tdata) then
+    return error(me, "Message struct in wrong format", #sendGameEventMessage)
+  end if
+  if tdata.getPropAt(1) <> #integer then
+    return error(me, "Message struct in wrong format", #sendGameEventMessage)
+  end if
+  return getConnection(pConnectionId).send("GAMEEVENT", tdata)
+end
+
+on sendHabboRoomMove me, tLocX, tLocY
+  if not connectionExists(pConnectionId) then
+    return error(me, "Connection not found:" && pConnectionId, #sendHabboRoomMove)
+  end if
+  return getConnection(pConnectionId).send("MOVE", [#short: tLocX, #short: tLocY])
 end

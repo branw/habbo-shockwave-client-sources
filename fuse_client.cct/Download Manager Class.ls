@@ -6,6 +6,7 @@ on construct me
   pReceivedTasks = []
   pCompleteTasks = []
   pTypeDefList = [:]
+  me.emptyCookies()
   return 1
 end
 
@@ -21,7 +22,7 @@ on create me, tURL, tMemName, ttype, tForceFlag
   return queue(me, tURL, tMemName, ttype, tForceFlag)
 end
 
-on remove me, tMemNameOrNum
+on Remove me, tMemNameOrNum
   return me.abort(tMemNameOrNum)
 end
 
@@ -29,9 +30,9 @@ on exists me, tMemName
   return not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName])
 end
 
-on queue me, tURL, tMemName, ttype, tForceFlag
+on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
   if not ilk(tURL, #string) then
-    return error(me, "Missing or invalid URL:" && tURL, #queue)
+    return error(me, "Missing or invalid URL:" && tURL, #queue, #major)
   end if
   if not ilk(tMemName, #string) then
     tMemName = tURL
@@ -40,7 +41,7 @@ on queue me, tURL, tMemName, ttype, tForceFlag
     ttype = me.recognizeMemberType(tURL)
   end if
   if not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName]) then
-    return error(me, "File already downloading:" && tMemName, #queue)
+    return error(me, "File already downloading:" && tMemName, #queue, #minor)
   end if
   if memberExists(tMemName) then
     if tForceFlag then
@@ -52,14 +53,17 @@ on queue me, tURL, tMemName, ttype, tForceFlag
     tMemNum = createMember(tMemName, ttype)
   end if
   if tMemNum < 1 then
-    return error(me, "Failed to create member!", #queue)
+    return error(me, "Failed to create member!", #queue, #major)
   else
     if member(tMemNum).type = #bitmap then
       member(tMemNum).image = image(1, 1, 8)
     end if
   end if
   pReceivedTasks.add(tMemName)
-  pTaskQueue[tMemName] = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]
+  tTempTask = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]
+  tTempTask[#downloadMethod] = tDownloadMethod
+  tTempTask[#redirectType] = tRedirectType
+  pTaskQueue[tMemName] = tTempTask
   me.updateQueue()
   return tMemNum
 end
@@ -69,27 +73,27 @@ on registerCallback me, tMemNameOrNum, tMethod, tClientID, tArgument
   if not tTaskData then
     if stringp(tMemNameOrNum) then
       if getmemnum(tMemNameOrNum) = 0 then
-        return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback)
+        return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback, #major)
       end if
     else
       if integerp(tMemNameOrNum) then
         if member(tMemNameOrNum).type = #empty then
-          return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback)
+          return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback, #major)
         end if
       else
-        return error(me, "Member's name or number expected:" && tMemNameOrNum, #registerCallback)
+        return error(me, "Member's name or number expected:" && tMemNameOrNum, #registerCallback, #major)
       end if
     end if
     tTaskData = [#status: #complete]
   end if
   if not symbolp(tMethod) then
-    return error(me, "Symbol referring to a handler expected:" && tMethod, #registerCallback)
+    return error(me, "Symbol referring to a handler expected:" && tMethod, #registerCallback, #major)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #registerCallback)
+    return error(me, "Object not found:" && tClientID, #registerCallback, #major)
   end if
   if not getObject(tClientID).handler(tMethod) then
-    return error(me, "Handler not found in object:" && tMethod, tClientID, #registerCallback)
+    return error(me, "Handler not found in object:" && tMethod, tClientID, #registerCallback, #major)
   end if
   case tTaskData[#status] of
     #complete:
@@ -109,11 +113,11 @@ on getLoadPercent me, tMemNameOrNum
     if stringp(tMemNameOrNum) then
       tMemName = tMemNameOrNum
     else
-      return error(me, "Member's name or number expected:" && tMemNameOrNum, #getLoadPercent)
+      return error(me, "Member's name or number expected:" && tMemNameOrNum, #getLoadPercent, #minor)
     end if
   end if
   if pReceivedTasks.getOne(tMemName) = 0 then
-    return error(me, "Downloaded file not found:" && tMemName, #getLoadPercent)
+    return error(me, "Downloaded file not found:" && tMemName, #getLoadPercent, #minor)
   end if
   if not voidp(pActiveTasks[tMemName]) then
     return pActiveTasks[tMemName].getProperty(#Percent)
@@ -196,14 +200,14 @@ on print me
     tListMode = ilk(tList)
     repeat with i = 1 to tList.count
       if tListMode = #list then
-        tid = i
+        tID = i
       else
-        tid = tList.getPropAt(i)
+        tID = tList.getPropAt(i)
       end if
-      if symbolp(tid) then
-        tid = "#" & tid
+      if symbolp(tID) then
+        tID = "#" & tID
       end if
-      put tid && ":" && tList[i]
+      put tID && ":" && tList[i]
     end repeat
   end repeat
   return 1
@@ -234,13 +238,13 @@ on searchTask me, tMemNameOrNum
     if tTaskData[#status] <> VOID then
       return tTaskData
     end if
-    return error(me, "Referred task not found:" && tMemNameOrNum, #searchTask)
+    return error(me, "Referred task not found:" && tMemNameOrNum, #searchTask, #minor)
   else
     if integerp(tMemNameOrNum) then
       return searchTask(me, member(tMemNameOrNum).name)
     end if
   end if
-  return error(me, "Member's name or number expected:" && tMemNameOrNum, #searchTask)
+  return error(me, "Member's name or number expected:" && tMemNameOrNum, #searchTask, #minor)
 end
 
 on updateQueue me
@@ -249,7 +253,11 @@ on updateQueue me
       tTaskName = pTaskQueue.getPropAt(1)
       tTaskData = pTaskQueue[tTaskName]
       pTaskQueue.deleteProp(tTaskName)
-      pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("download.instance.class"))
+      if tTaskData[#downloadMethod] = #httpcookie then
+        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("httpcookie.instance.class"))
+      else
+        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("download.instance.class"))
+      end if
       pActiveTasks[tTaskName].define(tTaskName, tTaskData)
       receiveUpdate(me.getID())
     end if
@@ -293,11 +301,16 @@ on recognizeMemberType me, tURL
   tFileType = tFileType.char[offset(".", tFileType) + 1..length(tFileType)]
   tFileType = pTypeDefList[tFileType]
   if not symbolp(tFileType) then
-    error(me, "Couldn't recognize member's type:" && tURL, #recognizeMemberType)
+    error(me, "Couldn't recognize member's type:" && tURL, #recognizeMemberType, #minor)
     return #field
   else
     return tFileType
   end if
+end
+
+on emptyCookies me
+  tCookiePrefLoc = getVariable("httpcookie.pref.name")
+  setPref(tCookiePrefLoc, EMPTY)
 end
 
 on fillTypeDefinitions me

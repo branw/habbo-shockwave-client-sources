@@ -1,4 +1,4 @@
-property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount
+property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount, pAllowindexing
 
 on define me, tdata
   pGroupId = tdata[#id]
@@ -7,6 +7,7 @@ on define me, tdata
   pCastcount = tdata[#casts].count
   pCallBack = tdata[#callback]
   pCurrPercent = tdata[#Percent]
+  pAllowindexing = tdata[#doindexing]
   pTempPercent = 0
   pLastPercent = 0
   pCurLoadCount = 0
@@ -72,6 +73,10 @@ on getTaskPercent me
   return pCurrPercent
 end
 
+on getIndexingAllowed me
+  return pAllowindexing
+end
+
 on DoCallBack me
   if pStatus = #ready then
     if listp(pCallBack) then
@@ -84,15 +89,15 @@ on DoCallBack me
   end if
 end
 
-on addCallBack me, tid, tMethod, tClientID, tArgument
+on addCallBack me, tID, tMethod, tClientID, tArgument
   if not symbolp(tMethod) then
-    return error(me, "Symbol referring to handler expected:" && tMethod, #addCallBack)
+    return error(me, "Symbol referring to handler expected:" && tMethod, #addCallBack, #major)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #addCallBack)
+    return error(me, "Object not found:" && tClientID, #addCallBack, #major)
   end if
   if not getObject(tClientID).handler(tMethod) then
-    return error(me, "Handler not found in object:" && tMethod & "/" & tClientID, #addCallBack)
+    return error(me, "Handler not found in object:" && tMethod & "/" & tClientID, #addCallBack, #major)
   end if
   if pStatus = #ready then
     call(tMethod, getObject(tClientID), tArgument)

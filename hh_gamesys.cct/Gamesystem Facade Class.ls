@@ -27,6 +27,7 @@ on defineClient me, tSystemObj
   end if
   pThread.getBaseLogic().defineClient(me.getID())
   pThread.getMessageHandler().defineClient(me.getID())
+  pThread.getComponent().defineClient(me.getID())
   pThread.getProcManager().defineClient(me.getID())
   pThread.getProcManager().distributeEvent(#facadeok, me.getID())
   return 1
@@ -36,42 +37,60 @@ on getNumTickets me
   if getObject(#session) = 0 then
     return 0
   end if
-  return getObject(#session).get("user_ph_tickets")
+  return getObject(#session).GET("user_ph_tickets")
 end
 
 on getSpectatorModeFlag me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#spectatormode_flag)
-end
-
-on getGameStatus me
-  if pThread = 0 then
-    return 0
-  end if
-  return pThread.getBaseLogic().getGameStatus()
+  return me.getVarMgr().GET(#spectatormode_flag)
 end
 
 on getTournamentFlag me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#tournament_flag)
+  if not me.getVarMgr().exists(#tournament_flag) then
+    return 0
+  end if
+  return me.getVarMgr().GET(#tournament_flag)
+end
+
+on getWorldReady me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().getWorldReady()
+end
+
+on getGamestatus me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getBaseLogic().getGamestatus()
+end
+
+on setGameStatus me, tStatus
+  tVarMgr = me.getVarMgr()
+  if tVarMgr = 0 then
+    return 0
+  end if
+  return tVarMgr.set(#game_status, tStatus)
 end
 
 on getInstanceList me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#instancelist)
+  return me.getVarMgr().GET(#instancelist)
 end
 
 on getObservedInstance me
   if me.getVarMgr() = 0 then
     return 0
   end if
-  return me.getVarMgr().get(#observed_instance_data)
+  return me.getVarMgr().GET(#observed_instance_data)
 end
 
 on getGameParameters me
@@ -81,7 +100,7 @@ on getGameParameters me
   if not me.getVarMgr().exists(#gameparametervalues_format) then
     return 0
   end if
-  return me.getVarMgr().get(#gameparametervalues_format)
+  return me.getVarMgr().GET(#gameparametervalues_format)
 end
 
 on getJoinParameters me
@@ -91,7 +110,7 @@ on getJoinParameters me
   if not me.getVarMgr().exists(#joinparametervalues_format) then
     return 0
   end if
-  return me.getVarMgr().get(#joinparametervalues_format)
+  return me.getVarMgr().GET(#joinparametervalues_format)
 end
 
 on setInstanceListUpdates me, tBoolean
@@ -108,11 +127,11 @@ on sendGetInstanceList me
   return pThread.getMessageSender().sendGetInstanceList()
 end
 
-on observeInstance me, tid
+on observeInstance me, tID
   if pThread = 0 then
     return 0
   end if
-  return pThread.getMessageSender().sendObserveInstance(tid)
+  return pThread.getMessageSender().sendObserveInstance(tID)
 end
 
 on unobserveInstance me
@@ -200,13 +219,6 @@ on startGame
   return pThread.getMessageSender().sendStartGame()
 end
 
-on sendMoveGoal me, tLocX, tLocY
-  if pThread = 0 then
-    return 0
-  end if
-  return pThread.getMessageSender().sendMoveGoal(tLocX, tLocY)
-end
-
 on rejoinGame me
   if pThread = 0 then
     return 0
@@ -221,11 +233,184 @@ on enterLounge me
   return pThread.getBaseLogic().enterLounge()
 end
 
+on sendGameEventMessage me, tdata
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getMessageSender().sendGameEventMessage(tdata)
+end
+
 on sendGameSystemEvent me, tTopic, tdata
   if pThread = 0 then
     return 0
   end if
   return pThread.getProcManager().distributeEvent(tTopic, tdata)
+end
+
+on sendHabboRoomMove me, tLocX, tLocY
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getMessageSender().sendHabboRoomMove(tLocX, tLocY)
+end
+
+on createGameObject me, tID, ttype, tDataToStore
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().createGameObject(tID, ttype, tDataToStore)
+end
+
+on getGameObject me, tID
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().getGameObject(tID)
+end
+
+on getGameObjectProperty me, tID, tProp
+  if pThread = 0 then
+    return 0
+  end if
+  tObject = pThread.getComponent().getGameObject(tID)
+  if tObject = 0 then
+    return error(me, "Game object doesn't exist:" && tID, #getGameObjectProperty)
+  end if
+  return tObject.getGameObjectProperty(tProp)
+end
+
+on getGameObjectIdsOfType me, ttype
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().getGameObjectIdsOfType(ttype)
+end
+
+on updateGameObject me, tID, tdata
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().updateGameObject(tID, tdata)
+end
+
+on removeGameObject me, tID
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().removeGameObject(tID)
+end
+
+on clearTurnBuffer me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getTurnManager()._ClearTurnBuffer()
+end
+
+on executeGameObjectEvent me, tID, tEvent, tdata
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().executeGameObjectEvent(tID, tEvent, tdata)
+end
+
+on get360AngleFromComponents me, tX, tY
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().getGeometry().getAngleFromComponents(tX, tY)
+end
+
+on get8AngleFromComponents me, tX, tY
+  if pThread = 0 then
+    return 0
+  end if
+  tAngle360 = pThread.getWorld().getGeometry().getAngleFromComponents(tX, tY)
+  return pThread.getWorld().getGeometry().direction360to8(tAngle360)
+end
+
+on GetVelocityTable me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().getGeometry().GetVelocityTable()
+end
+
+on convertTileToWorldCoordinate me, tX, tY, tZ
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().convertTileToWorldCoordinate(tX, tY, tZ)
+end
+
+on gettileatworldcoordinate me, tX, tY, tZ
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().gettileatworldcoordinate(tX, tY, tZ)
+end
+
+on convertworldtotilecoordinate me, tX, tY, tZ
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().convertworldtotilecoordinate(tX, tY, tZ)
+end
+
+on convertWorldToScreenCoordinate me, tX, tY, tZ
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().convertWorldToScreenCoordinate(tX, tY, tZ)
+end
+
+on sqrt me, tInteger
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().pSquareRoot.fast_sqrt(tInteger)
+end
+
+on getGeometry me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld().getGeometry()
+end
+
+on getWorld me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getWorld()
+end
+
+on startTurnManager me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getBaseLogic().startTurnManager()
+end
+
+on stopTurnManager me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getBaseLogic().stopTurnManager()
+end
+
+on getNewTurnContainer me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getTurnManager().getNewTurnContainer()
+end
+
+on dump me
+  if pThread = 0 then
+    return 0
+  end if
+  return pThread.getComponent().dump()
 end
 
 on getVarMgr me

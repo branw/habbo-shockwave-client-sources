@@ -13,7 +13,7 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #gamestatus_scores:
       return me.renderScore(tdata)
@@ -81,7 +81,7 @@ on renderGameTimer me, tEndTime
   end if
   tTime = me.convertToMinSec(tEndTime - the milliSeconds)
   tTimeStr = tTime[1] & ":" & tTime[2]
-  tElem.setText(replaceChunks(getText("bb_info_remainingTime"), "\x", tTimeStr))
+  tElem.setText(replaceChunks(getText("gs_timeleft"), "\x", tTimeStr))
   return 1
 end
 

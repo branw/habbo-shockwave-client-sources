@@ -13,31 +13,31 @@ end
 
 on create me, tMessage
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #create)
+    return error(me, "Symbol or string expected:" && tMessage, #create, #major)
   end if
   if not voidp(me.pItemList[tMessage]) then
-    return error(me, "Broker task already exists:" && tMessage, #create)
+    return error(me, "Broker task already exists:" && tMessage, #create, #major)
   end if
   me.pItemList[tMessage] = [:]
   return 1
 end
 
-on remove me, tMessage
+on Remove me, tMessage
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #remove)
+    return error(me, "Symbol or string expected:" && tMessage, #Remove, #minor)
   end if
   if voidp(me.pItemList[tMessage]) then
-    return error(me, "Broker task not found:" && tMessage, #remove)
+    return error(me, "Broker task not found:" && tMessage, #Remove, #minor)
   end if
   return me.pItemList.deleteProp(tMessage)
 end
 
 on register me, tMessage, tClientID, tMethod
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #register)
+    return error(me, "Symbol or string expected:" && tMessage, #register, #major)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #register)
+    return error(me, "Object not found:" && tClientID, #register, #major)
   end if
   if voidp(me.pItemList[tMessage]) then
     me.pItemList[tMessage] = [:]
@@ -48,7 +48,7 @@ end
 
 on unregister me, tMessage, tClientID
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #unregister)
+    return error(me, "Symbol or string expected:" && tMessage, #unregister, #major)
   end if
   tList = me.pItemList[tMessage]
   if voidp(tList) then
@@ -56,7 +56,7 @@ on unregister me, tMessage, tClientID
   end if
   tList.deleteProp(tClientID)
   if tList.count = 0 then
-    me.remove(tMessage)
+    me.Remove(tMessage)
   end if
   return 1
 end
@@ -67,14 +67,14 @@ on execute me, tMessage, tArgA, tArgB, tArgC
     return 0
   end if
   repeat with i = tList.count down to 1
-    tid = tList.getPropAt(i)
+    tID = tList.getPropAt(i)
     tMethod = tList[i]
-    tObject = getObjectManager().get(tid)
+    tObject = getObjectManager().GET(tID)
     if tObject = 0 then
-      me.unregister(tMessage, tid)
+      me.unregister(tMessage, tID)
       next repeat
     end if
-    call(tMethod, tObject, tArgA, tArgB, tArgC)
+    call(tMethod, [tObject], tArgA, tArgB, tArgC)
   end repeat
   return 1
 end

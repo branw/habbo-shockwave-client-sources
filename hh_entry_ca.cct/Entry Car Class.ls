@@ -1,10 +1,15 @@
-property pSprite, pOffset, pTurnPnt, pDirection
+property pSprite, pOffset, pTurnPnt, pDirection, pPausedTime
 
-on define me, tsprite, tDirection
-  pSprite = tsprite
+on define me, tSprite, tCount
+  if tCount mod 2 then
+    tdir = #right
+  else
+    tdir = #left
+  end if
+  pSprite = tSprite
   pOffset = [0, 0]
   pTurnPnt = 0
-  pDirection = tDirection
+  pDirection = tdir
   me.reset()
   return 1
 end
@@ -28,9 +33,14 @@ on reset me
   pSprite.height = pSprite.member.height
   pSprite.ink = 41
   pSprite.backColor = random(150) + 20
+  pPausedTime = random(150)
 end
 
 on update me
+  if pPausedTime > 0 then
+    pPausedTime = pPausedTime - 1
+    return 0
+  end if
   pSprite.loc = pSprite.loc + pOffset
   if pSprite.locH = pTurnPnt then
     pOffset[2] = -pOffset[2]

@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -12,9 +12,9 @@ on construct me
   pBadgeObjID = "Room_badge"
   pDoorBellID = "Room_doorbell"
   pPreviewObjID = "Preview_renderer"
-  pRoomSpaceId = "Room_visualizer"
-  pBottomBarId = "Room_bar"
   pInfoStandId = "Room_info_stand"
+  pRoomGuiID = "Room_gui_program"
+  pRoomSpaceId = "Room_visualizer"
   pInterfaceId = "Room_interface"
   pDelConfirmID = getText("win_delete_item", "Delete item?")
   pLoaderBarID = "Loading room"
@@ -27,6 +27,10 @@ on construct me
   pRingingUser = EMPTY
   pVisitorQueue = []
   pBannerLink = 0
+  pSwapAnimations = []
+  pTradeTimeout = 0
+  pLoadingBarID = 0
+  pQueueCollection = []
   pModBadgeList = getVariableValue("moderator.badgelist")
   createObject(pGeometryId, "Room Geometry Class")
   createObject(pContainerID, "Container Hand Class")
@@ -36,34 +40,33 @@ on construct me
   createObject(pBadgeObjID, "Badge Manager Class")
   createObject(pPreviewObjID, "Preview Renderer Class")
   createObject(pDoorBellID, "Doorbell Class")
+  createObject(pRoomGuiID, "Room GUI Class")
+  createObject(pInfoStandId, "Info Stand Class")
   pIgnoreListObj = createObject(#temp, "Ignore List Class")
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
-  registerMessage(#notify, me.getID(), #notify)
-  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
-  registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
+  registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   return 1
 end
 
 on deconstruct me
   pClickAction = #null
-  unregisterMessage(#notify, me.getID())
-  unregisterMessage(#updateMessageCount, me.getID())
-  unregisterMessage(#updateBuddyrequestCount, me.getID())
   pIgnoreListObj = VOID
   removeObject(pBadgeObjID)
   removeObject(pDoorBellID)
+  removeObject(pInfoStandId)
+  removeObject(pRoomGuiID)
   return me.hideAll()
 end
 
-on showRoom me, tRoomId
-  if not memberExists(tRoomId & ".room") then
-    return error(me, "Room description not found:" && tRoomId, #showRoom)
+on showRoom me, tRoomID
+  if not memberExists(tRoomID & ".room") then
+    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomID & ".room", #showRoom, #major)
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then
     activateWindow(pLoaderBarID)
   end if
-  tRoomField = tRoomId & ".room"
+  tRoomField = tRoomID & ".room"
   createVisualizer(pRoomSpaceId, tRoomField)
   tVisObj = getVisualizer(pRoomSpaceId)
   tLocX = tVisObj.getProperty(#locX)
@@ -82,11 +85,23 @@ on showRoom me, tRoomId
     if me.getHiliter() <> 0 then
       me.getHiliter().deconstruct()
     end if
-    error(me, "Hiliter not found in room description!!!", #showRoom)
+    error(me, "Hiliter not found in room description!!!", #showRoom, #minor)
   else
     createObject(pHiliterId, "Room Hiliter Class")
     me.getHiliter().define([#sprite: tHiliterSpr, #geometry: pGeometryId])
     receiveUpdate(pHiliterId)
+  end if
+  tAnimations = tVisObj.getProperty(#swapAnims)
+  if tAnimations <> 0 then
+    repeat with tAnimation in tAnimations
+      tObj = createObject(#random, getVariableValue("swap.animation.class"))
+      if tObj = 0 then
+        error(me, "Error creating swap animation", #showRoom, #minor)
+        next repeat
+      end if
+      pSwapAnimations.add(tObj)
+      pSwapAnimations[pSwapAnimations.count].define(tAnimation)
+    end repeat
   end if
   me.getArrowHiliter().Init()
   pClickAction = "moveHuman"
@@ -100,6 +115,10 @@ on hideRoom me
   pSelectedObj = EMPTY
   me.hideArrowHiliter()
   me.hideTrashCover()
+  repeat with tAnim in pSwapAnimations
+    tAnim.deconstruct()
+  end repeat
+  pSwapAnimations = []
   if visualizerExists(pRoomSpaceId) then
     removeVisualizer(pRoomSpaceId)
   end if
@@ -107,74 +126,25 @@ on hideRoom me
 end
 
 on showRoomBar me
-  if not windowExists(pBottomBarId) then
-    createWindow(pBottomBarId, "empty.window", 0, 452)
+  tGUI = getObject(pRoomGuiID)
+  if not voidp(tGUI) and not tGUI = 0 then
+    tGUI.showRoomBar()
   end if
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj = 0 then
-    return 0
-  end if
-  tWndObj.lock(1)
-  tWndObj.unmerge()
-  tSpectatorMode = me.getComponent().getSpectatorMode()
-  tModSpectator = getObject(#session).get("user_rights").getOne("fuse_enter_full_rooms")
-  if tSpectatorMode and tModSpectator or not tSpectatorMode then
-    tLayout = "room_bar.window"
-  else
-    tLayout = "room_bar_spectator.window"
-  end if
-  if not tWndObj.merge(tLayout) then
-    return 0
-  end if
-  tWndObj.registerClient(me.getID())
-  tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
-  tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #keyDown)
-  tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseEnter)
-  tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseLeave)
-  executeMessage(#messageUpdateRequest)
-  executeMessage(#buddyUpdateRequest)
-  if me.getComponent().getRoomData().type = #private then
-    tRoomData = me.getComponent().pSaveData
-    tRoomTxt = getText("room_name") && tRoomData[#name] & RETURN & getText("room_owner") && tRoomData[#owner]
-    tWndObj.getElement("room_info_text").setText(tRoomTxt)
-  else
-    tWndObj.getElement("room_info_text").hide()
-  end if
-  return 1
 end
 
 on hideRoomBar me
-  if timeoutExists(#flash_messenger_icon) then
-    removeTimeout(#flash_messenger_icon)
-  end if
-  if windowExists(pBottomBarId) then
-    removeWindow(pBottomBarId)
-  end if
-end
-
-on showInfostand me
-  if not windowExists(pInfoStandId) then
-    createWindow(pInfoStandId, "info_stand.window", 552, 332)
-    tWndObj = getWindow(pInfoStandId)
-    tWndObj.lock(1)
-    tWndObj.registerClient(me.getID())
-    tWndObj.registerProcedure(#eventProcInfoStand, me.getID(), #mouseUp)
-  end if
-  return 1
-end
-
-on hideInfoStand me
-  if windowExists(pInfoStandId) then
-    return removeWindow(pInfoStandId)
+  tGUI = getObject(pRoomGuiID)
+  if not voidp(tGUI) and not tGUI = 0 then
+    tGUI.hideRoomBar()
   end if
 end
 
 on showInterface me, tObjType
   tSession = getObject(#session)
-  tUserRights = getObject(#session).get("user_rights")
+  tUserRights = getObject(#session).GET("user_rights")
   tOwnUser = me.getComponent().getOwnUser()
-  if tOwnUser = 0 then
-    return error(me, "Own user not found!", #showInterface)
+  if tOwnUser = 0 and tObjType <> "user" then
+    return error(me, "Own user not found!", #showInterface, #major)
   end if
   if tObjType = "active" or tObjType = "item" then
     tSomeRights = 0
@@ -192,19 +162,22 @@ on showInterface me, tObjType
     end if
   end if
   tCtrlType = EMPTY
-  if tSession.get("room_controller") or tUserRights.getOne("fuse_any_room_controller") then
+  if tSession.GET("room_controller") or tUserRights.getOne("fuse_any_room_controller") then
     tCtrlType = "ctrl"
   end if
-  if tSession.get("room_owner") then
+  if tSession.GET("room_owner") then
     tCtrlType = "owner"
   end if
   if tObjType = "user" then
-    if pSelectedObj = tSession.get("user_index") then
+    if pSelectedObj = tSession.GET("user_index") then
       tCtrlType = "personal"
     else
       if tCtrlType = EMPTY then
         tCtrlType = "friend"
       end if
+    end if
+    if tOwnUser = 0 then
+      tCtrlType = "spectator"
     end if
   end if
   if variableExists("interface.cmds." & tObjType & "." & tCtrlType) then
@@ -213,7 +186,7 @@ on showInterface me, tObjType
     return me.hideInterface(#hide)
   end if
   if tObjType = "active" or tObjType = "item" then
-    if getObject(#session).get("user_rights").getOne("fuse_pick_up_any_furni") then
+    if getObject(#session).GET("user_rights").getOne("fuse_pick_up_any_furni") then
       if tButtonList.getPos("pick") = 0 then
         tButtonList.add("pick")
       end if
@@ -224,20 +197,24 @@ on showInterface me, tObjType
   end if
   if tUserRights.getOne("fuse_use_club_dance") then
     tButtonList.deleteOne("dance")
-    if tOwnUser.getProperty(#dancing) = 0 then
-      me.dancingStoppedExternally()
+    if tOwnUser <> 0 then
+      if tOwnUser.getProperty(#dancing) = 0 then
+        me.dancingStoppedExternally()
+      end if
     end if
   else
     tButtonList.deleteOne("hcdance")
   end if
-  tMainAction = tOwnUser.getProperty(#mainAction)
-  tSwimming = tOwnUser.getProperty(#swimming)
-  if tMainAction = "sit" or tMainAction = "lay" or tSwimming then
-    tButtonList.deleteOne("dance")
-    tButtonList.deleteOne("hcdance")
-  end if
-  if tSwimming then
-    tButtonList.deleteOne("wave")
+  if tOwnUser <> 0 then
+    tMainAction = tOwnUser.getProperty(#mainAction)
+    tSwimming = tOwnUser.getProperty(#swimming)
+    if tMainAction = "sit" or tMainAction = "lay" or tSwimming then
+      tButtonList.deleteOne("dance")
+      tButtonList.deleteOne("hcdance")
+    end if
+    if tSwimming then
+      tButtonList.deleteOne("wave")
+    end if
   end if
   if tObjType = "item" then
     tObjType = "active"
@@ -247,7 +224,7 @@ on showInterface me, tObjType
   end if
   if me.getComponent().getRoomData().type = #private then
     if tObjType = "user" then
-      if pSelectedObj <> tSession.get("user_name") then
+      if pSelectedObj <> tSession.GET("user_name") then
         tUserInfo = me.getComponent().getUserObject(pSelectedObj).getInfo()
         if tUserInfo.ctrl = 0 then
           tButtonList.deleteOne("take_rights")
@@ -289,12 +266,18 @@ on showInterface me, tObjType
     end if
   end if
   if tCtrlType = "personal" then
-    if getObject("session").get("available_badges").ilk <> #list then
+    if getObject("session").GET("available_badges").ilk <> #list then
       tButtonList.deleteOne("badge")
     else
-      if getObject("session").get("available_badges").count < 1 then
+      if getObject("session").GET("available_badges").count < 1 then
         tButtonList.deleteOne("badge")
       end if
+    end if
+  end if
+  if tObjType = "user" then
+    tWebID = me.getComponent().getUserObject(pSelectedObj).getWebID()
+    if not variableExists("link.format.userpage") or voidp(tWebID) then
+      tButtonList.deleteOne("userpage")
     end if
   end if
   tWndObj = getWindow(pInterfaceId)
@@ -335,7 +318,9 @@ on showInterface me, tObjType
       end if
     end if
     if tButtonList.getPos("trade") > 0 then
-      if me.getComponent().getRoomID() <> "private" or me.getComponent().getRoomData()[#trading] = 0 then
+      tNotPrivateRoom = me.getComponent().getRoomID() <> "private"
+      tNoTrading = me.getComponent().getRoomData()[#trading] = 0
+      if pTradeTimeout or tNotPrivateRoom or tNoTrading then
         tWndObj.getElement("trade.button").deactivate()
       end if
       if not tUserRights.getOne("fuse_trade") then
@@ -346,13 +331,35 @@ on showInterface me, tObjType
   return 1
 end
 
+on startTradeButtonTimeout me
+  pTradeTimeout = 1
+  tWndObj = getWindow(pInterfaceId)
+  if tWndObj <> 0 then
+    if tWndObj.elementExists("trade.button") then
+      tWndObj.getElement("trade.button").deactivate()
+    end if
+  end if
+  tTimeout = getVariable("room.request.timeout", 10000)
+  createTimeout(#activeTradeButton, tTimeout, #endTradeButtonTimeout, me.getID(), VOID, 1)
+end
+
+on endTradeButtonTimeout me
+  pTradeTimeout = 0
+  tWndObj = getWindow(pInterfaceId)
+  if tWndObj <> 0 then
+    if tWndObj.elementExists("trade.button") then
+      tWndObj.getElement("trade.button").Activate()
+    end if
+  end if
+end
+
 on hideInterface me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #remove
+    tHideOrRemove = #Remove
   end if
   tWndObj = getWindow(pInterfaceId)
   if tWndObj <> 0 then
-    if tHideOrRemove = #remove then
+    if tHideOrRemove = #Remove then
       return removeWindow(pInterfaceId)
     else
       return tWndObj.hide()
@@ -361,82 +368,75 @@ on hideInterface me, tHideOrRemove
   return 0
 end
 
-on showObjectInfo me, tObjType
-  tWndObj = getWindow(pInfoStandId)
-  if not tWndObj then
-    return 0
-  end if
-  case tObjType of
-    "user":
-      tObj = me.getComponent().getUserObject(pSelectedObj)
-    "active":
-      tObj = me.getComponent().getActiveObject(pSelectedObj)
-    "item":
-      tObj = me.getComponent().getItemObject(pSelectedObj)
-    "pet":
-      tObj = me.getComponent().getUserObject(pSelectedObj)
-    otherwise:
-      error(me, "Unsupported object type:" && tObjType, #showObjectInfo)
-      tObj = 0
-  end case
-  if tObj = 0 then
-    tProps = 0
-  else
-    tProps = tObj.getInfo()
-  end if
-  if listp(tProps) then
-    tWndObj.getElement("bg_darken").show()
-    tWndObj.getElement("info_name").show()
-    tWndObj.getElement("info_text").show()
-    tWndObj.getElement("info_name").setText(tProps[#name])
-    tWndObj.getElement("info_text").setText(tProps[#Custom])
-    tElem = tWndObj.getElement("info_image")
-    if ilk(tProps[#image]) = #image then
-      tElem.resizeTo(tProps[#image].width, tProps[#image].height)
-      tElem.getProperty(#sprite).member.regPoint = point(tProps[#image].width / 2, tProps[#image].height)
-      tElem.feedImage(tProps[#image])
-    end if
-    me.updateInfoStandBadge(tProps[#badge])
-    return 1
-  else
-    return me.hideObjectInfo()
-  end if
-end
-
-on hideObjectInfo me
-  if objectExists("BadgeEffect") then
-    removeObject("BadgeEffect")
-  end if
-  if not windowExists(pInfoStandId) then
-    return 0
-  end if
-  tWndObj = getWindow(pInfoStandId)
-  tWndObj.getElement("info_image").clearImage()
-  tWndObj.getElement("bg_darken").hide()
-  tWndObj.getElement("info_name").hide()
-  tWndObj.getElement("info_text").hide()
-  tWndObj.getElement("info_badge").clearImage()
-  return 1
-end
-
-on updateInfoStandBadge me, tBadgeID, tUserID
-  if objectExists(pBadgeObjID) then
-    return me.getBadgeObject().updateInfoStandBadge(pInfoStandId, pSelectedObj, tBadgeID, tUserID)
-  end if
-end
-
 on showArrowHiliter me, tUserID
-  return me.getArrowHiliter().show(tUserID)
+  if objectExists(pArrowObjID) then
+    return me.getArrowHiliter().show(tUserID)
+  end if
 end
 
 on hideArrowHiliter me
   return me.getArrowHiliter().hide()
 end
 
-on showDoorBell me, tName
+on showDoorBellWaiting me
+  me.hideLoaderBar()
+  createWindow(pLoaderBarID, "habbo_simple.window")
+  tWndObj = getWindow(pLoaderBarID)
+  if tWndObj = 0 then
+    return 0
+  end if
+  tWndObj.merge("room_doorbell_waiting.window")
+  tWndObj.center()
+  tWndObj.registerClient(me.getID())
+  tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
+  tRoomData = me.getComponent().getRoomData()
+  if tRoomData = 0 then
+    return 1
+  end if
+  tRoomName = tRoomData[#name]
+  tElem = tWndObj.getElement("room_doorbell_roomname")
+  if tElem = 0 then
+    return 1
+  end if
+  tElem.setText(tRoomName)
+  return 1
+end
+
+on showDoorBellAccepted me, tName
+  if tName = EMPTY then
+    nothing()
+  else
+    if objectExists(pDoorBellID) then
+      getObject(pDoorBellID).removeFromList(tName)
+    end if
+  end if
+  return 1
+end
+
+on showDoorBellRejected me, tName
+  if tName = EMPTY then
+    me.hideLoaderBar()
+    createWindow(pLoaderBarID, "habbo_simple.window")
+    tWndObj = getWindow(pLoaderBarID)
+    if tWndObj = 0 then
+      return 0
+    end if
+    tWndObj.merge("room_doorbell_rejected.window")
+    tWndObj.center()
+    tWndObj.registerClient(me.getID())
+    tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
+  else
+    if objectExists(pDoorBellID) then
+      getObject(pDoorBellID).removeFromList(tName)
+    end if
+  end if
+  return 1
+end
+
+on showDoorBellDialog me, tName
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 then
-    return error(me, "Own user not found!", #showDoorBell)
+    return error(me, "Own user not found!", #showDoorBell, #major)
   end if
   if tOwnUser.getInfo().ctrl = 0 then
     return 1
@@ -446,15 +446,9 @@ on showDoorBell me, tName
   end if
 end
 
-on hideDoorBell me
+on hideDoorBellDialog me
   if objectExists(pDoorBellID) then
     getObject(pDoorBellID).hideDoorBell()
-  end if
-end
-
-on roomEnterDoorBell me, tName
-  if objectExists(pDoorBellID) then
-    getObject(pDoorBellID).removeFromList(tName)
   end if
 end
 
@@ -468,7 +462,7 @@ on showLoaderBar me, tCastLoadId, tText
     tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
     if not voidp(tCastLoadId) then
       tBuffer = tWndObj.getElement("gen_loaderbar").getProperty(#buffer).image
-      showLoadingBar(tCastLoadId, [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)])
+      pLoadingBarID = showLoadingBar(tCastLoadId, [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)])
     end if
     if stringp(tText) then
       tWndObj.getElement("general_loader_text").setText(tText)
@@ -485,6 +479,7 @@ on hideLoaderBar me
   if not voidp(tInterstitialMngr) then
     tInterstitialMngr.adClosed()
   end if
+  pLoadingBarID = 0
 end
 
 on resizeInterstitialWindow me
@@ -516,8 +511,10 @@ on resizeInterstitialWindow me
   if tAdHeight > tAdMaxH then
     tAdHeight = tAdMaxH
   end if
-  tAdImage = image(tAdWidth, tAdHeight, 32)
-  tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
+  if tAdMember.type = #bitmap then
+    tAdImage = image(tAdWidth, tAdHeight, 32)
+    tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
+  end if
   tWndWidth = 240
   tBorderWidth = 25
   tAdLocX = 0
@@ -532,10 +529,13 @@ on resizeInterstitialWindow me
   end if
   tWndObj.resizeBy(tOffX, tOffY)
   tWndObj.center()
-  tLoadTxtElem = tWndObj.getElement("general_loader_text")
-  tLoadTxtElem.setText(tLoadTxtElem.getText())
-  tQueueTxtElem = tWndObj.getElement("queue_text")
-  tQueueTxtElem.setText(tQueueTxtElem.getText())
+  tElementList = ["general_loader_text", "queue_text", "second_queue_title", "queue_text_2"]
+  repeat with tElemID in tElementList
+    tElem = tWndObj.getElement(tElemID)
+    if tElem <> 0 then
+      tElem.setText(tElem.getText())
+    end if
+  end repeat
   if not tWndObj.elementExists("room_banner_pic") then
     return 0
   end if
@@ -551,28 +551,60 @@ on resizeInterstitialWindow me
   tAdSprite.registerProcedure(#eventProc, tInterstitialMngr.getID(), #mouseWithin)
 end
 
-on updateQueueWindow me, tQueueSet, tQueueData
+on updateQueueWindow me, tQueueCollection
   if not windowExists(pLoaderBarID) then
     return 0
   end if
   tWndObj = getWindow(pLoaderBarID)
+  if pLoadingBarID <> 0 then
+    if objectExists(pLoadingBarID) then
+      removeObject(pLoadingBarID)
+    end if
+    pLoadingBarID = 0
+  end if
+  tWndObj.unmerge()
+  if tQueueCollection.count() = 1 then
+    tWndObj.merge("room_loader.window")
+    tSetCount = 1
+  else
+    tWndObj.merge("room_loader_2.window")
+    tSetCount = 2
+  end if
+  tWndObj.center()
+  tWndObj.registerClient(me.getID())
+  tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
+  if tWndObj.elementExists("gen_loaderbar") then
+    tWndObj.getElement("gen_loaderbar").setProperty(#visible, 0)
+  end if
   if not tWndObj.elementExists("general_loader_text") then
     return 0
   end if
-  if not tWndObj.elementExists("gen_loaderbar") then
-    return 0
-  end if
-  tLoadTxtElem = tWndObj.getElement("general_loader_text")
-  tLoadTxtElem.setText(getText("queue_line"))
-  tWndObj.getElement("gen_loaderbar").setProperty(#visible, 0)
-  tQueueTxtElem = tWndObj.getElement("queue_text")
-  tQueueTxt = getText("queue_set." & tQueueSet & ".info")
-  repeat with tCount = 1 to tQueueData.count
-    tQueueProp = getPropAt(tQueueData, tCount)
-    tQueueValue = tQueueData[tQueueProp]
-    tQueueTxt = replaceChunks(tQueueTxt, "%" & tQueueProp & "%", tQueueValue)
+  tTitleElementList = ["general_loader_text", "second_queue_title"]
+  tTextElementList = ["queue_text", "queue_text_2"]
+  tTitleTextList = ["queue_current_", "queue_other_"]
+  pQueueCollection = tQueueCollection.duplicate()
+  repeat with i = 1 to tSetCount
+    tQueueSet = pQueueCollection[i]
+    tQueueTarget = tQueueSet["target"]
+    tQueueData = tQueueSet["data"]
+    tQueueSetName = tQueueSet["name"]
+    if tWndObj.elementExists(tTitleElementList[i]) then
+      tTitleElem = tWndObj.getElement(tTitleElementList[i])
+      tTitleElem.setText(getText(tTitleTextList[i] & string(tQueueTarget)))
+    end if
+    if tWndObj.elementExists(tTextElementList[i]) then
+      tQueueTxtElem = tWndObj.getElement(tTextElementList[i])
+      tQueueTxt = getText("queue_set." & tQueueSetName & ".info")
+      repeat with tCount = 1 to tQueueData.count
+        tQueueProp = getPropAt(tQueueData, tCount)
+        tQueueValue = tQueueData[tQueueProp]
+        tQueueTxt = replaceChunks(tQueueTxt, "%" & tQueueProp & "%", tQueueValue)
+      end repeat
+      tQueueTxtElem.setText(tQueueTxt)
+    end if
   end repeat
-  tQueueTxtElem.setText(tQueueTxt)
+  me.resizeInterstitialWindow()
+  return 1
 end
 
 on showTrashCover me, tlocz, tColor
@@ -627,13 +659,15 @@ on hideAll me
   if objectExists(#photo_interface) then
     getObject(#photo_interface).close()
   end if
+  if objectExists(pInfoStandId) then
+    getObject(pInfoStandId).hideInfoStand()
+  end if
   me.hideRoom()
   me.hideRoomBar()
-  me.hideInfoStand()
-  me.hideInterface(#remove)
+  me.hideInterface(#Remove)
   me.hideConfirmDelete()
   me.hideConfirmPlace()
-  me.hideDoorBell()
+  me.hideDoorBellDialog()
   me.hideLoaderBar()
   me.hideTrashCover()
   me.hideLoaderBar()
@@ -672,8 +706,16 @@ on getObjectMover me
   return getObject(pObjMoverID)
 end
 
+on setSelectedObject me, tSelectedObj
+  pSelectedObj = tSelectedObj
+end
+
 on getSelectedObject me
   return pSelectedObj
+end
+
+on getInfoStandObject me
+  return getObject(pInfoStandId)
 end
 
 on getProperty me, tPropID
@@ -713,61 +755,36 @@ on dancingStoppedExternally me
   return 1
 end
 
-on setSpeechDropdown me, tMode
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj = 0 then
-    return 1
-  end if
-  tElem = tWndObj.getElement("int_speechmode_dropmenu")
-  if tElem = 0 then
-    return 1
-  end if
-  tElem.setSelection(tMode, 1)
-  return 1
-end
-
-on deobfuscate me, tList
-  tString = EMPTY
-  repeat with i = 1 to tList.count
-    if i = tList.count then
-      return tString
-    end if
-    tKusetus = bitXor(tList[i], 101)
-    tNum = bitXor(tList[i + 1], tKusetus) + 14
-    tString = tString & numToChar(tNum)
-    i = i + 1
-  end repeat
-  return tString
-end
-
 on getKeywords me
-  t = [[33, 87, 198, 246, 224, 219, 19, 45, 50, 0, 85, 80, 242, 241, 207, 244], [69, 51, 77, 125, 196, 255, 241, 207, 144, 162, 152, 157, 103, 100, 118, 69], [97, 23, 153, 169, 110, 85, 198, 248, 254, 204, 98, 103, 139, 136, 112, 115]]
-  return [me.deobfuscate(t[1]), me.deobfuscate(t[2]), me.deobfuscate(t[3])]
+  return [deobfuscate("$cMgMXLrlJM|OI-9"), deobfuscate("%bl&-ym3Lj-|.I-)"), deobfuscate("EBLFM9M2,KM|oH/h")]
 end
 
 on notify me, ttype
   case ttype of
     400:
-      executeMessage(#alert, [#msg: "room_cant_trade"])
+      executeMessage(#alert, [#Msg: "room_cant_trade"])
     401:
-      executeMessage(#alert, [#msg: "room_max_pet_limit"])
+      executeMessage(#alert, [#Msg: "room_max_pet_limit"])
     402:
-      executeMessage(#alert, [#msg: "room_cant_set_item"])
+      executeMessage(#alert, [#Msg: "room_cant_set_item"])
     403:
-      executeMessage(#alert, [#msg: "wallitem_post.it.limit"])
+      executeMessage(#alert, [#Msg: "wallitem_post.it.limit"])
     404:
-      executeMessage(#alert, [#msg: "queue_tile_limit"])
+      executeMessage(#alert, [#Msg: "queue_tile_limit"])
+    405:
+      executeMessage(#alert, [#Msg: "room_alert_furni_limit", #id: "roomfullfurni", #modal: 1])
+    406:
+      executeMessage(#alert, [#Msg: "room_sound_furni_limit"])
   end case
 end
 
-on setRollOverInfo me, tInfo
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj <> 0 then
-    tWndObj.getElement("room_tooltip_text").setText(tInfo)
+on getIgnoreStatus me, tUserID, tName
+  if not objectp(pIgnoreListObj) then
+    return 0
   end if
-end
-
-on getIgnoreStatus me, tUserID
+  if not voidp(tName) then
+    return pIgnoreListObj.getIgnoreStatus(tName)
+  end if
   if me.getComponent().userObjectExists(tUserID) and objectp(pIgnoreListObj) then
     tName = me.getComponent().getUserObject(tUserID).getName()
     return pIgnoreListObj.getIgnoreStatus(tName)
@@ -776,7 +793,7 @@ on getIgnoreStatus me, tUserID
   end if
 end
 
-on uningoreAdmin me, tUserID, tBadge
+on unignoreAdmin me, tUserID, tBadge
   if me.getComponent().userObjectExists(tUserID) and pModBadgeList.getOne(tBadge) > 0 then
     tName = me.getComponent().getUserObject(tUserID).getName()
     if objectp(pIgnoreListObj) then
@@ -787,7 +804,7 @@ on uningoreAdmin me, tUserID, tBadge
   end if
 end
 
-on startObjectMover me, tObjID, tStripID
+on startObjectMover me, tObjID, tStripID, tProps
   if not objectExists(pObjMoverID) then
     createObject(pObjMoverID, "Object Mover Class")
   end if
@@ -797,21 +814,23 @@ on startObjectMover me, tObjID, tStripID
     "item":
       pClickAction = "moveItem"
     "user":
-      return error(me, "Can't move user objects!", #startObjectMover)
+      return error(me, "Can't move user objects!", #startObjectMover, #minor)
   end case
-  return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType)
+  return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType, tProps)
 end
 
 on stopObjectMover me
   if not objectExists(pObjMoverID) then
-    return error(me, "Object mover not found!", #stopObjectMover)
+    return error(me, "Object mover not found!", #stopObjectMover, #minor)
   end if
+  getObject(pObjMoverID).clear()
   pClickAction = "moveHuman"
   pSelectedObj = EMPTY
   pSelectedType = EMPTY
-  me.hideObjectInfo()
+  if objectExists(pInfoStandId) then
+    getObject(pInfoStandId).hideObjectInfo()
+  end if
   me.hideInterface(#hide)
-  getObject(pObjMoverID).clear()
   return 1
 end
 
@@ -819,7 +838,7 @@ on startTrading me, tTargetUser
   if pSelectedType <> "user" then
     return 0
   end if
-  if tTargetUser = getObject(#session).get("user_name") then
+  if tTargetUser = getObject(#session).GET("user_name") then
     return 0
   end if
   me.getComponent().getRoomConnection().send("TRADE_OPEN", tTargetUser)
@@ -830,7 +849,7 @@ on startTrading me, tTargetUser
 end
 
 on stopTrading me
-  return error(me, "TODO: stopTrading...!", #stopTrading)
+  return error(me, "TODO: stopTrading...!", #stopTrading, #minor)
   pClickAction = "moveHuman"
   if objectExists(pObjMoverID) then
     me.stopObjectMover()
@@ -843,7 +862,7 @@ on showConfirmDelete me
     return 0
   end if
   if not createWindow(pDelConfirmID, "habbo_basic.window", 200, 120) then
-    return error(me, "Couldn't create confirmation window!", #showConfirmDelete)
+    return error(me, "Couldn't create confirmation window!", #showConfirmDelete, #major)
   end if
   tMsgA = getText("room_confirmDelete", "Confirm delete")
   tMsgB = getText("room_areYouSure", "Are you absolutely sure you want to delete this item?")
@@ -870,7 +889,7 @@ on showConfirmPlace me
     return 0
   end if
   if not createWindow(pPlcConfirmID, "habbo_basic.window", 200, 120) then
-    return error(me, "Couldn't create confirmation window!", #showConfirmPlace)
+    return error(me, "Couldn't create confirmation window!", #showConfirmPlace, #major)
   end if
   tMsgA = getText("room_confirmPlace", "Confirm placement")
   tMsgB = getText("room_areYouSurePlace", "Are you absolutely sure you want to place this item?")
@@ -902,7 +921,7 @@ on placeFurniture me, tObjID, tObjType
       end if
       tObj = me.getComponent().getActiveObject(tObjID)
       if tObj = 0 then
-        return error(me, "Invalid active object:" && tObjID, #placeFurniture)
+        return error(me, "Invalid active object:" && tObjID, #placeFurniture, #major)
       end if
       tStripID = tObj.getaProp(#stripId)
       tStr = tStripID && tloc[1] && tloc[2] && tObj.pDimensions[1] && tObj.pDimensions[2] && tObj.pDirection[1]
@@ -916,7 +935,7 @@ on placeFurniture me, tObjID, tObjType
       end if
       tObj = me.getComponent().getItemObject(tObjID)
       if tObj = 0 then
-        return error(me, "Invalid item object:" && tObjID, #placeFurniture)
+        return error(me, "Invalid item object:" && tObjID, #placeFurniture, #major)
       end if
       tStripID = tObj.getaProp(#stripId)
       tStr = tStripID && tloc
@@ -927,55 +946,21 @@ on placeFurniture me, tObjID, tObjType
   return 0
 end
 
-on updateMessageCount me, tMsgCount
-  if windowExists(pBottomBarId) then
-    pNewMsgCount = value(tMsgCount)
-    me.flashMessengerIcon()
+on setSpeechDropdown me, tMode
+  tGUI = getObject(pRoomGuiID)
+  if not voidp(tGUI) and not tGUI = 0 then
+    tGUI.setSpeechDropdown(tMode)
   end if
-  return 1
 end
 
-on updateBuddyrequestCount me, tReqCount
-  if windowExists(pBottomBarId) then
-    pNewBuddyReq = value(tReqCount)
-    me.flashMessengerIcon()
-  end if
-  return 1
+on showCfhSenderDelayed me, tID
+  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tID, 1)
 end
 
-on flashMessengerIcon me
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj = 0 then
-    return 0
+on highLightCfhSender me, tID
+  if not voidp(tID) then
+    me.showArrowHiliter(tID)
   end if
-  if not tWndObj.elementExists("int_messenger_image") then
-    return 0
-  end if
-  if pMessengerFlash then
-    tmember = "mes_lite_icon"
-    pMessengerFlash = 0
-  else
-    tmember = "mes_dark_icon"
-    pMessengerFlash = 1
-  end if
-  if pNewMsgCount = 0 and pNewBuddyReq = 0 then
-    tmember = "mes_dark_icon"
-    if timeoutExists(#flash_messenger_icon) then
-      removeTimeout(#flash_messenger_icon)
-    end if
-  else
-    if pNewMsgCount > 0 then
-      if not timeoutExists(#flash_messenger_icon) then
-        createTimeout(#flash_messenger_icon, 500, #flashMessengerIcon, me.getID(), VOID, 0)
-      end if
-    else
-      tmember = "mes_lite_icon"
-      if timeoutExists(#flash_messenger_icon) then
-        removeTimeout(#flash_messenger_icon)
-      end if
-    end if
-  end if
-  tWndObj.getElement("int_messenger_image").getProperty(#sprite).setMember(member(getmemnum(tmember)))
   return 1
 end
 
@@ -1004,13 +989,29 @@ on validateEvent me, tEvent, tSprID, tloc
   return 1
 end
 
+on objectFinalized me, tID
+  if pSelectedObj = tID then
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).showObjectInfo(pSelectedType)
+    end if
+  end if
+end
+
+on showRemoveSpecsNotice me
+  executeMessage(#alert, [#Msg: "room_remove_specs", #modal: 1])
+end
+
 on eventProcActiveRollOver me, tEvent, tSprID, tProp
+  tGUI = getObject(pRoomGuiID)
+  if voidp(tGUI) or tGUI = 0 then
+    return 0
+  end if
   if me.getComponent().getRoomData().type = #private then
     if tEvent = #mouseEnter then
-      me.setRollOverInfo(me.getComponent().getActiveObject(tSprID).getCustom())
+      tGUI.setRollOverInfo(me.getComponent().getActiveObject(tSprID).getCustom())
     else
       if tEvent = #mouseLeave then
-        me.setRollOverInfo(EMPTY)
+        tGUI.setRollOverInfo(EMPTY)
       end if
     end if
   end if
@@ -1024,188 +1025,35 @@ on eventProcUserRollOver me, tEvent, tSprID, tProp
       me.showArrowHiliter(VOID)
     end if
   end if
+  tGUI = getObject(pRoomGuiID)
+  if voidp(tGUI) or tGUI = 0 then
+    return 0
+  end if
   if tEvent = #mouseEnter then
     tObject = me.getComponent().getUserObject(tSprID)
     if tObject = 0 then
       return 
     end if
-    me.setRollOverInfo(tObject.getInfo().getaProp(#name))
+    tGUI.setRollOverInfo(tObject.getInfo().getaProp(#name))
   else
     if tEvent = #mouseLeave then
-      me.setRollOverInfo(EMPTY)
+      tGUI.setRollOverInfo(EMPTY)
     end if
   end if
 end
 
 on eventProcItemRollOver me, tEvent, tSprID, tProp
-  if tEvent = #mouseEnter then
-    me.setRollOverInfo(me.getComponent().getItemObject(tSprID).getCustom())
-  else
-    if tEvent = #mouseLeave then
-      me.setRollOverInfo(EMPTY)
-    end if
-  end if
-end
-
-on eventProcRoomBar me, tEvent, tSprID, tParam
-  if tEvent = #keyDown and tSprID = "chat_field" then
-    tChatField = getWindow(pBottomBarId).getElement(tSprID)
-    if the commandDown and (the keyCode = 8 or the keyCode = 9) then
-      if not getObject(#session).get("user_rights").getOne("fuse_debug_window") then
-        tChatField.setText(EMPTY)
-        return 1
-      end if
-    end if
-    case the keyCode of
-      36, 76:
-        if tChatField.getText() = EMPTY then
-          return 1
-        end if
-        if pFloodblocking then
-          if the milliSeconds < pFloodTimer then
-            return 0
-          else
-            pFloodEnterCount = VOID
-          end if
-        end if
-        if voidp(pFloodEnterCount) then
-          pFloodEnterCount = 0
-          pFloodblocking = 0
-          pFloodTimer = the milliSeconds
-        else
-          pFloodEnterCount = pFloodEnterCount + 1
-          if pFloodEnterCount > 2 then
-            if the milliSeconds < pFloodTimer + 3000 then
-              tChatField.setText(EMPTY)
-              createObject("FloodBlocking", "Flood Blocking Class")
-              getObject("FloodBlocking").Init(pBottomBarId, tSprID, 30000)
-              pFloodblocking = 1
-              pFloodTimer = the milliSeconds + 30000
-            else
-              pFloodEnterCount = VOID
-            end if
-          end if
-        end if
-        me.getComponent().sendChat(tChatField.getText())
-        tChatField.setText(EMPTY)
-        return 1
-      117:
-        tChatField.setText(EMPTY)
-    end case
+  tGUI = getObject(pRoomGuiID)
+  if voidp(tGUI) or tGUI = 0 then
     return 0
   end if
-  if getWindow(pBottomBarId).getElement(tSprID).getProperty(#blend) = 100 then
-    case tSprID of
-      "int_help_image":
-        if tEvent = #mouseUp then
-          executeMessage(#openGeneralDialog, #help)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_help", "interface_icon_help")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_hand_image":
-        if tEvent = #mouseUp then
-          me.getContainer().openClose()
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_hand", "interface_icon_hand")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_brochure_image":
-        if tEvent = #mouseUp then
-          executeMessage(#show_hide_catalogue)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_catalog", "interface_icon_catalog")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_purse_image":
-        if tEvent = #mouseUp then
-          executeMessage(#openGeneralDialog, #purse)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_purse", "interface_icon_purse")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_nav_image":
-        if tEvent = #mouseUp then
-          executeMessage(#show_hide_navigator)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_navigator", "interface_icon_navigator")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_messenger_image":
-        if tEvent = #mouseUp then
-          executeMessage(#show_hide_messenger)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_messenger", "interface_icon_messenger")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-      "int_hand_image":
-        if tEvent = #mouseUp then
-          me.getContainer().openClose()
-        end if
-      "get_credit_text":
-        if tEvent = #mouseUp then
-          executeMessage(#openGeneralDialog, #purse)
-        end if
-      "int_speechmode_dropmenu":
-        if tEvent = #mouseUp then
-          me.getComponent().setChatMode(tParam)
-        end if
-      "int_tv_close":
-        if tEvent = #mouseUp then
-          me.getComponent().setSpectatorMode(0)
-        end if
-        if tEvent = #mouseEnter then
-          tInfo = getText("interface_icon_tv_close")
-          me.setRollOverInfo(tInfo)
-        else
-          if tEvent = #mouseLeave then
-            me.setRollOverInfo(EMPTY)
-          end if
-        end if
-    end case
-  end if
-end
-
-on eventProcInfoStand me, tEvent, tSprID, tParam
-  if tSprID = "info_badge" then
-    tSession = getObject(#session)
-    if me.getSelectedObject() = tSession.get("user_index") then
-      if objectExists(pBadgeObjID) then
-        getObject(pBadgeObjID).toggleOwnBadgeVisibility()
-      end if
+  if tEvent = #mouseEnter then
+    tGUI.setRollOverInfo(me.getComponent().getItemObject(tSprID).getCustom())
+  else
+    if tEvent = #mouseLeave then
+      tGUI.setRollOverInfo(EMPTY)
     end if
   end if
-  return 1
 end
 
 on eventProcInterface me, tEvent, tSprID, tParam
@@ -1222,7 +1070,9 @@ on eventProcInterface me, tEvent, tSprID, tParam
   end if
   tOwnUser = tComponent.getOwnUser()
   if tOwnUser = 0 then
-    return error(me, "Own user not found!", #eventProcInterface)
+    if not (tSprID = "kick.button" or tSprID = "give_rights.button" or tSprID = "take_rights.button" or tSprID = "friend.button" or tSprID = "ignore.button" or tSprID = "unignore.button") then
+      return error(me, "Own user not found!", #eventProcInterface, #major)
+    end if
   end if
   case tSprID of
     "dance.button":
@@ -1283,7 +1133,9 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       tComponent.getRoomConnection().send("ASSIGNRIGHTS", tUserName)
       pSelectedObj = EMPTY
-      me.hideObjectInfo()
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.hideInterface(#hide)
       me.hideArrowHiliter()
       return 1
@@ -1295,7 +1147,9 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       tComponent.getRoomConnection().send("REMOVERIGHTS", tUserName)
       pSelectedObj = EMPTY
-      me.hideObjectInfo()
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.hideInterface(#hide)
       me.hideArrowHiliter()
       return 1
@@ -1308,6 +1162,12 @@ on eventProcInterface me, tEvent, tSprID, tParam
       executeMessage(#externalBuddyRequest, tUserName)
       return 1
     "trade.button":
+      tList = [:]
+      tList["showDialog"] = 1
+      executeMessage(#getHotelClosingStatus, tList)
+      if tList["retval"] = 1 then
+        return 1
+      end if
       if tComponent.userObjectExists(pSelectedObj) then
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
       else
@@ -1315,6 +1175,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       me.startTrading(pSelectedObj)
       me.getContainer().open()
+      me.startTradeButtonTimeout()
       return 1
     "ignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
@@ -1334,8 +1195,16 @@ on eventProcInterface me, tEvent, tSprID, tParam
       if objectExists(pBadgeObjID) then
         getObject(pBadgeObjID).openBadgeWindow()
       end if
+    "userpage.button":
+      if variableExists("link.format.userpage") then
+        tWebID = tComponent.getUserObject(pSelectedObj).getWebID()
+        if not voidp(tWebID) then
+          tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(tWebID))
+          openNetPage(tDestURL)
+        end if
+      end if
   end case
-  return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface)
+  return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
 end
 
 on eventProcRoom me, tEvent, tSprID, tParam
@@ -1354,16 +1223,19 @@ on eventProcRoom me, tEvent, tSprID, tParam
       "GOAWAY":
         tPrm = [:]
       otherwise:
-        error(me, "Is this command valid:" && tCmd & "?", #eventProcRoom)
+        error(me, "Is this command valid:" && tCmd & "?", #eventProcRoom, #minor)
     end case
     return me.getComponent().getRoomConnection().send(tCmd, tPrm)
   end if
-  if tEvent = #mouseDown then
+  tDragging = 0
+  if tEvent = #mouseDown or tDragging then
     case pClickAction of
       "moveHuman":
         if tParam <> "object_selection" then
           pSelectedObj = EMPTY
-          me.hideObjectInfo()
+          if objectExists(pInfoStandId) then
+            getObject(pInfoStandId).hideObjectInfo()
+          end if
           me.hideInterface(#hide)
           me.hideArrowHiliter()
         end if
@@ -1378,24 +1250,26 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
         tObj = me.getComponent().getActiveObject(pSelectedObj)
         if tObj = 0 then
-          return error(me, "Invalid active object:" && pSelectedObj, #eventProcRoom)
+          return error(me, "Invalid active object:" && pSelectedObj, #eventProcRoom, #major)
         end if
         me.getComponent().getRoomConnection().send("MOVESTUFF", pSelectedObj && tloc[1] && tloc[2] && tObj.pDirection[1])
         me.stopObjectMover()
       "placeActive":
-        if getObject(#session).get("room_controller") or getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+        if getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tCanPlace = 1
         end if
         if not tCanPlace then
           return 0
         end if
-        if getObject(#session).get("room_owner") then
+        if getObject(#session).GET("room_owner") then
           me.placeFurniture(pSelectedObj, pSelectedType)
           me.hideInterface(#hide)
-          me.hideObjectInfo()
+          if objectExists(pInfoStandId) then
+            getObject(pInfoStandId).hideObjectInfo()
+          end if
           me.stopObjectMover()
         else
-          if not getObject(#session).get("user_rights").getOne("fuse_trade") then
+          if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
             return 0
           end if
           tloc = getObject(pObjMoverID).getProperty(#loc)
@@ -1407,20 +1281,22 @@ on eventProcRoom me, tEvent, tSprID, tParam
           end if
         end if
       "placeItem":
-        if getObject(#session).get("room_controller") or getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+        if getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tCanPlace = 1
         end if
         if not tCanPlace then
           return 0
         end if
-        if getObject(#session).get("room_owner") then
+        if getObject(#session).GET("room_owner") then
           if me.placeFurniture(pSelectedObj, pSelectedType) then
             me.hideInterface(#hide)
-            me.hideObjectInfo()
+            if objectExists(pInfoStandId) then
+              getObject(pInfoStandId).hideObjectInfo()
+            end if
             me.stopObjectMover()
           end if
         else
-          if not getObject(#session).get("user_rights").getOne("fuse_trade") then
+          if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
             return 0
           end if
           tloc = getObject(pObjMoverID).getProperty(#itemLocStr)
@@ -1433,17 +1309,17 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
       "tradeItem":
     end case
-    return error(me, "Unsupported click action:" && pClickAction, #eventProcRoom)
+    return error(me, "Unsupported click action:" && pClickAction, #eventProcRoom, #minor)
   end if
 end
 
 on eventProcUserObj me, tEvent, tSprID, tParam
   tObject = me.getComponent().getUserObject(tSprID)
   if tObject = 0 then
-    error(me, "User object not found:" && tSprID, #eventProcUserObj)
+    error(me, "User object not found:" && tSprID, #eventProcUserObj, #major)
     return me.eventProcRoom(tEvent, "floor")
   end if
-  if the shiftDown then
+  if the shiftDown and the optionDown then
     return me.outputObjectInfo(tSprID, "user", the rollover)
   end if
   if pClickAction = "moveActive" or pClickAction = "placeActive" then
@@ -1453,10 +1329,18 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     return me.eventProcRoom(tEvent, tSprID, tParam)
   end if
   if tObject.select() then
+    if tObject.getClass() = "user" then
+      executeMessage(#userClicked, tObject.getName())
+    end if
+    if tObject.getClass() = "user" and tEvent = #mouseDown then
+      executeMessage(#tutorial_userClicked)
+    end if
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = tObject.getClass()
-      me.showObjectInfo(pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.showArrowHiliter(tSprID)
     end if
@@ -1464,14 +1348,15 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tParam = #userEnters then
       tloc = [5, 5]
     end if
-    if tObject <> me.getComponent().getOwnUser() or tParam = #userEnters then
+    if tObject <> me.getComponent().getOwnUser() or (tObject.getProperty(#moving) or tParam = #userEnters) then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
     end if
-    me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
   else
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    me.hideObjectInfo()
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
   end if
@@ -1498,28 +1383,33 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
   if tObject = 0 then
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    me.hideObjectInfo()
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
-    return error(me, "Active object not found:" && tSprID, #eventProcActiveObj)
+    return error(me, "Active object not found:" && tSprID, #eventProcActiveObj, #major)
   end if
   if me.getComponent().getRoomData().type = #private then
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = "active"
-      me.showObjectInfo(pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.hideArrowHiliter()
     end if
   end if
-  tIsController = getObject(#session).get("room_controller")
-  if getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+  tIsController = getObject(#session).GET("room_controller")
+  if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
     tIsController = 1
   end if
   if the optionDown and tIsController then
     return me.startObjectMover(pSelectedObj)
   end if
-  if tObject.select() then
+  tTemp = call(#select, tObject)
+  if tTemp then
     return 1
   else
     return me.eventProcRoom(tEvent, "floor", "object_selection")
@@ -1528,7 +1418,7 @@ end
 
 on eventProcPassiveObj me, tEvent, tSprID, tParam
   if not me.validateEvent(tEvent, tSprID, the mouseLoc) then
-    pass()
+    return 0
   end if
   tObject = me.getComponent().getPassiveObject(tSprID)
   if the shiftDown then
@@ -1566,23 +1456,29 @@ on eventProcItemObj me, tEvent, tSprID, tParam
   if not me.getComponent().itemObjectExists(tSprID) then
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    me.hideObjectInfo()
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
-    return error(me, "Item object not found:" && tSprID, #eventProcItemObj)
+    return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
   end if
   if me.getComponent().getItemObject(tSprID).select() then
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = "item"
-      me.showObjectInfo(pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.hideArrowHiliter()
     end if
   else
     pSelectedObj = tSprID
     pSelectedType = "item"
-    me.showObjectInfo(pSelectedType)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).showObjectInfo(pSelectedType)
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
   end if
@@ -1599,7 +1495,9 @@ on eventProcDelConfirm me, tEvent, tSprID, tParam
           me.getComponent().getRoomConnection().send("REMOVEITEM", pDeleteObjID)
       end case
       me.hideInterface(#hide)
-      me.hideObjectInfo()
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       pDeleteObjID = EMPTY
       pDeleteType = EMPTY
     "habbo_decision_cancel", "close":
@@ -1614,7 +1512,9 @@ on eventProcPlcConfirm me, tEvent, tSprID, tParam
       me.placeFurniture(pSelectedObj, pSelectedType)
       me.hideConfirmPlace()
       me.hideInterface(#hide)
-      me.hideObjectInfo()
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.stopObjectMover()
     "habbo_decision_cancel", "close":
       me.getObjectMover().resume()
@@ -1630,7 +1530,7 @@ on eventProcBanner me, tEvent, tSprID, tParam
     "room_banner_link":
       if pBannerLink <> 0 then
         if connectionExists(pInfoConnID) and getObject(#session).exists("ad_id") then
-          getConnection(pInfoConnID).send("ADCLICK", getObject(#session).get("ad_id"))
+          getConnection(pInfoConnID).send("ADCLICK", getObject(#session).GET("ad_id"))
         end if
         openNetPage(pBannerLink)
       end if
@@ -1638,6 +1538,14 @@ on eventProcBanner me, tEvent, tSprID, tParam
       me.getComponent().getRoomConnection().send("QUIT")
       me.getComponent().removeEnterRoomAlert()
       executeMessage(#leaveRoom)
+    "queue_change":
+      if connectionExists(pInfoConnID) then
+        tSelected = 2
+        if pQueueCollection.count() >= tSelected then
+          tTarget = pQueueCollection[tSelected][#target]
+          getConnection(pInfoConnID).send("ROOM_QUEUE_CHANGE", [#integer: tTarget])
+        end if
+      end if
   end case
   return 1
 end
@@ -1666,25 +1574,33 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   tdata[#x] = tObj.pLocX
   tdata[#y] = tObj.pLocY
   tdata[#h] = tObj.pLocH
-  tdata[#dir] = tObj.pDirection
+  tdata[#Dir] = tObj.pDirection
   tdata[#locH] = sprite(tSprNum).locH
   tdata[#locV] = sprite(tSprNum).locV
   tdata[#locZ] = EMPTY
   tSprList = tObj.getSprites()
   repeat with tSpr in tSprList
-    tdata[#locZ] = tdata[#locZ] && tSpr.locZ
+    tdata[#locZ] = tdata[#locZ] & tSpr.locZ && EMPTY
+  end repeat
+  tdata[#sprNumList] = EMPTY
+  repeat with tSpr in tSprList
+    tdata[#sprNumList] = tdata[#sprNumList] & tSpr.spriteNum && EMPTY
   end repeat
   put "- - - - - - - - - - - - - - - - - - - - - -"
-  put "ID       " & tdata[#id]
-  put "Class    " & tdata[#class]
-  put "Member   " & sprite(tSprNum).member.name
-  put "World X  " & tdata[#x]
-  put "World Y  " & tdata[#y]
-  put "World H  " & tdata[#h]
-  put "Dir      " & tdata[#dir]
-  put "Scr X    " & tdata[#locH]
-  put "Scr Y    " & tdata[#locV]
-  put "Scr Z    " & tdata[#locZ]
+  put "ID            " & tdata[#id]
+  put "Class         " & tdata[#class]
+  put "Member        " & sprite(tSprNum).member.name
+  put "Cast          " & castLib(sprite(tSprNum).castLibNum).name
+  put "World X       " & tdata[#x]
+  put "World Y       " & tdata[#y]
+  put "World H       " & tdata[#h]
+  put "Dir           " & tdata[#Dir]
+  put "Scr X         " & tdata[#locH]
+  put "Scr Y         " & tdata[#locV]
+  put "Scr Z         " & tdata[#locZ]
+  put "This sprite   " & tSprNum
+  put "All sprites   " & tdata[#sprNumList]
+  put "Object info   " & tObj
   put "- - - - - - - - - - - - - - - - - - - - - -"
 end
 

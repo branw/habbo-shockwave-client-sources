@@ -1,17 +1,26 @@
-property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetType, pPetTemplateObj, pPetRacesList
+property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetTemplateObj, pPetRacesList, pNameCheckPending, pDefinitions
 
 on construct me
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #construct)
+    return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   tPetClass = value(readValueFromField("fuse.object.classes", RETURN, "pet"))
   pPetTemplateObj = createObject(#temp, tPetClass)
   pPageData = [:]
   pPetRacesList = [:]
+  tPetDEfText = member(getmemnum("pet.definitions")).text
+  tPetDEfText = replaceChunks(tPetDEfText, RETURN, EMPTY)
+  pPetDefinitions = value(tPetDEfText)
+  if ilk(pPetDefinitions) <> #propList then
+    pPetDefinitions = [:]
+    error(me, "Pet definitions has invalid data!", me.getID(), #construct, #major)
+  end if
   i = 0
   repeat while 1
-    if textExists("pet_race_" & i & "_000") then
+    tRaceDefExists = pPetDefinitions.getaProp(string(i)) <> VOID
+    tRaceTextExists = textExists("pet_race_" & i & "_000")
+    if tRaceDefExists and tRaceTextExists then
       tPetType = string(i)
       tTempRaces = []
       tTempRaces.add("000")
@@ -30,15 +39,16 @@ on construct me
           tTempRaces.add(tTemp)
         else
           tColorList = []
-          if memberExists("petColors_" & tPetType) then
-            tColorTxt = member(getmemnum("petColors_" & tPetType)).text
+          tPetColorId = pPetDefinitions[tPetType][#colorid]
+          if memberExists("petColors_" & tPetColorId) then
+            tColorTxt = member(getmemnum("petColors_" & tPetColorId)).text
             repeat with tLine = 1 to tColorTxt.line.count
               if tColorTxt.line[tLine].length = 7 then
                 tColorList.add(tColorTxt.line[tLine].char[2..7])
               end if
             end repeat
           else
-            error(me, "Couldn't find pet colors member!", #construct)
+            error(me, "Couldn't find pet colors member!" && tPetColorId, #construct, #major)
             return 0
           end if
           pPetRacesList[tPetType] = ["races": tTempRaces, "colors": tColorList]
@@ -51,20 +61,18 @@ on construct me
     end if
     i = i + 1
   end repeat
-  registerMessage(#petapproved, me.getID(), #petNameApproved)
-  registerMessage(#petunacceptable, me.getID(), #petNameUnacceptable)
+  me.regMsgList(1)
   return 1
 end
 
 on deconstruct me
-  unregisterMessage(#petapproved, me.getID())
-  unregisterMessage(#petunacceptable, me.getID())
+  me.regMsgList(0)
   return 1
 end
 
 on define me, tPageProps
   if tPageProps.ilk <> #propList then
-    return error(me, "Incorrect Catalogue page data", #define)
+    return error(me, "Incorrect Catalogue page data", #define, #major)
   end if
   if not voidp(tPageProps["productList"]) then
     tProducts = tPageProps["productList"]
@@ -110,7 +118,7 @@ on petNameUnacceptable me
   if tWndObj.elementExists("dedication_text") then
     tWndObj.getElement("dedication_text").setText(EMPTY)
   end if
-  return executeMessage(#alert, [#msg: "catalog_pet_unacceptable", #id: "ctlg_petunacceptable"])
+  return executeMessage(#alert, [#Msg: "catalog_pet_unacceptable", #id: "ctlg_petunacceptable"])
 end
 
 on definePet me, tProps
@@ -133,14 +141,14 @@ end
 on selectProduct me, tOrderNum
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #selectProduct)
+    return error(me, "Couldn't access catalogue window!", #selectProduct, #major)
   end if
   tWndObj = tCataloguePage
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #selectProduct)
+    return error(me, "Incorrect value", #selectProduct, #major)
   end if
   if voidp(pPageData) then
-    return error(me, "product not found", #selectProduct)
+    return error(me, "product not found", #selectProduct, #major)
   end if
   if pPageData.count = 0 then
     return 
@@ -194,7 +202,7 @@ end
 
 on nextProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #nextProduct)
+    return error(me, "Incorrect data", #nextProduct, #major)
   end if
   tNext = pLastProductNum + 1
   if tNext > pPageData.count then
@@ -206,7 +214,7 @@ end
 
 on prevProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #prewProduct)
+    return error(me, "Incorrect data", #prewProduct, #major)
   end if
   tPrev = pLastProductNum - 1
   if tPrev < 1 then
@@ -231,21 +239,22 @@ on eventProc me, tEvent, tSprID, tProp
         tText = replaceChunks(tText, RETURN, "\r")
       end if
       if tText.length < 1 then
-        return executeMessage(#alert, [#msg: "catalog_give_petname", #id: "ctlg_petmsg"])
+        return executeMessage(#alert, [#Msg: "catalog_give_petname", #id: "ctlg_petmsg"])
       else
         if tText.length > 15 then
-          return executeMessage(#alert, [#msg: "catalog_pet_name_length", #id: "ctlg_petmsg"])
+          return executeMessage(#alert, [#Msg: "catalog_pet_name_length", #id: "ctlg_petmsg"])
         end if
       end if
       tText = tText.char[1..15]
       tText = convertSpecialChars(tText, 1)
       if pSelectedProduct.ilk <> #propList then
-        return error(me, "incorrect Selected Product Data", #eventProc)
+        return error(me, "incorrect Selected Product Data", #eventProc, #major)
       end if
       tPet = numToChar(2) & pSelectedProduct["petRace"] & numToChar(2) & pSelectedProduct["petColor"]
       pSelectedProduct["extra_parm"] = tText & tPet
-      if connectionExists(getVariable("connection.info.id", #info)) then
-        getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tText, #short: 1])
+      if connectionExists(getVariable("connection.info.id", #Info)) then
+        pNameCheckPending = 1
+        getConnection(getVariable("connection.info.id", #Info)).send("APPROVENAME", [#string: tText, #integer: 1])
       end if
     else
       if tSprID = "ctlg_nextmodel_button" then
@@ -262,6 +271,34 @@ on eventProc me, tEvent, tSprID, tProp
         end if
       end if
     end if
+  end if
+  return 1
+end
+
+on handle_nameapproved me, tMsg
+  if not pNameCheckPending then
+    return 1
+  end if
+  pNameCheckPending = 0
+  tParm = tMsg.connection.GetIntFrom(tMsg)
+  if tParm = 0 then
+    me.petNameApproved()
+  else
+    me.petNameUnacceptable()
+  end if
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(36, #handle_nameapproved)
+  tCmds = [:]
+  tCmds.setaProp("APPROVENAME", 42)
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
   end if
   return 1
 end

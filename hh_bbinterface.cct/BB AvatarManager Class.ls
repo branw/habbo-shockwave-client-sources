@@ -22,13 +22,13 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #gamestatus_events:
       repeat with tEvent in tdata
         case tEvent[#type] of
           0:
-            me.createRoomObject(tEvent[#Data])
+            me.createRoomObject(tEvent[#data])
           1:
             me.deleteRoomObject(tEvent[#id])
           2:
@@ -75,10 +75,10 @@ on createRoomObject me, tdata
   tAvatarStruct.addProp(#x, tdata[#locX])
   tAvatarStruct.addProp(#y, tdata[#locY])
   tAvatarStruct.addProp(#h, 0.0)
-  tAvatarStruct.addProp(#Custom, tdata[#mission])
+  tAvatarStruct.addProp(#custom, tdata[#mission])
   tAvatarStruct.addProp(#sex, tdata[#sex])
   tAvatarStruct.addProp(#teamId, tdata[#teamId])
-  if tdata[#name] = getObject(#session).get(#userName) then
+  if tdata[#name] = getObject(#session).GET(#userName) then
     getObject(#session).set("user_index", tUserStrId)
   end if
   tFigure = pFigureSystemObj.parseFigure(tdata[#figure], tdata[#sex], "user")
@@ -96,11 +96,11 @@ on createRoomObject me, tdata
   end if
 end
 
-on deleteRoomObject me, tid
+on deleteRoomObject me, tID
   if pRoomComponentObj = 0 then
     return 0
   end if
-  tUserStrId = string(tid)
+  tUserStrId = string(tID)
   pGoalLocationList.deleteProp(tUserStrId)
   pCurrentLocationList.deleteProp(tUserStrId)
   pExpectedLocationList.deleteProp(tUserStrId)
@@ -135,7 +135,7 @@ on updateRoomObjectLocation me, tuser
   if pExpectedLocationList[tUserStrId] <> VOID then
     if [tuser[#locX], tuser[#locY]] <> [pExpectedLocationList[tUserStrId][1], pExpectedLocationList[tUserStrId][2]] and tNextLoc <> 0 then
       pExpectedLocationList.deleteProp(tUserStrId)
-      tUserObj.refresh(tuser[#locX], tuser[#locY], 0.0)
+      tUserObj.Refresh(tuser[#locX], tuser[#locY], 0.0)
       return 1
     end if
   end if
@@ -144,7 +144,7 @@ on updateRoomObjectLocation me, tuser
     tParams = "mv " & tNextLoc[1] & "," & tNextLoc[2] & ",1.0"
     call(symbol("action_mv"), [tUserObj], tParams)
   end if
-  tUserObj.refresh(tuser[#locX], tuser[#locY], 0.0)
+  tUserObj.Refresh(tuser[#locX], tuser[#locY], 0.0)
 end
 
 on updateRoomObjectGoal me, tuser
@@ -161,7 +161,10 @@ on updateRoomObjectGoal me, tuser
 end
 
 on handleUserCreated me, tName, tUserStrId
-  if tUserStrId <> getObject(#session).get("user_index") then
+  if me.getGameSystem().getSpectatorModeFlag() then
+    return 1
+  end if
+  if tUserStrId <> getObject(#session).GET("user_index") then
     return 0
   end if
   return getObject(#room_interface).showArrowHiliter(tUserStrId)

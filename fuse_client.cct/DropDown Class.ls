@@ -1,4 +1,4 @@
-property pState, pProp, pTextKeys, pTextlist, pShowOrder, pDropMenuImg, pDropActiveBtnImg, pDropDownImg, pLineHeight, pMarginTop, pMarginBottom, pMarginLeft, pAlignment, pOpenDir, pMaxWidth, pDotLineImg, pFont, pFonSize, pSelectedItemNum, pRollOverItem, pLoc, pFixedSize, pOrigWidth, pLastRollOver, pTextWidth, pClickPass, pDelayID, pOnFirstChoise, pDropDownType, pmodel
+property pState, pProp, pTextKeys, pTextlist, pShowOrder, pDropMenuImg, pDropActiveBtnImg, pDropDownImg, pLineHeight, pMarginTop, pMarginBottom, pMarginLeft, pAlignment, pOpenDir, pMaxWidth, pDotLineImg, pFont, pFonSize, pSelectedItemNum, pRollOverItem, pLoc, pFixedSize, pOrigWidth, pLastRollOver, pTextWidth, pClickPass, pDelayID, pOnFirstChoice, pDropDownType, pmodel, pOrdering
 
 on define me, tProps
   tField = tProps[#type] & tProps[#model] & ".element"
@@ -21,6 +21,7 @@ on define me, tProps
   pMaxWidth = tProps[#maxwidth]
   pLineHeight = tProps[#height]
   pFixedSize = tProps[#fixedsize]
+  pOrdering = 1
   if not voidp(pProp[#dropDownType]) then
     pDropDownType = pProp[#dropDownType].getProp(#content)
   else
@@ -164,12 +165,11 @@ on setSelection me, tSelNumOrStr, tUpdate
 end
 
 on setShowOrder me, tStyle, tFirstNum, tDeleteOne, tOpenDir
-  tChoise = pShowOrder[pSelectedItemNum]
+  if not pOrdering then
+    return 1
+  end if
+  tChoice = pShowOrder[pSelectedItemNum]
   case tStyle of
-    #reverse:
-      repeat with i = 1 to pTextlist.count
-        pShowOrder[i] = pTextlist.count + 1 - i
-      end repeat
     #normal:
       repeat with i = 1 to pTextlist.count
         pShowOrder[i] = i
@@ -177,22 +177,25 @@ on setShowOrder me, tStyle, tFirstNum, tDeleteOne, tOpenDir
   end case
   if tFirstNum > 0 then
     if tOpenDir = #down then
-      tTemp = pShowOrder[1]
       tTempPlace = pShowOrder.getPos(tFirstNum)
-      pShowOrder[1] = tFirstNum
-      pShowOrder[tTempPlace] = tTemp
+      pShowOrder.deleteAt(tTempPlace)
+      pShowOrder.addAt(1, tFirstNum)
     else
-      tTemp = pShowOrder[pShowOrder.count]
       tTempPlace = pShowOrder.getPos(tFirstNum)
-      pShowOrder[pShowOrder.count] = tFirstNum
-      pShowOrder[tTempPlace] = tTemp
+      pShowOrder.deleteAt(tTempPlace)
+      pShowOrder.addAt(pShowOrder.count + 1, tFirstNum)
     end if
   end if
   if tDeleteOne > 0 then
     pShowOrder.deleteOne(tDeleteOne)
   end if
-  pSelectedItemNum = pShowOrder.getPos(tChoise)
+  pSelectedItemNum = pShowOrder.getPos(tChoice)
   return 0
+end
+
+on setOrdering me, tMode
+  pOrdering = tMode
+  return 1
 end
 
 on arrangeTextList me, tStyle
@@ -202,7 +205,7 @@ on arrangeTextList me, tStyle
         if pShowOrder[pSelectedItemNum] > 2 then
           me.setShowOrder(#normal, pShowOrder[pSelectedItemNum], 1)
         else
-          me.setShowOrder(#reverse, 1, 2)
+          me.setShowOrder(#normal, 1, 2)
         end if
         pDropMenuImg = me.createDropImg(pTextlist, 1, #up)
       #choose:
@@ -218,16 +221,16 @@ on arrangeTextList me, tStyle
         me.setShowOrder(#normal, pShowOrder[pSelectedItemNum])
         pDropMenuImg = me.createDropImg(pTextlist, 1, #up)
       #choose:
-        me.setShowOrder(#reverse, pShowOrder[pSelectedItemNum], #down)
+        me.setShowOrder(#normal, pShowOrder[pSelectedItemNum], #down)
     end case
   end if
   if pDropDownType = #default and pOpenDir = #down then
     case tStyle of
       #open:
-        me.setShowOrder(#reverse, pShowOrder[pSelectedItemNum], VOID, #down)
+        me.setShowOrder(#normal, pShowOrder[pSelectedItemNum], VOID, #down)
         pDropMenuImg = me.createDropImg(pTextlist, 1, #up)
       #choose:
-        me.setShowOrder(#reverse, pShowOrder[pSelectedItemNum], #down)
+        me.setShowOrder(#normal, pShowOrder[pSelectedItemNum], #down)
     end case
   end if
 end
@@ -267,7 +270,7 @@ on openMenu me
   me.render()
   pState = #open
   pLastRollOver = -2
-  pOnFirstChoise = 1
+  pOnFirstChoice = 1
   return 1
 end
 
@@ -299,8 +302,8 @@ on mouseDown me
 end
 
 on mouseUp me
-  if pOnFirstChoise then
-    pOnFirstChoise = 0
+  if pOnFirstChoice then
+    pOnFirstChoice = 0
     return 0
   end if
   if me.pSprite.blend < 100 then
@@ -332,7 +335,7 @@ end
 
 on cancelDelay me
   if not voidp(pDelayID) then
-    me.cancel(pDelayID)
+    me.Cancel(pDelayID)
     pDelayID = VOID
   end if
 end
@@ -353,11 +356,11 @@ on mouseWithin me
       pLastRollOver = -1
       return 1
     end if
-    if pOnFirstChoise and pLastRollOver = -1 then
+    if pOnFirstChoice and pLastRollOver = -1 then
       pLastRollOver = pRollOverItem
     end if
     if pRollOverItem <> pLastRollOver then
-      pOnFirstChoise = 0
+      pOnFirstChoice = 0
       if pRollOverItem > pShowOrder.count then
         pRollOverItem = pShowOrder.count
       end if

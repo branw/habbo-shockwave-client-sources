@@ -34,8 +34,8 @@ on setcursor ttype
   return getSpecialServices().setcursor(ttype)
 end
 
-on openNetPage tURL_key
-  return getSpecialServices().openNetPage(tURL_key)
+on openNetPage tURL_key, tTarget
+  return getSpecialServices().openNetPage(tURL_key, tTarget)
 end
 
 on showLoadingBar tLoadID, tProps
@@ -48,6 +48,10 @@ end
 
 on getMachineID
   return getSpecialServices().getMachineID()
+end
+
+on getPredefinedURL tURL
+  return getSpecialServices().getPredefinedURL(tURL)
 end
 
 on getMoviePath me

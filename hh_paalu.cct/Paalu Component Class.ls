@@ -39,11 +39,11 @@ on prepareGame me, tPlayer01, tPlayer02
     pGameActive = 0
     return 0
   end if
-  pPlayer01.define([#name: tPlayer01, #dir: 0])
-  pPlayer02.define([#name: tPlayer02, #dir: 4])
+  pPlayer01.define([#name: tPlayer01, #Dir: 0])
+  pPlayer02.define([#name: tPlayer02, #Dir: 4])
   pPlayer01.status([#bal: 0, #loc: -3])
   pPlayer02.status([#bal: 0, #loc: 4])
-  tMyIndex = getObject(#session).get("user_index")
+  tMyIndex = getObject(#session).GET("user_index")
   if tPlayer01 = tMyIndex then
     tOwnPlayer = pPlayer01
   else
@@ -64,13 +64,13 @@ on startGame me, tPlayer01, tPlayer02
     me.getInterface().resetDialog()
     tPlayerObj01 = getThread(#room).getComponent().getUserObject(tPlayer01)
     tPlayerObj02 = getThread(#room).getComponent().getUserObject(tPlayer02)
-    pPlayer01.define([#name: tPlayer01, #dir: 0])
-    pPlayer02.define([#name: tPlayer02, #dir: 4])
+    pPlayer01.define([#name: tPlayer01, #Dir: 0])
+    pPlayer02.define([#name: tPlayer02, #Dir: 4])
     pPlayer01.status([#bal: 0, #loc: -3])
     pPlayer02.status([#bal: 0, #loc: 4])
     pGameActive = 1
   end if
-  tMyIndex = getObject(#session).get("user_index")
+  tMyIndex = getObject(#session).GET("user_index")
   if tPlayer01 = tMyIndex then
     me.getInterface().start()
   else

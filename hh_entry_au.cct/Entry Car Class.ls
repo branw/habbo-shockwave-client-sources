@@ -1,30 +1,34 @@
-property pSprite, pOffset, pTurnPnt, pDirection, ancestor, pID
+property pSprite, pOffset, pTurnPnt, pDirection, pPauseTime
 
-on define me, tid, tsprite, tDirection, tAncestor
+on define me, tSprite, tid
   pID = tid
-  ancestor = tAncestor
-  pSprite = tsprite
+  if tid mod 2 then
+    tdir = #right
+  else
+    tdir = #left
+  end if
+  pSprite = tSprite
   pOffset = [0, 0]
   pTurnPnt = 0
-  pDirection = tDirection
+  pDirection = tdir
+  me.reset()
   return 1
 end
 
 on reset me
   tmodel = ["car2", "car_b2", "car_c2"][random(3)]
-  pSprite.castNum = getmemnum(tmodel)
   if pDirection = #left then
-    pSprite.flipH = 1
-    pSprite.loc = point(635, 478)
+    pSprite.flipH = 0
+    pSprite.loc = point(675, 498)
     pOffset = [-2, -1]
     pTurnPnt = 439
   else
-    pSprite.flipH = 0
+    pSprite.flipH = 1
     pSprite.loc = point(146, 507)
     pOffset = [2, -1]
     pTurnPnt = 438
   end if
-  pSprite.flipH = not pSprite.flipH
+  pSprite.castNum = getmemnum(tmodel)
   pSprite.width = pSprite.member.width
   pSprite.height = pSprite.member.height
   if random(10) < 6 then
@@ -34,9 +38,14 @@ on reset me
     pSprite.ink = 36
     pSprite.backColor = 0
   end if
+  pPauseTime = random(150)
 end
 
 on update me
+  if pPauseTime > 0 then
+    pPauseTime = pPauseTime - 1
+    return 0
+  end if
   pSprite.loc = pSprite.loc + pOffset
   if pSprite.locH = pTurnPnt then
     pOffset[2] = -pOffset[2]
@@ -45,10 +54,8 @@ on update me
     tDirNum = not (tDirNum - 1) + 1
     tMemName = tMemName.char[1..length(tMemName) - 1] & tDirNum
     pSprite.castNum = getmemnum(tMemName)
-    pSprite.width = pSprite.member.width
-    pSprite.height = pSprite.member.height
   end if
-  if pDirection = #left and pSprite.locV > 510 or pDirection = #right and pSprite.locH > pTurnPnt and pSprite.locV > 490 then
-    me.resetCarAfterDelay(pID)
+  if pSprite.locV > 510 then
+    return me.reset()
   end if
 end

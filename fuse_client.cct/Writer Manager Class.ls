@@ -13,9 +13,9 @@ on deconstruct me
   return 1
 end
 
-on create me, tid, tMetrics
-  if not voidp(pItemList[tid]) then
-    return error(me, "Writer already exists:" && tid, #create)
+on create me, tID, tMetrics
+  if not voidp(pItemList[tID]) then
+    return error(me, "Writer already exists:" && tID, #create, #minor)
   end if
   tObj = getObjectManager().create(#temp, pWriterClass)
   if not tObj then
@@ -28,28 +28,28 @@ on create me, tid, tMetrics
       tObj.setFont(pPlainStruct)
       tObj.define(tMetrics)
   end case
-  pItemList[tid] = tObj
-  tObj.setID(tid)
+  pItemList[tID] = tObj
+  tObj.setID(tID)
   return 1
 end
 
-on remove me, tid
-  tObj = pItemList[tid]
+on Remove me, tID
+  tObj = pItemList[tID]
   if voidp(tObj) then
-    return error(me, "Writer not found:" && tid, #remove)
+    return error(me, "Writer not found:" && tID, #Remove, #minor)
   end if
   tObj.deconstruct()
-  return pItemList.deleteProp(tid)
+  return pItemList.deleteProp(tID)
 end
 
-on get me, tid
-  tObj = pItemList[tid]
+on GET me, tID
+  tObj = pItemList[tID]
   if voidp(tObj) then
     return 0
   end if
   return tObj
 end
 
-on exists me, tid
-  return not voidp(pItemList[tid])
+on exists me, tID
+  return not voidp(pItemList[tID])
 end

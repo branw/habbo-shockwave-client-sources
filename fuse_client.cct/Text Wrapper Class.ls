@@ -23,9 +23,12 @@ on prepare me
   pFontData[#fontSize] = me.pProps[#fontSize]
   pFontData[#fontStyle] = me.pProps[#fontStyle]
   if integerp(me.pProps[#fixedLineSpace]) then
+    if me.pProps[#fixedLineSpace] = me.pProps[#fontSize] then
+      me.pProps[#fixedLineSpace] = me.pProps[#fixedLineSpace] + 1
+    end if
     pFontData[#fixedLineSpace] = me.pProps[#fixedLineSpace]
   else
-    pFontData[#fixedLineSpace] = me.pProps[#fontSize]
+    pFontData[#fixedLineSpace] = me.pProps[#fontSize] + 1
   end if
   if voidp(pFontData[#key]) then
     pFontData[#key] = EMPTY
@@ -78,13 +81,13 @@ on getFont me
   return tStruct
 end
 
-on registerScroll me, tid
+on registerScroll me, tID
   if voidp(me.pScrolls) then
     me.prepare()
   end if
-  if not voidp(tid) then
-    if me.pScrolls.getPos(tid) = 0 then
-      me.pScrolls.add(tid)
+  if not voidp(tID) then
+    if me.pScrolls.getPos(tID) = 0 then
+      me.pScrolls.add(tID)
     end if
   else
     if me.pScrolls.count = 0 then
@@ -93,7 +96,7 @@ on registerScroll me, tid
   end if
   tSourceRect = rect(me.pOffX, me.pOffY, me.pOffX + me.pOwnW, me.pOffY + me.pOwnH)
   tScrollList = []
-  tWndObj = getWindowManager().get(me.pMotherId)
+  tWndObj = getWindowManager().GET(me.pMotherId)
   repeat with tScrollId in me.pScrolls
     tScrollList.add(tWndObj.getElement(tScrollId))
   end repeat
@@ -137,9 +140,9 @@ on createImgFromTxt me
         pTextMem.text = string(getObject(me.pMotherId).getProperty(tKey))
       else
         if textExists(pFontData[#key]) then
-          pTextMem.text = getTextManager().get(pFontData[#key])
+          pTextMem.text = getTextManager().GET(pFontData[#key])
         else
-          error(me, "Text not found:" && pFontData[#key], #createImgFromTxt)
+          error(me, "Text not found:" && pFontData[#key], #createImgFromTxt, #minor)
           pTextMem.text = pFontData[#key]
         end if
       end if

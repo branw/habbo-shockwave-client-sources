@@ -12,12 +12,16 @@ on construct me
   pNullCastName = "empty"
   pSysCastNum = castLib("fuse_client").number
   pBinCastNum = castLib(getVariable("dynamic.bin.cast")).number
+  me.verifyReset()
   return 1
 end
 
-on startCastLoad me, tCasts, tPermanentFlag, tAdd
+on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing
   if voidp(tPermanentFlag) then
     tPermanentFlag = 0
+  end if
+  if voidp(tDoIndexing) then
+    tDoIndexing = 1
   end if
   pTempWaitList = []
   tCastList = []
@@ -47,13 +51,13 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd
   if voidp(tAdd) then
     tAdd = 0
   end if
-  tid = getUniqueID()
-  pLatestTaskID = tid
+  tID = getUniqueID()
+  pLatestTaskID = tID
   if tAdd = 0 then
     me.removeTemporaryCast(tCastList)
   end if
   if pTempWaitList.count > 0 then
-    pWaitList[tid] = pTempWaitList.duplicate()
+    pWaitList[tID] = pTempWaitList.duplicate()
   end if
   if pWaitList.count = 0 then
     tStatus = #ready
@@ -62,26 +66,27 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd
     tStatus = #LOADING
     tPercent = 0
   end if
-  pTaskList[tid] = createObject(#temp, getClassVariable("castload.task.class"))
+  pTaskList[tID] = createObject(#temp, getClassVariable("castload.task.class"))
   tProps = [:]
-  tProps[#id] = tid
+  tProps[#id] = tID
   tProps[#status] = tStatus
   tProps[#Percent] = tPercent
   tProps[#sofar] = 0
   tProps[#casts] = pTempWaitList.duplicate()
   tProps[#callback] = VOID
-  pTaskList[tid].define(tProps)
+  tProps[#doindexing] = tDoIndexing
+  pTaskList[tID].define(tProps)
   repeat with i = 1 to getIntVariable("net.operation.count", 2)
     me.AddNextpreloadNetThing()
   end repeat
-  return tid
+  return tID
 end
 
-on registerCallback me, tid, tMethod, tClientID, tArgument
-  if voidp(pTaskList.findPos(tid)) then
+on registerCallback me, tID, tMethod, tClientID, tArgument
+  if voidp(pTaskList.findPos(tID)) then
     return 0
   else
-    return call(#addCallBack, pTaskList[tid], tid, tMethod, tClientID, tArgument)
+    return call(#addCallBack, pTaskList[tID], tID, tMethod, tClientID, tArgument)
   end if
 end
 
@@ -124,15 +129,15 @@ on resetCastLibs me, tClean, tForced
   return me.InitPreloader()
 end
 
-on getLoadPercent me, tid
-  if voidp(tid) then
-    tid = pLatestTaskID
+on getLoadPercent me, tID
+  if voidp(tID) then
+    tID = pLatestTaskID
   end if
-  if not voidp(pTaskList[tid]) then
-    if pTaskList[tid].getTaskState() = #ready then
+  if not voidp(pTaskList[tID]) then
+    if pTaskList[tID].getTaskState() = #ready then
       return 1.0
     else
-      return pTaskList[tid].getTaskPercent()
+      return pTaskList[tID].getTaskPercent()
     end if
   else
     return 1.0
@@ -202,15 +207,33 @@ on AddNextpreloadNetThing me
     if pWaitList.count > 0 then
       if count(pWaitList[1]) > 0 then
         tFile = pWaitList[1][1]
-        tURL = getMoviePath() & tFile & pFileExtension
-        tid = pWaitList.getPropAt(1)
+        tParsedFile = tFile
+        tFileExtension = pFileExtension
+        tURL = EMPTY
+        tParamOffset = offset("?", tFile)
+        tParamString = EMPTY
+        if tParamOffset > 0 then
+          tParamString = tFile.char[tParamOffset..tFile.length]
+          tFile = tFile.char[1..tParamOffset - 1]
+        end if
+        tPossibleExtension = chars(tFile, tFile.length - 3, tFile.length)
+        if tPossibleExtension = ".cst" or tPossibleExtension = ".cct" then
+          tFileExtension = tPossibleExtension
+          tParsedFile = chars(tFile, 1, tFile.length - tPossibleExtension.length)
+        end if
+        if not tParsedFile contains "http://" then
+          tURL = getMoviePath() & tParsedFile & tFileExtension & tParamString
+        else
+          tURL = tParsedFile & tFileExtension & tParamString
+        end if
+        tID = pWaitList.getPropAt(1)
         pWaitList[1].deleteAt(1)
         if count(pWaitList[1]) = 0 then
           pWaitList.deleteProp(pWaitList.getPropAt(1))
         end if
         pCurrentDownLoads[tFile] = createObject(#temp, getClassVariable("castload.instance.class"))
-        pCurrentDownLoads[tFile].define(tFile, tURL, tid)
-        pTaskList[tid].changeLoadingCount(1)
+        pCurrentDownLoads[tFile].define(tFile, tURL, tID)
+        pTaskList[tID].changeLoadingCount(1)
         receivePrepare(me.getID())
         return 1
       end if
@@ -219,22 +242,27 @@ on AddNextpreloadNetThing me
   return 0
 end
 
-on DoneCurrentDownLoad me, tFile, tURL, tid, tstate
+on DoneCurrentDownLoad me, tFile, tURL, tID, tstate
+  if voidp(pCurrentDownLoads[tFile]) then
+    return error(me, "CastLoad task was lost!" && tFile && tID, #DoneCurrentDownLoad, #major)
+  end if
+  tTask = pTaskList[tID]
+  if tTask = VOID then
+    return error(me, "Task list item was lost!" && tFile && tID, #DoneCurrentDownLoad, #major)
+  end if
   if tstate <> #error then
     tCastNumber = me.getAvailableEmptyCast()
     if tCastNumber > 0 then
       tCastName = tFile
-      me.setImportedCast(tCastNumber, tCastName, tURL)
+      tPreIndexing = tTask.getIndexingAllowed()
+      me.setImportedCast(tCastNumber, tCastName, tURL, tPreIndexing)
     end if
   end if
-  if voidp(pCurrentDownLoads[tFile]) then
-    return error(me, "CastLoad task was lost!" && tFile, #DoneCurrentDownLoad)
-  end if
-  pTaskList[tid].OneCastDone(tFile)
-  pTaskList[tid].changeLoadingCount(-1)
+  tTask.OneCastDone(tFile)
+  tTask.changeLoadingCount(-1)
   pCurrentDownLoads[tFile].deconstruct()
   me.delay(50, #removeCastLoadInstance, tFile)
-  me.removeCastLoadTask(tid)
+  me.removeCastLoadTask(tID)
   return 1
 end
 
@@ -243,36 +271,47 @@ on removeCastLoadInstance me, tFile
     return 0
   end if
   if voidp(pCurrentDownLoads[tFile]) then
-    return error(me, "CastLoad instance was lost!" && tFile, #removeCastLoadInstance)
+    return error(me, "CastLoad instance was lost!" && tFile, #removeCastLoadInstance, #minor)
   else
     return pCurrentDownLoads.deleteProp(tFile)
   end if
 end
 
-on removeCastLoadTask me, tid
-  if pTaskList[tid].getTaskState() = #ready then
-    pTaskList[tid].DoCallBack()
-    pTaskList[tid].deconstruct()
-    pTaskList.deleteProp(tid)
+on removeCastLoadTask me, tID
+  if pTaskList[tID].getTaskState() = #ready then
+    pTaskList[tID].DoCallBack()
+    pTaskList[tID].deconstruct()
+    pTaskList.deleteProp(tID)
     if count(pTaskList) = 0 then
       removePrepare(me.getID())
     end if
   end if
 end
 
-on TellStreamState me, tFileName, tstate, tPercent, tid
-  call(#UpdateTaskPercent, pTaskList[tid], tPercent, tFileName)
+on TellStreamState me, tFileName, tstate, tPercent, tID
+  tObject = pTaskList[tID]
+  if tObject <> VOID then
+    call(#UpdateTaskPercent, tObject, tPercent, tFileName)
+  else
+    return error(me, "Task list instance was lost!" && tFileName && tID, #TellStreamState, #major)
+  end if
 end
 
-on setImportedCast me, tCastNum, tCastName, tFileName
+on setImportedCast me, tCastNum, tCastName, tFileName, tDoIndexing
   tCastLib = castLib(tCastNum)
+  if voidp(tDoIndexing) then
+    tDoIndexing = 1
+  end if
   if tCastLib.name contains pNullCastName then
     tCastLib.fileName = tFileName
     tCastLib.name = tCastName
     pPermanentLevelList[tCastName][2] = tCastNum
-    getResourceManager().preIndexMembers(tCastNum)
+    if tDoIndexing then
+      getResourceManager().preIndexMembers(tCastNum)
+    end if
     pLoadedCasts[tCastName] = string(tCastNum)
   end if
+  me.verifyReset()
 end
 
 on getAvailableEmptyCast me
@@ -300,7 +339,7 @@ on removeTemporaryCast me, tNewLoadListOfcasts
           pCastLibCount = the number of castLibs
           tError = "CastLib count was changed!!!" & RETURN
           tError = tError & "CastLib with problems:" && castLib(pCastLibCount).name
-          error(me, tError, #removeTemporaryCast)
+          error(me, tError, #removeTemporaryCast, #minor)
         end if
       end if
     end if
@@ -310,7 +349,13 @@ end
 on addOneCastToWaitList me, tCastName, tPermanentOrNot
   if not me.FindCastNumber(tCastName) and not pWaitList.getOne(tCastName) then
     pTempWaitList.add(tCastName)
-    pPermanentLevelList.addProp(tCastName, [tPermanentOrNot, 0])
+    tOffset = offset("?", tCastName)
+    if tOffset <> 0 then
+      tCastNameNoParams = tCastName.char[1..tOffset - 1]
+    else
+      tCastNameNoParams = tCastName
+    end if
+    pPermanentLevelList.addProp(tCastNameNoParams, [tPermanentOrNot, 0])
   else
     if voidp(pLoadedCasts[tCastName]) then
       pLoadedCasts[tCastName] = string(me.FindCastNumber(tCastName))
@@ -322,7 +367,7 @@ on ResetOneDynamicCast me, tCastNum
   if pLoadedCasts.getOne(string(tCastNum)) <> 0 then
     pLoadedCasts.deleteProp(pLoadedCasts.getOne(string(tCastNum)))
   else
-    error(me, "Couldn't remove cast:" && tCastNum, #ResetOneDynamicCast)
+    error(me, "Couldn't remove cast:" && tCastNum, #ResetOneDynamicCast, #minor)
   end if
   getThreadManager().closeThread(tCastNum)
   getResourceManager().unregisterMembers(tCastNum)
@@ -330,6 +375,16 @@ on ResetOneDynamicCast me, tCastNum
   castLib(pNullCastName && tCastNum - 2).fileName = getMoviePath() & pNullCastName & pFileExtension
   pAvailableDynCasts.addProp(pNullCastName & tCastNum - 2, tCastNum)
   return 1
+end
+
+on verifyReset me
+  repeat with tEmptyCastNum = 1 to the number of castLibs
+    if castLib(tEmptyCastNum).fileName contains pNullCastName then
+      if the number of castMembers of castLib tEmptyCastNum > 0 then
+        return resetClient()
+      end if
+    end if
+  end repeat
 end
 
 on solveNetErrorMsg me, tErrorCode

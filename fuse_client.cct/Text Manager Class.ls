@@ -1,4 +1,4 @@
-on get me, tKey, tDefault
+on GET me, tKey, tDefault
   tText = me.pItemList[tKey]
   if voidp(tText) then
     tError = "Text not found:" && tKey
@@ -8,14 +8,14 @@ on get me, tKey, tDefault
     else
       tText = tKey
     end if
-    error(me, tError, #get)
+    error(me, tError, #GET, #minor)
   end if
   return tText
 end
 
 on dump me, tField, tDelimiter
   if not memberExists(tField) then
-    return error(me, "Field member expected:" && tField, #dump)
+    return error(me, "Field member expected:" && tField, #dump, #major)
   end if
   tStr = field(tField)
   tStrServices = getStringServices()

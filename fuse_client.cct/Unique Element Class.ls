@@ -92,13 +92,13 @@ on moveBy me, tOffX, tOffY
   pSprite.loc = pSprite.loc + [tOffX, tOffY]
 end
 
-on resizeTo me, tX, tY
+on resizeTo me, tX, tY, tForcedTag
   tOffX = tX - pSprite.width
   tOffY = tY - pSprite.height
-  return me.resizeBy(tOffX, tOffY)
+  return me.resizeBy(tOffX, tOffY, tForcedTag)
 end
 
-on resizeBy me, tOffH, tOffV
+on resizeBy me, tOffH, tOffV, tForcedTag
   if tOffH <> 0 or tOffV <> 0 then
     case pScaleH of
       #move:
@@ -107,6 +107,10 @@ on resizeBy me, tOffH, tOffV
         pSprite.width = pSprite.width + tOffH
       #center:
         me.moveBy(tOffH / 2, 0)
+      #fixed:
+        if tForcedTag then
+          pSprite.width = pSprite.width + tOffH
+        end if
     end case
     case pScaleV of
       #move:
@@ -115,6 +119,10 @@ on resizeBy me, tOffH, tOffV
         pSprite.height = pSprite.height + tOffV
       #center:
         me.moveBy(0, tOffV / 2)
+      #fixed:
+        if tForcedTag then
+          pSprite.height = pSprite.height + tOffV
+        end if
     end case
     pwidth = pSprite.width
     pheight = pSprite.height
@@ -123,14 +131,14 @@ on resizeBy me, tOffH, tOffV
 end
 
 on flipH me
-  tImage = image(pimage.width, pimage.height, pimage.depth)
+  tImage = image(pimage.width, pimage.height, pimage.depth, me.pimage.paletteRef)
   tQuad = [point(pimage.width, 0), point(0, 0), point(0, pimage.height), point(pimage.width, pimage.height)]
   tImage.copyPixels(pimage, tQuad, pimage.rect)
   pimage = tImage
 end
 
 on flipV me
-  tImage = image(pimage.width, pimage.height, pimage.depth)
+  tImage = image(pimage.width, pimage.height, pimage.depth, me.pimage.paletteRef)
   tQuad = [point(0, pimage.height), point(pimage.width, pimage.height), point(pimage.width, 0), point(0, 0)]
   tImage.copyPixels(pimage, tQuad, pimage.rect)
   pimage = tImage

@@ -42,12 +42,12 @@ on define me, tdata
   pLastDir = me.pDirection
   me.pPeopleSize = getVariable("human.size." & tdata[#type])
   if not me.pPeopleSize then
-    error(me, "People size not found, using default!", #define)
+    error(me, "People size not found, using default!", #define, #minor)
     me.pPeopleSize = "h"
   end if
   me.pCanvasSize = value(getVariable("human.canvas." & me.pPeopleSize))
   if not me.pCanvasSize then
-    error(me, "Canvas size not found, using default!", #define)
+    error(me, "Canvas size not found, using default!", #define, #minor)
     me.pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
   end if
   pCanvasName = me.pClass && me.pName && me.getID() && "Canvas"
@@ -61,10 +61,14 @@ on define me, tdata
   pBuffer = pMember.image
   tPartSymbols = tdata[#parts]
   if not me.setPartLists(tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #define)
+    return error(me, "Couldn't create part lists!", #define, #major)
   end if
   me.arrangeParts()
   me.simulateUpdate()
+  return pMember
+end
+
+on getMember me
   return pMember
 end
 
@@ -94,7 +98,7 @@ on simulateUpdate me
   end if
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on Refresh me, tX, tY, tH, tDirHead, tDirBody
   pMoving = 0
   pDancing = 0
   pTalking = 0

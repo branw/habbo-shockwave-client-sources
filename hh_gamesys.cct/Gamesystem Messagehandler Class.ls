@@ -8,7 +8,7 @@ on deconstruct me
   return me.regMsgList(0)
 end
 
-on defineClient me, tid
+on defineClient me, tID
   return 1
 end
 
@@ -24,6 +24,8 @@ end
 on regMsgList me, tBool
   pMsgIds = [:]
   pMsgIds.setaProp(28, #users)
+  pMsgIds.setaProp(30, #objects)
+  pMsgIds.setaProp(31, #heightmap)
   pMsgIds.setaProp(72, #numtickets)
   pMsgIds.setaProp(73, #notickets)
   pMsgIds.setaProp(124, #numtickets)
@@ -47,11 +49,13 @@ on regMsgList me, tBool
   pMsgIds.setaProp(249, #gamereset)
   pMsgIds.setaProp(250, #gameplayerinfo)
   pMsgIds.setaProp(251, #idlewarning)
+  pMsgIds.setaProp(252, #skilllevelchanged)
   tMsgs = [:]
   repeat with i = 1 to pMsgIds.count
     tMsgs.setaProp(pMsgIds.getPropAt(i), #handle_message)
   end repeat
   tCmds = [:]
+  tCmds.setaProp("MOVE", 75)
   tCmds.setaProp("GETINSTANCELIST", 159)
   tCmds.setaProp("OBSERVEINSTANCE", 160)
   tCmds.setaProp("UNOBSERVEINSTANCE", 161)
@@ -66,12 +70,13 @@ on regMsgList me, tBool
   tCmds.setaProp("STARTGAME", 170)
   tCmds.setaProp("GAMEEVENT", 171)
   tCmds.setaProp("REJOINGAME", 172)
+  tCmds.setaProp("REQUESTFULLSTATUSUPDATE", 173)
   if tBool then
-    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   end if
   return 1
 end

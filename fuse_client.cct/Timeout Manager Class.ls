@@ -6,33 +6,33 @@ end
 on deconstruct me
   tObjMngr = getObjectManager()
   repeat with i = 1 to me.pItemList.count
-    tid = me.pItemList[i][#timerid]
-    if tObjMngr.exists(tid) then
-      tObjMngr.get(tid).forget()
+    tID = me.pItemList[i][#timerid]
+    if tObjMngr.exists(tID) then
+      tObjMngr.GET(tID).forget()
     end if
   end repeat
   me.pItemList = [:]
   return 1
 end
 
-on create me, tid, tTime, tHandler, tClientID, tArgument, tIterations
-  if me.exists(tid) then
-    return error(me, "Timeout already registered:" && tid, #create)
+on create me, tID, tTime, tHandler, tClientID, tArgument, tIterations
+  if me.exists(tID) then
+    return error(me, "Timeout already registered:" && tID, #create, #major)
   end if
   if not integerp(tTime) then
-    return error(me, "Integer expected:" && tTime, #create)
+    return error(me, "Integer expected:" && tTime, #create, #major)
   end if
   if not symbolp(tHandler) then
-    return error(me, "Symbol expected:" && tHandler, #create)
+    return error(me, "Symbol expected:" && tHandler, #create, #major)
   end if
   tObjMngr = getObjectManager()
   if tObjMngr.exists(tClientID) then
-    if not tObjMngr.get(tClientID).handler(tHandler) then
-      return error(me, "Handler not found in object:" && tHandler && tClientID, #create)
+    if not tObjMngr.GET(tClientID).handler(tHandler) then
+      return error(me, "Handler not found in object:" && tHandler && tClientID, #create, #major)
     end if
   else
     if not voidp(tClientID) then
-      return error(me, "Object ID or VOID expected:" && tClientID, #create)
+      return error(me, "Object ID or VOID expected:" && tClientID, #create, #major)
     end if
   end if
   tUniqueId = "Timeout" && getUniqueID()
@@ -44,61 +44,61 @@ on create me, tid, tTime, tHandler, tClientID, tArgument, tIterations
   tList[#argument] = tArgument
   tList[#iterations] = tIterations
   tList[#count] = 0
-  me.pItemList[tid] = tList
+  me.pItemList[tID] = tList
   return 1
 end
 
-on get me, tid
-  if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #get)
+on GET me, tID
+  if not me.exists(tID) then
+    return error(me, "Item not found:" && tID, #GET, #minor)
   end if
-  tTask = me.pItemList[tid]
+  tTask = me.pItemList[tID]
   if voidp(tTask[#client]) then
     value(tTask[#handler] & "(" & tTask[#argument] & ")")
   else
     tObjMngr = getObjectManager()
     if tObjMngr.exists(tTask[#client]) then
-      call(tTask[#handler], tObjMngr.get(tTask[#client]), tTask[#argument])
+      call(tTask[#handler], tObjMngr.GET(tTask[#client]), tTask[#argument])
     else
-      return me.remove(tid)
+      return me.Remove(tID)
     end if
   end if
 end
 
-on remove me, tid
-  if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #remove)
+on Remove me, tID
+  if not me.exists(tID) then
+    return error(me, "Item not found:" && tID, #Remove, #minor)
   end if
   tObjMngr = getObjectManager()
-  tObject = tObjMngr.get(me.pItemList[tid][#uniqueid])
+  tObject = tObjMngr.GET(me.pItemList[tID][#uniqueid])
   if tObject <> 0 then
     tObject.target = VOID
     tObject.forget()
     tObject = VOID
-    tObjMngr.remove(me.pItemList[tid][#uniqueid])
+    tObjMngr.Remove(me.pItemList[tID][#uniqueid])
   end if
-  return me.pItemList.deleteProp(tid)
+  return me.pItemList.deleteProp(tID)
 end
 
-on exists me, tid
-  return listp(me.pItemList[tid])
+on exists me, tID
+  return listp(me.pItemList[tID])
 end
 
 on executeTimeOut me, tTimeout
   repeat with i = 1 to me.pItemList.count
     if me.pItemList[i][#uniqueid] = tTimeout.name then
-      tid = me.pItemList.getPropAt(i)
-      tTask = me.pItemList[tid]
+      tID = me.pItemList.getPropAt(i)
+      tTask = me.pItemList[tID]
       exit repeat
     end if
   end repeat
-  if voidp(tid) then
+  if voidp(tID) then
     tTimeout.forget()
     return 0
   end if
-  me.pItemList[tid][#count] = me.pItemList[tid][#count] + 1
-  if me.pItemList[tid][#count] = me.pItemList[tid][#iterations] then
-    me.remove(tid)
+  me.pItemList[tID][#count] = me.pItemList[tID][#count] + 1
+  if me.pItemList[tID][#count] = me.pItemList[tID][#iterations] then
+    me.Remove(tID)
   end if
   if voidp(tTask[#client]) then
     value(tTask[#handler] & "(" & tTask[#argument] & ")")
@@ -107,7 +107,7 @@ on executeTimeOut me, tTimeout
     if objectp(tObject) then
       call(tTask[#handler], tObject, tTask[#argument])
     else
-      return me.remove(tid)
+      return me.Remove(tID)
     end if
   end if
   return 1

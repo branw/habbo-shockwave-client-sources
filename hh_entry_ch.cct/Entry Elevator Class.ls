@@ -1,8 +1,9 @@
 property pSpriteA, pSpriteB, pPause, pmode, pTopLimit, pBottomLimit, pFloors, pCurrentFloor, pTargetFloor, pContinueTime
 
-on define me, tSpriteA, tSpriteB
+on define me, tSpriteA
   pSpriteA = tSpriteA
-  pSpriteB = tSpriteB
+  tVisual = getThread(#entry).getInterface().pEntryVisual
+  pSpriteB = getVisualizer(tVisual).getSprById("elevator_shadow")
   pmode = #up
   pPause = 0
   pTopLimit = 296

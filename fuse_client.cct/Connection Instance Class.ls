@@ -1,10 +1,12 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD
 
 on construct me
+  pDecipherOn = 0
   pEncryptionOn = 0
   pMsgStruct = getStructVariable("struct.message")
   pMsgStruct.setaProp(#connection, me)
   pDecoder = 0
+  pEncoder = 0
   pLastContent = EMPTY
   pConnectionShouldBeKilled = 0
   pCommandsPntr = getStructVariable("struct.pointer")
@@ -26,7 +28,7 @@ on connect me, tHost, tPort
   if tErrCode = 0 then
     pXtra.connectToNetServer("*", "*", pHost, pPort, "*", 1)
   else
-    return error(me, "Creation of callback failed:" && tErrCode, #connect)
+    return error(me, "Creation of callback failed:" && tErrCode, #connect, #major)
   end if
   pLastContent = EMPTY
   if pLogMode > 0 then
@@ -46,7 +48,7 @@ on disconnect me, tControlled
   end if
   pXtra = VOID
   if not tControlled then
-    error(me, "Connection disconnected:" && me.getID(), #disconnect)
+    error(me, "Connection disconnected:" && me.getID(), #disconnect, #minor)
   end if
   return 1
 end
@@ -57,7 +59,7 @@ end
 
 on setDecoder me, tDecoder
   if not objectp(tDecoder) then
-    return error(me, "Decoder object expected:" && tDecoder, #setDecoder)
+    return error(me, "Decoder object expected:" && tDecoder, #setDecoder, #major)
   else
     pDecoder = tDecoder
     return 1
@@ -68,9 +70,22 @@ on getDecoder me
   return pDecoder
 end
 
+on setEncoder me, tEncoder
+  if not objectp(tEncoder) then
+    return error(me, "Encoder object expected:" && tEncoder, #setEncoder, #major)
+  else
+    pEncoder = tEncoder
+    return 1
+  end if
+end
+
+on getEncoder me
+  return pEncoder
+end
+
 on setLogMode me, tMode
   if tMode.ilk <> #integer then
-    return error(me, "Invalid argument:" && tMode, #setLogMode)
+    return error(me, "Invalid argument:" && tMode, #setLogMode, #minor)
   end if
   pLogMode = tMode
   if pLogMode = 2 then
@@ -95,11 +110,14 @@ on setEncryption me, tBoolean
 end
 
 on send me, tCmd, tMsg
+  if pConnectionShouldBeKilled then
+    return 0
+  end if
   if tMsg.ilk = #propList then
     return me.sendNew(tCmd, tMsg)
   end if
   if not (pConnectionOk and objectp(pXtra)) then
-    return error(me, "Connection not ready:" && me.getID(), #send)
+    return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if
   if tMsg.ilk <> #string then
     tMsg = string(tMsg)
@@ -109,12 +127,11 @@ on send me, tCmd, tMsg
     tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
   end if
   if tCmd.ilk = #void then
-    return error(me, "Unrecognized command!", #send)
+    return error(me, "Unrecognized command!", #send, #major)
   end if
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
   end if
-  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
   tMsg = tCmd & tMsg
   tLength = 0
   repeat with tChar = 1 to length(tMsg)
@@ -125,8 +142,8 @@ on send me, tCmd, tMsg
   tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
-  if pEncryptionOn and objectp(pDecoder) then
-    tMsg = pDecoder.encipher(tMsg)
+  if pEncryptionOn and objectp(pEncoder) then
+    tMsg = pEncoder.encipher(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -134,7 +151,7 @@ end
 
 on sendNew me, tCmd, tParmArr
   if not (pConnectionOk and objectp(pXtra)) then
-    return error(me, "Connection not ready:" && me.getID(), #send)
+    return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if
   tMsg = EMPTY
   tLength = 2
@@ -182,7 +199,7 @@ on sendNew me, tCmd, tParmArr
           tMsg = tMsg & tBy1
           tLength = tLength + 1
         otherwise:
-          error(me, "Unsupported param type:" && ttype, #send)
+          error(me, "Unsupported param type:" && ttype, #send, #major)
       end case
     end repeat
   end if
@@ -191,19 +208,18 @@ on sendNew me, tCmd, tParmArr
     tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
   end if
   if tCmd.ilk = #void then
-    return error(me, "Unrecognized command!", #send)
+    return error(me, "Unrecognized command!", #send, #major)
   end if
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
   end if
-  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
   tMsg = tCmd & tMsg
   tL1 = numToChar(bitOr(bitAnd(tLength, 63), 64))
   tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
-  if pEncryptionOn and objectp(pDecoder) then
-    tMsg = pDecoder.encipher(tMsg)
+  if pEncryptionOn and objectp(pEncoder) then
+    tMsg = pEncoder.encipher(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -230,6 +246,8 @@ on getProperty me, tProp
       return pPort
     #decoder:
       return me.getDecoder()
+    #encoder:
+      return me.getEncoder()
     #logmode:
       return me.getLogMode()
     #listener:
@@ -238,6 +256,8 @@ on getProperty me, tProp
       return pCommandsPntr
     #message:
       return pMsgStruct
+    #deciphering:
+      return pDecipherOn
   end case
   return 0
 end
@@ -246,6 +266,8 @@ on setProperty me, tProp, tValue
   case tProp of
     #decoder:
       return me.setDecoder(tValue)
+    #encoder:
+      return me.setEncoder(tValue)
     #logmode:
       return me.setLogMode(tValue)
     #listener:
@@ -262,6 +284,8 @@ on setProperty me, tProp, tValue
       else
         return 0
       end if
+    #deciphering:
+      pDecipherOn = tValue
   end case
   return 0
 end
@@ -351,6 +375,9 @@ on xtraMsgHandler me
     me.disconnect()
     return 0
   end if
+  if pEncryptionOn and pDecipherOn then
+    tContent = pDecoder.decipher(tContent)
+  end if
   me.msghandler(tContent)
 end
 
@@ -386,33 +413,41 @@ on forwardMsg me, tSubject, tParams
   if pLogMode > 0 then
     me.log("-->" && tSubject & RETURN & tParams)
   end if
-  getObject(#session).set("con_lastreceived", tSubject && "-" && the long time)
   tParams = getStringServices().convertSpecialChars(tParams)
   tCallbackList = pListenersPntr.getaProp(#value).getaProp(tSubject)
   if tCallbackList.ilk <> #list then
-    return error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
+    return error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg, #minor)
   end if
   tObjMgr = getObjectManager()
   repeat with i = 1 to count(tCallbackList)
     tCallback = tCallbackList[i]
-    tObject = tObjMgr.get(tCallback[1])
+    tObject = tObjMgr.GET(tCallback[1])
     if tObject <> 0 then
       pMsgStruct.setaProp(#subject, tSubject)
       pMsgStruct.setaProp(#content, tParams)
       call(tCallback[2], tObject, pMsgStruct)
       next repeat
     end if
-    error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg)
+    error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg, #minor)
     tCallbackList.deleteAt(1)
     i = i - 1
   end repeat
 end
 
 on log me, tMsg
+  if not pD then
+    the debugPlaybackEnabled = 0
+    if not (the runMode contains "Author") then
+      return 1
+    end if
+  end if
   case pLogMode of
     1:
       put "[Connection" && me.getID() & "] :" && tMsg
     2:
+      if not (the runMode contains "Author") then
+        return 1
+      end if
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
       end if

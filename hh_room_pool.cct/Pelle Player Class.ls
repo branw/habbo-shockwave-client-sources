@@ -22,13 +22,14 @@ on initPlayer me, jname, jdata
   pName = jname
   pJumpData = decompressString(jdata)
   pJumpData = "0000" & pJumpData & "0000000000"
+  plastPressKey = VOID
   me.openHidePlayBackWindow()
   receiveUpdate(me.getID())
   return 1
 end
 
 on openHidePlayBackWindow me
-  if pName <> getObject(#session).get("user_name") then
+  if pName <> getObject(#session).GET("user_name") then
     return 0
   end if
   if windowExists(pReplayAnimWnd) then
@@ -74,7 +75,7 @@ on update me
       end if
       pKeyAcceptTime = the milliSeconds + (100 - (the milliSeconds - pKeyAcceptTime))
     else
-      if pJumpDone = 0 and pName = getObject(#session).get("user_name") then
+      if pJumpDone = 0 and pName = getObject(#session).GET("user_name") then
         pJumpDone = 1
         tSplashPos = getThread(#room).getInterface().getGeometry().getWorldCoordinate(me.pMyLoc.locH, me.pMyLoc.locV)
         if tSplashPos = 0 then

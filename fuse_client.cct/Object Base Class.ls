@@ -16,11 +16,11 @@ on deconstruct me
   return 1
 end
 
-on setID me, tid
+on setID me, tID
   if voidp(me.id) then
-    id = tid
+    id = tID
   else
-    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tid, #setID)
+    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tID, #setID, #minor)
   end if
 end
 
@@ -30,10 +30,10 @@ end
 
 on delay me, tTime, tMethod, tArgument
   if not integerp(tTime) then
-    return error(me, "Integer expected:" && tTime, #delay)
+    return error(me, "Integer expected:" && tTime, #delay, #major)
   end if
   if not symbolp(tMethod) then
-    return error(me, "Symbol expected:" && tMethod, #delay)
+    return error(me, "Symbol expected:" && tMethod, #delay, #major)
   end if
   tUniqueId = "Delay" && me.getID() && the milliSeconds
   timeout(tUniqueId).new(tTime, #executeDelay, me)
@@ -42,7 +42,7 @@ on delay me, tTime, tMethod, tArgument
   return tUniqueId
 end
 
-on cancel me, tDelayID
+on Cancel me, tDelayID
   if voidp(me.delays[tDelayID]) then
     return 0
   end if
@@ -59,8 +59,8 @@ on print me
 end
 
 on executeDelay me, tTimeout
-  tid = tTimeout.name
-  tTask = delays[tid]
-  me.cancel(tid)
+  tID = tTimeout.name
+  tTask = delays[tID]
+  me.Cancel(tID)
   call(tTask[#method], me, tTask[#argument])
 end

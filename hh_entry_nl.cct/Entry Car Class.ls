@@ -1,6 +1,10 @@
-property pSprite, pOffset, pTurnPnt, pDirection
+property pSprite, pOffset, pTurnPnt, pDirection, pInitDelay
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCount
+  tDirection = #right
+  if tCount mod 2 = 1 then
+    tDirection = #left
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
@@ -14,7 +18,7 @@ on reset me
   if pDirection = #left then
     pSprite.castNum = getmemnum(tmodel)
     pSprite.flipH = 0
-    pSprite.loc = point(724, 469)
+    pSprite.loc = point(744, 479)
     pOffset = [-2, -1]
     pTurnPnt = 488
   else
@@ -33,9 +37,14 @@ on reset me
     pSprite.ink = 36
     pSprite.backColor = 0
   end if
+  pInitDelay = random(120)
 end
 
 on update me
+  pInitDelay = pInitDelay - 1
+  if pInitDelay > 0 then
+    return 0
+  end if
   pSprite.loc = pSprite.loc + pOffset
   if pSprite.locH = pTurnPnt then
     pOffset[2] = -pOffset[2]

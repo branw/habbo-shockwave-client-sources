@@ -29,7 +29,7 @@ end
 
 on reserveSprite me, tClientID
   if pFreeSprList.count = 0 then
-    return error(me, "Out of free sprite channels!", #reserveSprite)
+    return error(me, "Out of free sprite channels!", #reserveSprite, #major)
   end if
   tSprNum = pFreeSprList[1]
   tsprite = sprite(tSprNum)
@@ -44,10 +44,10 @@ end
 
 on releaseSprite me, tSprNum
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #releaseSprite)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #releaseSprite, #minor)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempting to release free sprite!", #releaseSprite)
+    return error(me, "Attempting to release free sprite!", #releaseSprite, #minor)
   end if
   tsprite = sprite(tSprNum)
   tsprite.member = member(0)
@@ -73,25 +73,25 @@ on releaseAllSprites me
   return 1
 end
 
-on setEventBroker me, tSprNum, tid
+on setEventBroker me, tSprNum, tID
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #setEventBroker)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #setEventBroker, #major)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempted to modify non-reserved sprite!", #setEventBroker)
+    return error(me, "Attempted to modify non-reserved sprite!", #setEventBroker, #major)
   end if
   tsprite = sprite(tSprNum)
   tsprite.scriptInstanceList = [new(pEventBroker)]
-  tsprite.setID(tid)
+  tsprite.setID(tID)
   return 1
 end
 
 on removeEventBroker me, tSprNum
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #removeEventBroker)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #removeEventBroker, #minor)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempted to modify non reserved sprite!", #removeEventBroker)
+    return error(me, "Attempted to modify non reserved sprite!", #removeEventBroker, #minor)
   end if
   sprite(tSprNum).scriptInstanceList = []
   return 1

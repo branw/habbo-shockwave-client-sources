@@ -92,7 +92,7 @@ on getWorldCoordinate me, tLocX, tLocY
     end if
   end if
   if tHeight = 0 then
-    return [tX, tY, tHeight]
+    return [tX, tY, 0]
   else
     repeat with i = 1 to 9
       tX = integer((tLocX - pYFactor - pXOffset) / pXFactor + (tLocY + i * pHFactor - pYOffset) / pYFactor)

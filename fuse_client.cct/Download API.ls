@@ -14,8 +14,8 @@ on getDownloadManager
   return tMgr.getManager(#download_manager)
 end
 
-on queueDownload tURL, tMemName, tFileType, tForceFlag
-  return getDownloadManager().queue(tURL, tMemName, tFileType, tForceFlag)
+on queueDownload tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType
+  return getDownloadManager().queue(tURL, tMemName, tFileType, tForceFlag, tDownloadType, tRedirectType)
 end
 
 on abortDownLoad tMemNameOrNum
@@ -26,12 +26,12 @@ on registerDownloadCallback tMemNameOrNum, tMethod, tClientID, tArgument
   return getDownloadManager().registerCallback(tMemNameOrNum, tMethod, tClientID, tArgument)
 end
 
-on getDownLoadPercent tid
-  return getDownloadManager().getLoadPercent(tid)
+on getDownLoadPercent tID
+  return getDownloadManager().getLoadPercent(tID)
 end
 
-on downloadExists tid
-  return getDownloadManager().exists(tid)
+on downloadExists tID
+  return getDownloadManager().exists(tID)
 end
 
 on printDownloads

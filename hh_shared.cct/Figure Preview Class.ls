@@ -2,12 +2,13 @@ property pBodyPartObjects
 
 on createTemplateHuman me, tSize, tdir, tAction, tActionProps
   tProps = [:]
-  if not objectExists("temp_humanobj") then
-    if not createObject("temp_humanobj", "Human Template Class") then
-      return error(me, "Failed to init temporary human object!", #createTemplateHuman)
+  tObjectName = "temp_humanobj"
+  if not objectExists(tObjectName) then
+    if not createObject(tObjectName, "Human Template Class") then
+      return error(me, "Failed to init temporary human object!", #createTemplateHuman, #major)
     end if
     tProps[#userName] = "temp_human_figurecreator"
-    tProps[#figure] = getObject(#session).get("user_figure").duplicate()
+    tProps[#figure] = getObject(#session).GET("user_figure").duplicate()
     tProps[#direction] = [tdir, 1, 1]
     tProps[#x] = 10000
     tProps[#y] = 10000
@@ -17,15 +18,17 @@ on createTemplateHuman me, tSize, tdir, tAction, tActionProps
     else
       tProps[#type] = 64
     end if
-    tmember = getObject("temp_humanobj").define(tProps)
+    tmember = getObject(tObjectName).define(tProps)
+  else
+    tmember = getObject(tObjectName).getMember()
   end if
   case tAction of
     "remove":
-      removeObject("temp_humanobj")
+      removeObject(tObjectName)
     "reset":
-      call(#resetTemplateHuman, [getObject("temp_humanobj")])
+      call(#resetTemplateHuman, [getObject(tObjectName)])
     otherwise:
-      call(symbol("action_" & tAction), [getObject("temp_humanobj")], tActionProps)
+      call(symbol("action_" & tAction), [getObject(tObjectName)], tActionProps)
   end case
   return tmember
 end
@@ -39,11 +42,11 @@ end
 
 on createHumanPartPreview me, tWindowTitle, tElement, tPartList, tFigure
   if voidp(tFigure) then
-    tFigure = getObject(#session).get("user_figure")
+    tFigure = getObject(#session).GET("user_figure")
     if tFigure.ilk = #propList then
       tFigure = tFigure.duplicate()
     else
-      return error(me, "Figure data not found!", #createHumanPartPreview)
+      return error(me, "Figure data not found!", #createHumanPartPreview, #major)
     end if
   end if
   me.createTemplateParts(tFigure, tPartList, 3)

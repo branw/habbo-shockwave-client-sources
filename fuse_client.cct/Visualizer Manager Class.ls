@@ -14,19 +14,19 @@ on construct me
   return 1
 end
 
-on create me, tid, tLayout, tLocX, tLocY
+on create me, tID, tLayout, tLocX, tLocY
   if not integerp(tLocX) then
     tLocX = 0
   end if
   if not integerp(tLocY) then
     tLocY = 0
   end if
-  if me.exists(tid) then
-    me.remove(tid)
+  if me.exists(tID) then
+    me.Remove(tID)
   end if
-  tItem = getObjectManager().create(tid, pInstanceClass)
+  tItem = getObjectManager().create(tID, pInstanceClass)
   if not tItem then
-    return error(me, "Item creation failed:" && tid, #create)
+    return error(me, "Item creation failed:" && tID, #create, #major)
   end if
   tProps = [:]
   tProps[#locX] = tLocX
@@ -35,43 +35,43 @@ on create me, tid, tLayout, tLocX, tLocY
   tProps[#layout] = tLayout
   tProps[#boundary] = pBoundary
   if not tItem.define(tProps) then
-    getObjectManager().remove(tid)
+    getObjectManager().Remove(tID)
     return 0
   end if
-  me.pItemList.add(tid)
+  me.pItemList.add(tID)
   pAvailableLocZ = pAvailableLocZ + tItem.getProperty(#sprCount)
   return 1
 end
 
-on remove me, tid
-  if not me.exists(tid) then
+on Remove me, tID
+  if not me.exists(tID) then
     return 0
   end if
-  tItem = me.get(tid)
+  tItem = me.GET(tID)
   pAvailableLocZ = pAvailableLocZ - tItem.getProperty(#sprCount)
-  pPosCache[tid] = [tItem.getProperty(#locX), tItem.getProperty(#locY)]
-  me.pItemList.deleteOne(tid)
-  if pActiveItem = tid then
+  pPosCache[tID] = [tItem.getProperty(#locX), tItem.getProperty(#locY)]
+  me.pItemList.deleteOne(tID)
+  if pActiveItem = tID then
     pActiveItem = me.pItemList.getLast()
   end if
-  getObjectManager().remove(tid)
+  getObjectManager().Remove(tID)
   me.Activate(me.pItemList.getLast())
   return 1
 end
 
-on Activate me, tid
-  if me.exists(tid) then
-    pActiveItem = tid
-    me.get(tid).setActive()
+on Activate me, tID
+  if me.exists(tID) then
+    pActiveItem = tID
+    me.GET(tID).setActive()
     return 1
   else
     return 0
   end if
 end
 
-on deactivate me, tid
-  if me.exists(tid) then
-    me.get(tid).setDeactive()
+on deactivate me, tID
+  if me.exists(tID) then
+    me.GET(tID).setDeactive()
     return 1
   else
     return 0
@@ -80,7 +80,7 @@ end
 
 on hideAll me
   repeat with tItem in me.pItemList
-    tObj = me.get(tItem)
+    tObj = me.GET(tItem)
     if tObj.getProperty(#visible) then
       tObj.hide()
       pHideList.add(tItem)
@@ -91,7 +91,7 @@ end
 
 on showAll me
   repeat with tItem in pHideList
-    tObj = me.get(tItem)
+    tObj = me.GET(tItem)
     if tObj <> 0 then
       tObj.show()
     end if
@@ -124,7 +124,7 @@ end
 
 on setDefaultLocZ me, tValue
   if not integerp(tValue) then
-    return error(me, "integer expected:" && tValue, #setDefaultLocZ)
+    return error(me, "integer expected:" && tValue, #setDefaultLocZ, #minor)
   end if
   pDefaultLocZ = tValue
   return Activate(me)
@@ -132,7 +132,7 @@ end
 
 on setBoundary me, tValue
   if not listp(tValue) and not ilk(tValue, #rect) then
-    return error(me, "List or rect expected:" && tValue, #setBoundary)
+    return error(me, "List or rect expected:" && tValue, #setBoundary, #minor)
   end if
   pBoundary[1] = tValue[1]
   pBoundary[2] = tValue[2]

@@ -1,7 +1,12 @@
 property pSprite, pOffset, pProps, pDirection, pmodel, pDelayCounter
 
-on define me, tsprite, ttype
-  pSprite = tsprite
+on define me, tSprite, ttype
+  pSprite = [tSprite]
+  if ttype > 1 then
+    tVisualID = getThread(#entry).getInterface().pEntryVisual
+    tVisualizer = getVisualizer(tVisualID)
+    pSprite[2] = tVisualizer.getSprById("boat" & ttype & "_roof")
+  end if
   pOffset = [0, 0]
   pmodel = "boat_" & ttype
   pDelayCounter = 1
@@ -24,10 +29,10 @@ on reset me
   pDirection = [#left, #right][random(2)]
   if pmodel = "boat_1" then
     if pDirection = #left then
-      pSprite.loc = pProps[#left]
+      pSprite[1].loc = pProps[#left]
       pOffset = [-2, 1]
     else
-      pSprite.loc = pProps[#right]
+      pSprite[1].loc = pProps[#right]
       pOffset = [2, -1]
     end if
   else
@@ -55,8 +60,8 @@ on update me
     return 1
   end if
   if pmodel = "boat_1" then
-    pSprite.loc = pSprite.loc + pOffset
-    if pDirection = #left and pSprite.locH < pProps[#leftlimit] or pDirection = #right and pSprite.locH > pProps[#rightlimit] then
+    pSprite[1].loc = pSprite[1].loc + pOffset
+    if pDirection = #left and pSprite[1].locH < pProps[#leftlimit] or pDirection = #right and pSprite[1].locH > pProps[#rightlimit] then
       return me.reset()
     end if
   else

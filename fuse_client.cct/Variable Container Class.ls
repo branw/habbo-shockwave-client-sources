@@ -11,7 +11,7 @@ end
 
 on create me, tVariable, tValue
   if not stringp(tVariable) and not symbolp(tVariable) then
-    return error(me, "String or symbol expected:" && tVariable, #create)
+    return error(me, "String or symbol expected:" && tVariable, #create, #major)
   end if
   me.pItemList[tVariable] = tValue
   return 1
@@ -19,13 +19,13 @@ end
 
 on set me, tVariable, tValue
   if not stringp(tVariable) and not symbolp(tVariable) then
-    return error(me, "String or symbol expected:" && tVariable, #set)
+    return error(me, "String or symbol expected:" && tVariable, #set, #major)
   end if
   me.pItemList[tVariable] = tValue
   return 1
 end
 
-on get me, tVariable, tDefault
+on GET me, tVariable, tDefault
   tValue = me.pItemList[tVariable]
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
@@ -35,7 +35,7 @@ on get me, tVariable, tDefault
     else
       tValue = 0
     end if
-    error(me, tError, #get)
+    error(me, tError, #GET, #minor)
   end if
   return tValue
 end
@@ -48,12 +48,12 @@ on getInt me, tVariable, tDefault
       tValue = tDefault
       tError = tError & RETURN & "Using given default:" && tDefault
     end if
-    error(me, tError, #getInt)
+    error(me, tError, #getInt, #minor)
   end if
   return tValue
 end
 
-on getValue me, tVariable, tDefault
+on GetValue me, tVariable, tDefault
   tValue = value(me.pItemList[tVariable])
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
@@ -61,12 +61,15 @@ on getValue me, tVariable, tDefault
       tValue = tDefault
       tError = tError & RETURN & "Using given default:" && tDefault
     end if
-    error(me, tError, #getValue)
+    error(me, tError, #GetValue, #minor)
+  end if
+  if ilk(tValue) = #list or ilk(tValue) = #propList then
+    return tValue.duplicate()
   end if
   return tValue
 end
 
-on remove me, tVariable
+on Remove me, tVariable
   return me.pItemList.deleteProp(tVariable)
 end
 

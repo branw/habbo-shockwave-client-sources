@@ -11,15 +11,15 @@ on construct me
   return 1
 end
 
-on create me, tid, tHost, tPort
-  if not symbolp(tid) and not stringp(tid) then
-    return error(me, "Symbol or string expected:" && tid, #create)
+on create me, tID, tHost, tPort
+  if not symbolp(tID) and not stringp(tID) then
+    return error(me, "Symbol or string expected:" && tID, #create, #major)
   end if
   if not stringp(tHost) then
-    return error(me, "String expected:" && tHost, #create)
+    return error(me, "String expected:" && tHost, #create, #major)
   end if
   if not integerp(tPort) then
-    return error(me, "Integer expected:" && tPort, #create)
+    return error(me, "Integer expected:" && tPort, #create, #major)
   end if
   if getIntVariable("connection.log.level") = 2 and the runMode contains "Author" then
     if not memberExists("connectionLog.text") then
@@ -29,31 +29,31 @@ on create me, tid, tHost, tPort
     else
       tLogField = member(getmemnum("connectionLog.text"))
     end if
-    tLogField.text = tLogField.text & RETURN & "Connection logging" && tid & RETURN
+    tLogField.text = tLogField.text & RETURN & "Connection logging" && tID & RETURN
   end if
-  if not me.exists(tid) then
-    if not createObject(tid, getClassVariable(pClassString)) then
-      return error(me, "Failed to initialize connection:" && tid, #create)
+  if not me.exists(tID) then
+    if not createObject(tID, getClassVariable(pClassString)) then
+      return error(me, "Failed to initialize connection:" && tID, #create, #major)
     end if
-    me.pItemList.add(tid)
+    me.pItemList.add(tID)
   end if
-  if voidp(pListenerList[tid]) then
+  if voidp(pListenerList[tID]) then
     tMsgPtr = getStructVariable("struct.pointer")
     tMsgPtr.setaProp(#value, [:])
-    pListenerList[tid] = tMsgPtr
+    pListenerList[tID] = tMsgPtr
   else
-    tMsgPtr = pListenerList[tid]
+    tMsgPtr = pListenerList[tID]
   end if
-  if voidp(pCommandsList[tid]) then
+  if voidp(pCommandsList[tID]) then
     tCmdPtr = getStructVariable("struct.pointer")
     tCmdPtr.setaProp(#value, [:])
-    pCommandsList[tid] = tCmdPtr
+    pCommandsList[tID] = tCmdPtr
   else
-    tCmdPtr = pCommandsList[tid]
+    tCmdPtr = pCommandsList[tID]
   end if
-  me.get(tid).setProperty(#listener, tMsgPtr)
-  me.get(tid).setProperty(#commands, tCmdPtr)
-  me.get(tid).connect(tHost, tPort)
+  me.GET(tID).setProperty(#listener, tMsgPtr)
+  me.GET(tID).setProperty(#commands, tCmdPtr)
+  me.GET(tID).connect(tHost, tPort)
   return 1
 end
 
@@ -66,26 +66,27 @@ on closeAll me
   me.pItemList = []
 end
 
-on registerListener me, tid, tObjID, tMsgList
-  if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener)
+on registerListener me, tID, tObjID, tMsgList
+  if tID.ilk <> #symbol and tID.ilk <> #string then
+    return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
   tObject = getObject(tObjID)
   if tObject = 0 then
-    return error(me, "Object not found:" && tObjID, #registerListener)
+    return error(me, "Object not found:" && tObjID, #registerListener, #major)
   end if
-  if voidp(pListenerList[tid]) then
+  if voidp(pListenerList[tID]) then
     tPtr = getStructVariable("struct.pointer")
     tPtr.setaProp(#value, [:])
-    pListenerList[tid] = tPtr
+    pListenerList[tID] = tPtr
   else
-    tPtr = pListenerList[tid]
+    tPtr = pListenerList[tID]
   end if
   repeat with i = 1 to tMsgList.count
     tMsg = tMsgList.getPropAt(i)
     tMethod = tMsgList[i]
     if not tObject.handler(tMethod) then
-      return error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener)
+      error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener, #major)
+      next repeat
     end if
     if voidp(tPtr.getaProp(#value).getaProp(tMsg)) then
       tPtr.getaProp(#value).setaProp(tMsg, [])
@@ -95,11 +96,11 @@ on registerListener me, tid, tObjID, tMsgList
   return 1
 end
 
-on unregisterListener me, tid, tObjID, tMsgList
-  if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener)
+on unregisterListener me, tID, tObjID, tMsgList
+  if tID.ilk <> #symbol and tID.ilk <> #string then
+    return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  tPtr = pListenerList[tid]
+  tPtr = pListenerList[tID]
   if voidp(tPtr) then
     return 0
   end if
@@ -108,7 +109,8 @@ on unregisterListener me, tid, tObjID, tMsgList
     tMsg = tMsgList.getPropAt(i)
     tMethod = tMsgList[i]
     if voidp(tList.getaProp(tMsg)) then
-      return error(me, "No listeners for message:" && tMsg && "/" && tid, #unregisterListener)
+      error(me, "No listeners for message:" && tMsg && "/" && tID, #unregisterListener, #minor)
+      next repeat
     end if
     repeat with j = 1 to tList.getaProp(tMsg).count
       tCallback = tList.getaProp(tMsg)[j]
@@ -121,16 +123,16 @@ on unregisterListener me, tid, tObjID, tMsgList
   return 1
 end
 
-on registerCommands me, tid, tObjID, tCmdList
-  if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener)
+on registerCommands me, tID, tObjID, tCmdList
+  if tID.ilk <> #symbol and tID.ilk <> #string then
+    return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  if voidp(pCommandsList[tid]) then
+  if voidp(pCommandsList[tID]) then
     tPtr = getStructVariable("struct.pointer")
     tPtr.setaProp(#value, [:])
-    pCommandsList[tid] = tPtr
+    pCommandsList[tID] = tPtr
   else
-    tPtr = pCommandsList[tid]
+    tPtr = pCommandsList[tID]
   end if
   repeat with i = 1 to tCmdList.count
     tCmd = tCmdList.getPropAt(i)
@@ -141,7 +143,7 @@ on registerCommands me, tid, tObjID, tCmdList
     tNew = tBy1 & tBy2
     if tOld <> VOID then
       if tOld <> tNew then
-        error(me, "Registered command override:" && tCmd && "/" && tOld && "->" && tNew)
+        error(me, "Registered command override:" && tCmd && "/" && tOld && "->" && tNew, #minor)
       end if
     end if
     tPtr.getaProp(#value).setaProp(tCmd, tNew)
@@ -149,11 +151,11 @@ on registerCommands me, tid, tObjID, tCmdList
   return 1
 end
 
-on unregisterCommands me, tid, tObjID, tCmdList
-  if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener)
+on unregisterCommands me, tID, tObjID, tCmdList
+  if tID.ilk <> #symbol and tID.ilk <> #string then
+    return error(me, "Invalid message header ID:" && tID, #registerListener, #major)
   end if
-  tPtr = pCommandsList[tid]
+  tPtr = pCommandsList[tID]
   if voidp(tPtr) then
     return 0
   end if

@@ -18,15 +18,15 @@ on deconstruct me
   return removeMultiuser(pConnectionId)
 end
 
-on retrieveData me, tid, tAuth, tCallBackObj
-  pQueue.add([#type: #retrieve, #id: tid, #auth: tAuth, #callback: tCallBackObj])
+on retrieveData me, tID, tAuth, tCallBackObj
+  pQueue.add([#type: #retrieve, #id: tID, #auth: tAuth, #callback: tCallBackObj])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
 end
 
 on storeData me, tdata, tCallBackObj
-  pQueue.add([#type: #store, #Data: tdata, #callback: tCallBackObj])
+  pQueue.add([#type: #store, #data: tdata, #callback: tCallBackObj])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
@@ -41,16 +41,16 @@ end
 
 on checkConnection me
   if not multiuserExists(pConnectionId) then
-    return error(me, "MUS connection not found:" && pConnectionId, #checkConnection)
+    return error(me, "MUS connection not found:" && pConnectionId, #checkConnection, #minor)
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
-    tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#password)
+    tUserID = getObject(#session).GET(#user_user_id)
+    tMachineID = getSpecialServices().getMachineID()
     if pUseCrypto then
-      tUserName = pCrypto.encipher(tUserName)
-      tPassword = pCrypto.encipher(tPassword)
+      tUserID = pCrypto.encipher(tUserID)
+      tMachineID = pCrypto.encipher(tMachineID)
     end if
-    getMultiuser(pConnectionId).send("LOGIN" && tUserName && tPassword)
+    getMultiuser(pConnectionId).send("LOGIN" && tUserID && tMachineID)
     me.next()
   else
     me.delay(1000, #checkConnection)
@@ -71,7 +71,7 @@ on next me
         tTask = pQueue[1]
         case tTask.type of
           #store:
-            return getMultiuser(pConnectionId).sendBinary(tTask.Data)
+            return getMultiuser(pConnectionId).sendBinary(tTask.data)
           #retrieve:
             return getMultiuser(pConnectionId).send("GETBINDATA" && tTask.id && tTask.auth)
           #fusemsg:
@@ -146,6 +146,8 @@ on helloReply me, tMsg
     pUseCrypto = 0
   else
     pCrypto.setKey(tSecretKey)
+    tPremixString = "j5bty8i7s0gkca3m53z7b0bh3xonkxpun0s5qjn0gkntvqzzpwi1nqagpa7tjopes0hm5t870kam370hxnxu05j0ktqzw1qgatoe0mf"
+    pCrypto.preMixEncodeSbox(tPremixString, 17)
     pUseCrypto = 1
   end if
   pHandshakeFinished = 1

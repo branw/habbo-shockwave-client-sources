@@ -73,6 +73,14 @@ on getProperty me, tProp
       return me.pLocY
     #offset:
       return pScrollOffset
+    #scrollrange:
+      if me.pType = "scrollbarv" then
+        return pClientSourceRect[4] - pClientSourceRect[2]
+      else
+        return pClientSourceRect[2] - pClientSourceRect[1]
+      end if
+    #scrollStep:
+      return pScrollStep
   end case
   return 0
 end
@@ -262,12 +270,15 @@ on sendAdjustOffsetTo me, tNewOffset
   if abs(pScrollOffset - tNewOffset) < pScrollStep and tNewOffset < pMaxOffset and tNewOffset > 0 then
     return 1
   end if
-  if tNewOffset <= pMaxOffset then
+  if tNewOffset < pMaxOffset then
     pScrollOffset = tNewOffset
+    if pScrollStep > 0 then
+      pScrollOffset = pScrollOffset / pScrollStep * pScrollStep
+    end if
   else
     pScrollOffset = pMaxOffset
   end if
-  if tNewOffset <= 0 then
+  if pScrollOffset <= 0 then
     pScrollOffset = 0
   end if
   if me.pType = "scrollbarv" then

@@ -29,7 +29,7 @@ on prepare me
     if textExists(me.pProps[#key]) then
       pMember.text = getText(me.pProps[#key])
     else
-      error(me, "Text not found:" && me.pProps[#key], #define)
+      error(me, "Text not found:" && me.pProps[#key], #define, #minor)
       pMember.text = me.pProps[#key]
     end if
   end if

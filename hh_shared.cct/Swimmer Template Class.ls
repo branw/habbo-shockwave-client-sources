@@ -15,13 +15,13 @@ on define me, tdata
   me.pLocH = tdata[#h]
   me.pPeopleSize = getVariable("human.size." & integer(me.pXFactor))
   if not me.pPeopleSize then
-    error(me, "People size not found, using default!", #define)
+    error(me, "People size not found, using default!", #define, #minor)
     me.pPeopleSize = "sh"
   end if
   me.pCanvasSize = value(getVariable("human.canvas." & me.pPeopleSize))
   me.pCanvasSize.addProp(#swm, [60, 60, 32, -8])
   if not me.pCanvasSize then
-    error(me, "Canvas size not found, using default!", #define)
+    error(me, "Canvas size not found, using default!", #define, #minor)
     me.pCanvasSize = [#std: [64, 102, 32, -8], #lay: [89, 102, 32, -4]]
   end if
   if me.pCanvasName = VOID then
@@ -54,10 +54,10 @@ on define me, tdata
   call(#registerProcedure, me.pMatteSpr.scriptInstanceList, #eventProcUserRollOver, tTargetID, #mouseLeave)
   tPartSymbols = tdata[#parts]
   if not setPartLists(me, tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #define)
+    return error(me, "Couldn't create part lists!", #define, #major)
   end if
   me.arrangeParts()
-  me.refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)
+  me.Refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)
   return 1
 end
 
@@ -69,7 +69,7 @@ on getFigure me
   return pFigure
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on Refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pMoving = 0
   me.pDancing = 0
   me.pTalking = 0
@@ -98,7 +98,7 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pDirection = tDirBody
   me.arrangeParts()
   if me.pExtraObjs.count > 0 then
-    call(#refresh, me.pExtraObjs)
+    call(#Refresh, me.pExtraObjs)
   end if
   me.pSync = 0
 end
@@ -137,7 +137,7 @@ on setPartLists me, tmodels
     if (tPartSymbol = "fc" or tPartSymbol = "hd") and tmodels[tPartSymbol]["model"] = "002" and me.pXFactor < 33 then
       tmodels[tPartSymbol]["model"] = "001"
     end if
-    tPartCls = value(getThread(#room).getComponent().getClassContainer().get("swimpart"))
+    tPartCls = value(getThread(#room).getComponent().getClassContainer().GET("swimpart"))
     tPartObj = createObject(#temp, tPartCls)
     if stringp(tmodels[tPartSymbol]["color"]) then
       tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")

@@ -3,7 +3,6 @@ on construct me
 end
 
 on deconstruct me
-  unregisterMessage(#GETCATALOGPAG, me.getID())
   return me.regMsgList(0)
 end
 
@@ -43,6 +42,7 @@ on handle_catalogpage me, tMsg
   tProductList = []
   tTextList = [:]
   tTextList.sort()
+  tDealNumber = 1
   repeat with tLineNum = 1 to tCount
     the itemDelimiter = ":"
     tLine = tMsg.content.line[tLineNum]
@@ -99,6 +99,26 @@ on handle_catalogpage me, tMsg
         tTemp["dimensions"] = tdata.item[8]
         tTemp["purchaseCode"] = tdata.item[9]
         tTemp["partColors"] = tdata.item[10]
+        if tdata.item.count > 10 then
+          tItemCount = tdata.item[11]
+          if tdata.item.count >= 11 + tItemCount * 3 then
+            tDealList = []
+            tDealItem = [:]
+            repeat with i = 0 to tItemCount - 1
+              tDealItem["class"] = tdata.item[11 + i * 3 + 1]
+              tDealItem["count"] = tdata.item[11 + i * 3 + 2]
+              tDealItem["partColors"] = tdata.item[11 + i * 3 + 3]
+              tDealList[i + 1] = tDealItem.duplicate()
+            end repeat
+            tTemp["dealList"] = tDealList
+            if tDealList.count > 1 then
+              tTemp["dealNumber"] = tDealNumber
+              tDealNumber = tDealNumber + 1
+            else
+              tTemp["dealNumber"] = 0
+            end if
+          end if
+        end if
         tProductList.add(tTemp)
     end case
   end repeat
@@ -112,18 +132,17 @@ on handle_catalogpage me, tMsg
   me.getComponent().saveCataloguePage(tList)
 end
 
-on handle_nameapproved me, tMsg
-  tParm = tMsg.connection.GetIntFrom(tMsg)
-  if tParm = 1 then
-    executeMessage(#petapproved)
+on handle_purchasenotallowed me, tMsg
+  if voidp(tMsg.connection) then
+    return 0
   end if
-end
-
-on handle_nameunacceptable me, tMsg
-  tParm = tMsg.connection.GetIntFrom(tMsg)
-  if tParm = 1 then
-    executeMessage(#petunacceptable)
-  end if
+  tCode = tMsg.connection.GetIntFrom(tMsg)
+  case tCode of
+    0:
+    1:
+      return executeMessage(#alert, [#Msg: "catalog_purchase_not_allowed_hc", #modal: 1])
+  end case
+  return 0
 end
 
 on regMsgList me, tBool
@@ -133,13 +152,11 @@ on regMsgList me, tBool
   tMsgs.setaProp(68, #handle_purchase_nobalance)
   tMsgs.setaProp(126, #handle_catalogindex)
   tMsgs.setaProp(127, #handle_catalogpage)
-  tMsgs.setaProp(36, #handle_nameapproved)
-  tMsgs.setaProp(37, #handle_nameunacceptable)
+  tMsgs.setaProp(296, #handle_purchasenotallowed)
   tCmds = [:]
   tCmds.setaProp("GPRC", 100)
   tCmds.setaProp("GCIX", 101)
   tCmds.setaProp("GCAP", 102)
-  tCmds.setaProp("APPROVENAME", 42)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

@@ -137,9 +137,9 @@ on showInstance me
       me.ChangeWindowView(#gameDetails4t)
   end case
   return 0
-  tStateStr = getText("bb_state_" & tParams[#state])
+  tStateStr = getText("gs_state_" & tParams[#state])
   if tParams[#state] = #created then
-    tSpecStr = replaceChunks(getText("bb_specnum"), "\x", tParams[#numSpectators])
+    tSpecStr = replaceChunks(getText("gs_specnum"), "\x", tParams[#numSpectators])
   else
     tSpecStr = EMPTY
   end if
@@ -160,6 +160,7 @@ on showGameCreation me
   if tElem = 0 then
     return 0
   end if
+  updateStage()
   tElem.setEdit(1)
   return tElem.setFocus(1)
   return 1
@@ -231,7 +232,7 @@ on eventProcMainWindow me, tEvent, tSprID, tParam
     return error(me, "Gamesystem not found.", #eventProcMainWindow)
   end if
   case tSprID of
-    "bb_button_buyTkts":
+    "gs_button_buytickets":
       me.delayedMenuToBack()
       return executeMessage(#show_ticketWindow)
     "bb_area_gameList1":
@@ -291,13 +292,14 @@ on eventProcMainWindow me, tEvent, tSprID, tParam
         tGameSystemObj.leaveGame()
       else
         tGameSystemObj.unobserveInstance()
+        me.getComponent().resetUserTeamIndex()
         return me.ChangeWindowView(#gameList)
       end if
     "bb_link_gameInfo":
       tParams = tGameSystemObj.getObservedInstance()
       tAction = me.getInstanceDetailButtonState(tParams[#state])
       case tAction of
-        #start:
+        #start, #start_dimmed:
           return tGameSystemObj.startGame()
         #spectate:
           return tGameSystemObj.watchGame()
@@ -409,7 +411,11 @@ on getInstanceDetailButtonState me, tGameState
   tButton = #empty
   if tGameState = #created then
     if me.getComponent().isUserHost() then
-      tButton = #start
+      if me.getComponent().gameCanStart() then
+        tButton = #start
+      else
+        tButton = #start_dimmed
+      end if
     else
       if pWatchMode then
         tButton = #spectateInfo
@@ -445,38 +451,30 @@ on setNormalBalloonMargins me
   return 1
 end
 
-on showErrorMessage me, tErrorStr, tRequestStr, tExtra
-  case string(tErrorStr) of
+on showErrorMessage me, tErrorType, tRequestStr, tExtra
+  case tErrorType of
+    2:
+      executeMessage(#openOneClickGameBuyWindow)
+      return 1
     "game_deleted":
-      tAlertStr = "bb_error_game_deleted"
-    "invalidparam":
-      tAlertStr = "bb_error_invalid"
-    "notickets":
-      tAlertStr = "bb_error_notickets"
-    "dailylimit":
-      tAlertStr = "bb_error_dailylimit"
-    "blockedip":
-      tAlertStr = "bb_error_blockedip"
+      tAlertStr = "gs_error_game_deleted"
     "idlewarning":
-      tAlertStr = "bb_idlewarning"
-    "kickedfromteam":
-      tAlertStr = "bb_kickedfromteam"
+      tAlertStr = "gs_idlewarning"
     otherwise:
-      if tRequestStr = VOID then
-        tAlertStr = "bb_error_" & tErrorStr
-      else
-        tAlertStr = "bb_error_" & tRequestStr & "_" & tErrorStr
+      tAlertStr = "gs_error_" & tRequestStr & "_" & tErrorType
+      if not textExists(tAlertStr) then
+        tAlertStr = "gs_error_" & tErrorType
       end if
   end case
   case tRequestStr of
     "create":
       me.ChangeWindowView(#gameList)
   end case
-  case tErrorStr of
-    "kicked":
+  case tErrorType of
+    6:
       me.ChangeWindowView(#gameList)
   end case
-  return executeMessage(#alert, [#id: "bb_error", #msg: tAlertStr])
+  return executeMessage(#alert, [#id: "gs_error", #Msg: tAlertStr])
 end
 
 on delayedMenuToBack me

@@ -42,9 +42,9 @@ on setProperty me, tPropID, tValue
   return 0
 end
 
-on createMember me, tMemName, ttype
-  if not voidp(pAllMemNumList[tMemName]) then
-    error(me, "Member already exists:" && tMemName, #createMember)
+on createMember me, tMemName, ttype, tForcedDuplicate
+  if not voidp(pAllMemNumList[tMemName]) and not tForcedDuplicate then
+    error(me, "Member already exists:" && tMemName, #createMember, #minor)
     return me.getmemnum(tMemName)
   end if
   if ttype = #bitmap and pBmpMemNumList.count > 0 then
@@ -53,20 +53,22 @@ on createMember me, tMemName, ttype
   else
     tmember = new(ttype, castLib(pBin))
     if not ilk(tmember, #member) then
-      return error(me, "Failed to create member:" && tMemName && ttype, #createMember)
+      return error(me, "Failed to create member:" && tMemName && ttype, #createMember, #major)
     end if
   end if
   tmember.name = tMemName
   tMemNum = tmember.number
   pAllMemNumList[tMemName] = tMemNum
-  pDynMemNumList.add(tMemNum)
+  if pDynMemNumList.getPos(tMemNum) = 0 then
+    pDynMemNumList.add(tMemNum)
+  end if
   return tMemNum
 end
 
 on removeMember me, tMemName
   tMemNum = pAllMemNumList[tMemName]
   if pDynMemNumList.getPos(tMemNum) < 1 then
-    return error(me, "Can't delete member:" && tMemName, #removeMember)
+    return error(me, "Can't delete member:" && tMemName, #removeMember, #minor)
   end if
   tmember = member(tMemNum)
   if tmember.type = #bitmap then
@@ -90,7 +92,7 @@ end
 
 on updateMember me, tMemName
   if tMemName.ilk <> #string then
-    return error(me, "Member's name required:" && tMemName, #updateMember)
+    return error(me, "Member's name required:" && tMemName, #updateMember, #minor)
   end if
   if not me.unregisterMember(tMemName) then
     return 0
@@ -145,7 +147,7 @@ on preIndexMembers me, tCastNum
                 if tMemA.name <> EMPTY and tMemB.name <> EMPTY then
                   tLibA = castLib(tMemA.castLibNum).name
                   tLibB = castLib(tMemB.castLibNum).name
-                  error(me, "Duplicate member names:" && tmember.name && "/" && tLibA && "/" && tLibB, #preIndexMembers)
+                  error(me, "Duplicate member names:" && tmember.name && "/" && tLibA && "/" && tLibB, #preIndexMembers, #minor)
                 end if
               end if
             end if
@@ -160,32 +162,7 @@ on preIndexMembers me, tCastNum
     end if
     tAliasIndex = getVariable("alias.index.field")
     if member(tAliasIndex, tCastLib).number > 0 then
-      tAliasList = field(tAliasIndex, tCastLib)
-      tItemDeLim = the itemDelimiter
-      the itemDelimiter = "="
-      repeat with i = 1 to tAliasList.line.count
-        tLine = tAliasList.line[i]
-        if length(tLine) > 2 then
-          tName = item 2 to the number of items in tLine of tLine
-          if the last char in tName = "*" then
-            tName = tName.char[1..length(tName) - 1]
-            tNumber = pAllMemNumList[tName]
-            if tNumber > 0 then
-              tReplacingNum = -tNumber
-            else
-              tReplacingNum = tNumber
-            end if
-          else
-            tNumber = pAllMemNumList[tName]
-            tReplacingNum = tNumber
-          end if
-          if tNumber > 0 then
-            tMemName = item 1 of tLine
-            pAllMemNumList[tMemName] = tReplacingNum
-          end if
-        end if
-      end repeat
-      the itemDelimiter = tItemDeLim
+      me.readAliasIndexesFromField(tAliasIndex, tCastLib)
     end if
     tClsIndex = getVariable("class.index.field")
     if member(tClsIndex, tCastLib).number > 0 then
@@ -193,6 +170,35 @@ on preIndexMembers me, tCastNum
     end if
   end repeat
   return 1
+end
+
+on readAliasIndexesFromField me, tAliasIndex, tCastlibNo
+  tAliasList = field(tAliasIndex, tCastlibNo)
+  tItemDeLim = the itemDelimiter
+  the itemDelimiter = "="
+  repeat with i = 1 to tAliasList.line.count
+    tLine = tAliasList.line[i]
+    if length(tLine) > 2 then
+      tName = item 2 to the number of items in tLine of tLine
+      if the last char in tName = "*" then
+        tName = tName.char[1..length(tName) - 1]
+        tNumber = pAllMemNumList[tName]
+        if tNumber > 0 then
+          tReplacingNum = -tNumber
+        else
+          tReplacingNum = tNumber
+        end if
+      else
+        tNumber = pAllMemNumList[tName]
+        tReplacingNum = tNumber
+      end if
+      if tNumber > 0 then
+        tMemName = item 1 of tLine
+        pAllMemNumList[tMemName] = tReplacingNum
+      end if
+    end if
+  end repeat
+  the itemDelimiter = tItemDeLim
 end
 
 on unregisterMembers me, tCastNum

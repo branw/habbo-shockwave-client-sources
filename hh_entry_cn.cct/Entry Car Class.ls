@@ -1,6 +1,11 @@
 property pSprite, pOffset, pDirection, pmodel, pDelayCounter
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCount
+  if tCount mod 2 = 1 then
+    tDirection = #right
+  else
+    tDirection = #left
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pDirection = tDirection

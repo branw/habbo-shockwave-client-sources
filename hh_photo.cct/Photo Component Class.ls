@@ -24,8 +24,7 @@ end
 
 on storePicture me, tmember, tText
   if not voidp(tText) then
-    tText = convertSpecialChars(tText, 1)
-    tText = replaceChunks(tText, "\", EMPTY)
+    tText = getStringServices().convertSpecialChars(tText, 1)
   end if
   tCS = me.countCS(tmember.image)
   tdata = [#image: tmember.media, #time: the date && the time, #cs: tCS]
@@ -34,13 +33,13 @@ on storePicture me, tmember, tText
   pLastPhotoData = tdata
 end
 
-on binaryDataStored me, tid
+on binaryDataStored me, tID
   me.getInterface().saveOk()
-  pPhotoCache.setaProp(tid, pLastPhotoData)
+  pPhotoCache.setaProp(tID, pLastPhotoData)
   pLastPhotoData = VOID
 end
 
-on binaryDataReceived me, tdata, tid
+on binaryDataReceived me, tdata, tID
   if ilk(tdata) <> #propList then
     return 0
   end if
@@ -48,7 +47,7 @@ on binaryDataReceived me, tdata, tid
     return 0
   end if
   tText = pPhotoText
-  pPhotoCache.setaProp(tid, tdata)
+  pPhotoCache.setaProp(tID, tdata)
   if not windowExists(pWindowID) then
     return 0
   end if
@@ -106,7 +105,6 @@ on setFilm me, tFilm
   pFilm = tFilm
   me.getInterface().setButtonHilites()
   me.getInterface().updateFilm()
-  getObject(#session).set("user_photo_film", tFilm)
 end
 
 on getFilm me
@@ -142,8 +140,8 @@ on setItemData me, tMsg
   else
     me.binaryDataReceived(pPhotoCache.getaProp(pPhotoId), pPhotoId)
   end if
-  towner = getObject(#session).get("room_owner")
-  tCanRemovePhotos = getObject(#session).get("user_rights").getOne("fuse_remove_photos")
+  towner = getObject(#session).GET("room_owner")
+  tCanRemovePhotos = getObject(#session).GET("user_rights").getOne("fuse_remove_photos")
   if not towner and not tCanRemovePhotos then
     tWndObj.getElement("photo_remove").setProperty(#visible, 0)
   end if

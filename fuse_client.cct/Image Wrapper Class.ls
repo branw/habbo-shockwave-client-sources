@@ -26,8 +26,8 @@ on prepare me
 end
 
 on feedImage me, tImage
-  if not ilk(tImage, #image) then
-    return error(me, "Image object expected!" && tImage, #feedImage)
+  if not (ilk(tImage) = #image) then
+    return error(me, "Image object expected!" && tImage, #feedImage, #minor)
   end if
   tTargetRect = rect(pOwnX, pOwnY, pOwnX + pOwnW, pOwnY + pOwnH)
   me.pBuffer.image.fill(tTargetRect, me.pProps[#bgColor])
@@ -48,13 +48,13 @@ on clearBuffer me
   return me.pimage.fill(me.pimage.rect, me.pProps[#bgColor])
 end
 
-on registerScroll me, tid
+on registerScroll me, tID
   if voidp(pScrolls) then
     me.prepare()
   end if
-  if not voidp(tid) then
-    if pScrolls.getPos(tid) = 0 then
-      pScrolls.add(tid)
+  if not voidp(tID) then
+    if pScrolls.getPos(tID) = 0 then
+      pScrolls.add(tID)
     end if
   else
     if pScrolls.count = 0 then
@@ -63,7 +63,7 @@ on registerScroll me, tid
   end if
   tSourceRect = rect(pOffX, pOffY, pOffX + pOwnW, pOffY + pOwnH)
   tScrollList = []
-  tWndObj = getWindowManager().get(me.pMotherId)
+  tWndObj = getWindowManager().GET(me.pMotherId)
   repeat with tScrollId in pScrolls
     tScrollList.add(tWndObj.getElement(tScrollId))
   end repeat
@@ -112,7 +112,7 @@ on getOffsetY me
   return pOffY
 end
 
-on resizeBy me, tOffH, tOffV
+on resizeBy me, tOffH, tOffV, tForcedTag
   if tOffH <> 0 or tOffV <> 0 then
     if me.pProps[#style] = #unique then
       case me.pScaleH of
@@ -122,6 +122,10 @@ on resizeBy me, tOffH, tOffV
           me.pwidth = me.pwidth + tOffH
         #center:
           me.moveBy(tOffH / 2, 0)
+        #fixed:
+          if tForcedTag then
+            me.pwidth = me.pwidth + tOffH
+          end if
       end case
       case me.pScaleV of
         #move:
@@ -130,6 +134,10 @@ on resizeBy me, tOffH, tOffV
           me.pheight = me.pheight + tOffV
         #center:
           me.moveBy(0, tOffV / 2)
+        #fixed:
+          if tForcedTag then
+            me.pheight = me.pheight + tOffV
+          end if
       end case
       if me.pwidth < 1 then
         me.pwidth = 1
@@ -151,6 +159,11 @@ on resizeBy me, tOffH, tOffV
           pOwnW = pOwnW + tOffH
         #center:
           pOwnX = pOwnX + tOffH / 2
+        #fixed:
+          if tForcedTag then
+            me.pSprite.width = me.pSprite.width + tOffH
+            pOwnW = me.pSprite.width
+          end if
       end case
       case me.pScaleV of
         #move:
@@ -159,6 +172,11 @@ on resizeBy me, tOffH, tOffV
           pOwnH = pOwnH + tOffV
         #center:
           pOwnY = pOwnY + tOffV / 2
+        #fixed:
+          if tForcedTag then
+            me.pSprite.height = me.pSprite.height + tOffV
+            pOwnV = me.pSprite.height
+          end if
       end case
     end if
     me.registerScroll()
@@ -180,5 +198,9 @@ on mouseDown me
 end
 
 on mouseUp me
+  return point(the mouseH - me.pSprite.locH + pOwnX + pOffX, the mouseV - me.pSprite.locV + pOwnY + pOffY)
+end
+
+on mouseWithin me
   return point(the mouseH - me.pSprite.locH + pOwnX + pOffX, the mouseV - me.pSprite.locV + pOwnY + pOffY)
 end

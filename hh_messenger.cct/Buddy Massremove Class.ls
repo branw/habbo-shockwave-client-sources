@@ -57,12 +57,11 @@ end
 
 on removeUnnecessaryFromBuddylist me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList.deleteProp(#msg)
-    pBuddyList.deleteProp(#emailOk)
+    pBuddyList.deleteProp(#customText)
     pBuddyList.deleteProp(#msgs)
     pBuddyList.deleteProp(#update)
     pBuddyList.deleteProp(#sex)
-    pBuddyList.deleteProp(#unit)
+    pBuddyList.deleteProp(#location)
     pBuddyList.deleteProp(#online)
   end repeat
   return 1
@@ -78,7 +77,7 @@ on setUpMassRemoveWindow me
     return tWndObj.close()
   end if
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].addProp(#remove, 0)
+    pBuddyList[i].addProp(#Remove, 0)
   end repeat
   pPageCount = pBuddyList.count / pOnScreenNum
   if pBuddyList.count mod pOnScreenNum <> 0 then
@@ -128,7 +127,7 @@ on updateView me
     tElem1.show()
     tElem2.show()
     tElem1.setText(pBuddyList[tStartNr + i].name)
-    if not pBuddyList[tStartNr + i].remove then
+    if not pBuddyList[tStartNr + i].Remove then
       pRemoveCheckBoxList[i] = 0
       me.updateCheckButton(tElem2ID, "button.checkbox.off")
       next repeat
@@ -205,12 +204,12 @@ on checkBoxClicked me, tid, ttype
   tBoxID = "friendremove_checkbox" & tNum
   if pRemoveCheckBoxList[tNum] = 0 then
     pRemoveCheckBoxList[tNum] = 1
-    pBuddyList[tStartNr + tNum].remove = 1
+    pBuddyList[tStartNr + tNum].Remove = 1
     pChosen = pChosen + 1
     me.updateCheckButton(tBoxID, "button.checkbox.on")
   else
     pRemoveCheckBoxList[tNum] = 0
-    pBuddyList[tStartNr + tNum].remove = 0
+    pBuddyList[tStartNr + tNum].Remove = 0
     pChosen = pChosen - 1
     me.updateCheckButton(tBoxID, "button.checkbox.off")
   end if
@@ -248,7 +247,7 @@ end
 on getStayCount me
   tStay = 0
   repeat with i = 1 to pBuddyList.count
-    if not pBuddyList[i].remove then
+    if not pBuddyList[i].Remove then
       tStay = tStay + 1
     end if
   end repeat
@@ -291,7 +290,7 @@ on showConfirmationWindow me
   tElem.setText(tText)
   tText = EMPTY
   repeat with i = 1 to pBuddyList.count
-    if not pBuddyList[i].remove then
+    if not pBuddyList[i].Remove then
       tText = tText & pBuddyList[i].name & ", "
     end if
   end repeat
@@ -303,7 +302,7 @@ end
 on commitRemove me
   pRemoveList = []
   repeat with i = 1 to pBuddyList.count
-    if pBuddyList[i].remove then
+    if pBuddyList[i].Remove then
       pRemoveList.add(pBuddyList[i].id)
     end if
   end repeat
@@ -317,12 +316,12 @@ end
 
 on sendRemoveList me
   if pRemoveList = [] then
-    getConnection(getVariable("connection.info.id")).send("MESSENGER_SENDUPDATE", [#integer: 0])
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
     return me.endMassRemovalSession()
   end if
   tListSize = 400
   tCount = 0
-  tSendList = [#integer: 0, #integer: 0]
+  tSendList = [#integer: 0]
   repeat with i = 1 to tListSize
     tSendList.addProp(#integer, integer(pRemoveList[1]))
     pRemoveList.deleteAt(1)
@@ -331,7 +330,7 @@ on sendRemoveList me
       exit repeat
     end if
   end repeat
-  tSendList[2] = tCount
+  tSendList[1] = tCount
   getConnection(getVariable("connection.info.id")).send("MESSENGER_REMOVEBUDDY", tSendList)
   return 1
 end
@@ -351,7 +350,7 @@ on arrangeFriendList me, ttype
       #name:
         tNewList.addProp(pBuddyList[i].name, pBuddyList[i])
       #logintime:
-        tTime = pBuddyList[i].last_access_time.word[1]
+        tTime = pBuddyList[i].lastAccess.word[1]
         tArrangedTime = tTime.item[3] & tTime.item[2] & tTime.item[1]
         tNewList.addProp(tArrangedTime, pBuddyList[i])
     end case
@@ -384,7 +383,7 @@ end
 
 on selectAllFriends me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].remove = 1
+    pBuddyList[i].Remove = 1
   end repeat
   pChosen = pBuddyList.count
   me.updateView()
@@ -393,7 +392,7 @@ end
 
 on invertSelection me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].remove = not pBuddyList[i].remove
+    pBuddyList[i].Remove = not pBuddyList[i].Remove
   end repeat
   pChosen = pBuddyList.count - pChosen
   me.updateView()

@@ -5,7 +5,7 @@ on define me, tPart, tProps
   pBalance = 2
   pAnimFrm = 0
   pPart = tPart
-  pDirection = tProps[#dir]
+  pDirection = tProps[#Dir]
   pBodyColor = tProps[#figure][pPart]["color"]
   pCounter = 0
   return 1

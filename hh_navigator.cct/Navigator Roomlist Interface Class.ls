@@ -1,8 +1,9 @@
-property pStrLastFlatSearch, pFlatPasswords, pFlatInfoAction
+property pStrLastFlatSearch, pFlatPasswords, pFlatInfoAction, pModifyFlatInfo, pDoorStatusModified
 
 on construct me
   pStrLastFlatSearch = EMPTY
   pFlatInfoAction = 0
+  pDoorStatusModified = 0
   return 1
 end
 
@@ -38,14 +39,8 @@ on hideSpaceNodeUsers me
 end
 
 on getPasswordFromField me, tElementId
-  tPw = EMPTY
-  if voidp(pFlatPasswords[tElementId]) then
-    return "null"
-  end if
-  repeat with f in pFlatPasswords[tElementId]
-    tPw = tPw & f
-  end repeat
-  return tPw
+  tPwd = pFlatPasswords[tElementId]
+  return tPwd
 end
 
 on flatPasswordIncorrect me
@@ -53,33 +48,57 @@ on flatPasswordIncorrect me
 end
 
 on checkFlatAccess me, tFlatData
-  unregisterMessage(symbol("receivedFlatStruct" & tFlatData[#id]), me.getID())
-  if me.getProperty(#viewedNodeId) <> tFlatData[#id] then
-    return 1
-  end if
-  if tFlatData[#owner] = getObject(#session).get("user_name") then
+  if tFlatData[#owner] = getObject(#session).GET("user_name") then
     tDoor = "open"
   else
     tDoor = tFlatData[#door]
     pFlatPasswords = [:]
   end if
   case tDoor of
-    "open", "closed":
-      if voidp(tFlatData) then
-        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo)
-      end if
-      return me.getComponent().executeRoomEntry(tFlatData[#id])
     "password":
       me.ChangeWindowView("nav_gr_password")
       getWindow(me.pWindowTitle).getElement("nav_roomname_text").setText(tFlatData[#name])
-      me.setProperty(#viewedNodeId, tFlatData[#id])
+      me.setProperty(#passwordNodeId, tFlatData[#id])
+    otherwise:
+      if voidp(tFlatData) then
+        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo, #major)
+      end if
+      return me.getComponent().executeRoomEntry(tFlatData[#id])
   end case
+  return 1
+end
+
+on handleRecommendedRoomListClicked me, tParm
+  tNodeInfo = me.getComponent().getNodeInfo(#recom)
+  tRoomList = tNodeInfo.getaProp(#children)
+  if voidp(tRoomList) then
+    return 0
+  end if
+  tClickedLine = integer(tParm.locV / me.pListItemHeight) + 1
+  if tClickedLine > tRoomList.count then
+    return 0
+  end if
+  tNodeInfo = tRoomList[tClickedLine]
+  me.setProperty(#viewedNodeId, tNodeInfo[#id])
+  tGoLinkH = 255
+  me.setLoadingCursor(1)
+  if tParm.locH > tGoLinkH then
+    me.getComponent().prepareRoomEntry(string(tNodeInfo[#id]), #private)
+  else
+    me.showNodeInfo(tNodeInfo[#id])
+  end if
+  return 1
 end
 
 on handleRoomListClicked me, tParm
-  tNodeList = me.getComponent().getNodeChildren(me.getProperty(#categoryId))
-  if not ilk(tNodeList, #list) then
-    return 0
+  tCategoryId = me.getProperty(#categoryId)
+  tNodeInfo = me.getComponent().getNodeInfo(tCategoryId)
+  if not listp(tNodeInfo) then
+    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked, #major)
+  end if
+  tNodeList = tNodeInfo[#children]
+  if not listp(tNodeList) then
+    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeCount = tNodeList.count
   if not ilk(tParm, #point) or tNodeCount = 0 then
@@ -98,6 +117,7 @@ on handleRoomListClicked me, tParm
   if tNodeInfo[#nodeType] = 0 then
     me.setLoadingCursor(1)
     me.getComponent().expandNode(tNodeInfo[#id])
+    executeMessage(#tutorial_roomcategory_expanded)
   else
     if the shiftDown then
       if tNodeInfo[#nodeType] = 1 then
@@ -132,26 +152,25 @@ end
 on showRoomlistError me, tText
   me.setLoadingCursor(0)
   tElem = getWindow(me.pWindowTitle).getElement("nav_roomlist")
-  tWidth = tElem.getProperty(#width)
-  tHeight = tElem.getProperty(#height)
-  tTempImg = image(tWidth, tHeight, 8)
-  tTextImg = me.pWriterPlainNormLeft.render(tText)
-  tTempImg.copyPixels(tTextImg, tTextImg.rect + rect(8, 5, 8, 5), tTextImg.rect)
-  tElem.feedImage(tTempImg)
+  if tElem <> 0 then
+    tWidth = tElem.getProperty(#width)
+    tHeight = tElem.getProperty(#height)
+    tTempImg = image(tWidth, tHeight, 8)
+    tTextImg = me.pWriterPlainNormLeft.render(tText)
+    tTempImg.copyPixels(tTextImg, tTextImg.rect + rect(8, 5, 8, 5), tTextImg.rect)
+    tElem.feedImage(tTempImg)
+  end if
 end
 
 on modifyPrivateRoom me, tFlatInfo
   if not (tFlatInfo.ilk = #propList) then
-    registerMessage(symbol("receivedFlatStruct" & tFlatInfo), me.getID(), #modifyPrivateRoom)
-    return me.getComponent().sendGetFlatInfo(tFlatInfo)
+    return me.getComponent().getInfoBroker().requestRoomData(tFlatInfo, #private, [me.getID(), #modifyPrivateRoom])
   end if
-  unregisterMessage(symbol("receivedFlatStruct" & tFlatInfo[#id]), me.getID())
-  if tFlatInfo[#id] <> me.getProperty(#viewedNodeId) then
-    return 1
-  end if
-  tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id])
+  tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id], #own)
   if tFlatInfo = 0 then
-    return error(me, "Flat info is VOID", #modifyPrivateRoom)
+    return error(me, "Flat info is VOID", #modifyPrivateRoom, #major)
+  else
+    pModifyFlatInfo = tFlatInfo
   end if
   if tFlatInfo.findPos(#parentid) = VOID then
     registerMessage(#flatcat_received, me.getID(), #modifyPrivateRoom)
@@ -159,9 +178,15 @@ on modifyPrivateRoom me, tFlatInfo
   end if
   unregisterMessage(#flatcat_received, me.getID())
   pFlatPasswords = [:]
-  if tFlatInfo[#owner] <> getObject(#session).get("user_name") then
+  pDoorStatusModified = 0
+  if tFlatInfo[#owner] <> getObject(#session).GET("user_name") then
     return 0
   end if
+  me.setModifyFirstPage()
+end
+
+on setModifyFirstPage me
+  tFlatInfo = pModifyFlatInfo
   me.ChangeWindowView("nav_gr_mod")
   tWndObj = getWindow(me.pWindowTitle)
   tTempProps = [#name: "nav_modify_roomnamefield", #description: "nav_modify_roomdescription_field"]
@@ -181,40 +206,69 @@ on modifyPrivateRoom me, tFlatInfo
   else
     me.updateRadioButton("nav_modify_nameshow_no_radio", ["nav_modify_nameshow_yes_radio"])
   end if
+  tMaxVisitorsElm = tWndObj.getElement("nav_maxusers_amount")
+  tMaxVisitors = pModifyFlatInfo[#maxVisitors]
+  tAbsoluteMaxVisitors = pModifyFlatInfo[#absoluteMaxVisitors]
+  if tMaxVisitors > tAbsoluteMaxVisitors then
+    tMaxVisitors = tAbsoluteMaxVisitors
+  end if
+  tMaxVisitorsElm.setText(pModifyFlatInfo[#maxVisitors])
+end
+
+on setModifySecondPage me
+  tFlatInfo = pModifyFlatInfo
+  me.ChangeWindowView("nav_gr_mod_b")
+  tWndObj = getWindow(me.pWindowTitle)
   case tFlatInfo[#door] of
     "open":
       me.updateRadioButton("nav_modify_door_open_radio", ["nav_modify_door_locked_radio", "nav_modify_door_pw_radio"])
+      me.hidePasswordFields(1)
     "closed":
       me.updateRadioButton("nav_modify_door_locked_radio", ["nav_modify_door_open_radio", "nav_modify_door_pw_radio"])
+      me.hidePasswordFields(1)
     "password":
       me.updateRadioButton("nav_modify_door_pw_radio", ["nav_modify_door_open_radio", "nav_modify_door_locked_radio"])
+      me.hidePasswordFields(0)
   end case
   me.updateCheckButton("nav_modify_furnituremove_check", tFlatInfo[#ableothersmovefurniture])
+end
+
+on leaveModifyPage me
+  tPage = me.pLastWindowName
+  case tPage of
+    "nav_gr_mod":
+      pModifyFlatInfo[#name] = getWindow(me.pWindowTitle).getElement("nav_modify_roomnamefield").getText()
+      pModifyFlatInfo[#description] = getWindow(me.pWindowTitle).getElement("nav_modify_roomdescription_field").getText()
+      pModifyFlatInfo[#maxVisitors] = getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").getText()
+    "nav_gr_mod_b":
+      pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
+  end case
+end
+
+on hidePasswordFields me, tHidden
+  tPassWordElements = ["nav_modify_door_pw", "nav_modify_door_pw2", "nav_pwfields", "nav_pwdescr"]
+  tWndObj = getWindow(me.pWindowTitle)
+  repeat with tElemID in tPassWordElements
+    tElem = tWndObj.getElement(tElemID)
+    tElem.setProperty(#visible, not tHidden)
+  end repeat
 end
 
 on checkModifiedFlatPasswords me
   tElementId1 = "nav_modify_door_pw"
   tElementId2 = "nav_modify_door_pw2"
-  if voidp(pFlatPasswords[tElementId1]) then
-    tPw1 = []
-  else
-    tPw1 = pFlatPasswords[tElementId1]
-  end if
-  if voidp(pFlatPasswords[tElementId2]) then
-    tPw2 = []
-  else
-    tPw2 = pFlatPasswords[tElementId2]
-  end if
-  if tPw1.count = 0 then
-    executeMessage(#alert, [#msg: "Alert_ForgotSetPassword"])
+  tPw1 = pFlatPasswords[tElementId1]
+  tPw2 = pFlatPasswords[tElementId2]
+  if tPw1.length = 0 then
+    executeMessage(#alert, [#Msg: "Alert_ForgotSetPassword", #modal: 1])
     return 0
   end if
-  if tPw1.count < 3 then
-    executeMessage(#alert, [#msg: "nav_error_passwordtooshort"])
+  if tPw1.length < 3 then
+    executeMessage(#alert, [#Msg: "nav_error_passwordtooshort", #modal: 1])
     return 0
   end if
   if tPw1 <> tPw2 then
-    executeMessage(#alert, [#msg: "Alert_WrongPassword"])
+    executeMessage(#alert, [#Msg: "Alert_WrongPassword", #modal: 1])
     return 0
   end if
   return 1
@@ -257,11 +311,11 @@ on prepareCategoryDropMenu me, tNodeId
   tDefaultCatId = me.getComponent().getNodeProperty(tNodeId, #parentid)
   tDropDown = tWndObj.getElement("nav_choosecategory")
   if not ilk(tDropDown, #instance) then
-    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu)
+    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu, #major)
   end if
-  tCatProps = getObject(#session).get("user_flat_cats")
+  tCatProps = getObject(#session).GET("user_flat_cats")
   if not ilk(tCatProps, #propList) then
-    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu)
+    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu, #major)
   end if
   tCatTxtItems = []
   tCatKeyItems = []
@@ -297,9 +351,14 @@ on eventProcNavigatorPublic me, tEvent, tSprID, tParm
     if tEvent = #mouseUp then
       case tSprID of
         "close":
-          me.hideNavigator(#hide)
+          return me.hideNavigator(#hide)
         "nav_go_button":
           return me.getComponent().prepareRoomEntry(me.getProperty(#viewedNodeId))
+        "nav_addtofavourites_button":
+          me.getComponent().sendAddFavoriteFlat(me.getProperty(#viewedNodeId))
+          return me.getComponent().sendGetFavoriteFlats()
+        "nav_hidefull":
+          return me.getComponent().showHideFullRooms(me.getProperty(#categoryId))
       end case
     end if
   end if
@@ -322,6 +381,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
       "nav_tab_own":
         me.setLoadingCursor(1)
         me.ChangeWindowView("nav_gr_own")
+        executeMessage(#tutorial_ownrooms_tab_clicked)
       "nav_tab_fav":
         me.setLoadingCursor(1)
         me.ChangeWindowView("nav_gr_fav")
@@ -332,6 +392,9 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
   else
     if tEvent = #mouseUp then
       case tSprID of
+        "nav_recom_roomlist":
+          me.setLoadingCursor(1)
+          return me.handleRecommendedRoomListClicked(tParm)
         "nav_roomlist":
           me.setLoadingCursor(1)
           return me.handleRoomListClicked(tParm)
@@ -349,21 +412,24 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
         "nav_removefavourites_button":
           me.getComponent().sendRemoveFavoriteFlat(me.getProperty(#viewedNodeId))
           me.setProperty(#viewedNodeId, VOID)
+          me.setRoomInfoArea(#hide)
           me.getComponent().sendGetFavoriteFlats()
         "nav_ringbell_cancel_button", "nav_flatpassword_cancel_button", "nav_trypw_cancel_button", "nav_noanswer_ok_button":
           me.ChangeWindowView("nav_gr0")
           me.getComponent().updateState("enterEntry")
         "nav_flatpassword_ok_button":
-          tLastClickedId = me.getProperty(#viewedNodeId)
+          tLastClickedId = me.getProperty(#passwordNodeId)
+          tCategory = me.getProperty(#categoryId)
           tTemp = me.getPasswordFromField("nav_flatpassword_field")
-          if length(tTemp) = 0 then
+          if voidp(tTemp) or tTemp = EMPTY then
             return 
           end if
-          tFlatData = me.getComponent().getNodeInfo(tLastClickedId)
+          tFlatData = me.getComponent().getNodeInfo(tLastClickedId, tCategory)
           if tFlatData = 0 then
             return 0
           end if
-          tFlatData[#password] = tTemp
+          tFlatData[#Password] = tTemp
+          me.getComponent().updateSingleSubNodeInfo(tFlatData)
           me.ChangeWindowView("nav_gr_trypassword")
           me.getComponent().executeRoomEntry(tLastClickedId)
         "nav_tryagain_ok_button":
@@ -371,6 +437,10 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           me.ChangeWindowView("nav_gr_password")
         "nav_createroom_button", "nav_createroom_icon":
           return executeMessage(#open_roomkiosk)
+        "nav_hidefull":
+          return me.getComponent().showHideFullRooms(me.getProperty(#categoryId))
+        "nav_refresh_recoms":
+          return me.getComponent().sendGetRecommendedRooms()
       end case
     else
       if tEvent = #keyDown then
@@ -379,45 +449,15 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
             if the key = RETURN then
               return me.startFlatSearch()
             end if
-          "nav_modify_door_pw", "nav_modify_door_pw2", "nav_flatpassword_field":
-            if voidp(pFlatPasswords[tSprID]) then
-              pFlatPasswords[tSprID] = []
+          "OLD":
+          "nav_flatpassword_field":
+            tKeyCatched = me.passwordFieldTypeEvent(tSprID, 0)
+            if tKeyCatched then
+              pPasswordChecked = 0
+              tTimeoutHideName = "asteriskUpdate" & the milliSeconds
+              createTimeout(tTimeoutHideName, 1, #updatePasswordAsterisks, me.getID(), [me.pWindowTitle, tSprID], 1)
             end if
-            case the keyCode of
-              48:
-                return 0
-              36, 76:
-                if tSprID = "nav_flatpassword_field" then
-                  return me.eventProcNavigatorPrivate(#mouseUp, "nav_flatpassword_ok_button", VOID)
-                else
-                  return 1
-                end if
-              51:
-                if pFlatPasswords[tSprID].count > 0 then
-                  pFlatPasswords[tSprID].deleteAt(pFlatPasswords[tSprID].count)
-                end if
-              117:
-                pFlatPasswords[tSprID] = []
-              otherwise:
-                tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
-                tTheKey = the key
-                tASCII = charToNum(tTheKey)
-                if tASCII > 31 and tASCII < 128 then
-                  if tValidKeys contains tTheKey or tValidKeys = EMPTY then
-                    if pFlatPasswords[tSprID].count < 32 then
-                      pFlatPasswords[tSprID].append(tTheKey)
-                    end if
-                  end if
-                end if
-            end case
-            tStr = EMPTY
-            repeat with i = 1 to pFlatPasswords[tSprID].count
-              put "*" after tStr
-            end repeat
-            getWindow(me.pWindowTitle).getElement(tSprID).setText(tStr)
-            set the selStart to pFlatPasswords[tSprID].count
-            set the selEnd to pFlatPasswords[tSprID].count
-            return 1
+            return 0
         end case
       end if
     end if
@@ -431,11 +471,26 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
       "nav_modify_removerights":
         me.ChangeWindowView("nav_remove_rights")
       "nav_remove_rights_cancel_2":
-        me.modifyPrivateRoom(me.getProperty(#viewedNodeId))
+        me.setModifySecondPage()
       "nav_remove_rights_ok_2":
         tNodeId = me.getProperty(#viewedNodeId, #mod)
         me.getComponent().sendRemoveAllRights(tNodeId)
-        me.modifyPrivateRoom(me.getProperty(#viewedNodeId))
+        me.setModifySecondPage()
+      "nav_maxusers_minus":
+        tMaxVisitors = integer(me.getComponent().getNodeProperty(tNodeId, #maxVisitors) - 5)
+        if tMaxVisitors < 10 then
+          tMaxVisitors = 10
+        end if
+        getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").setText(tMaxVisitors)
+        me.getComponent().setNodeProperty(tNodeId, #maxVisitors, tMaxVisitors)
+      "nav_maxusers_plus":
+        tAbsoluteMax = me.getComponent().getNodeProperty(tNodeId, #absoluteMaxVisitors)
+        tMaxVisitors = integer(me.getComponent().getNodeProperty(tNodeId, #maxVisitors) + 5)
+        if tMaxVisitors > tAbsoluteMax then
+          tMaxVisitors = tAbsoluteMax
+        end if
+        getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").setText(tMaxVisitors)
+        me.getComponent().setNodeProperty(tNodeId, #maxVisitors, tMaxVisitors)
       "nav_modify_nameshow_yes_radio":
         me.getComponent().setNodeProperty(tNodeId, #showownername, "1")
         me.updateRadioButton("nav_modify_nameshow_yes_radio", ["nav_modify_nameshow_no_radio"])
@@ -445,12 +500,18 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
       "nav_modify_door_open_radio":
         me.getComponent().setNodeProperty(tNodeId, #door, "open")
         me.updateRadioButton("nav_modify_door_open_radio", ["nav_modify_door_locked_radio", "nav_modify_door_pw_radio"])
+        pDoorStatusModified = 1
+        me.hidePasswordFields(1)
       "nav_modify_door_locked_radio":
         me.getComponent().setNodeProperty(tNodeId, #door, "closed")
         me.updateRadioButton("nav_modify_door_locked_radio", ["nav_modify_door_open_radio", "nav_modify_door_pw_radio"])
+        pDoorStatusModified = 1
+        me.hidePasswordFields(1)
       "nav_modify_door_pw_radio":
         me.getComponent().setNodeProperty(tNodeId, #door, "password")
         me.updateRadioButton("nav_modify_door_pw_radio", ["nav_modify_door_open_radio", "nav_modify_door_locked_radio"])
+        pDoorStatusModified = 1
+        me.hidePasswordFields(0)
       "nav_modify_furnituremove_check":
         tValue = integer(not me.getComponent().getNodeProperty(tNodeId, #ableothersmovefurniture))
         me.getComponent().setNodeProperty(tNodeId, #ableothersmovefurniture, tValue)
@@ -467,22 +528,29 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
         "nav_choosecategory":
           return me.getComponent().setNodeProperty(tNodeId, #parentid, tParm)
         "nav_modify_next":
+          me.leaveModifyPage()
+          me.setModifySecondPage()
+        "nav_modify_prev":
+          me.leaveModifyPage()
+          me.setModifyFirstPage()
+        "nav_modify_ready":
           if voidp(tNodeId) then
             return 0
           end if
+          me.leaveModifyPage()
           tWndObj = getWindow(me.pWindowTitle)
-          tFlatData = me.getComponent().getNodeInfo(tNodeId)
-          if tFlatData[#door] = "password" then
+          tFlatData = me.getComponent().getNodeInfo(tNodeId, #own)
+          if tFlatData[#door] = "password" and pDoorStatusModified then
             if not me.checkModifiedFlatPasswords() then
               return 0
             end if
           end if
-          tFlatData[#name] = replaceChars(tWndObj.getElement("nav_modify_roomnamefield").getText().line[1], "/", EMPTY)
+          tFlatData[#name] = replaceChars(pModifyFlatInfo[#name].line[1], "/", EMPTY)
           if tFlatData[#name] = EMPTY then
             return 0
           end if
-          tFlatData[#description] = tWndObj.getElement("nav_modify_roomdescription_field").getText()
-          tFlatData[#password] = me.getPasswordFromField("nav_modify_door_pw")
+          tFlatData[#description] = pModifyFlatInfo[#description]
+          tFlatData[#Password] = pModifyFlatInfo[#Password]
           tFlatData[#name] = convertSpecialChars(tFlatData[#name], 1)
           tFlatData[#description] = convertSpecialChars(tFlatData[#description], 1)
           me.getComponent().sendupdateFlatInfo(tFlatData)
@@ -500,6 +568,8 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
         "nav_modify_deleteroom":
           executeMessage(#removeEnterRoomAlert)
           me.ChangeWindowView("nav_gr_modify_delete1")
+        "nav_modifyBackTab":
+          me.ChangeWindowView("nav_gr_own")
         otherwise:
           if voidp(tNodeId) then
             return 0
@@ -525,46 +595,15 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
     else
       if tEvent = #keyDown then
         case tSprID of
-          "nav_modify_door_pw", "nav_modify_door_pw2", "nav_flatpassword_field":
-            if voidp(pFlatPasswords[tSprID]) then
-              pFlatPasswords[tSprID] = []
+          "nav_modify_door_pw", "nav_modify_door_pw2":
+            tKeyCatched = me.passwordFieldTypeEvent(tSprID, 1)
+            if tKeyCatched then
+              pPasswordChecked = 0
+              tTimeoutHideName = "asteriskUpdate" & the milliSeconds
+              createTimeout(tTimeoutHideName, 1, #updatePasswordAsterisks, me.getID(), [me.pWindowTitle, tSprID], 1)
             end if
-            case the keyCode of
-              48:
-                return 0
-              36, 76:
-                if tSprID = "nav_flatpassword_field" then
-                  return me.eventProcNavigatorPrivate(#mouseUp, "nav_flatpassword_ok_button", VOID)
-                else
-                  return 1
-                end if
-              51:
-                if pFlatPasswords[tSprID].count > 0 then
-                  pFlatPasswords[tSprID].deleteAt(pFlatPasswords[tSprID].count)
-                end if
-              117:
-                pFlatPasswords[tSprID] = []
-              otherwise:
-                tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
-                tTheKey = the key
-                tASCII = charToNum(tTheKey)
-                if tASCII > 31 and tASCII < 128 then
-                  if tValidKeys contains tTheKey or tValidKeys = EMPTY then
-                    if pFlatPasswords[tSprID].count < 32 then
-                      pFlatPasswords[tSprID].append(tTheKey)
-                    end if
-                  end if
-                end if
-            end case
-            tStr = EMPTY
-            repeat with i = 1 to pFlatPasswords[tSprID].count
-              put "*" after tStr
-            end repeat
-            getWindow(me.pWindowTitle).getElement(tSprID).setText(tStr)
-            set the selStart to pFlatPasswords[tSprID].count
-            set the selEnd to pFlatPasswords[tSprID].count
-            return 1
-          "nav_modify_roomdescription_field":
+            return 0
+          "nav_modify_roomdescription_field", "nav_modify_roomnamefield":
             tKeyCode = the keyCode
             case tKeyCode of
               36, 76:
@@ -574,4 +613,50 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
       end if
     end if
   end if
+end
+
+on passwordFieldTypeEvent me, tSprID, tCheckLength
+  if voidp(tSprID) then
+    return error(me, "No password field defined!", #passwordFieldTypeEvent, #minor)
+  end if
+  if voidp(tCheckLength) then
+    tCheckLength = 1
+  end if
+  tValidKeys = getVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
+  if voidp(pFlatPasswords[tSprID]) then
+    pFlatPasswords[tSprID] = EMPTY
+  end if
+  case the keyCode of
+    36, 76:
+      return 1
+    48:
+      return 0
+    123, 124, 125, 126:
+      return 1
+    51:
+      if pFlatPasswords[tSprID].length > 0 then
+        tTempPass = pFlatPasswords[tSprID]
+        pFlatPasswords[tSprID] = chars(tTempPass, 1, tTempPass.length - 1)
+      end if
+    117:
+      getWindow(me.pWindowTitle).getElement(tSprID).setText(EMPTY)
+      pFlatPasswords[tSprID] = EMPTY
+    otherwise:
+      tValidKeys = getVariable("permitted.name.chars")
+      tTheKey = the key
+      if not (tValidKeys = EMPTY) then
+        if not (tValidKeys contains tTheKey) then
+          tMessageTxt = getText("reg_use_allowed_chars") & RETURN & tValidKeys
+          executeMessage(#alert, [#Msg: tMessageTxt, #modal: 1])
+          return 1
+        end if
+        if tCheckLength then
+          if pFlatPasswords[tSprID].length > getIntVariable("pass.length.max", 16) then
+            executeMessage(#alert, [#Msg: "alert_shortenPW", #modal: 1])
+            return 1
+          end if
+        end if
+      end if
+  end case
+  return 1
 end

@@ -38,10 +38,12 @@ on construct me
   else
     pValueField = 0
   end if
+  registerMessage(#updateFilmCount, me.getID(), #updatePurseFilm)
   return 1
 end
 
 on deconstruct me
+  unregisterMessage(#updateFilmCount, me.getID())
   removeUpdate(me.getID())
   removeWindow(pWindowTitle)
   removeWindow(pVoucherWindowTitle)
@@ -71,10 +73,10 @@ end
 
 on hidePurse me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #remove
+    tHideOrRemove = #Remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #remove then
+    if tHideOrRemove = #Remove then
       removeWindow(pWindowTitle)
     else
       getWindow(pWindowTitle).hide()
@@ -189,16 +191,16 @@ on update me
     if not tWinObj then
       return 0
     end if
-    tid = "loading_anim"
-    if tWinObj.elementExists(tid) then
+    tID = "loading_anim"
+    if tWinObj.elementExists(tID) then
       t1 = pQuad[1]
       t2 = pQuad[2]
       t3 = pQuad[3]
       t4 = pQuad[4]
       pQuad = [t2, t3, t4, t1]
-      tImage = tWinObj.getElement(tid).getProperty(#image)
+      tImage = tWinObj.getElement(tID).getProperty(#image)
       tImage.copyPixels(pAnimImage, pQuad, pAnimImage.rect)
-      tWinObj.getElement(tid).feedImage(tImage)
+      tWinObj.getElement(tID).feedImage(tImage)
     else
       removeUpdate(me.getID())
     end if
@@ -326,7 +328,7 @@ on getPurseAd me, tSourceURL, tClickURL
   end if
   if not voidp(tSourceURL) then
     if not (tSourceURL starts "http") then
-      return error(me, "Incorrect URL!", #getPurseAd)
+      return error(me, "Incorrect URL!", #getPurseAd, #minor)
     end if
     if not memberExists("purse-ad") then
       pAdMemNum = queueDownload(tSourceURL, "purse-ad", #bitmap, 1)
@@ -415,23 +417,18 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("coins") then
         tWndObj.getElement("coins").setText(tTxt1)
       end if
-      if tWndObj.elementExists("purse_info_tickets") then
-        tFieldTxt = getObject(#session).get("user_ph_tickets") && getText("purse_info_tickets")
-        tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
-      end if
-      if tWndObj.elementExists("purse_info_film") then
-        tFieldTxt = getObject(#session).get("user_photo_film") && getText("purse_info_film")
-        tWndObj.getElement("purse_info_film").setText(tFieldTxt)
-      end if
-      tMyName = getObject(#session).get(#userName)
+      tMyName = getObject(#session).GET(#userName)
       if tWndObj.elementExists("purse_name") then
         tWndObj.getElement("purse_name").setText(tMyName)
       end if
-      if not getObject(#session).get("conf_voucher") then
+      if not getObject(#session).GET("conf_voucher") then
         tWndObj.getElement("purse_voucher").setProperty(#blend, 50)
         tWndObj.getElement("purse_voucher").setProperty(#cursor, 0)
       end if
       me.drawPurseCoins(tSaldo)
+      me.updatePurseTickets()
+      me.updatePurseFilm()
+      return 1
     "PurseTransactions2.window":
       if not tWndObj.merge("PurseTransactions2.window") then
         return tWndObj.close()
@@ -445,7 +442,7 @@ on changePurseWindowView me, tWindowName
         getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", ["hd", "fc", "ey", "hr"])
       end if
       if tWndObj.elementExists("header_name") then
-        tWndObj.getElement("header_name").setText(getObject(#session).get("user_name"))
+        tWndObj.getElement("header_name").setText(getObject(#session).GET("user_name"))
       end if
       tTxt1 = getText("purse_date", "DATE")
       if tWndObj.elementExists("taction_date") then
@@ -467,7 +464,7 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("taction_value") then
         tWndObj.getElement("taction_value").setText(tTxt1)
       end if
-      tMyName = getObject(#session).get(#userName)
+      tMyName = getObject(#session).GET(#userName)
       if tWndObj.elementExists("taction_name") then
         tWriteObj = getWriter(pPurseBigTextWriterID)
         tElem = tWndObj.getElement("taction_name")
@@ -521,7 +518,7 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("taction_info") then
         tWndObj.getElement("taction_info").setText(tTxt1)
       end if
-      tMyName = getObject(#session).get(#userName)
+      tMyName = getObject(#session).GET(#userName)
       if tWndObj.elementExists("taction_name") then
         tWriteObj = getWriter(pPurseBigTextWriterID)
         tElem = tWndObj.getElement("taction_name")
@@ -559,7 +556,7 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("header2") then
         tWndObj.getElement("header2").setText(tTxt1)
       end if
-      tMyName = getObject(#session).get(#userName)
+      tMyName = getObject(#session).GET(#userName)
       if tWndObj.elementExists("taction_name") then
         tWriteObj = getWriter(pPurseBigTextWriterID)
         tElem = tWndObj.getElement("taction_name")
@@ -678,7 +675,7 @@ end
 
 on checkSaldo me, tElement
   if getObject(#session).exists("user_walletbalance") then
-    tSaldo = getObject(#session).get("user_walletbalance")
+    tSaldo = getObject(#session).GET("user_walletbalance")
   else
     tSaldo = VOID
   end if
@@ -709,14 +706,41 @@ on dataReceived me
   pDataReceived = 1
 end
 
-on updateSaldoView me
-  if windowExists(pWindowTitle) then
-    tWndObj = getWindow(pWindowTitle)
-    if pOpenWindow = "purse.window" then
-      tSaldo = me.checkSaldo("purse_amount")
-      me.drawPurseCoins(tSaldo)
-    end if
+on updatePurseSaldo me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
   end if
+  if pOpenWindow <> "purse.window" then
+    return 0
+  end if
+  tSaldo = me.checkSaldo("purse_amount")
+  me.drawPurseCoins(tSaldo)
+  return 1
+end
+
+on updatePurseTickets me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if tWndObj.elementExists("purse_info_tickets") then
+    tFieldTxt = getObject(#session).GET("user_ph_tickets") && getText("purse_info_tickets")
+    tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
+  end if
+  return 1
+end
+
+on updatePurseFilm me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if tWndObj.elementExists("purse_info_film") then
+    tFieldTxt = getObject(#session).GET("user_photo_film") && getText("purse_info_film")
+    tWndObj.getElement("purse_info_film").setText(tFieldTxt)
+  end if
+  return 1
 end
 
 on eventProcPurse me, tEvent, tElemID, tParm
@@ -768,18 +792,18 @@ on eventProcPurse me, tEvent, tElemID, tParm
         me.drawPage(pPageView - 1)
       "purse_buy":
         tSession = getObject(#session)
-        if tSession.get("user_rights").getOne("can_buy_credits") then
+        if tSession.GET("user_rights").getOne("can_buy_credits") then
           tURL = getText("url_purselink")
         else
           tURL = getText("url_purse_subscribe")
         end if
-        tURL = tURL & urlEncode(tSession.get("user_name"))
+        tURL = tURL & urlEncode(tSession.GET("user_name"))
         if tSession.exists("user_checksum") then
-          tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+          tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
         end if
-        openNetPage(tURL, "_new")
+        openNetPage(tURL)
       "purse_voucher":
-        if getObject(#session).get("conf_voucher") then
+        if getObject(#session).GET("conf_voucher") then
           me.showVoucherWindow()
         end if
       "voucher_send":

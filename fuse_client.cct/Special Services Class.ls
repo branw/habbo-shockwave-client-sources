@@ -35,6 +35,7 @@ end
 on catch me
   the alertHook = pSavedHook
   return pCatchFlag
+  return 0
 end
 
 on createToolTip me, tText
@@ -100,7 +101,7 @@ on setcursor me, ttype
   return 1
 end
 
-on openNetPage me, tURL_key
+on openNetPage me, tURL_key, tTarget
   if not stringp(tURL_key) then
     return 0
   end if
@@ -109,16 +110,50 @@ on openNetPage me, tURL_key
   else
     tURL = tURL_key
   end if
-  gotoNetPage(tURL, "_new")
-  put "Open page:" && tURL
+  tURL = me.getPredefinedURL(tURL)
+  tResolvedTarget = VOID
+  tTargetIsPArent = 0
+  if voidp(tTarget) then
+    if variableExists("default.url.open.target") then
+      tResolvedTarget = getVariable("default.url.open.target")
+      tTargetIsPArent = 1
+    else
+      tResolvedTarget = "_new"
+    end if
+  else
+    if tTarget = "self" or tTarget = "_self" then
+      tResolvedTarget = VOID
+    else
+      if tTarget = "_new" or tTarget = "new" then
+        tResolvedTarget = "_new"
+      else
+        tResolvedTarget = tTarget
+      end if
+    end if
+  end if
+  if variableExists("client.http.request.sourceid") and tTargetIsPArent then
+    tSourceParamTxt = getVariable("client.http.request.sourceid") & "=1"
+    if not (tURL contains tSourceParamTxt) then
+      if tURL contains "?" then
+        tURL = tURL & "&" & tSourceParamTxt
+      else
+        tURL = tURL & "?" & tSourceParamTxt
+      end if
+    end if
+  end if
+  gotoNetPage(tURL, tResolvedTarget)
+  put "Open page:" && tURL && "target:" && tResolvedTarget
   return 1
 end
 
 on showLoadingBar me, tLoadID, tProps
   tObj = createObject(#random, getClassVariable("loading.bar.class"))
+  if tObj = 0 then
+    return error(me, "Couldn't create loading bar instance!", #showLoadingBar, #major)
+  end if
   if not tObj.define(tLoadID, tProps) then
     removeObject(tObj.getID())
-    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar)
+    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar, #major)
   end if
   return tObj.getID()
 end
@@ -129,14 +164,14 @@ on getUniqueID me
 end
 
 on getMachineID me
-  tMachineID = getPref(getVariable("pref.value.id"))
-  if voidp(tMachineID) then
-    tMachineID = pDecoder.encipher(string(the milliSeconds))
-    setPref(getVariable("pref.value.id"), tMachineID)
-  end if
-  if tMachineID.char[1..4] = "uid:" then
-    tMachineID = pDecoder.encipher(string(the milliSeconds))
-    setPref(getVariable("pref.value.id"), tMachineID)
+  tMachineID = string(getPref(getVariable("pref.value.id")))
+  tMaxLength = 24
+  tMinLength = 10
+  if chars(tMachineID, 1, 1) = "#" then
+    tMachineID = chars(tMachineID, 2, tMachineID.length)
+  else
+    tMachineID = me.generateMachineId(tMaxLength)
+    setPref(getVariable("pref.value.id"), "#" & tMachineID)
   end if
   return tMachineID
 end
@@ -149,10 +184,26 @@ on getMoviePath me
   return deobfuscate(getVariable(tVariableID))
 end
 
+on getPredefinedURL me, tURL
+  if tURL contains "http://%predefined%/" then
+    if variableExists("url.prefix") then
+      tReplace = "http://%predefined%"
+      tPrefix = getVariable("url.prefix")
+      if chars(tPrefix, tPrefix.length, tPrefix.length) = "/" then
+        tReplace = "http://%predefined%/"
+      end if
+      tURL = replaceChunks(tURL, tReplace, tPrefix)
+    else
+      return error(me, "URL prefix not defined, invalid link.", #getPredefinedURL, #minor)
+    end if
+  end if
+  return tURL
+end
+
 on getExtVarPath me
   tVariableID = "system.v2"
   if not variableExists(tVariableID) then
-    return getVariableManager().get("external.variables.txt")
+    return getVariableManager().GET("external.variables.txt")
   end if
   return deobfuscate(getVariable(tVariableID))
 end
@@ -227,11 +278,31 @@ on readValueFromField me, tField, tDelimiter, tSearchedKey
   return 0
 end
 
+on addRandomParamToURL me, tURL
+  tRandomParamName = "randp"
+  tSeparator = "?"
+  if tURL contains "?" then
+    tSeparator = "&"
+  end if
+  tURL = tURL & tSeparator & tRandomParamName & random(999) & "=1"
+  return tURL
+end
+
 on print me, tObj, tMsg
   tObj = string(tObj)
   tObj = tObj.word[2..tObj.word.count - 2]
   tObj = tObj.char[2..length(tObj)]
   put "Print:" & RETURN & TAB && "Object: " && tObj & RETURN & TAB && "Message:" && tMsg
+end
+
+on generateMachineId me, tMaxLength
+  tMachineID = string(the milliSeconds) & string(the time) & string(the date)
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM"]
+  repeat with tDelimiter in tLocaleDelimiters
+    tMachineID = replaceChunks(tMachineID, tDelimiter, EMPTY)
+  end repeat
+  tMachineID = chars(tMachineID, 1, tMaxLength)
+  return tMachineID
 end
 
 on setExtVarPath me, tURL
@@ -264,4 +335,15 @@ on alertHook me
   pCatchFlag = 1
   the alertHook = pSavedHook
   return 1
+end
+
+on getReceipt me, tStamp
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  return tReceipt
 end

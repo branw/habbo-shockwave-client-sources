@@ -9,7 +9,6 @@ end
 on getDate me
   if connectionExists(getVariable("connection.info.id")) then
     return getConnection(getVariable("connection.info.id")).send("GDATE")
-    put "sent get date to the server"
   else
     return 0
   end if
