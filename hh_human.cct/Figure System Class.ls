@@ -54,7 +54,10 @@ on parseFigure me, tFigureData, tsex, tClass
     tClass = "user"
   end if
   case tClass of
-    "user", "pelle":
+    "user", "pelle", "bot":
+      if tClass = "bot" and tFigureData contains "&" then
+        return me.parseOldBotFigure(tFigureData, tsex, tClass)
+      end if
       tTempFigure = [:]
       if tFigureData.char.count mod 5 = 0 and integerp(integer(tFigureData)) then
         tFigureData = tFigureData.char[1..tFigureData.char.count]
@@ -83,48 +86,54 @@ on parseFigure me, tFigureData, tsex, tClass
         the itemDelimiter = tDelim
       end if
       tFigure = me.parseNewTypeFigure(tTempFigure, tsex)
-    "bot":
-      the itemDelimiter = "&"
-      tPartCount = tFigureData.item.count
-      tFigure = [:]
-      repeat with i = 1 to tPartCount
-        tPart = tFigureData.item[i]
-        the itemDelimiter = "="
-        tProp = tPart.item[1]
-        tDesc = tPart.item[2]
-        the itemDelimiter = "/"
-        tValue = [:]
-        tValue["model"] = tDesc.item[1]
-        repeat while tValue["model"].char[1] = "0"
-          tValue["model"] = tValue["model"].char[2..tValue["model"].length]
-        end repeat
-        tColor = tDesc.item[2].line[1]
-        the itemDelimiter = ","
-        if tColor.item.count = 1 then
-          if integer(tColor) = 0 then
-            tValue["color"] = rgb("EEEEEE")
-          else
-            tPalette = paletteIndex(integer(tColor))
-            tValue["color"] = rgb(tPalette.red, tPalette.green, tPalette.blue)
-          end if
-        else
-          if tColor.item.count = 3 then
-            tValue["color"] = value("rgb(" & tColor & ")")
-            if voidp(tValue["color"]) then
-              tValue["color"] = rgb("EEEEEE")
-            end if
-            if tValue["color"].red + tValue["color"].green + tValue["color"].blue > 238 * 3 then
-              tValue["color"] = rgb("EEEEEE")
-            end if
-          else
-            tValue["color"] = rgb("EEEEEE")
-          end if
-        end if
-        tFigure[tProp] = tValue
-        the itemDelimiter = "&"
-      end repeat
   end case
   return tFigureData
+  return tFigure
+end
+
+on parseOldBotFigure me, tFigureData, tsex, tClass
+  if tClass <> "bot" then
+    return tFigureData
+  end if
+  the itemDelimiter = "&"
+  tPartCount = tFigureData.item.count
+  tFigure = [:]
+  repeat with i = 1 to tPartCount
+    tPart = tFigureData.item[i]
+    the itemDelimiter = "="
+    tProp = tPart.item[1]
+    tDesc = tPart.item[2]
+    the itemDelimiter = "/"
+    tValue = [:]
+    tValue["model"] = tDesc.item[1]
+    repeat while tValue["model"].char[1] = "0"
+      tValue["model"] = tValue["model"].char[2..tValue["model"].length]
+    end repeat
+    tColor = tDesc.item[2].line[1]
+    the itemDelimiter = ","
+    if tColor.item.count = 1 then
+      if integer(tColor) = 0 then
+        tValue["color"] = rgb("EEEEEE")
+      else
+        tPalette = paletteIndex(integer(tColor))
+        tValue["color"] = rgb(tPalette.red, tPalette.green, tPalette.blue)
+      end if
+    else
+      if tColor.item.count = 3 then
+        tValue["color"] = value("rgb(" & tColor & ")")
+        if voidp(tValue["color"]) then
+          tValue["color"] = rgb("EEEEEE")
+        end if
+        if tValue["color"].red + tValue["color"].green + tValue["color"].blue > 238 * 3 then
+          tValue["color"] = rgb("EEEEEE")
+        end if
+      else
+        tValue["color"] = rgb("EEEEEE")
+      end if
+    end if
+    tFigure[tProp] = tValue
+    the itemDelimiter = "&"
+  end repeat
   return tFigure
 end
 
