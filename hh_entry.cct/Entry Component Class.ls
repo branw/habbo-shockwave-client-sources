@@ -41,5 +41,5 @@ on updateState me, tstate
       pState = tstate
       return me.getInterface().showEntryBar()
   end case
-  return error(me, "Unknown state:" && tstate, #updateState)
+  return error(me, "Unknown state:" && tstate, #updateState, #minor)
 end

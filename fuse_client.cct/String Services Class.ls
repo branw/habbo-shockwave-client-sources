@@ -166,7 +166,7 @@ end
 on replaceChunks me, tString, tChunkA, tChunkB
   tStr = EMPTY
   if voidp(tString) or voidp(tChunkA) or voidp(tChunkB) then
-    error(me, "At least one of the parameters was void!", me.getID(), #replaceChunks)
+    error(me, "At least one of the parameters was void!", me.getID(), #replaceChunks, #minor)
     return tStr
   end if
   repeat while tString contains tChunkA

@@ -103,7 +103,7 @@ end
 on playInChannel me, tMemName, tChannelNum
   tChannel = me.getChannel(tChannelNum)
   if tChannel = 0 then
-    return error(VOID, "Invalid sound channel:" && tChannelNum, #playInChannel)
+    return error(VOID, "Invalid sound channel:" && tChannelNum, #playInChannel, #minor)
   end if
   tObject = me.createSoundInstance(tMemName, VOID, VOID)
   tChannel.reset()
@@ -113,7 +113,7 @@ end
 on queue me, tMemName, tChannelNum, tProps
   tChannel = me.getChannel(tChannelNum)
   if tChannel = 0 then
-    return error(VOID, "Invalid sound channel:" && tChannelNum, #queue)
+    return error(VOID, "Invalid sound channel:" && tChannelNum, #queue, #minor)
   end if
   tObject = me.createSoundInstance(tMemName, VOID, tProps)
   tRetVal = tChannel.queue(tObject)

@@ -11,11 +11,11 @@ end
 
 on initializeValidPartLists me, tPartList
   if not (tPartList.ilk = #propList) then
-    error(me, "Can't initialize part list!", #initializeValidPartLists)
+    error(me, "Can't initialize part list!", #initializeValidPartLists, #major)
     if memberExists("DefaultPartList") then
       tPartList = value(member(getmemnum("DefaultPartList")).text)
     else
-      return error(me, "Missing default part list!")
+      return error(me, "Missing default part list!", #initializeValidPartLists, #major)
     end if
   end if
   pValidPartsList = tPartList
@@ -35,7 +35,7 @@ end
 
 on initializeSelectablePartList me, tSetIDList
   if not (tSetIDList.ilk = #list) then
-    return error(me, "Can't initialize selectable partlist", #initializeSelectablePartList)
+    return error(me, "Can't initialize selectable partlist", #initializeSelectablePartList, #major)
   end if
   tTempSetIDList = [:]
   tTempSetIDList["M"] = []
@@ -203,7 +203,7 @@ on generateFigureDataToOldServerMode me, tFigure, tsex, tCheckValidParts
       end if
     end repeat
   else
-    error(me, "Weirdness in figure data!!!", #generateFigureDataToOldServerMode)
+    error(me, "Weirdness in figure data!!!", #generateFigureDataToOldServerMode, #minor)
     tNewFigure = tFigureData
   end if
   the itemDelimiter = tTemp
@@ -357,7 +357,7 @@ on parseNewTypeFigure me, tFigure, tsex
       if not listp(tColorList) then
         tColor = rgb("#EEEEEE")
         tColorId = 1
-        error(me, "Weirdness in the list of figure parts!", #parseNewTypeFigure)
+        error(me, "Weirdness in the list of figure parts!", #parseNewTypeFigure, #minor)
       else
         if tColorId > tColorList.count then
           tColorId = 1

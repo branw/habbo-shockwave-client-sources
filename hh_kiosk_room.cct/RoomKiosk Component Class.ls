@@ -30,10 +30,10 @@ end
 
 on sendFlatCategory me, tNodeId, tCategoryId
   if voidp(tNodeId) then
-    return error(me, "Node ID expected!", #sendFlatCategory)
+    return error(me, "Node ID expected!", #sendFlatCategory, #major)
   end if
   if voidp(tCategoryId) then
-    return error(me, "Category ID expected!", #sendFlatCategory)
+    return error(me, "Category ID expected!", #sendFlatCategory, #major)
   end if
   if connectionExists(getVariable("connection.info.id")) then
     return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryId)])
@@ -51,7 +51,7 @@ on updateState me, tstate, tProps
       pState = tstate
       return registerMessage(#open_roomkiosk, me.getID(), #showHideRoomKiosk)
   end case
-  return error(me, "Unknown state:" && tstate, #updateState)
+  return error(me, "Unknown state:" && tstate, #updateState, #minor)
 end
 
 on getState me

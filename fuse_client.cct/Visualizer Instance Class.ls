@@ -100,7 +100,7 @@ end
 
 on moveZ me, tZ
   if not integerp(tZ) then
-    return error(me, "Integer expected:" && tZ, #moveZ)
+    return error(me, "Integer expected:" && tZ, #moveZ, #minor)
   end if
   repeat with i = 1 to pSpriteList.count
     pSpriteList[i].locZ = tZ + i - 1
@@ -130,7 +130,7 @@ end
 on moveSprBy me, tid, tX, tY
   tsprite = pActSprList[tid]
   if voidp(tsprite) then
-    return error(me, "Sprite not found:" && tid, #moveSprBy)
+    return error(me, "Sprite not found:" && tid, #moveSprBy, #minor)
   end if
   tsprite.loc = tsprite.loc + [tX, tY]
   return me.Refresh()
@@ -139,7 +139,7 @@ end
 on moveSprTo me, tid, tX, tY
   tsprite = pActSprList[tid]
   if voidp(tsprite) then
-    return error(me, "Sprite not found:" && tid, #moveSprTo)
+    return error(me, "Sprite not found:" && tid, #moveSprTo, #minor)
   end if
   tsprite.loc = point(tX, tY)
   return me.Refresh()
@@ -366,7 +366,7 @@ end
 on buildVisual me, tLayout
   tLayout = getObjectManager().GET(#layout_parser).parse(tLayout)
   if not listp(tLayout) then
-    return error(me, "Invalid visualizer definition:" && tLayout, #buildVisual)
+    return error(me, "Invalid visualizer definition:" && tLayout, #buildVisual, #major)
   end if
   if not voidp(tLayout[#rect]) then
     if tLayout[#rect].count > 0 then
@@ -380,7 +380,7 @@ on buildVisual me, tLayout
   repeat with i = 1 to tLayout.count
     tMemNum = getResourceManager().getmemnum(tLayout[i][#member])
     if tMemNum < 1 then
-      error(me, "Member" && tLayout[i][#member] && "required by visualizer:" && me.getID() && "not found!", #buildVisual)
+      error(me, "Member" && tLayout[i][#member] && "required by visualizer:" && me.getID() && "not found!", #buildVisual, #major)
       next repeat
     end if
     tElem = tLayout[i]
@@ -407,7 +407,7 @@ on buildVisual me, tLayout
           releaseSprite(t_rSpr.spriteNum, me.getID())
         end repeat
         tSpriteList = [:]
-        return error(me, "Failed to build visual. System out of sprites!", #buildVisual)
+        return error(me, "Failed to build visual. System out of sprites!", #buildVisual, #major)
       end if
       tSpr.castNum = tMemNum
       tSpr.ink = tElem[#ink]
@@ -485,7 +485,7 @@ on buildVisual me, tLayout
         pSwapAnimList[tElem[#id]] = tAnimProps
         next repeat
       end if
-      error(me, "Animation had no ID", #buildVisual)
+      error(me, "Animation had no ID", #buildVisual, #minor)
     end if
   end repeat
   repeat with tSpr in tSpriteList

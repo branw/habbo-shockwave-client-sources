@@ -26,7 +26,7 @@ on create me, tid, tLayout, tLocX, tLocY
   end if
   tItem = getObjectManager().create(tid, pInstanceClass)
   if not tItem then
-    return error(me, "Item creation failed:" && tid, #create)
+    return error(me, "Item creation failed:" && tid, #create, #major)
   end if
   tProps = [:]
   tProps[#locX] = tLocX
@@ -124,7 +124,7 @@ end
 
 on setDefaultLocZ me, tValue
   if not integerp(tValue) then
-    return error(me, "integer expected:" && tValue, #setDefaultLocZ)
+    return error(me, "integer expected:" && tValue, #setDefaultLocZ, #minor)
   end if
   pDefaultLocZ = tValue
   return Activate(me)
@@ -132,7 +132,7 @@ end
 
 on setBoundary me, tValue
   if not listp(tValue) and not ilk(tValue, #rect) then
-    return error(me, "List or rect expected:" && tValue, #setBoundary)
+    return error(me, "List or rect expected:" && tValue, #setBoundary, #minor)
   end if
   pBoundary[1] = tValue[1]
   pBoundary[2] = tValue[2]

@@ -1,5 +1,24 @@
 property pStateSequenceList, pStateIndex, pState, pStateStringList, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pNameBase, pInitialized
 
+on deconstruct me
+  pStateSequenceList = []
+  pStateIndex = 1
+  pState = 1
+  pLayerDataList = [:]
+  pStateStringList = []
+  pFrameNumberList = []
+  pFrameNumberList2 = []
+  pLoopCountList = []
+  pBlendList = []
+  pInkList = []
+  pLoczList = []
+  pLocShiftList = []
+  pFrameRepeatList = []
+  pIsAnimatingList = []
+  pInitialized = 0
+  callAncestor(#deconstruct, [me])
+end
+
 on define me, tProps
   pStateSequenceList = []
   pStateIndex = 1
@@ -366,32 +385,32 @@ on validateStateSequenceList me
     tstate = pStateSequenceList[tIndex]
     if ilk(tstate) = #list then
       if tstate.count < 1 then
-        return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+        return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList, #major)
       end if
       repeat with tIndex2 = 1 to tstate.count
         tState2 = tstate[tIndex2]
         if tState2 < 1 then
-          return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+          return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList, #major)
         end if
         if tstatelist.count < tState2 then
           tstatelist[tState2] = 1
           next repeat
         end if
         if tstatelist[tState2] > 0 then
-          return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+          return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList, #major)
         end if
       end repeat
       next repeat
     end if
     if tstate < 1 then
-      return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+      return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList, #major)
     end if
     if tstatelist.count < tstate then
       tstatelist[tstate] = 1
       next repeat
     end if
     if tstatelist[tstate] > 0 then
-      return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+      return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList, #major)
       next repeat
     end if
     tstatelist[tstate] = 1
@@ -417,7 +436,7 @@ on solveTransparency me, tPart
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then
-      error(me, tName & ".props is not valid!", #solveInk)
+      error(me, tName & ".props is not valid!", #solveInk, #minor)
     else
       if tPropList[tPart] <> VOID then
         if tPropList[tPart][#transparent] <> VOID then

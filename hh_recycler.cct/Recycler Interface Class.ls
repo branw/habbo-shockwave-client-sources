@@ -451,7 +451,7 @@ on detectMemberName me, tClass, tProps
     if memberExists(tClass & "_" & tCount & "_" & "small") then
       tMemStr = tClass & "_" & tCount & "_" & "small"
     else
-      error(me, "Couldn't define member for recycler item!" & RETURN & tProps, #detectMemberNameString)
+      error(me, "Couldn't define member for recycler item!" & RETURN & tProps, #detectMemberNameString, #minor)
     end if
   else
     if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then

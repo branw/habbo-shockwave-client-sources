@@ -147,7 +147,7 @@ on createStripItem me, tdata
         end if
       end if
     otherwise:
-      error(me, "Unknown strip item type:" && tdata[#striptype], #createStripItem)
+      error(me, "Unknown strip item type:" && tdata[#striptype], #createStripItem, #major)
       tdata[#member] = "room_object_placeholder"
   end case
   if not voidp(tdata[#member]) then
@@ -165,7 +165,7 @@ on createStripItem me, tdata
         tDownloadIdName = tIconClassStr
         tDynThread = getThread(#dynamicdownloader)
         if tDynThread = 0 then
-          error(me, "Icon member not found and no dynamic download possibility: " & tdata[#member], #createStripItem)
+          error(me, "Icon member not found and no dynamic download possibility: " & tdata[#member], #createStripItem, #major)
         else
           tDynComponent = tDynThread.getComponent()
           tRoomSizePrefix = EMPTY
@@ -245,7 +245,7 @@ on placeItemToRoom me, tid
     return 0
   end if
   if not me.stripItemExists(tid) then
-    return error(me, "Attempted to access unexisting stripitem:" && tid, #placeItemToRoom)
+    return error(me, "Attempted to access unexisting stripitem:" && tid, #placeItemToRoom, #major)
   end if
   tdata = me.getStripItem(tid).duplicate()
   tdata[#x] = 0
@@ -405,7 +405,7 @@ on showContainerItems me
       tTempImage = image(tPreviewImage.width, tPreviewImage.height, 32)
       tTempImage.copyPixels(tPreviewImage, tPreviewImage.rect, tPreviewImage.rect)
       if voidp(tPreviewImage) then
-        error(me, "Preview image was void!", #showContainerItems)
+        error(me, "Preview image was void!", #showContainerItems, #major)
         return 0
       end if
       if tAddRecyclerTags and integer(tItem[#isRecyclable]) = 1 then
@@ -474,7 +474,7 @@ on eventProcContainer me, tEvent, tSprID, tParam
     tItemNum = integer(tSprID.char[16])
     tStripList = me.getStripItem(#list)
     if tItemNum > tStripList.count then
-      return error(me, "Attempted to place unexisting strip item!", #eventProcContainer)
+      return error(me, "Attempted to place unexisting strip item!", #eventProcContainer, #major)
     end if
     tdata = tStripList[tItemNum]
     tItemID = tdata[#stripId]

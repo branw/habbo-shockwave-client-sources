@@ -61,7 +61,7 @@ on checkFlatAccess me, tFlatData
       me.setProperty(#passwordNodeId, tFlatData[#id])
     otherwise:
       if voidp(tFlatData) then
-        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo)
+        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo, #major)
       end if
       return me.getComponent().executeRoomEntry(tFlatData[#id])
   end case
@@ -72,11 +72,11 @@ on handleRoomListClicked me, tParm
   tCategoryId = me.getProperty(#categoryId)
   tNodeInfo = me.getComponent().getNodeInfo(tCategoryId)
   if not listp(tNodeInfo) then
-    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked)
+    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeList = tNodeInfo[#children]
-  if not listp(tNodeInfo) then
-    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked)
+  if not listp(tNodeList) then
+    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeCount = tNodeList.count
   if not ilk(tParm, #point) or tNodeCount = 0 then
@@ -145,7 +145,7 @@ on modifyPrivateRoom me, tFlatInfo
   end if
   tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id], #own)
   if tFlatInfo = 0 then
-    return error(me, "Flat info is VOID", #modifyPrivateRoom)
+    return error(me, "Flat info is VOID", #modifyPrivateRoom, #major)
   else
     pModifyFlatInfo = tFlatInfo
   end if
@@ -288,11 +288,11 @@ on prepareCategoryDropMenu me, tNodeId
   tDefaultCatId = me.getComponent().getNodeProperty(tNodeId, #parentid)
   tDropDown = tWndObj.getElement("nav_choosecategory")
   if not ilk(tDropDown, #instance) then
-    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu)
+    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu, #major)
   end if
   tCatProps = getObject(#session).GET("user_flat_cats")
   if not ilk(tCatProps, #propList) then
-    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu)
+    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu, #major)
   end if
   tCatTxtItems = []
   tCatKeyItems = []
@@ -588,7 +588,7 @@ end
 
 on passwordFieldTypeEvent me, tSprID, tCheckLength
   if voidp(tSprID) then
-    return error(me, "No password field defined!", #passwordFieldTypeEvent)
+    return error(me, "No password field defined!", #passwordFieldTypeEvent, #minor)
   end if
   if voidp(tCheckLength) then
     tCheckLength = 1

@@ -58,7 +58,7 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
   end if
   tItem = getObjectManager().create(tid, me.pInstanceClass)
   if not tItem then
-    return error(me, "Failed to create window object:" && tid, #create)
+    return error(me, "Failed to create window object:" && tid, #create, #major)
   end if
   tProps = [:]
   tProps[#locX] = tX
@@ -196,7 +196,7 @@ on modal me, tid, tLayout, tPosition
       tModal.lock()
       tModal.getElement("modal").setProperty(#blend, 40)
     else
-      error(me, "Failed to create modal window layer!", #modal)
+      error(me, "Failed to create modal window layer!", #modal, #major)
     end if
   end if
   the keyboardFocusSprite = 0

@@ -3,7 +3,7 @@ property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedPr
 on construct me
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #construct)
+    return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   pPageData = [:]
   pSmallImg = image(32, 32, 24)
@@ -32,7 +32,7 @@ end
 
 on define me, tPageProps
   if tPageProps.ilk <> #propList then
-    return error(me, "Incorrect Catalogue page data", #define)
+    return error(me, "Incorrect Catalogue page data", #define, #major)
   end if
   pPageData = [:]
   pPageData.sort()
@@ -64,7 +64,7 @@ end
 on setDate me, tDate
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #construct)
+    return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   if stringp(tDate) then
     if tCataloguePage.elementExists("trophies_date") then
@@ -79,7 +79,7 @@ end
 on renderSmallIcons me, tstate, tPram
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #renderSmallIcons)
+    return error(me, "Couldn't access catalogue window!", #renderSmallIcons, #major)
   end if
   tWndObj = tCataloguePage
   case tstate of
@@ -97,7 +97,7 @@ on renderSmallIcons me, tstate, tPram
       tFirst = tPram
       tLast = tPram
   end case
-  return error(me, "unsupported mode", #ShowSmallIcons)
+  return error(me, "unsupported mode", #ShowSmallIcons, #minor)
   if voidp(tFirst) or voidp(tLast) then
     return 
   end if
@@ -132,14 +132,14 @@ end
 
 on renderProductColors me, tOrderNum
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #renderProductColors)
+    return error(me, "Incorrect value", #renderProductColors, #major)
   end if
   if pPageData.ilk <> #propList then
-    return error(me, "page data not found", #renderProductColors)
+    return error(me, "page data not found", #renderProductColors, #major)
   end if
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #construct)
+    return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   tWndObj = tCataloguePage
   repeat with f = 1 to pNumOfColorBoxies
@@ -184,14 +184,14 @@ end
 on selectProduct me, tOrderNum
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #selectProduct)
+    return error(me, "Couldn't access catalogue window!", #selectProduct, #major)
   end if
   tWndObj = tCataloguePage
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #selectProduct)
+    return error(me, "Incorrect value", #selectProduct, #major)
   end if
   if voidp(pPageData) then
-    return error(me, "product not found", #selectProduct)
+    return error(me, "product not found", #selectProduct, #major)
   end if
   if tOrderNum > pPageData.count then
     return 
@@ -234,7 +234,7 @@ end
 
 on nextProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #nextProduct)
+    return error(me, "Incorrect data", #nextProduct, #major)
   end if
   tNext = pLastProductNum + 1
   if tNext > pPageData.count then
@@ -248,7 +248,7 @@ end
 
 on prevProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #prewProduct)
+    return error(me, "Incorrect data", #prewProduct, #major)
   end if
   tPrev = pLastProductNum - 1
   if tPrev < 1 then
@@ -266,17 +266,17 @@ on selectColor me, tOrderNum
   end if
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #selectColor)
+    return error(me, "Couldn't access catalogue window!", #selectColor, #major)
   end if
   tWndObj = tCataloguePage
   if not integerp(pSelectedOrderNum) then
-    return error(me, "Incorrect SelectedOrderNum", #selectColor)
+    return error(me, "Incorrect SelectedOrderNum", #selectColor, #major)
   end if
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #selectColor)
+    return error(me, "Incorrect value", #selectColor, #major)
   end if
   if voidp(pPageData) then
-    return error(me, "product not found", #selectColor)
+    return error(me, "product not found", #selectColor, #major)
   end if
   if voidp(pPageData[pSelectedOrderNum]) then
     return 
@@ -341,7 +341,7 @@ on eventProc me, tEvent, tSprID, tProp
                 end if
               end if
               if pSelectedProduct.ilk <> #propList then
-                return error(me, "incorrect Selected Product Data", #eventProc)
+                return error(me, "incorrect Selected Product Data", #eventProc, #major)
               end if
               pSelectedProduct["extra_parm"] = tText
               getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)

@@ -41,7 +41,7 @@ end
 on setID me, tid
   pSprite = sprite(me.spriteNum)
   if not stringp(tid) then
-    return error(me, "String expected:" && tid, #setID)
+    return error(me, "String expected:" && tid, #setID, #major)
   end if
   id = tid
   return 1

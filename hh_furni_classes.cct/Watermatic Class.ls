@@ -10,11 +10,11 @@ end
 
 on select me
   if not threadExists(#room) then
-    return error(me, "Room thread not found!!!", #select)
+    return error(me, "Room thread not found!!!", #select, #major)
   end if
   tUserObj = getThread(#room).getComponent().getOwnUser()
   if not tUserObj then
-    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select)
+    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select, #major)
   end if
   case me.pDirection[1] of
     4:

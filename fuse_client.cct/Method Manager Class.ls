@@ -14,7 +14,7 @@ end
 
 on create me, tid, tObject
   if not me.register(tid, tObject) then
-    return error(me, "Failed to register object:" && tid, #create)
+    return error(me, "Failed to register object:" && tid, #create, #major)
   else
     me.pItemList[tid] = tObject
     return 1
@@ -24,7 +24,7 @@ end
 on getMethod me, tConnectionID, tCommand
   tMethods = pMethodCache[tConnectionID]
   if voidp(tMethods) then
-    return error(me, "Method list for connection not found:" && tConnectionID, #getMethod)
+    return error(me, "Method list for connection not found:" && tConnectionID, #getMethod, #major)
   else
     return tMethods[tCommand]
   end if
@@ -32,7 +32,7 @@ end
 
 on Remove me, tid
   if voidp(me.pItemList[tid]) then
-    return error(me, "Object not found:" && tid, #Remove)
+    return error(me, "Object not found:" && tid, #Remove, #minor)
   else
     me.unregister(tid)
     me.pItemList.deleteProp(tid)
@@ -42,11 +42,11 @@ end
 
 on register me, tid, tObject
   if not tObject.handler(#getCommands) then
-    return error(me, "Invalid method object:" && tid, #register)
+    return error(me, "Invalid method object:" && tid, #register, #major)
   end if
   tMethodList = tObject.getCommands()
   if not ilk(tMethodList, #propList) then
-    return error(me, "Invalid method object:" && tid, #register)
+    return error(me, "Invalid method object:" && tid, #register, #major)
   end if
   repeat with i = 1 to tMethodList.count
     tMethod = tMethodList.getPropAt(i)
@@ -60,7 +60,7 @@ on register me, tid, tObject
         tCurrentList[tMethodList[i].getPropAt(j)] = [tMethodList[i][j], tid]
         next repeat
       end if
-      error(me, "Method" && "#" & tMethodList[i][j] && "not found in object:" && tid, #register)
+      error(me, "Method" && "#" & tMethodList[i][j] && "not found in object:" && tid, #register, #major)
     end repeat
   end repeat
   return 1
@@ -72,7 +72,7 @@ on unregister me, tObjectOrID
   else
     if stringp(tObjectOrID) or symbolp(tObjectOrID) then
       if not me.GET(tObjectOrID) then
-        return error(me, "Object not found:" && tObjectOrID, #unregister)
+        return error(me, "Object not found:" && tObjectOrID, #unregister, #minor)
       end if
       tid = tObjectOrID
     end if

@@ -44,7 +44,7 @@ end
 
 on createMember me, tMemName, ttype, tForcedDuplicate
   if not voidp(pAllMemNumList[tMemName]) and not tForcedDuplicate then
-    error(me, "Member already exists:" && tMemName, #createMember)
+    error(me, "Member already exists:" && tMemName, #createMember, #minor)
     return me.getmemnum(tMemName)
   end if
   if ttype = #bitmap and pBmpMemNumList.count > 0 then
@@ -53,7 +53,7 @@ on createMember me, tMemName, ttype, tForcedDuplicate
   else
     tmember = new(ttype, castLib(pBin))
     if not ilk(tmember, #member) then
-      return error(me, "Failed to create member:" && tMemName && ttype, #createMember)
+      return error(me, "Failed to create member:" && tMemName && ttype, #createMember, #major)
     end if
   end if
   tmember.name = tMemName
@@ -68,7 +68,7 @@ end
 on removeMember me, tMemName
   tMemNum = pAllMemNumList[tMemName]
   if pDynMemNumList.getPos(tMemNum) < 1 then
-    return error(me, "Can't delete member:" && tMemName, #removeMember)
+    return error(me, "Can't delete member:" && tMemName, #removeMember, #minor)
   end if
   tmember = member(tMemNum)
   if tmember.type = #bitmap then
@@ -92,7 +92,7 @@ end
 
 on updateMember me, tMemName
   if tMemName.ilk <> #string then
-    return error(me, "Member's name required:" && tMemName, #updateMember)
+    return error(me, "Member's name required:" && tMemName, #updateMember, #minor)
   end if
   if not me.unregisterMember(tMemName) then
     return 0
@@ -147,7 +147,7 @@ on preIndexMembers me, tCastNum
                 if tMemA.name <> EMPTY and tMemB.name <> EMPTY then
                   tLibA = castLib(tMemA.castLibNum).name
                   tLibB = castLib(tMemB.castLibNum).name
-                  error(me, "Duplicate member names:" && tmember.name && "/" && tLibA && "/" && tLibB, #preIndexMembers)
+                  error(me, "Duplicate member names:" && tmember.name && "/" && tLibA && "/" && tLibB, #preIndexMembers, #minor)
                 end if
               end if
             end if

@@ -328,7 +328,7 @@ on getPurseAd me, tSourceURL, tClickURL
   end if
   if not voidp(tSourceURL) then
     if not (tSourceURL starts "http") then
-      return error(me, "Incorrect URL!", #getPurseAd)
+      return error(me, "Incorrect URL!", #getPurseAd, #minor)
     end if
     if not memberExists("purse-ad") then
       pAdMemNum = queueDownload(tSourceURL, "purse-ad", #bitmap, 1)

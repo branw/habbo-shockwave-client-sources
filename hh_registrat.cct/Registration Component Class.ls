@@ -107,7 +107,7 @@ end
 on sendNewFigureDataToServer me, tPropList
   tPropList = tPropList.duplicate()
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found", #sendNewFigureDataToServer)
+    return error(me, "Figure system object not found", #sendNewFigureDataToServer, #major)
   end if
   if not voidp(tPropList["figure"]) then
     tFigure = getObject("Figure_System").GenerateFigureDataToServerMode(tPropList["figure"], tPropList["sex"])
@@ -127,7 +127,7 @@ on sendNewFigureDataToServer me, tPropList
   repeat with f = 1 to tPropList.count
     tProp = tPropList.getPropAt(f)
     if voidp(tPropList[tProp]) then
-      return error(me, "Data missing!!" && tProp, #sendNewFigureDataToServer)
+      return error(me, "Data missing!!" && tProp, #sendNewFigureDataToServer, #major)
     end if
     tValue = tPropList[tProp]
     if not voidp(pRegMsgStruct[tProp]) then
@@ -147,14 +147,14 @@ on sendNewFigureDataToServer me, tPropList
   if connectionExists(getVariable("connection.info.id")) then
     return getConnection(getVariable("connection.info.id")).send("REGISTER", tMsg)
   else
-    return error(me, "Connection not found:" && getVariable("connection.info.id"), #sendNewFigureDataToServer)
+    return error(me, "Connection not found:" && getVariable("connection.info.id"), #sendNewFigureDataToServer, #major)
   end if
 end
 
 on sendFigureUpdateToServer me, tPropList
   tPropList = tPropList.duplicate()
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found", #sendFigureUpdateToServer)
+    return error(me, "Figure system object not found", #sendFigureUpdateToServer, #major)
   end if
   if not voidp(tPropList["figure"]) then
     tFigure = getObject("Figure_System").GenerateFigureDataToServerMode(tPropList["figure"], tPropList["sex"])
@@ -163,7 +163,7 @@ on sendFigureUpdateToServer me, tPropList
   if not voidp(tPropList["password"]) then
     case tPropList["password"] of
       EMPTY, VOID:
-        return error(me, "Password was reseted, abort update!", #sendFigureUpdateToServer)
+        return error(me, "Password was reseted, abort update!", #sendFigureUpdateToServer, #minor)
     end case
   end if
   tMsg = [:]
@@ -191,7 +191,7 @@ on sendFigureUpdateToServer me, tPropList
   if connectionExists(getVariable("connection.info.id")) then
     return getConnection(getVariable("connection.info.id")).send("UPDATE", tMsg)
   else
-    return error(me, "Connection not found:" && getVariable("connection.info.id"), #sendFigureUpdateToServer)
+    return error(me, "Connection not found:" && getVariable("connection.info.id"), #sendFigureUpdateToServer, #major)
   end if
 end
 
@@ -205,7 +205,7 @@ on figureUpdateReady me
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("INFORETRIEVE")
   else
-    error(me, "Connection not found:" && getVariable("connection.info.id"), #figureUpdateReady)
+    error(me, "Connection not found:" && getVariable("connection.info.id"), #figureUpdateReady, #major)
   end if
   if getObject(#session).exists("conf_parent_email_request_reregistration") then
     if getObject(#session).GET("conf_parent_email_request_reregistration") then
@@ -305,16 +305,16 @@ end
 
 on sendUpdateAccountMsg me, tPropList
   if not ilk(tPropList, #propList) then
-    return error(me, "tPropList was not propertylist:" && tPropList, #sendUpdateMsg)
+    return error(me, "tPropList was not propertylist:" && tPropList, #sendUpdateAccountMsg, #major)
   else
     if voidp(tPropList["oldpassword"]) or voidp(tPropList["birthday"]) then
-      return error(me, "Missing old password or birthday:" && tPropList, #sendUpdateMsg)
+      return error(me, "Missing old password or birthday:" && tPropList, #sendUpdateAccountMsg, #major)
     else
       if voidp(tPropList["password"]) and voidp(tPropList["email"]) then
-        return error(me, "Password or email required:" && tPropList, #sendUpdateMsg)
+        return error(me, "Password or email required:" && tPropList, #sendUpdateAccountMsg, #major)
       else
         if not voidp(tPropList["password"]) and not voidp(tPropList["email"]) then
-          return error(me, "Password and email cannot appear together:" && tPropList, #sendUpdateMsg)
+          return error(me, "Password and email cannot appear together:" && tPropList, #sendUpdateAccountMsg, #major)
         end if
       end if
     end if
@@ -323,7 +323,7 @@ on sendUpdateAccountMsg me, tPropList
   repeat with f = 1 to tPropList.count
     tProp = tPropList.getPropAt(f)
     if voidp(tPropList[tProp]) then
-      return error(me, "Data missing!!" && tProp, #sendUpdateMsg)
+      return error(me, "Data missing!!" && tProp, #sendUpdateAccountMsg, #major)
     end if
     tValue = tPropList[tProp]
     if not voidp(pRegMsgStruct[tProp]) then
@@ -340,7 +340,7 @@ on sendUpdateAccountMsg me, tPropList
       tMsg.addProp(pRegMsgStruct[tProp].type, tValue)
       next repeat
     end if
-    return error(me, "Data property not found from structs!" && tProp, #sendUpdateMsg)
+    return error(me, "Data property not found from structs!" && tProp, #sendUpdateAccountMsg, #major)
   end repeat
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("UPDATE_ACCOUNT", tMsg)
@@ -378,7 +378,7 @@ on updateState me, tstate, tProps
       end if
       if not memberExists(tMemName) then
         tValidpartList = VOID
-        error(me, "Failure while loading part list", #updateState)
+        error(me, "Failure while loading part list", #updateState, #minor)
       else
         try()
         tValidpartList = value(member(getmemnum(tMemName)).text)
@@ -399,10 +399,10 @@ on updateState me, tstate, tProps
     "openFigureCreator":
       pState = tstate
       if not objectExists("Figure_System") then
-        return error(me, "Figure system object not found", #updateState)
+        return error(me, "Figure system object not found", #updateState, #major)
       end if
       if not objectExists(#session) then
-        return error(me, "Session object not found", #updateState)
+        return error(me, "Session object not found", #updateState, #major)
       end if
       if threadExists(#login) and not connectionExists(getVariable("connection.info.id")) then
         getThread(#login).getComponent().connect()
@@ -438,7 +438,7 @@ on updateState me, tstate, tProps
     "openFigureUpdate":
       pState = tstate
       if not objectExists("Figure_System") then
-        return error(me, "Figure system object not found", #updateState)
+        return error(me, "Figure system object not found", #updateState, #major)
       end if
       if not getObject("Figure_System").isFigureSystemReady() then
         me.getInterface().showLoadingWindow("update")
@@ -451,7 +451,7 @@ on updateState me, tstate, tProps
     "openForcedUpdate":
       pState = tstate
       if not objectExists("Figure_System") then
-        return error(me, "Figure system object not found", #updateState)
+        return error(me, "Figure system object not found", #updateState, #major)
       end if
       if not getObject("Figure_System").isFigureSystemReady() then
         me.getInterface().showLoadingWindow("forced")
@@ -490,13 +490,13 @@ on updateState me, tstate, tProps
       end if
       return 1
   end case
-  return error(me, "Unknown state:" && tstate, #updateState)
+  return error(me, "Unknown state:" && tstate, #updateState, #minor)
 end
 
 on tryLoginAfterRegistration me
   tLoginThread = getThread(#login)
   if tLoginThread = 0 then
-    error(me, "Login thread not found!", #tryLoginAfterRegistration)
+    error(me, "Login thread not found!", #tryLoginAfterRegistration, #major)
     return 0
   end if
   tLoginComponent = tLoginThread.getComponent()

@@ -28,7 +28,7 @@ on connect me, tHost, tPort
   if tErrCode = 0 then
     pXtra.connectToNetServer("*", "*", pHost, pPort, "*", 1)
   else
-    return error(me, "Creation of callback failed:" && tErrCode, #connect)
+    return error(me, "Creation of callback failed:" && tErrCode, #connect, #major)
   end if
   pLastContent = EMPTY
   if pLogMode > 0 then
@@ -48,7 +48,7 @@ on disconnect me, tControlled
   end if
   pXtra = VOID
   if not tControlled then
-    error(me, "Connection disconnected:" && me.getID(), #disconnect)
+    error(me, "Connection disconnected:" && me.getID(), #disconnect, #minor)
   end if
   return 1
 end
@@ -59,7 +59,7 @@ end
 
 on setDecoder me, tDecoder
   if not objectp(tDecoder) then
-    return error(me, "Decoder object expected:" && tDecoder, #setDecoder)
+    return error(me, "Decoder object expected:" && tDecoder, #setDecoder, #major)
   else
     pDecoder = tDecoder
     return 1
@@ -72,7 +72,7 @@ end
 
 on setEncoder me, tEncoder
   if not objectp(tEncoder) then
-    return error(me, "Encoder object expected:" && tEncoder, #setEncoder)
+    return error(me, "Encoder object expected:" && tEncoder, #setEncoder, #major)
   else
     pEncoder = tEncoder
     return 1
@@ -85,7 +85,7 @@ end
 
 on setLogMode me, tMode
   if tMode.ilk <> #integer then
-    return error(me, "Invalid argument:" && tMode, #setLogMode)
+    return error(me, "Invalid argument:" && tMode, #setLogMode, #minor)
   end if
   pLogMode = tMode
   if pLogMode = 2 then
@@ -117,7 +117,7 @@ on send me, tCmd, tMsg
     return me.sendNew(tCmd, tMsg)
   end if
   if not (pConnectionOk and objectp(pXtra)) then
-    return error(me, "Connection not ready:" && me.getID(), #send)
+    return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if
   if tMsg.ilk <> #string then
     tMsg = string(tMsg)
@@ -127,7 +127,7 @@ on send me, tCmd, tMsg
     tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
   end if
   if tCmd.ilk = #void then
-    return error(me, "Unrecognized command!", #send)
+    return error(me, "Unrecognized command!", #send, #major)
   end if
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
@@ -151,7 +151,7 @@ end
 
 on sendNew me, tCmd, tParmArr
   if not (pConnectionOk and objectp(pXtra)) then
-    return error(me, "Connection not ready:" && me.getID(), #send)
+    return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if
   tMsg = EMPTY
   tLength = 2
@@ -199,7 +199,7 @@ on sendNew me, tCmd, tParmArr
           tMsg = tMsg & tBy1
           tLength = tLength + 1
         otherwise:
-          error(me, "Unsupported param type:" && ttype, #send)
+          error(me, "Unsupported param type:" && ttype, #send, #major)
       end case
     end repeat
   end if
@@ -208,7 +208,7 @@ on sendNew me, tCmd, tParmArr
     tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
   end if
   if tCmd.ilk = #void then
-    return error(me, "Unrecognized command!", #send)
+    return error(me, "Unrecognized command!", #send, #major)
   end if
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
@@ -416,7 +416,7 @@ on forwardMsg me, tSubject, tParams
   tParams = getStringServices().convertSpecialChars(tParams)
   tCallbackList = pListenersPntr.getaProp(#value).getaProp(tSubject)
   if tCallbackList.ilk <> #list then
-    return error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
+    return error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg, #minor)
   end if
   tObjMgr = getObjectManager()
   repeat with i = 1 to count(tCallbackList)
@@ -428,7 +428,7 @@ on forwardMsg me, tSubject, tParams
       call(tCallback[2], tObject, pMsgStruct)
       next repeat
     end if
-    error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg)
+    error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg, #minor)
     tCallbackList.deleteAt(1)
     i = i - 1
   end repeat

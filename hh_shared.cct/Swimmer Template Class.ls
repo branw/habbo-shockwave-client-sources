@@ -15,13 +15,13 @@ on define me, tdata
   me.pLocH = tdata[#h]
   me.pPeopleSize = getVariable("human.size." & integer(me.pXFactor))
   if not me.pPeopleSize then
-    error(me, "People size not found, using default!", #define)
+    error(me, "People size not found, using default!", #define, #minor)
     me.pPeopleSize = "sh"
   end if
   me.pCanvasSize = value(getVariable("human.canvas." & me.pPeopleSize))
   me.pCanvasSize.addProp(#swm, [60, 60, 32, -8])
   if not me.pCanvasSize then
-    error(me, "Canvas size not found, using default!", #define)
+    error(me, "Canvas size not found, using default!", #define, #minor)
     me.pCanvasSize = [#std: [64, 102, 32, -8], #lay: [89, 102, 32, -4]]
   end if
   if me.pCanvasName = VOID then
@@ -54,7 +54,7 @@ on define me, tdata
   call(#registerProcedure, me.pMatteSpr.scriptInstanceList, #eventProcUserRollOver, tTargetID, #mouseLeave)
   tPartSymbols = tdata[#parts]
   if not setPartLists(me, tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #define)
+    return error(me, "Couldn't create part lists!", #define, #major)
   end if
   me.arrangeParts()
   me.Refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)

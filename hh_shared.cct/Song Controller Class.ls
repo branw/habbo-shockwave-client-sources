@@ -16,7 +16,14 @@ end
 
 on preloadSounds me, tSampleList
   repeat with i = 1 to tSampleList.count
-    me.startSampleDownload(tSampleList[i])
+    tItem = tSampleList[i]
+    if ilk(tItem) = #propList then
+      me.startSampleDownload(tItem[#sound], tItem[#parent])
+      next repeat
+    end if
+    if ilk(tItem) = #string then
+      me.startSampleDownload(tItem)
+    end if
   end repeat
 end
 
@@ -54,7 +61,7 @@ on stopSong me
   return getObject(pSongPlayer).stopSong()
 end
 
-on startSampleDownload me, tMemberName
+on startSampleDownload me, tMemberName, tParentId
   if memberExists(tMemberName) then
     if pSampleList.getaProp(tMemberName) = VOID then
       tSample = [#status: "ready"]
@@ -64,11 +71,11 @@ on startSampleDownload me, tMemberName
   else
     if pSampleList.getaProp(tMemberName) = VOID then
       if threadExists(#dynamicdownloader) then
-        getThread(#dynamicdownloader).getComponent().downloadCastDynamically(tMemberName, #sound, me.getID(), #soundDownloadCompleted)
+        getThread(#dynamicdownloader).getComponent().downloadCastDynamically(tMemberName, #sound, me.getID(), #soundDownloadCompleted, VOID, VOID, tParentId)
         tSample = [#status: "loading"]
         pSampleList.addProp(tMemberName, tSample)
       else
-        return error(me, "Dynamic downloader does not exist, cannot download sound.", #startSampleDownload)
+        return error(me, "Dynamic downloader does not exist, cannot download sound.", #startSampleDownload, #major)
       end if
     end if
   end if

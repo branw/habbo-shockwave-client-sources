@@ -26,7 +26,7 @@ on show me, tName, tDate, tMsg, tWindowName
     removeWindow(pPlateID)
   end if
   if not createWindow(pPlateID, tWindowName) then
-    return error(me, "Failed to open trophy plate window!!!", #show)
+    return error(me, "Failed to open trophy plate window!!!", #show, #major)
   else
     tWndObj = getWindow(pPlateID)
     tWndObj.center()

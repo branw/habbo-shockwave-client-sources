@@ -67,7 +67,7 @@ end
 
 on showRoom me, tRoomID
   if not memberExists(tRoomID & ".room") then
-    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomID & ".room", #showRoom)
+    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomID & ".room", #showRoom, #major)
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then
@@ -92,7 +92,7 @@ on showRoom me, tRoomID
     if me.getHiliter() <> 0 then
       me.getHiliter().deconstruct()
     end if
-    error(me, "Hiliter not found in room description!!!", #showRoom)
+    error(me, "Hiliter not found in room description!!!", #showRoom, #minor)
   else
     createObject(pHiliterId, "Room Hiliter Class")
     me.getHiliter().define([#sprite: tHiliterSpr, #geometry: pGeometryId])
@@ -103,7 +103,7 @@ on showRoom me, tRoomID
     repeat with tAnimation in tAnimations
       tObj = createObject(#random, getVariableValue("swap.animation.class"))
       if tObj = 0 then
-        error(me, "Error creating swap animation", #showRoom)
+        error(me, "Error creating swap animation", #showRoom, #minor)
         next repeat
       end if
       pSwapAnimations.add(tObj)
@@ -218,7 +218,7 @@ on showInterface me, tObjType
   tUserRights = getObject(#session).GET("user_rights")
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 and tObjType <> "user" then
-    return error(me, "Own user not found!", #showInterface)
+    return error(me, "Own user not found!", #showInterface, #major)
   end if
   if tObjType = "active" or tObjType = "item" then
     tSomeRights = 0
@@ -510,7 +510,7 @@ end
 on showDoorBellDialog me, tName
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 then
-    return error(me, "Own user not found!", #showDoorBell)
+    return error(me, "Own user not found!", #showDoorBell, #major)
   end if
   if tOwnUser.getInfo().ctrl = 0 then
     return 1
@@ -904,14 +904,14 @@ on startObjectMover me, tObjID, tStripID, tProps
     "item":
       pClickAction = "moveItem"
     "user":
-      return error(me, "Can't move user objects!", #startObjectMover)
+      return error(me, "Can't move user objects!", #startObjectMover, #minor)
   end case
   return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType, tProps)
 end
 
 on stopObjectMover me
   if not objectExists(pObjMoverID) then
-    return error(me, "Object mover not found!", #stopObjectMover)
+    return error(me, "Object mover not found!", #stopObjectMover, #minor)
   end if
   getObject(pObjMoverID).clear()
   pClickAction = "moveHuman"
@@ -939,7 +939,7 @@ on startTrading me, tTargetUser
 end
 
 on stopTrading me
-  return error(me, "TODO: stopTrading...!", #stopTrading)
+  return error(me, "TODO: stopTrading...!", #stopTrading, #minor)
   pClickAction = "moveHuman"
   if objectExists(pObjMoverID) then
     me.stopObjectMover()
@@ -952,7 +952,7 @@ on showConfirmDelete me
     return 0
   end if
   if not createWindow(pDelConfirmID, "habbo_basic.window", 200, 120) then
-    return error(me, "Couldn't create confirmation window!", #showConfirmDelete)
+    return error(me, "Couldn't create confirmation window!", #showConfirmDelete, #major)
   end if
   tMsgA = getText("room_confirmDelete", "Confirm delete")
   tMsgB = getText("room_areYouSure", "Are you absolutely sure you want to delete this item?")
@@ -979,7 +979,7 @@ on showConfirmPlace me
     return 0
   end if
   if not createWindow(pPlcConfirmID, "habbo_basic.window", 200, 120) then
-    return error(me, "Couldn't create confirmation window!", #showConfirmPlace)
+    return error(me, "Couldn't create confirmation window!", #showConfirmPlace, #major)
   end if
   tMsgA = getText("room_confirmPlace", "Confirm placement")
   tMsgB = getText("room_areYouSurePlace", "Are you absolutely sure you want to place this item?")
@@ -1011,7 +1011,7 @@ on placeFurniture me, tObjID, tObjType
       end if
       tObj = me.getComponent().getActiveObject(tObjID)
       if tObj = 0 then
-        return error(me, "Invalid active object:" && tObjID, #placeFurniture)
+        return error(me, "Invalid active object:" && tObjID, #placeFurniture, #major)
       end if
       tStripID = tObj.getaProp(#stripId)
       tStr = tStripID && tloc[1] && tloc[2] && tObj.pDimensions[1] && tObj.pDimensions[2] && tObj.pDirection[1]
@@ -1025,7 +1025,7 @@ on placeFurniture me, tObjID, tObjType
       end if
       tObj = me.getComponent().getItemObject(tObjID)
       if tObj = 0 then
-        return error(me, "Invalid item object:" && tObjID, #placeFurniture)
+        return error(me, "Invalid item object:" && tObjID, #placeFurniture, #major)
       end if
       tStripID = tObj.getaProp(#stripId)
       tStr = tStripID && tloc
@@ -1357,7 +1357,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
   tOwnUser = tComponent.getOwnUser()
   if tOwnUser = 0 then
     if not (tSprID = "kick.button" or tSprID = "give_rights.button" or tSprID = "take_rights.button" or tSprID = "friend.button" or tSprID = "ignore.button" or tSprID = "unignore.button") then
-      return error(me, "Own user not found!", #eventProcInterface)
+      return error(me, "Own user not found!", #eventProcInterface, #major)
     end if
   end if
   case tSprID of
@@ -1490,7 +1490,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
         end if
       end if
   end case
-  return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface)
+  return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
 end
 
 on eventProcRoom me, tEvent, tSprID, tParam
@@ -1509,7 +1509,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
       "GOAWAY":
         tPrm = [:]
       otherwise:
-        error(me, "Is this command valid:" && tCmd & "?", #eventProcRoom)
+        error(me, "Is this command valid:" && tCmd & "?", #eventProcRoom, #minor)
     end case
     return me.getComponent().getRoomConnection().send(tCmd, tPrm)
   end if
@@ -1536,7 +1536,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
         tObj = me.getComponent().getActiveObject(pSelectedObj)
         if tObj = 0 then
-          return error(me, "Invalid active object:" && pSelectedObj, #eventProcRoom)
+          return error(me, "Invalid active object:" && pSelectedObj, #eventProcRoom, #major)
         end if
         me.getComponent().getRoomConnection().send("MOVESTUFF", pSelectedObj && tloc[1] && tloc[2] && tObj.pDirection[1])
         me.stopObjectMover()
@@ -1595,14 +1595,14 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
       "tradeItem":
     end case
-    return error(me, "Unsupported click action:" && pClickAction, #eventProcRoom)
+    return error(me, "Unsupported click action:" && pClickAction, #eventProcRoom, #minor)
   end if
 end
 
 on eventProcUserObj me, tEvent, tSprID, tParam
   tObject = me.getComponent().getUserObject(tSprID)
   if tObject = 0 then
-    error(me, "User object not found:" && tSprID, #eventProcUserObj)
+    error(me, "User object not found:" && tSprID, #eventProcUserObj, #major)
     return me.eventProcRoom(tEvent, "floor")
   end if
   if the shiftDown and the optionDown then
@@ -1671,7 +1671,7 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
     end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
-    return error(me, "Active object not found:" && tSprID, #eventProcActiveObj)
+    return error(me, "Active object not found:" && tSprID, #eventProcActiveObj, #major)
   end if
   if me.getComponent().getRoomData().type = #private then
     if pSelectedObj <> tSprID then
@@ -1691,7 +1691,8 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
   if the optionDown and tIsController then
     return me.startObjectMover(pSelectedObj)
   end if
-  if tObject.select() then
+  tTemp = call(#select, tObject)
+  if tTemp then
     return 1
   else
     return me.eventProcRoom(tEvent, "floor", "object_selection")
@@ -1743,7 +1744,7 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
-    return error(me, "Item object not found:" && tSprID, #eventProcItemObj)
+    return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
   end if
   if me.getComponent().getItemObject(tSprID).select() then
     if pSelectedObj <> tSprID then

@@ -137,7 +137,7 @@ end
 
 on feedIconToCard me, tImg
   if ilk(tImg) <> #image then
-    return error(me, "tImg is not an #image", #feedIconToCard)
+    return error(me, "tImg is not an #image", #feedIconToCard, #major)
   end if
   tWndObj = getWindow(pCardWndID)
   tElem = tWndObj.getElement("small_img")

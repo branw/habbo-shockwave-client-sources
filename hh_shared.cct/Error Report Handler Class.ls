@@ -12,6 +12,15 @@ on handle_error_report me, tMsg
   tErrorList[#errorId] = tConn.GetIntFrom()
   tErrorList[#errorMsgId] = tConn.GetIntFrom()
   tErrorList[#time] = tConn.GetStrFrom()
+  if variableExists("reload.client.on.server.errors") then
+    tSpecialErrorArray = getVariableValue("reload.client.on.server.errors")
+    if listp(tSpecialErrorArray) then
+      if tSpecialErrorArray.getPos(tErrorList[#errorId]) <> 0 then
+        gotoNetPage(getVariable("client.reload.url"))
+        return 1
+      end if
+    end if
+  end if
   tErrorList[#errorId] = "SERVER-" & tErrorList[#errorId]
   me.getComponent().storeErrorReport(tErrorList)
   me.getInterface().showErrors()

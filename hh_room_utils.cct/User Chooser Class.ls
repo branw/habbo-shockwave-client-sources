@@ -49,7 +49,7 @@ on setMode me, tMode
     #item:
       pObjMode = #item
   end case
-  return error(me, "Unsupported obj type:" && tMode, #setMode)
+  return error(me, "Unsupported obj type:" && tMode, #setMode, #minor)
   return me.update()
 end
 

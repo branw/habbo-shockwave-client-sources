@@ -161,7 +161,7 @@ end
 
 on setFont me, tStruct
   if tStruct.ilk <> #struct then
-    return error(me, "Font struct expected!", #setFont)
+    return error(me, "Font struct expected!", #setFont, #major)
   end if
   if pMember.font <> tStruct.getaProp(#font) then
     pMember.font = tStruct.getaProp(#font)

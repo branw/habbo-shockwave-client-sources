@@ -51,7 +51,7 @@ end
 
 on handle_error me, tMsg
   tErr = tMsg.content
-  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
+  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error, #dummy)
   case tErr of
     "info: No place for stuff":
       me.getInterface().stopObjectMover()
@@ -154,7 +154,7 @@ on handle_users me, tMsg
   tList = [:]
   tuser = EMPTY
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found!", #handle_users)
+    return error(me, "Figure system object not found!", #handle_users, #major)
   end if
   repeat with f = 1 to tCount
     tLine = tMsg.content.line[f]
@@ -392,7 +392,7 @@ on handle_activeobject_update me, tMsg
     call(#movingFinished, [tActiveObj])
     executeMessage(#activeObjectsUpdated)
   else
-    return error(me, "Active object not found:" && tObj[#id], #handle_activeobject_update)
+    return error(me, "Active object not found:" && tObj[#id], #handle_activeobject_update, #major)
   end if
 end
 
@@ -475,7 +475,7 @@ on handle_stuffdataupdate me, tMsg
   if me.getComponent().activeObjectExists(tTarget) then
     call(#updateStuffdata, [me.getComponent().getActiveObject(tTarget)], tValue)
   else
-    return error(me, "Active object not found:" && tTarget, #handle_stuffdataupdate)
+    return error(me, "Active object not found:" && tTarget, #handle_stuffdataupdate, #major)
   end if
 end
 
@@ -487,7 +487,7 @@ on handle_presentopen me, tMsg
   if objectExists(tCard) then
     getObject(tCard).showContent([#type: ttype, #code: tCode, #color: tColors])
   else
-    error(me, "Package card obj not found!", #handle_presentopen)
+    error(me, "Package card obj not found!", #handle_presentopen, #major)
   end if
 end
 
@@ -501,7 +501,7 @@ on handle_flatproperty me, tMsg
   if tRoomPrg <> 0 then
     tRoomPrg.setProperty(tdata[#key], tdata[#value])
   else
-    error(me, "Private room program not found!", #handle_flatproperty)
+    error(me, "Private room program not found!", #handle_flatproperty, #major)
   end if
 end
 
@@ -631,11 +631,11 @@ on handle_trade_items me, tMsg
     tItemStr = "foo" & RETURN & tLine.word[3..tLine.word.count] & RETURN & 1
     tdata[#items] = me.handle_stripinfo([#subject: 108, #content: tItemStr]).getaProp(#objects)
     if not listp(tdata[#items]) then
-      return error(me, "Invalid itemdata from server!", #handle_trade_items)
+      return error(me, "Invalid itemdata from server!", #handle_trade_items, #major)
     end if
     tUserName = tLine.word[1]
     if tUserName = EMPTY then
-      return error(me, "No username from server", #handle_trade_items)
+      return error(me, "No username from server", #handle_trade_items, #major)
     end if
     if me.getInterface().getIgnoreStatus(VOID, tUserName) then
       return me.getComponent().getRoomConnection().send("TRADE_CLOSE")
@@ -692,7 +692,7 @@ on handle_doorflat me, tMsg
   tTeleId = tConn.GetIntFrom()
   tFlatID = tConn.GetIntFrom()
   if not (tTeleId and tFlatID) then
-    return error(me, "Retarded doorflat data!", #handle_doorflat)
+    return error(me, "Retarded doorflat data!", #handle_doorflat, #major)
   end if
   me.getComponent().startTeleport(tTeleId, tFlatID)
 end
@@ -739,7 +739,7 @@ end
 on handle_petstat me, tMsg
   tPetObj = me.getComponent().getUserObject(tMsg.connection.GetIntFrom())
   if tPetObj = 0 then
-    return error(me, "Pet object not found!", #handle_petstat)
+    return error(me, "Pet object not found!", #handle_petstat, #major)
   end if
   tName = tPetObj.getName()
   tAge = tMsg.connection.GetIntFrom()
@@ -824,7 +824,7 @@ on handle_slideobjectbundle me, tMsg
       tMoveType = "sld"
       tHasCharacter = 1
   end case
-  return error(me, "Incompatible character movetype", #handle_slideobjectbundle)
+  return error(me, "Incompatible character movetype", #handle_slideobjectbundle, #minor)
   if tHasCharacter then
     tCharID = tConn.GetIntFrom()
     tFromH = getLocalFloat(tConn.GetStrFrom())

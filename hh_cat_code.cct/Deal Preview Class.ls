@@ -73,7 +73,7 @@ on getPicture me, tImg
   end if
   repeat with i = tLimit down to 1
     if voidp(pDealList[i]["class"]) then
-      return error(me, "class property missing", #showPreviewImage)
+      return error(me, "class property missing", #showPreviewImage, #minor)
       next repeat
     end if
     tClass = pDealList[i]["class"]

@@ -34,7 +34,7 @@ on update me
   end if
   tStreamStatus = getStreamStatus(pNetId)
   if not listp(tStreamStatus) then
-    return error(me, "Invalid stream status:" && pFile && "/" && tStreamStatus, #update)
+    return error(me, "Invalid stream status:" && pFile && "/" && tStreamStatus, #update, #minor)
   end if
   if tStreamStatus.bytesSoFar > 0 and pState = #LOADING then
     tBytesSoFar = tStreamStatus.bytesSoFar
@@ -51,7 +51,7 @@ on update me
   else
     if the milliSeconds - pLoadTime > pRetryDelay or pState = #error then
       tErrorMsg = getCastLoadManager().solveNetErrorMsg(netError(pNetId))
-      error(me, "Failed network operation:" & RETURN & pURL & RETURN & tErrorMsg, #update)
+      error(me, "Failed network operation:" & RETURN & pURL & RETURN & tErrorMsg, #update, #minor)
       ptryCount = ptryCount + 1
       if ptryCount >= pCastLoadMaxRetryCount then
         pPercent = 1.0

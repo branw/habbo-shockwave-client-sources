@@ -38,7 +38,7 @@ on construct me
   pPetDefinitions = value(tPetDEfText)
   if ilk(pPetDefinitions) <> #propList then
     pPetDefinitions = [:]
-    error(me, "Pet definitions has invalid data!", me.getID(), #construct)
+    error(me, "Pet definitions has invalid data!", me.getID(), #construct, #major)
   end if
   if pXFactor = 32 then
     pMemberNamePrefix = "s_p_"
@@ -131,7 +131,7 @@ on setup me, tdata
   end if
   pCanvasSize = [62, 62, 32, -18]
   if not me.setPartLists(tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #setup)
+    return error(me, "Couldn't create part lists!", #setup, #major)
   end if
   me.resetValues(pLocX, pLocY, pLocH, pDirection, pDirection)
   me.Refresh(pLocX, pLocY, pLocH)
@@ -540,7 +540,7 @@ on getOffsetList me, tSize
       tList[tKey] = tOffsetData
       next repeat
     end if
-    error(me, "Invalid alias definition, no offset available: " & tValue, me.getID(), #getOffsetList)
+    error(me, "Invalid alias definition, no offset available: " & tValue, me.getID(), #getOffsetList, #minor)
   end repeat
   return tList
 end
