@@ -410,6 +410,7 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   end if
   me.pScreenLoc = me.pGeometry.getScreenCoordinate(tX, tY, tH)
   me.pMoving = 0
+  call(#reset, me.pPartList)
   me.pDirection = tDirBody
   me.pHeadDir = tDirHead
   me.pChanges = 1

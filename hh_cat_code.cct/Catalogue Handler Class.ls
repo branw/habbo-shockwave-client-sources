@@ -111,9 +111,13 @@ on handle_catalogpage me, tMsg
               tDealList[i + 1] = tDealItem.duplicate()
             end repeat
             tTemp["dealList"] = tDealList
-            tTemp["dealNumber"] = tDealNumber
+            if tDealList.count > 1 then
+              tTemp["dealNumber"] = tDealNumber
+              tDealNumber = tDealNumber + 1
+            else
+              tTemp["dealNumber"] = 0
+            end if
           end if
-          tDealNumber = tDealNumber + 1
         end if
         tProductList.add(tTemp)
     end case

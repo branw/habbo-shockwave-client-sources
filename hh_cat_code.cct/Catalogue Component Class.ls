@@ -267,7 +267,7 @@ on solveCatalogueMembers me, tdata
           end if
         end if
       end if
-      if tDealNumber > 0 then
+      if not voidp(tDealNumber) then
         tdata["productList"][f]["smallPrewImg"] = 0
       end if
     end repeat

@@ -210,6 +210,7 @@ on store_gamelocation me, tParamList
   tParamList.addProp(#tournament_flag, me.getVariableManager().get(#tournament_flag))
   getObject(#session).set(#gamespace_world_info, tParamList)
   me.getMessageSender().setInstanceListUpdates(0)
+  executeMessage(#changeRoom)
   tUnitId = tParamList[#unitId]
   tWorldId = tParamList[#worldId]
   me.spaceTravel(tUnitId, tWorldId, #game)

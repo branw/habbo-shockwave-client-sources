@@ -99,23 +99,39 @@ on getPicture me, tImg
   return tImg.trimWhiteSpace()
 end
 
-on renderDealPreviewImage me, tDealNumber
-  tmember = "ctlg_pic_deal_icon_narrow"
-  if memberExists(tmember) then
-    tMem = member(getmemnum(tmember))
-    tRenderedImage = image(tMem.width, tMem.height, 32)
-    tRenderedImage.copyPixels(tMem.image, tMem.rect, tMem.rect)
-    tWriteObj = getWriter(pCountWriterID)
-    tCountImg = tWriteObj.render(string(tDealNumber))
-    tCountImgTrimmed = image(tCountImg.width, tCountImg.height, 32)
-    tCountImgTrimmed.copyPixels(tCountImg, tCountImg.rect, tCountImg.rect, [#ink: 36])
-    tCountImgTrimmed = tCountImgTrimmed.trimWhiteSpace()
-    tNumberWd = tCountImgTrimmed.rect[3] - tCountImgTrimmed.rect[1]
-    tNumberHt = tCountImgTrimmed.rect[4] - tCountImgTrimmed.rect[2]
-    tOffsetRect = rect(20 - (tNumberWd + 1) / 2, 20 - (tNumberHt + 1) / 2, 20 - (tNumberWd + 1) / 2, 20 - (tNumberHt + 1) / 2)
-    tRenderedImage.copyPixels(tCountImg, tCountImg.rect + tOffsetRect, tCountImg.rect, [#ink: 36])
+on renderDealPreviewImage me, tDealNumber, tDealList, tWidth, tHeight
+  if tDealList.count > 1 then
+    tmember = "ctlg_pic_deal_icon_narrow"
+    if memberExists(tmember) then
+      tMem = member(getmemnum(tmember))
+      tRenderedImage = image(tMem.width, tMem.height, 32)
+      tRenderedImage.copyPixels(tMem.image, tMem.rect, tMem.rect)
+      tWriteObj = getWriter(pCountWriterID)
+      tCountImg = tWriteObj.render(string(tDealNumber))
+      tCountImgTrimmed = image(tCountImg.width, tCountImg.height, 32)
+      tCountImgTrimmed.copyPixels(tCountImg, tCountImg.rect, tCountImg.rect, [#ink: 36])
+      tCountImgTrimmed = tCountImgTrimmed.trimWhiteSpace()
+      tNumberWd = tCountImgTrimmed.rect[3] - tCountImgTrimmed.rect[1]
+      tNumberHt = tCountImgTrimmed.rect[4] - tCountImgTrimmed.rect[2]
+      tOffsetRect = rect(20 - (tNumberWd + 1) / 2, 20 - (tNumberHt + 1) / 2, 20 - (tNumberWd + 1) / 2, 20 - (tNumberHt + 1) / 2)
+      tRenderedImage.copyPixels(tCountImg, tCountImg.rect + tOffsetRect, tCountImg.rect, [#ink: 36])
+    else
+      tRenderedImage = image(1, 1, 32)
+    end if
   else
-    tRenderedImage = image(1, 1, 32)
+    tpartColors = tDealList[1][#partColors]
+    tClass = tDealList[1][#class]
+    tCount = tDealList[1][#count]
+    tBackgroundImage = image(tWidth, tHeight, 32)
+    tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
+    tRenderWd = tRenderedImage.rect[3] - tRenderedImage.rect[1]
+    tRenderHt = tRenderedImage.rect[4] - tRenderedImage.rect[2]
+    tOffsetRect = rect((tWidth - tRenderWd) / 2, min(8, tHeight - tRenderHt), (tWidth - tRenderWd) / 2, min(8, tHeight - tRenderHt))
+    tBackgroundImage.copyPixels(tRenderedImage, tRenderedImage.rect + tOffsetRect, tRenderedImage.rect, [#ink: 36])
+    tCountImg = me.getNumberImage(tCount)
+    tOffsetRect = rect(2, 0, 2, 0)
+    tBackgroundImage.copyPixels(tCountImg, tCountImg.rect + tOffsetRect, tCountImg.rect, [#ink: 36])
+    tRenderedImage = tBackgroundImage.trimWhiteSpace()
   end if
   return tRenderedImage
 end
