@@ -88,6 +88,7 @@ on handle_coppa_checktime me, tMsg
   else
     me.getComponent().continueBlocking()
   end if
+  return 1
 end
 
 on handle_coppa_getrealtime me, tMsg
@@ -95,21 +96,35 @@ on handle_coppa_getrealtime me, tMsg
   if not voidp(tdata) then
     me.getComponent().setBlockTime(tdata)
   end if
+  return 1
 end
 
-on handle_parent_email_requred me, tMsg
+on handle_parent_email_required me, tMsg
   tFlag = tMsg.connection.GetIntFrom(tMsg)
-  me.getComponent().parentEmailNeedGueryResult(tFlag)
+  me.getComponent().parentEmailNeedQueryResult(tFlag)
+  return 1
 end
 
 on handle_parent_email_validated me, tMsg
   tFlag = tMsg.connection.GetIntFrom(tMsg)
   me.getComponent().parentEmailValidated(tFlag)
+  return 1
 end
 
 on handle_update_account me, tMsg
   tFlag = tMsg.connection.GetIntFrom(tMsg)
   me.getInterface().responseToAccountUpdate(tFlag)
+  return 1
+end
+
+on handle_email_approved me, tMsg
+  me.getInterface().userEmailOk()
+  return 1
+end
+
+on handle_email_rejected me, tMsg
+  me.getInterface().userEmailUnacceptable()
+  return 1
 end
 
 on regMsgList me, tBool
@@ -128,9 +143,11 @@ on regMsgList me, tBool
   tMsgs.setaProp(168, #handle_nametoolong)
   tMsgs.setaProp(214, #handle_coppa_checktime)
   tMsgs.setaProp(215, #handle_coppa_getrealtime)
-  tMsgs.setaProp(217, #handle_parent_email_requred)
+  tMsgs.setaProp(217, #handle_parent_email_required)
   tMsgs.setaProp(218, #handle_parent_email_validated)
   tMsgs.setaProp(169, #handle_update_account)
+  tMsgs.setaProp(271, #handle_email_approved)
+  tMsgs.setaProp(272, #handle_email_rejected)
   tCmds = [:]
   tCmds.setaProp("INFORETRIEVE", 7)
   tCmds.setaProp("APPROVENAME", 42)
@@ -143,6 +160,7 @@ on regMsgList me, tBool
   tCmds.setaProp("VALIDATE_PARENT_EMAIL", 147)
   tCmds.setaProp("SEND_PARENT_EMAIL", 148)
   tCmds.setaProp("UPDATE_ACCOUNT", 149)
+  tCmds.setaProp("APPROVEEMAIL", 197)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

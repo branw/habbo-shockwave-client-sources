@@ -1,4 +1,4 @@
-property pTempPassword, pOpenWindow, pWindowTitle, pmode, pOldFigure, pOldSex, pPartChangeButtons, pBodyPartObjects, pPeopleSize, pBuffer, pFlipList, pNameChecked, pLastNameCheck, pPropsToServer, pErrorMsg, pRegProcess, pRegProcessLocation, pVerifyChangeWndID, pLastWindow
+property pTempPassword, pOpenWindow, pWindowTitle, pmode, pOldFigure, pOldSex, pPartChangeButtons, pBodyPartObjects, pPeopleSize, pBuffer, pFlipList, pNameChecked, pEmailChecked, pLastNameCheck, pPropsToServer, pErrorMsg, pRegProcess, pRegProcessLocation, pVerifyChangeWndID, pLastWindow
 
 on construct me
   pTempPassword = [:]
@@ -38,9 +38,9 @@ end
 
 on showHideFigureCreator me, tNewOrUpdate
   if windowExists(pWindowTitle) and pOpenWindow <> "reg_loading.window" then
-    closeFigureCreator(me)
+    return me.closeFigureCreator()
   else
-    me.openFigureCreator(tNewOrUpdate)
+    return me.openFigureCreator(tNewOrUpdate)
   end if
 end
 
@@ -58,7 +58,7 @@ on openFigureCreator me, tMode
       tWindow = tRegPages[1] & ".window"
     end if
   end if
-  me.enterPage(tWindow)
+  return me.enterPage(tWindow)
 end
 
 on closeFigureCreator me
@@ -87,6 +87,97 @@ on finishRegistration me, tdata
   else
     me.getComponent().getRealtime()
   end if
+end
+
+on userNameOk me
+  if pOpenWindow = "reg_loading.window" then
+    me.changePage(1)
+  end if
+end
+
+on userNameUnacceptable me
+  if pOpenWindow = "reg_loading.window" then
+    me.changePage("reg_namepage.window")
+  end if
+  executeMessage(#alert, [#msg: "Alert_unacceptableName", #id: "namenogood", #modal: 1])
+  me.clearUserNameField()
+end
+
+on userNameTooLong me
+  if pOpenWindow = "reg_loading.window" then
+    me.changePage("reg_namepage.window")
+  end if
+  executeMessage(#alert, [#msg: "Alert_NameTooLong", #id: "nametoolong", #modal: 1])
+end
+
+on userNameAlreadyReserved me
+  if pOpenWindow = "reg_loading.window" then
+    me.changePage("reg_namepage.window")
+  end if
+  executeMessage(#alert, [#msg: "Alert_NameAlreadyUse", #id: "namereserved", #modal: 1])
+  me.clearUserNameField()
+end
+
+on userEmailOk me
+  pEmailChecked = 1
+  me.leavePage(pOpenWindow)
+  return 1
+end
+
+on userEmailUnacceptable me
+  pEmailChecked = 0
+  case pOpenWindow of
+    "reg_info_update.window":
+      removeWindow(pVerifyChangeWndID)
+  end case
+  executeMessage(#alert, [#msg: "reg_verification_invalidEmail", #id: "emailnogood", #modal: 1])
+  return 1
+end
+
+on parentEmailQueryStatus me, tFlag
+  if pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
+    if not tFlag then
+      if pOpenWindow = "reg_loading.window" then
+        me.changePage(1)
+      end if
+    else
+      me.parentEmailNotNeeded()
+      me.changePage(1)
+    end if
+  else
+    if tFlag = 1 then
+      me.parentEmailNotNeeded()
+    end if
+  end if
+end
+
+on parentEmailOk me
+  if pRegProcess.ilk = #list then
+    if pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
+      tPos = pRegProcess.findPos("reg_parent_email")
+      tNextPage = pRegProcess[tPos + 1]
+      me.changePage(tNextPage & ".window")
+    else
+      if pRegProcessLocation = pRegProcess.count then
+        getObject(#session).set("user_figure", pPropsToServer["figure"].duplicate())
+        me.getComponent().sendFigureUpdateToServer(pPropsToServer)
+        me.getComponent().updateState("start")
+        return me.closeFigureCreator()
+      else
+        tPos = pRegProcess.findPos("reg_parent_email")
+        tNextPage = pRegProcess[tPos + 1]
+        me.changePage(tNextPage & ".window")
+      end if
+    end if
+  end if
+end
+
+on parentEmailIncorrect me
+  if pOpenWindow <> "reg_parent_email.window" then
+    me.changePage("reg_parent_email.window")
+  end if
+  executeMessage(#alert, [#msg: "alert_reg_parent_email", #id: "parentemailincorrect", #modal: 1])
+  return 0
 end
 
 on blinkLoading me
@@ -931,52 +1022,6 @@ on checkAgreeTerms me
   end if
 end
 
-on userNameOk me
-  if pOpenWindow = "reg_loading.window" then
-    me.changePage(1)
-  end if
-end
-
-on userNameUnacceptable me
-  if pOpenWindow = "reg_loading.window" then
-    me.changePage("reg_namepage.window")
-  end if
-  executeMessage(#alert, [#msg: "Alert_unacceptableName", #id: "namenogood", #modal: 1])
-  me.clearUserNameField()
-end
-
-on userNameTooLong me
-  if pOpenWindow = "reg_loading.window" then
-    me.changePage("reg_namepage.window")
-  end if
-  executeMessage(#alert, [#msg: "Alert_NameTooLong", #id: "nametoolong", #modal: 1])
-end
-
-on userNameAlreadyReserved me
-  if pOpenWindow = "reg_loading.window" then
-    me.changePage("reg_namepage.window")
-  end if
-  executeMessage(#alert, [#msg: "Alert_NameAlreadyUse", #id: "namereserved", #modal: 1])
-  me.clearUserNameField()
-end
-
-on parentEmailQueryStatus me, tFlag
-  if pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
-    if not tFlag then
-      if pOpenWindow = "reg_loading.window" then
-        me.changePage(1)
-      end if
-    else
-      me.parentEmailNotNeeded()
-      me.changePage(1)
-    end if
-  else
-    if tFlag = 1 then
-      me.parentEmailNotNeeded()
-    end if
-  end if
-end
-
 on parentEmailNotNeeded me
   if pRegProcess.ilk = #list then
     tPos = pRegProcess.findPos("reg_parent_email")
@@ -984,35 +1029,6 @@ on parentEmailNotNeeded me
       pRegProcess.deleteAt(tPos)
     end if
   end if
-end
-
-on parentEmailOk me
-  if pRegProcess.ilk = #list then
-    if pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
-      tPos = pRegProcess.findPos("reg_parent_email")
-      tNextPage = pRegProcess[tPos + 1]
-      me.changePage(tNextPage & ".window")
-    else
-      if pRegProcessLocation = pRegProcess.count then
-        getObject(#session).set("user_figure", pPropsToServer["figure"].duplicate())
-        me.getComponent().sendFigureUpdateToServer(pPropsToServer)
-        me.getComponent().updateState("start")
-        return me.closeFigureCreator()
-      else
-        tPos = pRegProcess.findPos("reg_parent_email")
-        tNextPage = pRegProcess[tPos + 1]
-        me.changePage(tNextPage & ".window")
-      end if
-    end if
-  end if
-end
-
-on parentEmailIncorrect me
-  if pOpenWindow <> "reg_parent_email.window" then
-    me.changePage("reg_parent_email.window")
-  end if
-  executeMessage(#alert, [#msg: "alert_reg_parent_email", #id: "parentemailincorrect", #modal: 1])
-  return 0
 end
 
 on clearUserNameField me
@@ -1135,6 +1151,10 @@ on leavePage me, tCurrentWindow
       if tProceed then
         pPropsToServer["password"] = getPassword()
         me.getMyDataFromFields()
+        if not pEmailChecked then
+          me.getComponent().checkEmailAddress(tEmail)
+          return 0
+        end if
       else
         executeMessage(#alert, [#title: "alert_reg_t", #msg: pErrorMsg, #id: "problems", #modal: 1])
         return 0
@@ -1146,7 +1166,7 @@ on leavePage me, tCurrentWindow
           tBirthday = pPropsToServer["birthday"].item[3] & "." & pPropsToServer["birthday"].item[2] & "." & pPropsToServer["birthday"].item[1]
           the itemDelimiter = tItemD
           tHabboID = pPropsToServer["name"]
-          me.getComponent().parentEmailNeedGuery(tBirthday, tHabboID)
+          me.getComponent().parentEmailNeedQuery(tBirthday, tHabboID)
           me.ChangeWindowView("reg_loading.window")
           return 0
         end if
@@ -1168,6 +1188,10 @@ on leavePage me, tCurrentWindow
       if tProceed then
         pPropsToServer["password"] = getPassword()
         me.getMyDataFromFields()
+        if not pEmailChecked then
+          me.getComponent().checkEmailAddress(tEmail)
+          return 0
+        end if
       else
         executeMessage(#alert, [#title: "alert_reg_t", #msg: pErrorMsg, #id: "problems", #modal: 1])
         return 0
@@ -1179,7 +1203,7 @@ on leavePage me, tCurrentWindow
           tBirthday = pPropsToServer["birthday"].item[3] & "." & pPropsToServer["birthday"].item[2] & "." & pPropsToServer["birthday"].item[1]
           the itemDelimiter = tItemD
           tHabboID = pPropsToServer["name"]
-          me.getComponent().parentEmailNeedGuery(tBirthday, tHabboID)
+          me.getComponent().parentEmailNeedQuery(tBirthday, tHabboID)
           me.ChangeWindowView("reg_loading.window")
           return 0
         end if
@@ -1423,6 +1447,8 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
             pNameChecked = 0
           end if
         end if
+      "char_email_field":
+        pEmailChecked = 0
       "char_continent_drop":
         tCountryListImg = getObject("CountryMngr").getCountryListImg(tParm)
         getWindow(pWindowTitle).getElement("char_country_field").feedImage(tCountryListImg)
