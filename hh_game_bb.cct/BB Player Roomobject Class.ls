@@ -56,9 +56,9 @@ on roomObjectAction me, tAction, tdata
       me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
       me.pDestLScreen = me.pGeometry.getScreenCoordinate(tdata[#x], tdata[#y], tdata[#z])
       me.pMoveStart = the milliSeconds
-      call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-      call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-      call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+      me.definePartListAction(me.pPartListSubSet["sit"], "sit")
+      me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
+      me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
   end case
 end
 
@@ -143,16 +143,16 @@ on update me
   end repeat
 end
 
-on render me
+on render me, tForceUpdate
   if not me.pChanges then
     return 1
   end if
   me.pChanges = 0
-  if me.pLocChange and not me.pDirChange then
+  if me.pLocChange and not me.pDirChange and not tForceUpdate then
     me.pLocChange = 0
     return me.setHumanSpriteLoc()
   end if
-  if me.pDirChange = 0 then
+  if me.pDirChange = 0 and not tForceUpdate then
     return 1
   end if
   me.pDirChange = 0
@@ -220,9 +220,13 @@ on setBallColor me, tColor
 end
 
 on setPartLists me, tmodels
+  me.resetAction()
   me.pMainAction = "sit"
   callAncestor(#setPartLists, [me], tmodels)
   tPartDefinition = ["bl"]
+  if voidp(tmodels["bl"]) then
+    tPartDefinition = []
+  end if
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
     if voidp(tmodels[tPartSymbol]) then
@@ -268,9 +272,9 @@ on setPartLists me, tmodels
     me.pPartIndex[me.pPartList[i].pPart] = i
   end repeat
   call(#reset, me.pPartList)
-  call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+  me.definePartListAction(me.pPartListSubSet["sit"], "sit")
+  me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
+  me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
   return 1
 end
 
@@ -382,7 +386,7 @@ on action_mv me, tProps
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
-  call(#defineActMultiple, me.pPartList, "sit", me.pPartListSubSet["sit"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handLeft"])
-  call(#defineActMultiple, me.pPartList, "crr", me.pPartListSubSet["handRight"])
+  me.definePartListAction(me.pPartListSubSet["sit"], "sit")
+  me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
+  me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
 end
