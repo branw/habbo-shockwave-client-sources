@@ -79,7 +79,12 @@ on resolveSmallPreview me, tOffer
       tmember = tFurniProps.getaProp(#class) & "_small"
     end if
     if getThread(#dynamicdownloader).getComponent().isAssetDownloaded(tClass) then
-      tImage = getObject("Preview_renderer").renderPreviewImage(tmember, VOID, tFurniProps.getaProp(#partColors), tClass).duplicate()
+      tRenderedImage = getObject("Preview_renderer").renderPreviewImage(tmember, VOID, tFurniProps.getaProp(#partColors), tClass)
+      if ilk(tRenderedImage) = #image then
+        tImage = tRenderedImage.duplicate()
+      else
+        return error(me, "Deal preview rendered image missing.", #resolveSmallPreview, #minor)
+      end if
       if tOffer.getContent(1).getProductCount() > 1 then
         if not objectp(pDealPreviewObj) then
           error(me, "Deal preview renderer object missing.", #resolveSmallPreview)

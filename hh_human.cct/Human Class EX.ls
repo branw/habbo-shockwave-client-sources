@@ -473,6 +473,12 @@ on getInfo me
     pInfoStruct[#ctrl] = pCtrlType
   end if
   pInfoStruct[#badges] = me.pBadges
+  if voidp(me.pBadges) then
+    tConn = getConnection(getVariable("connection.info.id"))
+    if tConn <> 0 then
+      tConn.send("GETSELECTEDBADGES", [#integer: integer(me.pWebID)])
+    end if
+  end if
   pInfoStruct[#groupID] = me.pGroupId
   if pCustom = EMPTY then
     tPrefix = EMPTY

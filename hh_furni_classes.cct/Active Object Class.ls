@@ -62,15 +62,6 @@ on define me, tdata
   if me.solveMembers() = 0 then
     return 0
   end if
-  if ilk(me.pSprList) = #list then
-    repeat with tLayer = 1 to me.pSprList.count
-      tLayerName = numToChar(charToNum("a") + tLayer - 1)
-      tSpr = me.pSprList[tLayer]
-      if me.solveTransparency(tLayerName) then
-        removeEventBroker(tSpr.spriteNum)
-      end if
-    end repeat
-  end if
   if me.prepare(tdata[#props]) = 0 then
     return 0
   end if
@@ -622,24 +613,4 @@ on updateLocation me
     tSpr.locZ = tScreenLocs[3] + tZ - 1
   end repeat
   me.relocate(pSprList)
-end
-
-on solveTransparency me, tPart
-  tName = me.pClass
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
-  if memberExists(tName & ".props") then
-    tPropList = value(member(getmemnum(tName & ".props")).text)
-    if ilk(tPropList) <> #propList then
-      error(me, tName & ".props is not valid!", #solveInk, #minor)
-    else
-      if tPropList[tPart] <> VOID then
-        if tPropList[tPart][#transparent] <> VOID then
-          return tPropList[tPart][#transparent]
-        end if
-      end if
-    end if
-  end if
-  return 0
 end

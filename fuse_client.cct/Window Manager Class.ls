@@ -245,10 +245,12 @@ on modal me, tID, tLayout, tPosition
 end
 
 on registerWindowEvent me, tTitle, tSprID, tEvent
-  pLastEventData[#title] = tTitle
-  pLastEventData[#sprite] = tSprID
-  pLastEventData[#Event] = tEvent
-  pLastEventData[#time] = the long time
+  if tEvent = #mouseUp or tEvent = #mouseDown or tEvent = #keyUp or tEvent = #keyDown then
+    pLastEventData[#title] = tTitle
+    pLastEventData[#sprite] = tSprID
+    pLastEventData[#Event] = tEvent
+    pLastEventData[#time] = the long time
+  end if
 end
 
 on getLastEvent me

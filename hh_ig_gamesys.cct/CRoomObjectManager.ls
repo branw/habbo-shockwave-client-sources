@@ -122,7 +122,7 @@ end
 on createRoomObject me, a_sClass, a_iRef, a_mp_params
   t_rXML = CreateXML()
   t_rXML.open(getMember("empty.node.xml").text)
-  t_rXML.Search("type", "NODE")
+  t_rXML.search("type", "NODE")
   t_rXML.SetParam("REF", a_iRef)
   t_rXML.SetParam("CLASS", a_sClass)
   t_rRoomContext = getThread(#room).getComponent()._AccessRoom()

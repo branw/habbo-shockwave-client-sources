@@ -25,7 +25,6 @@ on deconstruct me
 end
 
 on feedData me, tdata, tWidth
-  sendProcessTracking(700)
   if ilk(tdata) <> #propList then
     return error(me, "Node data was not a proplist", #feedData, #major)
   end if
@@ -43,7 +42,6 @@ on feedData me, tdata, tWidth
 end
 
 on getData me, tKey
-  sendProcessTracking(710)
   if ilk(pData) <> #propList then
     return VOID
   end if
@@ -51,17 +49,14 @@ on getData me, tKey
 end
 
 on addChild me, tChild
-  sendProcessTracking(720)
   pChildren.add(tChild)
 end
 
 on getChildren me
-  sendProcessTracking(730)
   return pChildren
 end
 
 on hasChildren me
-  sendProcessTracking(740)
   if pChildren.count < 0 then
     return 0
   end if
@@ -75,7 +70,6 @@ on hasChildren me
 end
 
 on setState me, tstate
-  sendProcessTracking(750)
   if pState <> tstate then
     pState = tstate
     if not voidp(pRenderer) then
@@ -85,7 +79,6 @@ on setState me, tstate
 end
 
 on select me, tstate
-  sendProcessTracking(760)
   if pSelected <> tstate then
     pSelected = tstate
     if not voidp(pRenderer) then
@@ -95,17 +88,14 @@ on select me, tstate
 end
 
 on getState me
-  sendProcessTracking(770)
   return pState
 end
 
 on getSelected me
-  sendProcessTracking(780)
   return pSelected
 end
 
 on getImage me
-  sendProcessTracking(790)
   if voidp(pRenderer) or pRenderer = 0 then
     return VOID
   end if

@@ -464,12 +464,15 @@ on showContainerItems me
     if i <= tCount then
       tItem = tList[i]
       tPreviewImage = getObject("Preview_renderer").renderPreviewImage(tItem[#member], VOID, tItem[#colors], tItem[#class])
-      tTempImage = image(tPreviewImage.width, tPreviewImage.height, 32)
-      tTempImage.copyPixels(tPreviewImage, tPreviewImage.rect, tPreviewImage.rect)
-      if voidp(tPreviewImage) then
+      if ilk(tPreviewImage) <> #image then
+        tPreviewImage = getMember("no_icon_small").image
+      end if
+      if voidp(tPreviewImage) or tPreviewImage = 0 then
         error(me, "Preview image was void!", #showContainerItems, #major)
         return 0
       end if
+      tTempImage = image(tPreviewImage.width, tPreviewImage.height, 32)
+      tTempImage.copyPixels(tPreviewImage, tPreviewImage.rect, tPreviewImage.rect)
       if tAddRecyclerTags and integer(tItem[#isRecyclable]) = 1 then
         tRecyclableTagImg = getMember("recycler_icon_tag").image
         tRect = tRecyclableTagImg.rect

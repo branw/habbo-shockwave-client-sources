@@ -24,11 +24,6 @@ on construct me
     tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
     tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
   end if
-  tsprite = tVisual.getSprById("ticket_box")
-  if ilk(tsprite, #sprite) then
-    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
-    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
-  end if
   return 1
 end
 
@@ -76,11 +71,6 @@ on closePukukoppi me
     pSwimSuitIndex = 1
     removeWindow(pKoppiWndID)
   end if
-end
-
-on openTicketWindow me
-  executeMessage(#show_ticketWindow)
-  return 1
 end
 
 on prepare me
@@ -191,7 +181,7 @@ on eventProcPukukoppi me, tEvent, tSprID, tParam
     case tSprID of
       "exit":
         me.closePukukoppi()
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: EMPTY])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "go":
         me.closePukukoppi()
@@ -204,7 +194,7 @@ on eventProcPukukoppi me, tEvent, tSprID, tParam
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", tswimsuit)
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: tswimsuit])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "dew":
         getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
@@ -235,8 +225,6 @@ on eventProcDew me, tEvent, tSprID, tParam
             getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: 11, #short: 11])
           end if
         end if
-      "ticket_box":
-        return me.openTicketWindow()
       "highscore_table":
         return openNetPage("url_peeloscore")
       otherwise:

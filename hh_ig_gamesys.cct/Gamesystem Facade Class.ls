@@ -63,7 +63,7 @@ on getGameTicketsNotUsedFlag me
   if not variableExists("games.tickets.hide") then
     return 0
   end if
-  return value(getVariable("games.tickets.hide"))
+  return integer(getVariable("games.tickets.hide"))
 end
 
 on getWorldReady me

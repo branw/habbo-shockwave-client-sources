@@ -1,7 +1,7 @@
 property pStuffData, pWallitemData, pStuffDataByClass, pWallitemDataByClass, pMemberName, pRetryDownloadCount, pDownloadedData, pDownloadRetriesLeft
 
 on construct me
-  pDownloadRetriesLeft = 5
+  pDownloadRetriesLeft = 1
   pStuffData = [:]
   pStuffData.sort()
   pWallitemData = [:]

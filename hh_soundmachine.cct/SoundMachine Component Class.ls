@@ -1416,7 +1416,7 @@ on roomActivityUpdate me, tInitialUpdate
   tUpdate = me.getInterface().getEditorWindowExists()
   if tUpdate then
     if not tInitialUpdate then
-      getConnection(pConnectionId).send("MOVE", [#short: 1000, #short: 1000])
+      getConnection(pConnectionId).send("MOVE", [#integer: 1000, #integer: 1000])
     end if
     if not timeoutExists(pRoomActivityUpdateTimer) then
       createTimeout(pRoomActivityUpdateTimer, 30 * 1000, #roomActivityUpdate, me.getID(), VOID, 1)

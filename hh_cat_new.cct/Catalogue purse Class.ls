@@ -1,15 +1,12 @@
 on construct me
   me.updatePurseSaldo()
-  me.updatePurseTickets()
   me.updatePurseFilm()
   registerMessage(#updateCreditCount, me.getID(), #updatePurseSaldo)
-  registerMessage(#updateTicketCount, me.getID(), #updatePurseTickets)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#updateCreditCount, me.getID())
-  unregisterMessage(#updateTicketCount, me.getID())
 end
 
 on updatePurseSaldo me
@@ -26,17 +23,6 @@ on updatePurseSaldo me
       end if
       tWndObj.getElement("purse_amount").setText(tSaldo)
     end if
-  end if
-end
-
-on updatePurseTickets me
-  tWndObj = getThread(#catalogue).getInterface().getCatalogWindow()
-  if objectp(tWndObj) then
-    if tWndObj.elementExists("purse_info_tickets") then
-      tFieldTxt = getObject(#session).GET("user_ph_tickets") && getText("purse_info_tickets")
-      tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
-    end if
-    return 1
   end if
 end
 

@@ -1422,29 +1422,6 @@ on roomObjectExists me, tID, tList
   return not voidp(tList.getaProp(tID))
 end
 
-on startTeleport me, tTeleId, tFlatID
-  getObject(#session).set("target_door_ID", tTeleId)
-  getObject(#session).set("target_flat_ID", tFlatID)
-  return executeMessage(#requestRoomData, tFlatID, #private, [me.getID(), #processTeleportStruct])
-end
-
-on processTeleportStruct me, tFlatStruct
-  if not listp(tFlatStruct) then
-    return 0
-  end if
-  tFlatStruct = tFlatStruct.duplicate()
-  tFlatStruct[#id] = tFlatStruct[#flatId]
-  tFlatStruct.addProp(#teleport, getObject(#session).GET("target_door_ID"))
-  getObject(#session).Remove("target_flat_id")
-  if getObject(#session).exists("current_door_ID") then
-    tDoorID = getObject(#session).GET("current_door_ID")
-    tDoorObj = me.getComponent().getActiveObject(tDoorID)
-    if tDoorObj <> 0 then
-      tDoorObj.startTeleport(tFlatStruct)
-    end if
-  end if
-end
-
 on updateSlideObjects me, tTimeNow
   if voidp(tTimeNow) then
     tTimeNow = the milliSeconds

@@ -48,6 +48,7 @@ on parseIndexNode me, tMsg
   tNodeProps[#icon] = tConn.GetIntFrom()
   tNodeProps[#pageid] = tConn.GetIntFrom()
   tNodeProps[#nodename] = tConn.GetStrFrom()
+  tDisabled = tConn.GetIntFrom()
   tSubnodeCount = tConn.GetIntFrom()
   if tSubnodeCount > 0 then
     tNodeProps[#subnodes] = []

@@ -51,8 +51,6 @@ on prepare me
   if objectExists(#waterripples) then
     getObject(#waterripples).Init("vesi2")
   end if
-  tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById("jumpticketautomatic")
-  registerProcedure(tSpr, #eventProcJumpTicketAutomatic, me.getID(), #mouseDown)
   repeat with tID in ["pool_clickarea", "floor", "hiliter", "vesi2", "portaat1", "portaat3"]
     tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById(tID)
     registerProcedure(tSpr, #poolTeleport, me.getID(), #mouseDown)
@@ -143,14 +141,6 @@ on removeArrowCursor me
   pArrowCursor = 0
   cursor(-1)
   return 1
-end
-
-on eventProcJumpTicketAutomatic me
-  if threadExists(#pellehyppy) then
-    return executeMessage(#show_ticketWindow)
-  else
-    return 0
-  end if
 end
 
 on poolTeleport me, tEvent, tSprID, tParam

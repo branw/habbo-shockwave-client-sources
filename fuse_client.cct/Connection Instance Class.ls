@@ -274,6 +274,10 @@ on sendNew me, tCmd, tParmArr
           if tParm contains numToChar(2) then
             return 0
           end if
+          tParm = string(tParm)
+          if ilk(tParm) <> #string then
+            return error(me, "String expected:" && tCmd & ":" & tParm, #sendNew, #major)
+          end if
           tLen = 0
           repeat with tChar = 1 to length(tParm)
             tNum = charToNum(char tChar of tParm)
@@ -284,6 +288,10 @@ on sendNew me, tCmd, tParmArr
           tMsg = tMsg & tBy1 & tBy2 & tParm
           tLength = tLength + tLen + 2
         #short:
+          tParm = integer(tParm)
+          if ilk(tParm) <> #integer then
+            return error(me, "Short expected:" && tCmd & ":" & tParm, #sendNew, #major)
+          end if
           tBy1 = numToChar(bitOr(64, tParm / 64))
           tBy2 = numToChar(bitOr(64, bitAnd(63, tParm)))
           tMsg = tMsg & tBy1 & tBy2
@@ -291,6 +299,10 @@ on sendNew me, tCmd, tParmArr
         #integer, #boolean:
           if ttype = #boolean then
             tParm = tParm <> 0
+          end if
+          tParm = integer(tParm)
+          if ilk(tParm) <> #integer then
+            return error(me, "Integer expected:" && tCmd & ":" & tParm, #sendNew, #major)
           end if
           if tParm < 0 then
             tNegMask = 4

@@ -40,11 +40,11 @@ on handle_pt_win me, tMsg
   tResult = tConn.GetIntFrom()
   case tResult of
     1:
-      me.getComponent().endGame(0)
+      me.getComponent().endGame(1)
     0:
       me.getComponent().endGame(#both)
     -1:
-      me.getComponent().endGame(1)
+      me.getComponent().endGame(0)
   end case
   return 0
 end

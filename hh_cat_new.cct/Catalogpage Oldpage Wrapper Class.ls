@@ -210,7 +210,13 @@ on resolveSmallPreview me, tOffer
     end if
     tClass = me.getClassAsset(tFurniProps.getaProp(#class))
     if getThread(#dynamicdownloader).getComponent().isAssetDownloaded(tClass) then
-      tImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tFurniProps.getaProp(#partColors), tFurniProps.getaProp(#class)).duplicate()
+      tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tFurniProps.getaProp(#partColors), tFurniProps.getaProp(#class))
+      if ilk(tRenderedImage) = #bitmap then
+        tImage = tRenderedImage.duplicate()
+      else
+        error(me, "Deal preview render failed.", #resolveSmallPreview)
+        return member(getmemnum("no_icon_small")).image
+      end if
       if tOffer.getContent(1).getProductCount() > 1 then
         if not objectp(pDealPreviewObj) then
           error(me, "Deal preview renderer object missing.", #resolveSmallPreview)

@@ -216,14 +216,6 @@ on handle_users me, tMsg
         tListItem[#groupID] = string(tConn.GetIntFrom())
         tGroupStatus = tConn.GetIntFrom()
         tListItem[#groupstatus] = ([1: "owner", 2: "admin", 3: "member"]).getaProp(tGroupStatus)
-        tBadges = [:]
-        tBadgeCount = tConn.GetIntFrom()
-        repeat with j = 1 to tBadgeCount
-          tBadgeIndex = tConn.GetIntFrom()
-          tBadgeCode = tConn.GetStrFrom()
-          tBadges.setaProp(tBadgeIndex, tBadgeCode)
-        end repeat
-        tListItem[#badge] = tBadges
         tPoolFigure = tConn.GetStrFrom()
         if tPoolFigure <> EMPTY then
           the itemDelimiter = "/"
@@ -655,6 +647,7 @@ on parse_stripinfoitem me, tConn
   tObj[#striptype] = tConn.GetStrFrom()
   tObj[#id] = string(tConn.GetIntFrom())
   tClassID = tConn.GetIntFrom()
+  tObj[#category] = tConn.GetIntFrom()
   case tObj[#striptype] of
     "S":
       tFurniProps = pPersistentFurniData.getProps("s", tClassID)
@@ -671,6 +664,7 @@ on parse_stripinfoitem me, tConn
       tObj[#stuffdata] = tConn.GetStrFrom()
       tObj[#isRecyclable] = tConn.GetIntFrom()
       tObj[#isTradeable] = tConn.GetIntFrom()
+      tObj[#isGroupable] = tConn.GetIntFrom()
       tExp = tConn.GetIntFrom()
       if tExp <> -1 then
         tObj[#expire] = tExp
@@ -704,6 +698,7 @@ on parse_stripinfoitem me, tConn
       tObj[#props] = tConn.GetStrFrom()
       tObj[#isRecyclable] = tConn.GetIntFrom()
       tObj[#isTradeable] = tConn.GetIntFrom()
+      tObj[#isGroupable] = tConn.GetIntFrom()
       tExp = tConn.GetIntFrom()
       if tExp <> -1 then
         tObj[#expire] = tExp
@@ -813,6 +808,8 @@ on handle_trade_items me, tMsg
       tFurniInfo.setaProp(#striptype, tConn.GetStrFrom())
       tFurniInfo.setaProp(#id, tConn.GetIntFrom())
       tFurniInfo.setaProp(#classID, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#category, tConn.GetIntFrom())
+      tFurniInfo.setaProp(#isGroupable, tConn.GetIntFrom())
       tFurniInfo.setaProp(#data, tConn.GetStrFrom())
       tFurniInfo.setaProp(#day, tConn.GetIntFrom())
       tFurniInfo.setaProp(#month, tConn.GetIntFrom())
@@ -913,47 +910,7 @@ on handle_trade_completed me, tMsg
   tTrader.complete()
 end
 
-on handle_door_in me, tMsg
-  tConn = tMsg.connection
-  if not tConn then
-    return 0
-  end if
-  tDoor = tConn.GetIntFrom()
-  tuser = tConn.GetStrFrom()
-  tDoorObj = me.getComponent().getActiveObject(tDoor)
-  if tDoorObj <> 0 then
-    call(#animate, [tDoorObj], 18)
-    call(#prepareToKick, [tDoorObj], tuser)
-  end if
-end
-
-on handle_door_out me, tMsg
-  tConn = tMsg.connection
-  tDoor = me.getComponent().getActiveObject(string(tConn.GetIntFrom()))
-  if tDoor <> 0 then
-    call(#animate, [tDoor])
-  end if
-end
-
-on handle_doorflat me, tMsg
-  tConn = tMsg.connection
-  tSourceTeleId = tConn.GetIntFrom()
-  tTeleId = tConn.GetIntFrom()
-  tFlatID = tConn.GetIntFrom()
-  if not (tTeleId and tFlatID) then
-    return error(me, "Retarded doorflat data!", #handle_doorflat, #major)
-  end if
-  me.getComponent().startTeleport(tTeleId, tFlatID)
-end
-
 on handle_doordeleted me, tMsg
-  if getObject(#session).exists("current_door_ID") then
-    tDoorID = getObject(#session).GET("current_door_ID")
-    tDoorObj = me.getComponent().getActiveObject(tDoorID)
-    if tDoorObj <> 0 then
-      tDoorObj.kickOut()
-    end if
-  end if
 end
 
 on handle_dice_value me, tMsg
@@ -1482,7 +1439,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(46, #handle_flatproperty)
   tMsgs.setaProp(47, #handle_room_rights)
   tMsgs.setaProp(48, #handle_idata)
-  tMsgs.setaProp(62, #handle_doorflat)
   tMsgs.setaProp(63, #handle_doordeleted)
   tMsgs.setaProp(64, #handle_doordeleted)
   tMsgs.setaProp(69, #handle_room_ready)
@@ -1493,10 +1449,8 @@ on regMsgList me, tBool
   tMsgs.setaProp(84, #handle_removeitem)
   tMsgs.setaProp(85, #handle_updateitem)
   tMsgs.setaProp(88, #handle_stuffdataupdate)
-  tMsgs.setaProp(89, #handle_door_out)
   tMsgs.setaProp(90, #handle_dice_value)
   tMsgs.setaProp(91, #handle_doorbell_ringing)
-  tMsgs.setaProp(92, #handle_door_in)
   tMsgs.setaProp(93, #handle_activeobject_add)
   tMsgs.setaProp(94, #handle_activeobject_remove)
   tMsgs.setaProp(95, #handle_activeobject_update)

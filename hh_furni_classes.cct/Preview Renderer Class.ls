@@ -77,6 +77,12 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
       return member(getmemnum("no_icon_small")).image
     end if
     tColor = me.getSmallsColor(tMemStr, tColorList)
+    if ilk(member(getmemnum(tMemStr))) <> #member then
+      return 0
+    end if
+    if member(getmemnum(tMemStr)).type <> #bitmap then
+      return 0
+    end if
     if tColor = 0 or tColor = EMPTY then
       return member(getmemnum(tMemStr)).image
     end if
@@ -143,8 +149,13 @@ on addLayerToImage me, tImg, tNum, tMemStr, tColorList, tOffset
   else
     tColor = tColorList[tNum]
   end if
-  tImg2 = member(getmemnum(tMemStr & "_" & tAbc)).image
-  tRegp = member(getmemnum(tMemStr & "_" & tAbc)).regPoint - member(getmemnum(tMemStr)).regPoint
+  tmember = member(getmemnum(tMemStr & "_" & tAbc))
+  if ilk(tmember) <> #member then
+    error(me, "Member was not found" && tMemStr & "_" & tAbc, #addLayerToImage, #minor)
+    return image(1, 1, 32)
+  end if
+  tImg2 = tmember.image
+  tRegp = tmember.regPoint - member(getmemnum(tMemStr)).regPoint
   tRegp = tRegp - tOffset
   tRect = tImg2.rect - rect(tRegp[1], tRegp[2], tRegp[1], tRegp[2])
   tMatte = tImg2.createMatte()

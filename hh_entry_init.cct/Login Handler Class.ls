@@ -419,11 +419,17 @@ on handleHotelLogout me, tMsg
     -1:
       me.getComponent().disconnect()
       me.getInterface().showDisconnect()
+    0:
+      openNetPage(getText("url_logged_out"), "self")
     1:
       openNetPage(getText("url_logged_out"), "self")
     2:
       openNetPage(getText("url_logout_concurrent"), "self")
     3:
+      openNetPage(getText("url_logout_timeout"), "self")
+    4:
+      openNetPage(getText("url_logout_timeout"), "self")
+    otherwise:
       openNetPage(getText("url_logout_timeout"), "self")
   end case
 end

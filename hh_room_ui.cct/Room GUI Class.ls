@@ -79,7 +79,9 @@ end
 
 on showObjectInfo me, tObjType
   tObjDisp = getObject(pObjectDispID)
+  sendProcessTracking(780)
   tObjDisp.showObjectInfo(tObjType)
+  sendProcessTracking(781)
 end
 
 on showVote me

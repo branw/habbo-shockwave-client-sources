@@ -24,7 +24,7 @@ on AddElement me, i_iSubturn, i_rElement
   end if
 end
 
-on SetNumber me, i_iNumber
+on setNumber me, i_iNumber
   m_iNumber = i_iNumber
 end
 

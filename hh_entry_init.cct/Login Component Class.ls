@@ -46,9 +46,6 @@ on construct me
   if not objectExists("Help_Tooltip_Manager") then
     createObject("Help_Tooltip_Manager", "Help Tooltip Manager Class")
   end if
-  if not objectExists("Ticket_Window_Manager") then
-    createObject("Ticket_Window_Manager", "Ticket Window Manager Class")
-  end if
   if not objectExists("Oneclick_Buy_Window_Manager") then
     createObject("Oneclick_Buy_Window_Manager", "Game Oneclick Buy Window Manager Class")
   end if
@@ -238,8 +235,9 @@ on sendGetBadges me
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
+  tOwnUserId = getObject(#session).GET("user_user_id")
   tConnection = getConnection(getVariable("connection.info.id"))
-  return tConnection.send("GETSELECTEDBADGES")
+  return tConnection.send("GETSELECTEDBADGES", [#integer: integer(tOwnUserId)])
 end
 
 on handleLatencyTest me, tID

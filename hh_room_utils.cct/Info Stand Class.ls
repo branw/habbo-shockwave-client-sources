@@ -110,8 +110,11 @@ on updateInfostandAvatar me, tUserObj
   tSelectedObj = tRoomInterface.getSelectedObject()
   tSaveSelectedObj = tSelectedObj
   tRoomInterface.setSelectedObject(tUserObj.getID())
+  sendProcessTracking(770)
   me.showObjectInfo("user")
+  sendProcessTracking(771)
   tRoomInterface.setSelectedObject(tSaveSelectedObj)
+  sendProcessTracking(772)
   return 1
 end
 

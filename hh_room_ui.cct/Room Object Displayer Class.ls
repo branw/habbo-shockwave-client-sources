@@ -301,7 +301,9 @@ end
 
 on refreshView me
   me.clearWindowDisplayList()
+  sendProcessTracking(760)
   me.showObjectInfo(pLastSelectedObjType, 1)
+  sendProcessTracking(761)
 end
 
 on showHideActions me
@@ -352,8 +354,8 @@ on alignWindows me
   end if
   tStageWidth = the stageRight - the stageLeft
   tDefLeftPos = tDefLeftPos + (tStageWidth - 720)
-  sendProcessTracking(742)
   repeat with tIndex = pWindowList.count down to 1
+    sendProcessTracking(742)
     tWindowID = pWindowList[tIndex]
     if not windowExists(tWindowID) then
       next repeat
@@ -369,7 +371,11 @@ on alignWindows me
     sendProcessTracking(743)
     if tIndex >= pWindowList.count then
       sendProcessTracking(744)
-      tNextWindowID = pWindowList[pWindowList.count - 1]
+      if pWindowList.count <= 1 then
+        tNextWindowID = EMPTY
+      else
+        tNextWindowID = pWindowList[pWindowList.count - 1]
+      end if
       if windowExists(tNextWindowID) then
         tNextWindow = getWindow(tNextWindowID)
         if tAlignment = #right then
@@ -381,14 +387,19 @@ on alignWindows me
       sendProcessTracking(745)
       tPrevWindowID = pWindowList[tIndex + 1]
       if windowExists(tPrevWindowID) then
+        sendProcessTracking(746)
         tPrevWindow = getWindow(tPrevWindowID)
         if tAlignment = #right then
+          sendProcessTracking(747)
           tLeft = tDefLeftPos + tPrevWindow.getProperty(#width) - tWindowObj.getProperty(#width)
         end if
+        sendProcessTracking(748)
         tTop = tPrevWindow.getProperty(#locY) - tWindowObj.getProperty(#height)
       end if
     end if
+    sendProcessTracking(749)
     tWindowObj.moveTo(tLeft, tTop)
+    sendProcessTracking(750)
   end repeat
 end
 

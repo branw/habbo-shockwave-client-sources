@@ -12,10 +12,7 @@ on Refresh me, tTopic, tdata
 end
 
 on handle_msgstruct_numtickets me, tMsg
-  tNum = integer(tMsg.content.line[1].word[1])
-  if not integerp(tNum) then
-    return 0
-  end if
+  tNum = tMsg.connection.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#numtickets, tNum)
 end
 
