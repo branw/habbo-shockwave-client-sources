@@ -464,9 +464,10 @@ end
 on handle_presentopen me, tMsg
   ttype = tMsg.content.line[1]
   tCode = tMsg.content.line[2]
+  tColors = tMsg.content.line[3]
   tCard = "PackageCardObj"
   if objectExists(tCard) then
-    getObject(tCard).showContent([#type: ttype, #code: tCode])
+    getObject(tCard).showContent([#type: ttype, #code: tCode, #color: tColors])
   else
     error(me, "Package card obj not found!", #handle_presentopen)
   end if
