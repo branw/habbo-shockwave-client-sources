@@ -164,21 +164,14 @@ on getMachineID me
   tMachineID = getPref(getVariable("pref.value.id"))
   tMaxLength = 24
   if voidp(tMachineID) or tMachineID = EMPTY or string(tMachineID).char.count > tMaxLength then
-    tMachineID = pDecoder.encipher(string(the milliSeconds) & string(the date) & string(the time))
-    tMachineID = string(tMachineID)
-    tMachineID = chars(tMachineID, tMachineID.length - tMaxLength + 1, tMachineID.length)
+    tMachineID = me.generateMachineId(tMaxLength)
     setPref(getVariable("pref.value.id"), tMachineID)
   end if
   if string(tMachineID).length < 10 then
-    tMachineID = tMachineID & pDecoder.encipher(string(random(9999999999.0)))
-  end if
-  if string(tMachineID).length < 10 then
-    tMachineID = tMachineID & random(9999999999.0)
+    tMachineID = tMachineID & string(random(9999999999.0))
   end if
   if string(tMachineID).char[1..4] = "uid:" then
-    tMachineID = pDecoder.encipher(string(the milliSeconds) & string(the date) & string(the time))
-    tMachineID = string(tMachineID)
-    tMachineID = chars(tMachineID, tMachineID.length - tMaxLength + 1, tMachineID.length)
+    tMachineID = me.generateMachineId(tMaxLength)
     setPref(getVariable("pref.value.id"), tMachineID)
   end if
   return tMachineID
@@ -301,6 +294,16 @@ on print me, tObj, tMsg
   tObj = tObj.word[2..tObj.word.count - 2]
   tObj = tObj.char[2..length(tObj)]
   put "Print:" & RETURN & TAB && "Object: " && tObj & RETURN & TAB && "Message:" && tMsg
+end
+
+on generateMachineId me, tMaxLength
+  tMachineID = string(the milliSeconds) & string(the date) & string(the time)
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-"]
+  repeat with tDelimiter in tLocaleDelimiters
+    tMachineID = replaceChunks(tMachineID, tDelimiter, EMPTY)
+  end repeat
+  tMachineID = chars(tMachineID, 1, tMaxLength)
+  return tMachineID
 end
 
 on setExtVarPath me, tURL

@@ -68,6 +68,9 @@ on setDate me, tDate
   end if
   if stringp(tDate) then
     if tCataloguePage.elementExists("trophies_date") then
+      if objectExists(#dateFormatter) then
+        tDate = getObject(#dateFormatter).getLocalDateFromStr(tDate)
+      end if
       tCataloguePage.getElement("trophies_date").setText(tDate)
     end if
   end if
