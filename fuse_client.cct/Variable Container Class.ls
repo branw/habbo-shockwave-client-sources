@@ -63,6 +63,9 @@ on GetValue me, tVariable, tDefault
     end if
     error(me, tError, #GetValue, #minor)
   end if
+  if ilk(tValue) = #list or ilk(tValue) = #propList then
+    return tValue.duplicate()
+  end if
   return tValue
 end
 

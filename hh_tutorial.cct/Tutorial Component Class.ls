@@ -4,7 +4,7 @@ on construct me
   me.pEnabled = 0
   me.pRunning = 0
   me.pWaitingForPrefs = 1
-  me.pDefaultTutorial = "NUF"
+  me.pDefaultTutorial = getVariable("tutorial.name.new_user_flow")
   me.pMessages = [:]
   me.pMessages.setaProp(#userlogin, #getUserProperties)
   me.pMessages.setaProp(#restart_tutorial, #restartTutorial)

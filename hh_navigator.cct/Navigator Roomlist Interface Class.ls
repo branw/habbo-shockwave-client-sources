@@ -68,6 +68,28 @@ on checkFlatAccess me, tFlatData
   return 1
 end
 
+on handleRecommendedRoomListClicked me, tParm
+  tNodeInfo = me.getComponent().getNodeInfo(#recom)
+  tRoomList = tNodeInfo.getaProp(#children)
+  if voidp(tRoomList) then
+    return 0
+  end if
+  tClickedLine = integer(tParm.locV / me.pListItemHeight) + 1
+  if tClickedLine > tRoomList.count then
+    return 0
+  end if
+  tNodeInfo = tRoomList[tClickedLine]
+  me.setProperty(#viewedNodeId, tNodeInfo[#id])
+  tGoLinkH = 255
+  me.setLoadingCursor(1)
+  if tParm.locH > tGoLinkH then
+    me.getComponent().prepareRoomEntry(string(tNodeInfo[#id]), #private)
+  else
+    me.showNodeInfo(tNodeInfo[#id])
+  end if
+  return 1
+end
+
 on handleRoomListClicked me, tParm
   tCategoryId = me.getProperty(#categoryId)
   tNodeInfo = me.getComponent().getNodeInfo(tCategoryId)
@@ -370,6 +392,9 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
   else
     if tEvent = #mouseUp then
       case tSprID of
+        "nav_recom_roomlist":
+          me.setLoadingCursor(1)
+          return me.handleRecommendedRoomListClicked(tParm)
         "nav_roomlist":
           me.setLoadingCursor(1)
           return me.handleRoomListClicked(tParm)
@@ -414,6 +439,8 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           return executeMessage(#open_roomkiosk)
         "nav_hidefull":
           return me.getComponent().showHideFullRooms(me.getProperty(#categoryId))
+        "nav_refresh_recoms":
+          return me.getComponent().sendGetRecommendedRooms()
       end case
     else
       if tEvent = #keyDown then

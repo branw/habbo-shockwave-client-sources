@@ -1,4 +1,4 @@
-property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker, pRoomCatagoriesReady
+property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker, pRoomCatagoriesReady, pRecommendedRooms
 
 on construct me
   pRootUnitCatId = string(getIntVariable("navigator.visible.public.root"))
@@ -17,7 +17,7 @@ on construct me
   pNodeCache = [:]
   pNodeCacheExpList = [:]
   pNaviHistory = []
-  pHideFullRoomsFlag = 0
+  pHideFullRoomsFlag = 1
   pUpdateInterval = getIntVariable("navigator.cache.duration") * 1000
   if pUpdateInterval = 0 then
     pUpdateInterval = getIntVariable("navigator.updatetime")
@@ -156,7 +156,7 @@ on getUpdateInterval me
 end
 
 on updateInterface me, tID
-  if tID = #own or tID = #src or tID = #fav then
+  if tID = #own or tID = #src or tID = #fav or tID = #recom then
     return me.feedNewRoomList(tID)
   else
     return me.feedNewRoomList(tID & "/" & me.getCurrentNodeMask())
@@ -224,6 +224,7 @@ on expandNode me, tNodeId
   me.getInterface().clearRoomList()
   me.getInterface().setProperty(#categoryId, tNodeId)
   me.createNaviHistory(tNodeId)
+  me.updateInterface(#recom)
   return me.updateInterface(tNodeId)
 end
 
@@ -279,14 +280,26 @@ on createNaviHistory me, tCategoryId
     tText = getText("nav_hotelview") & RETURN & tText
   end if
   delete char -30003 of tText
-  me.getInterface().renderHistory(tCategoryId, tText)
+  tShowRecoms = 0
+  if pNaviHistory.count = 0 then
+    tShowRecoms = 1
+  else
+    if pNaviHistory.count = 1 then
+      if pNaviHistory[1] = #entry then
+        tShowRecoms = 1
+      end if
+    end if
+  end if
+  me.getInterface().renderHistory(tCategoryId, tText, tShowRecoms)
   return 1
 end
 
 on callNodeUpdate me
   case me.getInterface().getNaviView() of
     #unit, #flat:
-      return me.sendNavigate(me.getInterface().getProperty(#categoryId))
+      me.sendNavigate(me.getInterface().getProperty(#categoryId))
+      me.sendGetRecommendedRooms()
+      return 1
     #own:
       return me.getComponent().sendGetOwnFlats()
     #fav:
@@ -368,7 +381,11 @@ on feedNewRoomList me, tID
   if not listp(tNodeInfo) or not me.checkCacheForNode(tID) then
     return me.callNodeUpdate()
   end if
-  me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
+  if tID = #recom then
+    me.getInterface().updateRecomRoomList(tNodeInfo[#children])
+  else
+    me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
+  end if
   return 1
 end
 
@@ -400,6 +417,11 @@ on sendNavigate me, tNodeId, tDepth, tNodeMask
   return 1
 end
 
+on sendGetRecommendedRooms me
+  tConn = getConnection(pConnectionId)
+  tConn.send("GET_RECOMMENDED_ROOMS")
+end
+
 on updateCategoryIndex me, tCategoryIndex
   repeat with i = 1 to tCategoryIndex.count
     pCategoryIndex.setaProp(tCategoryIndex.getPropAt(i), tCategoryIndex[i])
@@ -409,7 +431,7 @@ end
 
 on saveNodeInfo me, tNodeInfo
   tNodeId = tNodeInfo[#id]
-  if tNodeId <> #own and tNodeId <> #src and tNodeId <> #fav and not (tNodeId contains "tmp") then
+  if tNodeId <> #own and tNodeId <> #src and tNodeId <> #fav and tNodeId <> #recom and not (tNodeId contains "tmp") then
     tNodeId = tNodeId & "/" & tNodeInfo[#nodeMask]
   end if
   if listp(tNodeInfo) then
@@ -671,11 +693,16 @@ on updateState me, tstate, tProps
         me.sendGetParentChain(pDefaultFlatCatId)
       end if
       me.sendNavigate(pDefaultFlatCatId)
+      me.sendGetRecommendedRooms()
       tForwardingHappening = variableExists("forward.id") and variableExists("forward.type")
       if tForwardingHappening then
         me.delay(3000, #goStraightToRoom)
       else
-        me.delay(2000, #updateState, "openNavigator")
+        if variableExists("friend.id") then
+          me.delay(3000, #followFriend)
+        else
+          me.delay(2000, #updateState, "openNavigator")
+        end if
       end if
       return 1
     "openNavigator":
@@ -700,5 +727,12 @@ on goStraightToRoom me
     tForwardType = #private
   end if
   executeMessage(#roomForward, tForwardId, tForwardType)
+  return 1
+end
+
+on followFriend me
+  tID = getVariable("friend.id")
+  tConn = getConnection(getVariable("connection.info.id"))
+  tConn.send("FOLLOW_FRIEND", [#integer: tID])
   return 1
 end

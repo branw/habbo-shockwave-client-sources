@@ -81,6 +81,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tDanceButtonState = #visible
     if tMainAction = "sit" or tMainAction = "lay" or tSwimming then
       tDanceButtonState = #deactive
+      tButtonList["wave"] = #deactive
     end if
     if tUserRights.getOne("fuse_use_club_dance") then
       tButtonList["hcdance"] = tDanceButtonState

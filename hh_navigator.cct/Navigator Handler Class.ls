@@ -325,6 +325,28 @@ on handle_roomforward me, tMsg
   return executeMessage(#roomForward, tStrRoomId, tStrRoomType)
 end
 
+on handle_recommended_room_list me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tNodeInfo = [#children: [:], #id: #recom]
+  tNumOfRooms = tConn.GetIntFrom()
+  repeat with tRoomNum = 1 to tNumOfRooms
+    tRoomData = [:]
+    tID = tConn.GetIntFrom()
+    tRoomData.setaProp(#id, "f_" & tID)
+    tRoomData.setaProp(#flatId, tID)
+    tRoomData.setaProp(#name, tConn.GetStrFrom())
+    tRoomData.setaProp(#owner, tConn.GetStrFrom())
+    tRoomData.setaProp(#door, tConn.GetStrFrom())
+    tRoomData.setaProp(#usercount, tConn.GetIntFrom())
+    tRoomData.setaProp(#maxUsers, tConn.GetIntFrom())
+    tRoomData.setaProp(#description, tConn.GetStrFrom())
+    tRoomData.setaProp(#nodeType, 2)
+    tNodeInfo[#children].setaProp(tRoomData[#id], tRoomData)
+  end repeat
+  me.getComponent().saveNodeInfo(tNodeInfo)
+  return 1
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(16, #handle_flat_results)
@@ -344,6 +366,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(226, #handle_failure)
   tMsgs.setaProp(227, #handle_parentchain)
   tMsgs.setaProp(286, #handle_roomforward)
+  tMsgs.setaProp(351, #handle_recommended_room_list)
   tCmds = [:]
   tCmds.setaProp("SBUSYF", 13)
   tCmds.setaProp("SUSERF", 16)
@@ -362,6 +385,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GETSPACENODEUSERS", 154)
   tCmds.setaProp("REMOVEALLRIGHTS", 155)
   tCmds.setaProp("GETPARENTCHAIN", 156)
+  tCmds.setaProp("GET_RECOMMENDED_ROOMS", 264)
   if tBool then
     registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)

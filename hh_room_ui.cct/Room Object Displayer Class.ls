@@ -60,6 +60,9 @@ on createBaseWindows me
 end
 
 on showObjectInfo me, tObjType
+  if voidp(tObjType) then
+    return 0
+  end if
   if pWindowCreator = 0 then
     return 0
   end if

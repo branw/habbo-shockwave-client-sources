@@ -15,7 +15,7 @@ end
 
 on create me, tID, tMetrics
   if not voidp(pItemList[tID]) then
-    return error(me, "Writer already exists:" && tID, #create, #major)
+    return error(me, "Writer already exists:" && tID, #create, #minor)
   end if
   tObj = getObjectManager().create(#temp, pWriterClass)
   if not tObj then

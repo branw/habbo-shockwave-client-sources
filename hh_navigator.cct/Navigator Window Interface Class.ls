@@ -211,6 +211,7 @@ on ChangeWindowView me, tWindowName
       if tNaviView = #flat then
         me.getComponent().createNaviHistory(tCategoryId)
         me.updateRoomList(tCategoryId, VOID)
+        me.getComponent().updateInterface(#recom)
       else
         me.getComponent().updateInterface(tCategoryId)
       end if
@@ -229,6 +230,18 @@ on ChangeWindowView me, tWindowName
         me.prepareCategoryDropMenu(me.getProperty(#viewedNodeId))
       end if
   end case
+  return 1
+end
+
+on updateRecomRoomList me, tRoomList
+  tImage = me.renderRoomList(tRoomList)
+  if windowExists(pWindowTitle) then
+    tWndObj = getWindow(pWindowTitle)
+    if tWndObj.elementExists("nav_recom_roomlist") then
+      tElem = tWndObj.getElement("nav_recom_roomlist")
+      tElem.feedImage(tImage)
+    end if
+  end if
   return 1
 end
 
@@ -317,7 +330,7 @@ on clearRoomList me
   return 1
 end
 
-on renderHistory me, tNodeId, tHistoryTxt
+on renderHistory me, tNodeId, tHistoryTxt, tShowRecoms
   if not (tNodeId = me.getProperty(#categoryId)) then
     return 0
   end if
@@ -329,24 +342,89 @@ on renderHistory me, tNodeId, tHistoryTxt
   if tElem = 0 then
     return 0
   end if
-  tOffset = me.getProperty(#historyOrigV)
-  if tOffset = VOID then
-    tOffset = tWndObj.getElement("nav_roomlist").getProperty(#locV)
-    me.setProperty(#historyOrigV, tOffset)
+  if not tWndObj.elementExists("nav_recom_roomlist") then
+    tShowRecoms = 0
+  end if
+  if not variableExists("room.recommendations") then
+    tShowRecoms = 0
+  end if
+  if getVariable("room.recommendations") <> 1 then
+    tShowRecoms = 0
+  end if
+  tRecomView = tWndObj.elementExists("nav_recom_roomlist")
+  tRoomlistOrigV = me.getProperty(#historyOrigV)
+  if tRoomlistOrigV = VOID then
+    tRoomlistOrigV = tWndObj.getElement("nav_roomlist").getProperty(#locV)
+    me.setProperty(#historyOrigV, tRoomlistOrigV)
+  end if
+  tRoomlistAreaOrigV = me.getProperty(#roomlistAreaOrigV)
+  if voidp(tRoomlistAreaOrigV) then
+    tRoomlistAreaOrigV = tWndObj.getElement("nav_roomlistArea").getProperty(#locV)
+    me.setProperty(#roomlistAreaOrigV, tRoomlistAreaOrigV)
+  end if
+  if tRecomView then
+    tRecomsOrigV = me.getProperty(#recomsOrigV)
+    if voidp(tRecomsOrigV) then
+      tRecomsOrigV = tWndObj.getElement("nav_recom_roomlist_hd").getProperty(#locV)
+      me.setProperty(#recomsOrigV, tRecomsOrigV)
+    end if
+  end if
+  if tShowRecoms then
+    tRecomHeaderElem = tWndObj.getElement("nav_recom_roomlist_hd")
+    tRecomListElem = tWndObj.getElement("nav_recom_roomlist")
+    tRecomListElem.show()
   end if
   tItemCount = tHistoryTxt.line.count
   if tHistoryTxt = EMPTY then
     tItemCount = 0
   end if
-  tOffset = tOffset - tWndObj.getElement("nav_roomlist").getProperty(#locV)
-  tOffset = tItemCount * pHistoryItemHeight + tOffset
+  tRoomlistCurrentV = tWndObj.getElement("nav_roomlist").getProperty(#locV)
+  tRoomlistOffset = tRoomlistOrigV - tRoomlistCurrentV
+  tHistoryOffset = tItemCount * pHistoryItemHeight
   if me.getNaviView() = #flat and tItemCount > 0 then
-    tOffset = tOffset + 7
+    tHistoryOffset = tHistoryOffset + 7
   end if
-  tWndObj.getElement("nav_roomlist_hd").moveBy(0, tOffset)
-  tScaleList = [tWndObj.getElement("nav_roomlist"), tWndObj.getElement("nav_scrollbar"), tWndObj.getElement("nav_roomlistArea")]
-  call(#moveBy, tScaleList, 0, tOffset)
-  call(#resizeBy, tScaleList, 0, -tOffset)
+  tRoomlistOffset = tRoomlistOffset + tHistoryOffset
+  if tShowRecoms then
+    tRoomlistOffset = tRoomlistOffset + 80
+    tHeaderImage = pWriterPlainBoldLeft.render(getText("nav_recommended_rooms")).duplicate()
+    tRecomHeaderElem.feedImage(tHeaderImage)
+    tWndObj.getElement("nav_refresh_recoms").show()
+  end if
+  if tShowRecoms then
+    tRecomsCurrentV = tWndObj.getElement("nav_recom_roomlist_hd").getProperty(#locV)
+    tRecomsOffset = tRecomsOrigV - tRecomsCurrentV
+    tRecomsOffset = tRecomsOffset + tHistoryOffset
+    tElemList = []
+    tElemList.add(tWndObj.getElement("nav_recom_roomlist"))
+    tElemList.add(tWndObj.getElement("nav_recom_roomlist_hd"))
+    tElemList.add(tWndObj.getElement("nav_refresh_recoms"))
+    call(#moveBy, tElemList, 0, tRecomsOffset)
+  end if
+  if not tShowRecoms and tWndObj.elementExists("nav_recom_roomlist_hd") then
+    tWndObj.getElement("nav_recom_roomlist_hd").clearImage()
+    tWndObj.getElement("nav_recom_roomlist").clearImage()
+    tWndObj.getElement("nav_recom_roomlist").hide()
+    tWndObj.getElement("nav_refresh_recoms").hide()
+  end if
+  tRoomlistAreaCurrentV = tWndObj.getElement("nav_roomlistArea").getProperty(#locV)
+  tAreaOffset = tRoomlistAreaOrigV - tRoomlistAreaCurrentV
+  if not tShowRecoms then
+    tAreaOffset = tAreaOffset + tHistoryOffset
+  end if
+  if tHistoryOffset > 0 and tShowRecoms then
+    tAreaOffset = tAreaOffset + tHistoryOffset
+  end if
+  tWndObj.getElement("nav_roomlist_hd").moveBy(0, tRoomlistOffset)
+  tScaleList = []
+  tScaleList.add(tWndObj.getElement("nav_roomlist"))
+  tScaleList.add(tWndObj.getElement("nav_scrollbar"))
+  tScaleList.add(tWndObj.getElement("nav_hidefull"))
+  call(#moveBy, tScaleList, 0, tRoomlistOffset)
+  call(#resizeBy, tScaleList, 0, -tRoomlistOffset)
+  tAreaElem = tWndObj.getElement("nav_roomlistArea")
+  tAreaElem.moveBy(0, tAreaOffset)
+  tAreaElem.resizeBy(0, -tAreaOffset)
   tTextImg = me.pWriterBackTabs.render(tHistoryTxt)
   if variableExists("nav_roomlist_marginv") then
     tMargin = getVariable("nav_roomlist_marginv")

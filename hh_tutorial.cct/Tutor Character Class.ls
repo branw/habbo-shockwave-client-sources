@@ -9,8 +9,16 @@ on construct me
   me.pBubble.setProperty(#targetID, "guide_image")
   me.pBubble.setProperty([#offsetx: 50])
   me.pBubble.update()
-  me.pDefPosX = 20
-  me.pDefPosY = 310
+  if variableExists("tutorial.tutor.default.x") then
+    me.pDefPosX = getVariable("tutorial.tutor.default.x")
+  else
+    me.pDefPosX = 20
+  end if
+  if variableExists("tutorial.tutor.default.y") then
+    me.pDefPosY = getVariable("tutorial.tutor.default.y")
+  else
+    me.pDefPosY = 250
+  end if
   me.pPose = 1
   return 1
 end
