@@ -250,9 +250,6 @@ on eventProcBrowse me, tEvent, tElemID, tParam
     "roomevent.close":
       me.Remove()
     "roomevent.type":
-      if tParam.ilk <> #point then
-        return 0
-      end if
       tChunks = explode(tParam, "_")
       pSelectedType = value(tChunks[tChunks.count])
       me.updateEventList()
