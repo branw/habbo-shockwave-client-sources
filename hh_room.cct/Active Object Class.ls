@@ -63,7 +63,7 @@ on getInfo me
   tInfo = [:]
   tInfo[#class] = pClass
   tInfo[#name] = getText("furni_" & pClass & "_name", "furni_" & pClass & "_name")
-  tInfo[#custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  tInfo[#Custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
   tInfo[#smallmember] = pSmallMember
   tInfo[#image] = getObject("Preview_renderer").renderPreviewImage(VOID, pPartColors, VOID, pClass)
   return tInfo

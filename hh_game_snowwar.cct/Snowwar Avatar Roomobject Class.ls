@@ -35,6 +35,17 @@ on define me, tdata
       end if
     end if
   end if
+  case tdata[#activity_state] of
+    1:
+      me.gameObjectAction("start_create")
+    2:
+      tParams = [:]
+      tParams.addProp(#hit_direction, tdata[#body_direction])
+      me.gameObjectAction("start_stunned", tParams)
+      me.gameObjectAction("next_stunned")
+    3:
+      me.gameObjectAction("start_invincible")
+  end case
   me.setOwnHiliter(1)
   return 1
 end
@@ -187,8 +198,7 @@ on gameObjectAction me, tAction, tdata
       end if
       me.pDirection = tDeathDirection
       call(#defineDir, me.pPartList, me.pDirection)
-      me.pPartList[me.pPartIndex["bd"]].pAction = pAvatarAction[#member] & "1"
-      me.pPartList[me.pPartIndex["sh"]].pAction = pAvatarAction[#member] & "1"
+      call(#defineActExplicit, me.pPartList, pAvatarAction[#member] & "1", ["bd", "sh"])
       me.pMainAction = "std"
       me.arrangeParts()
       me.render()
@@ -201,10 +211,8 @@ on gameObjectAction me, tAction, tdata
         tPart.pAction = "foo"
       end repeat
       pAvatarAction[#frame] = 2
-      me.pPartList[me.pPartIndex["bd"]].pDirection = pAvatarAction[#direction]
-      me.pPartList[me.pPartIndex["bd"]].pAction = pAvatarAction[#member] & "2"
-      me.pPartList[me.pPartIndex["sh"]].pDirection = pAvatarAction[#direction]
-      me.pPartList[me.pPartIndex["sh"]].pAction = pAvatarAction[#member] & "2"
+      call(#defineDirMultiple, me.pPartList, pAvatarAction[#direction], ["bd", "sh"])
+      call(#defineActExplicit, me.pPartList, pAvatarAction[#member] & "2", ["bd", "sh"])
       me.pChanges = 1
       me.arrangeParts()
       me.render()

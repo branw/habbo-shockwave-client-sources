@@ -5,6 +5,12 @@ on changePartData me, tmodel, tColor
   return me.ancestor.changePartData(tmodel, tColor)
 end
 
+on defineActExplicit me, tAct, tTargetPartList
+  if tTargetPartList.getOne(me.pPart) then
+    me.pAction = tAct
+  end if
+end
+
 on update me
   tAnimCntr = 0
   tAction = me.pAction

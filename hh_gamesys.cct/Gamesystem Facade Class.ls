@@ -385,7 +385,7 @@ on getNewTurnContainer me
   if pThread = 0 then
     return 0
   end if
-  return createObject(#random, getClassVariable("gamesystem.turn.class"))
+  return pThread.getTurnManager().getNewTurnContainer()
 end
 
 on dump me

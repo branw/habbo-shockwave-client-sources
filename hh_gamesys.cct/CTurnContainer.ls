@@ -63,3 +63,7 @@ end
 on GetSubTurns me
   return m_ar_subturns
 end
+
+on dump me
+  put "* Turn dump:" && m_iNumber && "events:" && m_ar_subturns
+end

@@ -436,11 +436,13 @@ on eventProcBan me, tEvent, tElemID, tParam, tWndID
     case tElemID of
       "alert_ok", "close":
         if variableExists("use.sso.ticket") then
-          openNetPage(getText("url_logged_out"), "self")
-        else
-          me.removeDialog(tWndID, pAlertList)
-          resetClient()
+          if getVariable("use.sso.ticket") = "1" then
+            openNetPage(getText("url_logged_out"), "self")
+            return 1
+          end if
         end if
+        me.removeDialog(tWndID, pAlertList)
+        resetClient()
     end case
   end if
 end

@@ -1,9 +1,10 @@
-property pWaitingForSync, m_iAllocationModel, m_rObjectPool, m_sHandler, m_rHandler, m_rQuickRandom, m_rCurrentTurn, m_rNextTurn, m_fTurnT, m_fTurnPulse, m_ar_turnBuffer, m_syncLostTime, m_iSpeedUp, m_iLastMS, m_iLastSubTurn, m_iSubTurnSpacing, m_aLastTurnData, m_bDump
+property pWaitingForSync, pTurnContainerClass, pTurnContainerPool, m_iAllocationModel, m_rObjectPool, m_sHandler, m_rHandler, m_rQuickRandom, m_rCurrentTurn, m_rNextTurn, m_fTurnT, m_fTurnPulse, m_ar_turnBuffer, m_syncLostTime, m_iSpeedUp, m_iLastMS, m_iLastSubTurn, m_iSubTurnSpacing, m_aLastTurnData, m_bDump
 
 on construct me
   pWaitingForSync = 0
-  m_iAllocationModel = #simple
-  m_rObjectPool = VOID
+  pTurnContainerClass = getClassVariable("gamesystem.turn.class")
+  pTurnContainerPool = []
+  m_iAllocationModel = #pool
   m_rHandler = VOID
   m_sHandler = ["CMinigameHandlerPrototype"]
   m_rCurrentTurn = VOID
@@ -25,9 +26,9 @@ on construct me
 end
 
 on deconstruct me
-  if not voidp(m_rObjectPool) then
-    removeObject(m_rObjectPool.getID())
-  end if
+  m_rCurrentTurn = VOID
+  pTurnContainerPool = []
+  m_ar_turnBuffer = []
   if not voidp(m_rHandler) then
     removeObject(m_rHandler.getID())
   end if
@@ -48,6 +49,8 @@ on StartMinigameEngine me
 end
 
 on stopMinigameEngine me
+  me._ClearTurnBuffer()
+  pTurnContainerPool = []
   m_fTurnT = 0.0
   m_iLastMS = the milliSeconds
   m_iLastSubTurn = -1
@@ -55,25 +58,32 @@ on stopMinigameEngine me
   pWaitingForSync = 1
 end
 
+on getNewTurnContainer me
+  if pTurnContainerPool.count > 0 and m_iAllocationModel <> #simple then
+    tTurnObject = pTurnContainerPool[1]
+    pTurnContainerPool.deleteAt(1)
+    return tTurnObject
+  else
+    return createObject(#temp, pTurnContainerClass)
+  end if
+end
+
+on releaseTurnContainer me, tObject
+  if tObject = 0 then
+    return 1
+  end if
+  if m_iAllocationModel = #simple then
+    return 1
+  end if
+  tObject.construct()
+  pTurnContainerPool.add(tObject)
+  return 1
+end
+
 on _SetMinigameHandler me, i_sClass
   m_sHandler = i_sClass
   createObject("MGEHandler", "CMinigameHandlerPrototype", m_sHandler)
   m_rHandler = getObject("MGEHandler")
-end
-
-on _SetSimpleAllocationModel me
-  m_iAllocationModel = #simple
-  if not voidp(m_rObjectPool) then
-    removeObject(m_rObjectPool.getID())
-    m_rObjectPool = VOID
-  end if
-end
-
-on _SetPooledAllocationModel me
-  if voidp(m_rObjectPool) then
-    m_rObjectPool = createObject("MGEObjectPool", "CRoomObjectManager")
-  end if
-  m_iAllocationModel = #pooled
 end
 
 on GetQuickRandom me
@@ -86,14 +96,6 @@ end
 
 on GetSubturnSpacing me
   return m_iSubTurnSpacing
-end
-
-on GetObjectPool me
-  if m_iAllocationModel = #pooled then
-    return m_rObjectPool
-  else
-    return VOID
-  end if
 end
 
 on _TurnBufferState me
@@ -147,17 +149,15 @@ end
 
 on _ClearTurnBuffer me
   me._ClearCurrentTurn()
-  repeat with tTurn in m_ar_turnBuffer
-    if not voidp(tTurn) then
-      removeObject(tTurn.getID())
-    end if
-  end repeat
   m_ar_turnBuffer = []
 end
 
 on _ClearCurrentTurn me
-  if not voidp(m_rCurrentTurn) then
-    removeObject(m_rCurrentTurn.getID())
+  if voidp(m_rCurrentTurn) then
+    return 1
+  end if
+  if m_iAllocationModel <> #simple then
+    me.releaseTurnContainer(m_rCurrentTurn)
   end if
   m_rCurrentTurn = VOID
 end
@@ -172,17 +172,12 @@ on floor i_fVal
 end
 
 on ProcessSubTurn me, i_iSubturn
-  tInfo = 0
-  tt = the milliSeconds
   if i_iSubturn <= m_rCurrentTurn.GetNSubTurns() then
     t_ar_events = m_rCurrentTurn.GetSubTurn(i_iSubturn)
     repeat with tEvent in t_ar_events
       t_iEvent = tEvent[#event_type]
       t_ar_iData = []
       if tEvent.count > 1 then
-        if tInfo = 0 then
-          tInfo = 1
-        end if
         repeat with i = 2 to tEvent.count
           t_ar_iData.append(tEvent[i])
         end repeat
@@ -274,24 +269,18 @@ end
 on _MinigameTestChecksum me, i_iChecksum
   tMyChecksum = me.calculateChecksum()
   m_rCurrentTurn.SetTested(1)
-  m_aLastTurnData.setaProp("Turn", m_rCurrentTurn.GetNumber())
-  m_aLastTurnData.setaProp("Events", m_rCurrentTurn.GetSubTurns())
   if i_iChecksum <> tMyChecksum then
     put "*** TURN" && m_rCurrentTurn.GetNumber() && " - CHECKSUM MISMATCH! server says:" && i_iChecksum & ", we say:" && tMyChecksum && ". Previous turn:" && m_aLastTurnData
+    put "Turn was " & m_syncLostTime & " seconds late."
     me.getComponent().dumpChecksumValues()
-    tDump = m_bDump
-    m_bDump = 0
-    if m_bDump then
-      put "START"
-      put "Turn was " & m_syncLostTime & " seconds late."
-      me.calculateChecksum()
-      put "END"
-    end if
-    m_bDump = tDump
     me._ClearCurrentTurn()
     me._ClearTurnBuffer()
     me.getMessageSender().sendGameEventMessage([#integer: 4])
     pWaitingForSync = 1
+  end if
+  if m_rCurrentTurn <> VOID then
+    m_aLastTurnData.setaProp("Turn", m_rCurrentTurn.GetNumber())
+    m_aLastTurnData.setaProp("Events", m_rCurrentTurn.GetSubTurns())
   end if
 end
 

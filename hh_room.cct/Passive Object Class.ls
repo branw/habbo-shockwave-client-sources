@@ -56,7 +56,7 @@ on getInfo me
   tInfo = [:]
   tInfo[#name] = pClass
   tInfo[#class] = pClass
-  tInfo[#custom] = pCustom
+  tInfo[#Custom] = pCustom
   return tInfo
 end
 
