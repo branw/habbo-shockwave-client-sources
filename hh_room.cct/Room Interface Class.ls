@@ -424,7 +424,7 @@ on showObjectInfo me, tObjType
     tWndObj.getElement("info_name").show()
     tWndObj.getElement("info_text").show()
     tWndObj.getElement("info_name").setText(tProps[#name])
-    tWndObj.getElement("info_text").setText(tProps[#custom])
+    tWndObj.getElement("info_text").setText(tProps[#Custom])
     tElem = tWndObj.getElement("info_image")
     if ilk(tProps[#image]) = #image then
       tElem.resizeTo(tProps[#image].width, tProps[#image].height)

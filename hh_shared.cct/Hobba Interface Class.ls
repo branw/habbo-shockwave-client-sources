@@ -311,7 +311,11 @@ on fillCryData me, tCryNumOrID
     end if
   end if
   if voidp(pCurrCryData) then
-    tNewID = tCryDB.getPropAt(count(tCryDB))
+    if pCurrCryNum > 0 and pCurrCryNum <= count(tCryDB) then
+      tNewID = tCryDB.getPropAt(pCurrCryNum)
+    else
+      tNewID = tCryDB.getPropAt(count(tCryDB))
+    end if
     return me.fillCryData(tNewID)
   else
     pCurrCryID = tCryID

@@ -52,6 +52,6 @@ on showSkillLevel me, tdata
   tSkillStr = replaceChunks(tSkillStr, "\y", tSkillValue)
   tSkillStr = replaceChunks(tSkillStr, "\r", RETURN)
   tUserObj.pCustom = tSkillStr
-  tUserObj.pInfoStruct[#custom] = tSkillStr
+  tUserObj.pInfoStruct[#Custom] = tSkillStr
   return 1
 end

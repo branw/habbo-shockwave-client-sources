@@ -76,7 +76,7 @@ on getInfo me
   tInfo = [:]
   tInfo[#name] = pName
   tInfo[#class] = pClass
-  tInfo[#custom] = pCustom
+  tInfo[#Custom] = pCustom
   tInfo[#smallmember] = pClass & "_small"
   if memberExists(pClass & "_small") then
     tInfo[#image] = member(getmemnum(pClass & "_small")).image

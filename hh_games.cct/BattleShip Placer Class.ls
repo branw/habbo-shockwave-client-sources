@@ -25,9 +25,9 @@ end
 
 on eventProcShipPlacer me, tEvent, tSprID, tParam
   pSpr.visible = 0
-  tsprite = rollover()
+  tSprite = rollover()
   pSpr.visible = 1
-  tid = call(#getID, sprite(tsprite).scriptInstanceList)
+  tid = call(#getID, sprite(tSprite).scriptInstanceList)
   if tid = "close" or tid contains "turn" then
     getThread(#games).getInterface().eventProcBattleShip(tEvent, tid)
   end if
