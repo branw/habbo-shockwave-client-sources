@@ -21,8 +21,6 @@ on construct me
   pAliasList = [:]
   pAliasListReceived = 0
   pAliasListLoading = 0
-  me.setAssetAlias(VOID, VOID)
-  me.setFurniRevision(VOID, VOID, VOID)
   pBypassList = value(getVariable("dyn.download.bypass.list", []))
 end
 
@@ -321,6 +319,7 @@ on setAssetAlias me, tOriginalClass, tAliasClass
     return 1
   end if
   pAliasList[tOriginalClass] = tAliasClass
+  pAliasList["s_" & tOriginalClass] = "s_" & tAliasClass
 end
 
 on setFurniRevision me, tClass, tRevision, tIsFurni

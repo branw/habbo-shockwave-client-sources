@@ -879,6 +879,13 @@ on handle_figure_change me, tMsg
   me.getComponent().updateCharacterFigure(tUserID, tUserFigure, tUserSex, tUserCustomInfo)
 end
 
+on handle_spectator_amount me, tMsg
+  tConn = tMsg.connection
+  tSpecCount = tConn.GetIntFrom()
+  tSpecMax = tConn.GetIntFrom()
+  me.getComponent().updateSpectatorCount(tSpecCount, tSpecMax)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -941,6 +948,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(254, #handle_youarespectator)
   tMsgs.setaProp(283, #handle_removespecs)
   tMsgs.setaProp(266, #handle_figure_change)
+  tMsgs.setaProp(298, #handle_spectator_amount)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -993,8 +1001,10 @@ on regMsgList me, tBool
   tCmds.setaProp("GETPETSTAT", 128)
   tCmds.setaProp("SETBADGE", 158)
   tCmds.setaProp("GETINTERST", 182)
+  tCmds.setaProp("CONVERT_FURNI_TO_CREDITS", 183)
   tCmds.setaProp("ROOM_QUEUE_CHANGE", 211)
   tCmds.setaProp("SETITEMSTATE", 214)
+  tCmds.setaProp("GET_SPECTATOR_AMOUNT", 216)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

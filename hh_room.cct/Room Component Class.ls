@@ -661,6 +661,14 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
   end if
 end
 
+on updateSpectatorCount me, tSpectatorCount, tSpectatorMax
+  tModeMgrObj = getObject(pSpectatorSystemID)
+  if tModeMgrObj = 0 then
+    return error(me, "Spectator System missing!", #setSpectatorMode)
+  end if
+  tModeMgrObj.updateSpectatorCount(tSpectatorCount, tSpectatorMax)
+end
+
 on loadRoomCasts me
   if pRoomId = EMPTY then
     return 0
