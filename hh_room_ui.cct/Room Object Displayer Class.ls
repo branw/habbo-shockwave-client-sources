@@ -1,4 +1,4 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed
 
 on construct me
   pWindowList = []
@@ -59,7 +59,10 @@ on createBaseWindows me
   end repeat
 end
 
-on showObjectInfo me, tObjType
+on showObjectInfo me, tObjType, tRefresh
+  if pClosed and tRefresh then
+    return 1
+  end if
   if voidp(tObjType) then
     return 0
   end if
@@ -159,6 +162,7 @@ on showObjectInfo me, tObjType
     end if
   end repeat
   me.alignWindows()
+  pClosed = 0
 end
 
 on clearWindowDisplayList me
@@ -176,7 +180,7 @@ end
 
 on refreshView me
   me.clearWindowDisplayList()
-  me.showObjectInfo(pLastSelectedObjType)
+  me.showObjectInfo(pLastSelectedObjType, 1)
 end
 
 on showHideActions me
@@ -419,6 +423,7 @@ on eventProc me, tEvent, tSprID, tParam
       "object_displayer_toggle_tags_icon":
         me.showHideTags()
       "room_obj_disp_close":
+        pClosed = 1
         me.clearWindowDisplayList()
       "room_obj_disp_looks":
         tAllowModify = 1

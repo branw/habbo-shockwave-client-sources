@@ -17,22 +17,31 @@ on define me, tPart, tProps
     pHitOffset = [-2, 1, -2, 1]
   end if
   pimage = tProps[#buffer].duplicate()
-  repeat with tdata in [[#part: "hd", #ink: 41], [#part: "hr", #ink: 41], [#part: "fc", #ink: 41]]
-    tPart = tdata[#part]
-    tInk = tdata[#ink]
-    tFigure = tProps[#figure][tPart]
-    tMemNum = getmemnum("sh_std_" & tPart & "_" & tFigure["model"] & "_" & pDirection & "_0")
-    tColor = tFigure["color"]
-    if tMemNum > 0 then
-      tmember = member(tMemNum)
-      tImage = tmember.image
-      tRegPnt = tmember.regPoint
-      tX = -tRegPnt[1] + 6
-      tY = tProps[#buffer].rect.height - tRegPnt[2] - 10
-      tDstRect = rect(tX, tY, tX + tImage.width, tY + tImage.height) + pDefOffset
-      tSrcRect = tImage.rect
-      tMaskImg = tImage.createMatte()
-      pimage.copyPixels(tImage, tDstRect, tSrcRect, [#maskImage: tMaskImg, #ink: tInk, #bgColor: tColor])
+  tHeadPartList = getVariable("human.partset.head.sh")
+  if tHeadPartList = 0 then
+    tHeadPartList = []
+  end if
+  tFigureData = tProps[#figure]
+  repeat with i = 1 to tFigureData.count
+    tPartName = tFigureData.getPropAt(i)
+    if tHeadPartList.findPos(tPartName) > 0 then
+      tdata = [#part: tPartName, #ink: 41]
+      tPart = tdata[#part]
+      tInk = tdata[#ink]
+      tFigure = tFigureData[tPart]
+      tMemNum = getmemnum("sh_std_" & tPart & "_" & tFigure["model"] & "_" & pDirection & "_0")
+      tColor = tFigure["color"]
+      if tMemNum > 0 then
+        tmember = member(tMemNum)
+        tImage = tmember.image
+        tRegPnt = tmember.regPoint
+        tX = -tRegPnt[1] + 6
+        tY = tProps[#buffer].rect.height - tRegPnt[2] - 10
+        tDstRect = rect(tX, tY, tX + tImage.width, tY + tImage.height) + pDefOffset
+        tSrcRect = tImage.rect
+        tMaskImg = tImage.createMatte()
+        pimage.copyPixels(tImage, tDstRect, tSrcRect, [#maskImage: tMaskImg, #ink: tInk, #bgColor: tColor])
+      end if
     end if
   end repeat
   pAction = EMPTY

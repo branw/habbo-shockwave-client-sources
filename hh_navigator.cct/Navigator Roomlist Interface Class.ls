@@ -107,6 +107,10 @@ on handleRoomListClicked me, tParm
   tClickedLine = integer(tParm.locV / me.pListItemHeight) + 1
   if tClickedLine > tNodeCount then
     tClickedLine = tNodeCount
+  else
+    if tClickedLine < 1 then
+      tClickedLine = 1
+    end if
   end if
   tNodeInfo = tNodeList[tClickedLine]
   if not listp(tNodeInfo) then
