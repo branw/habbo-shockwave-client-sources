@@ -8,7 +8,7 @@ on createTemplateHuman me, tSize, tdir, tAction, tActionProps
       return error(me, "Failed to init temporary human object!", #createTemplateHuman)
     end if
     tProps[#userName] = "temp_human_figurecreator"
-    tProps[#figure] = getObject(#session).get("user_figure").duplicate()
+    tProps[#figure] = getObject(#session).GET("user_figure").duplicate()
     tProps[#direction] = [tdir, 1, 1]
     tProps[#x] = 10000
     tProps[#y] = 10000
@@ -42,7 +42,7 @@ end
 
 on createHumanPartPreview me, tWindowTitle, tElement, tPartList, tFigure
   if voidp(tFigure) then
-    tFigure = getObject(#session).get("user_figure")
+    tFigure = getObject(#session).GET("user_figure")
     if tFigure.ilk = #propList then
       tFigure = tFigure.duplicate()
     else

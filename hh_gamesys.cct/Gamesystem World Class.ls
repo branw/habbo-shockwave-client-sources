@@ -121,7 +121,7 @@ on reserveTileForObject me, tLocX, tLocY, tObjectId, tObjectHeight
     return 0
   end if
   if not tTile.isAvailable() then
-    return 0
+    return error(me, "Tile is not available yet!" && tTile.dump(), #reserveTileForObject)
   end if
   if not listp(pTileSpaceReserveList[tObjectId]) then
     pTileSpaceReserveList.setaProp(tObjectId, [])

@@ -234,7 +234,7 @@ on calculateFrameMovement me
       end if
     else
       me.stopWalkLoop()
-      me.resetTargets()
+      me.pGameObjectNextTarget.setLoc(me.pGameObjectLocation.x, me.pGameObjectLocation.y, me.pGameObjectLocation.z)
       me.setGameObjectSyncProperty([#x: me.pGameObjectLocation.x, #y: me.pGameObjectLocation.y, #next_tile_x: me.pGameObjectLocation.getTileX(), #next_tile_y: me.pGameObjectLocation.getTileY()])
       pRoomObject.gameObjectMoveDone(me.pGameObjectLocation.getTileX(), me.pGameObjectLocation.getTileY(), 0.0, tDirBody, tDirBody, "std")
     end if
@@ -377,8 +377,6 @@ on calculateMovement me
       me.pGameObjectNextTarget.setTileLoc(tNextTile.getX(), tNextTile.getY(), 0)
       me.reserveSpaceForObject()
       return me.calculateMovement()
-    else
-      me.setGameObjectSyncProperty([#next_tile_x: tTileX, #next_tile_y: tTileY])
     end if
   end if
   return 0
@@ -399,14 +397,14 @@ on checkForSnowballCollisions me
   repeat with tBallObjectId in tBallObjectIdList
     tBallObject = tGameSystem.getGameObject(tBallObjectId)
     tThrowerId = string(tBallObject.getGameObjectProperty(#int_thrower_id))
-    if tThrowerId <> tOwnId then
+    if tThrowerId <> tOwnId and tBallObject.getActive() then
       if tBallObject.getLocation().z < PLAYER_HEIGHT then
         if tCollision.testForObjectToObjectCollision(me, tBallObject) then
           tBallLocX = tBallObject.getLocation().x
           tBallLocY = tBallObject.getLocation().y
           tBallLocZ = tBallObject.getLocation().z
           tBallDirection = tGameSystem.get360AngleFromComponents(tBallLocX - tlocation.x, tBallLocY - tlocation.y)
-          tGameSystem.removeGameObject(tBallObject.getObjectId())
+          tBallObject.Remove()
           me.executeGameObjectEvent(#start_snowball_hit, [#x: tBallLocX, #y: tBallLocY, #z: tBallLocZ, #direction: tBallDirection])
         end if
       end if

@@ -58,7 +58,7 @@ on ChangeWindowView me, tView
   if not tWndObj.merge(tView) then
     return error(me, "Cannot open tickets window", #ChangeWindowView)
   end if
-  tTickets = getObject(#session).get("user_ph_tickets")
+  tTickets = getObject(#session).GET("user_ph_tickets")
   tText = replaceChunks(getText("ph_tickets_txt"), "\x1", tTickets)
   tElem = tWndObj.getElement("ph_tickets_number")
   if tElem <> 0 then
@@ -90,7 +90,7 @@ on eventProcTicketsWindow me, tEvent, tSprID, tParam, tWndID
         if pGiftActive then
           tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
         else
-          tName = getObject(#session).get("user_name")
+          tName = getObject(#session).GET("user_name")
         end if
         if tName <> EMPTY then
           me.buyGameTickets(tName)

@@ -39,6 +39,10 @@ on getY me
   return pLocY
 end
 
+on getType me
+  return pType
+end
+
 on getWorldCoordinate me
   return [#x: x, #y: y, #z: z]
 end

@@ -65,15 +65,13 @@ end
 on verifyGameObjectList me, tObjectIdList
   tGameSystem = me.getGameSystem()
   tAllGameObjectIds = tGameSystem.getGameObjectIdsOfType(#all)
-  if tObjectIdList.count <> tAllGameObjectIds.count then
-    put "* Server objects:" && tObjectIdList
-    put "* Client objects:" && tAllGameObjectIds
-    repeat with tObjectId in tAllGameObjectIds
-      if tObjectIdList.getPos(tObjectId) < 1 then
-        tGameSystem.removeGameObject(tObjectId)
-      end if
-    end repeat
-  end if
+  put "* Server objects:" && tObjectIdList
+  put "* Client objects:" && tAllGameObjectIds
+  repeat with tObjectId in tAllGameObjectIds
+    if tObjectIdList.getPos(tObjectId) < 1 then
+      tGameSystem.removeGameObject(tObjectId)
+    end if
+  end repeat
   return 1
 end
 

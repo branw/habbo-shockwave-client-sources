@@ -149,17 +149,17 @@ on handle_msgstruct_watchfailed me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#watchfailed, [#id: tInstanceId, #request: "watch", #reason: tReason])
 end
 
+on handle_msgstruct_startfailed me, tMsg
+  tConn = tMsg.connection
+  tReason = tConn.GetIntFrom()
+  return me.getGameSystem().sendGameSystemEvent(#startfailed, [#reason: tReason, #request: "start"])
+end
+
 on handle_msgstruct_gamelocation me, tMsg
   tConn = tMsg.connection
   tUnitId = tConn.GetIntFrom()
   tWorldId = tConn.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#gamelocation, [#unitId: tUnitId, #worldId: tWorldId])
-end
-
-on handle_msgstruct_startfailed me, tMsg
-  tConn = tMsg.connection
-  tReason = tConn.GetIntFrom()
-  return me.getGameSystem().sendGameSystemEvent(#startfailed, [#reason: tReason, #request: "start"])
 end
 
 on handle_msgstruct_playerrejoined me, tMsg
@@ -170,6 +170,12 @@ end
 
 on handle_msgstruct_idlewarning me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#idlewarning, VOID)
+end
+
+on handle_msgstruct_skilllevelchanged me, tMsg
+  tConn = tMsg.connection
+  tLevel = tConn.GetStrFrom()
+  return me.getGameSystem().sendGameSystemEvent(#skilllevelchanged, [#level: tLevel])
 end
 
 on handle_msgstruct_heightmap me, tdata

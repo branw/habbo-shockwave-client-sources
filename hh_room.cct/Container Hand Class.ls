@@ -154,25 +154,29 @@ on createStripItem me, tdata
     if memberExists(tIconClassStr & "_small") then
       tdata[#member] = tIconClassStr & "_small"
     else
-      tdata[#member] = pIconPlaceholderName
-      tdata[#truemember] = tIconClassStr & "_small"
-      tdata[#downloadLocked] = 1
-      tDownloadIdName = tIconClassStr
-      tDynThread = getThread(#dynamicdownloader)
-      if tDynThread = 0 then
-        error(me, "Icon member not found and no dynamic download possibility: " & tdata[#member], #createStripItem)
+      if memberExists(tdata[#class] & "_small") then
+        tdata[#member] = tdata[#class] & "_small"
       else
-        tDynComponent = tDynThread.getComponent()
-        tRoomSizePrefix = EMPTY
-        tRoomThread = getThread(#room)
-        if tRoomThread <> 0 then
-          tTileSize = tRoomThread.getInterface().getGeometry().getTileWidth()
-          if tTileSize = 32 then
-            tRoomSizePrefix = "s_"
+        tdata[#member] = pIconPlaceholderName
+        tdata[#truemember] = tIconClassStr & "_small"
+        tdata[#downloadLocked] = 1
+        tDownloadIdName = tIconClassStr
+        tDynThread = getThread(#dynamicdownloader)
+        if tDynThread = 0 then
+          error(me, "Icon member not found and no dynamic download possibility: " & tdata[#member], #createStripItem)
+        else
+          tDynComponent = tDynThread.getComponent()
+          tRoomSizePrefix = EMPTY
+          tRoomThread = getThread(#room)
+          if tRoomThread <> 0 then
+            tTileSize = tRoomThread.getInterface().getGeometry().getTileWidth()
+            if tTileSize = 32 then
+              tRoomSizePrefix = "s_"
+            end if
           end if
+          tDownloadIdName = tRoomSizePrefix & tDownloadIdName
+          tDynComponent.downloadCastDynamically(tDownloadIdName, tdata[#striptype], me.getID(), #stripItemDownloadCallback, 1)
         end if
-        tDownloadIdName = tRoomSizePrefix & tDownloadIdName
-        tDynComponent.downloadCastDynamically(tDownloadIdName, tdata[#striptype], me.getID(), #stripItemDownloadCallback, 1)
       end if
     end if
   end if

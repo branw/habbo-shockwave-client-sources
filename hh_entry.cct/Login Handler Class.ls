@@ -60,6 +60,9 @@ on handleSessionParameters me, tMsg
           7:
             tValue = tMsg.connection.GetIntFrom()
             tSession.set("allow_profile_editing", tValue > 0)
+          8:
+            tValue = tMsg.connection.GetStrFrom()
+            tSession.set("tracking_header", tValue)
         end case
       end repeat
     end if
@@ -119,8 +122,8 @@ on handleUserObj me, tMsg
   repeat with i = 1 to tuser.count
     tSession.set("user_" & tuser.getPropAt(i), tuser[i])
   end repeat
-  tSession.set(#userName, tSession.get("user_name"))
-  tSession.set("user_password", tSession.get(#password))
+  tSession.set(#userName, tSession.GET("user_name"))
+  tSession.set("user_password", tSession.GET(#password))
   executeMessage(#updateFigureData)
   if getObject(#session).exists("user_logged") then
     return 
@@ -128,7 +131,7 @@ on handleUserObj me, tMsg
     getObject(#session).set("user_logged", 1)
   end if
   if getIntVariable("quickLogin", 0) and the runMode contains "Author" then
-    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).get(#userName), getObject(#session).get(#password)]))
+    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#password)]))
     me.getInterface().hideLogin()
   else
     me.getInterface().showUserFound()
@@ -202,7 +205,7 @@ end
 on handleRights me, tMsg
   tSession = getObject(#session)
   tSession.set("user_rights", [])
-  tRights = tSession.get("user_rights")
+  tRights = tSession.GET("user_rights")
   tPrivilegeFound = 1
   repeat while tPrivilegeFound = 1
     tPrivilege = tMsg.connection.GetStrFrom()

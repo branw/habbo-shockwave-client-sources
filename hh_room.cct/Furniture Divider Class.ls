@@ -8,6 +8,13 @@ on prepare me, tdata
     me.setOff()
     pChanges = 0
   end if
+  repeat with tLayer = 1 to me.pSprList.count
+    tLayerName = numToChar(charToNum("a") + tLayer - 1)
+    tSpr = me.pSprList[tLayer]
+    if me.solveTransparency(tLayerName) then
+      removeEventBroker(tSpr.spriteNum)
+    end if
+  end repeat
   return 1
 end
 
@@ -91,4 +98,24 @@ on select me
     getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
+end
+
+on solveTransparency me, tPart
+  tName = me.pClass
+  if me.pXFactor = 32 then
+    tName = "s_" & tName
+  end if
+  if memberExists(tName & ".props") then
+    tPropList = value(member(getmemnum(tName & ".props")).text)
+    if ilk(tPropList) <> #propList then
+      error(me, tName & ".props is not valid!", #solveInk)
+    else
+      if tPropList[tPart] <> VOID then
+        if tPropList[tPart][#transparent] <> VOID then
+          return tPropList[tPart][#transparent]
+        end if
+      end if
+    end if
+  end if
+  return 0
 end

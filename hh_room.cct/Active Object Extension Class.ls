@@ -33,7 +33,6 @@ on define me, tProps
       if tdata.ilk = #propList then
         pStateSequenceList = tdata[#states]
         pLayerDataList = tdata[#layers]
-        pStateStringList = tdata[#statestrings]
         if voidp(pLayerDataList) then
           pLayerDataList = [:]
         end if

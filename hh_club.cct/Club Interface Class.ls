@@ -1,10 +1,15 @@
-property pDialogId, pGiftDialogID, pConnectionId, pChosenLength
+property pDialogId, pGiftDialogID, pConnectionId, pChosenLength, pSubscribeFromHotel
 
 on construct me
   pGiftDialogID = "window_clubgift"
   pDialogId = "window_clubinfo1"
   pConnectionId = getVariable("connection.info.id")
   pChosenLength = 1
+  if variableExists("club.subscription.disabled") then
+    pSubscribeFromHotel = not getVariable("club.subscription.disabled") > 0
+  else
+    pSubscribeFromHotel = 1
+  end if
   registerMessage(#show_clubinfo, me.getID(), #show_clubinfo)
   registerMessage(#notify, me.getID(), #notify)
   return 1
@@ -173,6 +178,11 @@ on show_clubinfo me
       me.setupWindow(pDialogId)
       tWndObj = getWindow(pDialogId)
       if tClubInfo[#daysLeft] = 0 and tClubInfo[#ElapsedPeriods] = 0 then
+        if not pSubscribeFromHotel then
+          me.openBuyInHabboWeb()
+          tWndObj.close()
+          return 1
+        end if
         if not (getText("club_paybycash_url") starts "http") then
           tWndObj.merge("habbo_club_buy.window")
         else
@@ -222,6 +232,15 @@ on updateClubStatus me, tStatus, tResponseFlag, tOldClubStatus
   return 1
 end
 
+on openBuyInHabboWeb me
+  if getText("club_buy_url") = "club_buy_url" then
+    return error(me, "key club_buy_url not defined!", #eventProcDialogMousedown)
+  else
+    openNetPage("club_buy_url")
+  end if
+  return 1
+end
+
 on eventProcDialogMousedown me, tEvent, tSprID, tParam
   tClubInfo = me.getComponent().getStatus()
   case tSprID of
@@ -231,6 +250,11 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
         return 0
       end if
       tWndObj.unmerge()
+      if not pSubscribeFromHotel then
+        me.openBuyInHabboWeb()
+        tWndObj.close()
+        return 1
+      end if
       if getText("club_paybycash_url") starts "http" then
         tWndObj.merge("habbo_club_buy_jp.window")
       else

@@ -704,7 +704,7 @@ on handle_dice_value me, tMsg
     end if
   end if
   if me.getComponent().activeObjectExists(tid) then
-    me.getComponent().getActiveObject(tid).diceThrown(tValue)
+    call(#diceThrown, [me.getComponent().getActiveObject(tid)], tValue)
   end if
 end
 

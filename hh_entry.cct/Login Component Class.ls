@@ -37,6 +37,9 @@ on construct me
   if not objectExists("Ticket_Window_Manager") then
     createObject("Ticket_Window_Manager", "Ticket Window Manager Class")
   end if
+  if not objectExists("Oneclick_Buy_Window_Manager") then
+    createObject("Oneclick_Buy_Window_Manager", "Game Oneclick Buy Window Manager Class")
+  end if
   registerMessage(#openConnection, me.getID(), #openConnection)
   registerMessage(#closeConnection, me.getID(), #disconnect)
   registerMessage(#performLogin, me.getID(), #sendLogin)
@@ -109,13 +112,13 @@ on sendLogin me, tConnection
   if me.getComponent().isOkToLogin() then
     tSsoTicket = 0
     if getObject(#session).exists("SSO_ticket") then
-      tSsoTicket = getObject(#session).get("SSO_ticket")
+      tSsoTicket = getObject(#session).GET("SSO_ticket")
     end if
     if tSsoTicket <> 0 then
       return tConnection.send("SSO", [#string: tSsoTicket])
     else
-      tUserName = getObject(#session).get(#userName)
-      tPassword = getObject(#session).get(#password)
+      tUserName = getObject(#session).GET(#userName)
+      tPassword = getObject(#session).GET(#password)
       if not stringp(tUserName) or not stringp(tPassword) then
         return removeConnection(tConnection.getID())
       end if

@@ -57,10 +57,10 @@ on ShowAlert me
 end
 
 on showModtoolButton me
-  if not listp(getObject(#session).get("user_rights")) then
+  if not listp(getObject(#session).GET("user_rights")) then
     return 0
   end if
-  if getObject(#session).get("user_rights").getOne("fuse_kick") = 0 then
+  if getObject(#session).GET("user_rights").getOne("fuse_kick") = 0 then
     return 1
   end if
   if pModtoolButtonSpr.ilk <> #sprite then
@@ -120,7 +120,7 @@ on showCryWnd me
     end if
   end if
   pCryWndMode = "browse"
-  if getObject(#session).get("user_rights").getOne("fuse_see_chat_log_link") = 0 then
+  if getObject(#session).GET("user_rights").getOne("fuse_see_chat_log_link") = 0 then
     tWndObj.getElement("hobba_seelog").hide()
   end if
   return me.fillCryData(pCurrCryNum)
@@ -187,7 +187,7 @@ on userClicked me, tName
   if not windowExists(pModtoolWindowID) then
     return 1
   end if
-  if tName = getObject(#session).get("user_name") then
+  if tName = getObject(#session).GET("user_name") then
     return 1
   end if
   tWndObj = getWindow(pModtoolWindowID)
@@ -326,7 +326,7 @@ on fillCryData me, tCryNumOrID
   tTime = pCurrCryData[#time]
   tCategory = pCurrCryData[#category]
   tRoomID = pCurrCryData[#room_id]
-  if tRoomID <> VOID and getObject(#session).get("user_rights").getOne("fuse_see_flat_ids") <> 0 then
+  if tRoomID <> VOID and getObject(#session).GET("user_rights").getOne("fuse_see_flat_ids") <> 0 then
     tShowRoomID = "(id: " & tRoomID & ")"
   else
     tShowRoomID = EMPTY

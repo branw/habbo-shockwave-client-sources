@@ -255,6 +255,9 @@ on acquireAssetsFromCast me, tCastNum, tAssetId
               if tLine.length > 3 then
                 tLineData = value(tLine)
                 tAssetId = tLineData[#id]
+                if offset("s_", tAssetId) = 1 then
+                  tAssetId = tAssetId.char[3..tAssetId.length]
+                end if
                 tAssetClasses = tLineData[#classes]
                 tClassesContainer.set(tAssetId, tAssetClasses)
                 pDownloadedAssets[tAssetId] = #downloaded
