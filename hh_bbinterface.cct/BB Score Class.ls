@@ -13,7 +13,7 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #gamestatus_scores:
       return me.renderScore(tdata)

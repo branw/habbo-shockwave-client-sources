@@ -164,7 +164,7 @@ on eventProcChooser me, tEvent, tSprID, tParam
         if tItemObj.select() then
           tRoomInt.showInterface(ttype)
         else
-          tRoomInt.hideInterface(#Hide)
+          tRoomInt.hideInterface(#hide)
         end if
       else
         tRoomInt.showInterface(ttype)

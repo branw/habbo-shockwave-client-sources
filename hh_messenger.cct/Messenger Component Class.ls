@@ -238,7 +238,7 @@ on receive_UserNotFound me, tMsg
 end
 
 on receive_CampaignMsg me, tMsg
-  if tMsg[#Message].char[1..12] = "[dialog_msg]" then
+  if tMsg[#message].char[1..12] = "[dialog_msg]" then
     if memberExists(tMsg[#link] && "Class") then
       tObjID = getUniqueID()
       if not createObject(tObjID, tMsg[#link] && "Class") then

@@ -1,7 +1,7 @@
 property pAnimCycle, pFrameCounter, pSkipPulseAmount, pSkipPulseCounter, pSprite, pPauseTimer
 
-on define me, tsprite
-  pSprite = tsprite
+on define me, tSprite
+  pSprite = tSprite
   pAnimCycle = [1, 2, 3, 2]
   pFrameCounter = random(10)
   pSkipPulseCounter = 1

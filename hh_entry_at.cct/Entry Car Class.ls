@@ -1,10 +1,10 @@
 property pSprite, pHAdv, pVAdv, pStartDelay, pTurningPoints, pModelType, pMinStartDelay, pMaxStartDelay
 
-on define me, tsprite, tCarNo
+on define me, tSprite, tCarNo
   pTurningPoints = [434, 534]
   pMinStartDelay = 150
   pMaxStartDelay = 400
-  pSprite = tsprite
+  pSprite = tSprite
   me.reset()
   if tCarNo = 1 then
     pStartDelay = 0

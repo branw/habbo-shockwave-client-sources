@@ -61,7 +61,7 @@ on handle_error me, tMsg
       executeMessage(#leaveRoom)
     "Not owner":
       getObject(#session).set("room_controller", 0)
-      me.getInterface().hideInterface(#Hide)
+      me.getInterface().hideInterface(#hide)
   end case
 end
 
@@ -136,7 +136,7 @@ on handle_chat me, tMsg
       tMode = "SHOUT"
   end case
   if me.getComponent().userObjectExists(tuser) then
-    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #Message: tChat])
+    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #message: tChat])
   end if
 end
 
@@ -576,11 +576,11 @@ on handle_removestripitem me, tMsg
 end
 
 on handle_youarenotallowed me
-  executeMessage(#alert, [#Msg: "trade_youarenotallowed", #id: "youarenotallowed"])
+  executeMessage(#alert, [#msg: "trade_youarenotallowed", #id: "youarenotallowed"])
 end
 
 on handle_othernotallowed me
-  executeMessage(#alert, [#Msg: "trade_othernotallowed", #id: "othernotallowed"])
+  executeMessage(#alert, [#msg: "trade_othernotallowed", #id: "othernotallowed"])
 end
 
 on handle_idata me, tMsg

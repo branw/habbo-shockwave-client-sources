@@ -12,8 +12,8 @@ end
 on prepare me
   tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
   repeat with tid in ["goawaybus"]
-    tsprite = tRoomVis.getSprById(tid)
-    registerProcedure(tsprite, #busTeleport, me.getID(), #mouseDown)
+    tSprite = tRoomVis.getSprById(tid)
+    registerProcedure(tSprite, #busTeleport, me.getID(), #mouseDown)
   end repeat
 end
 

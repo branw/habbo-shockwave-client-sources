@@ -148,6 +148,10 @@ on xtraMsgHandler me
   end if
   pConnectionOk = 1
   tNewMsg = pXtra.getNetMessage()
+  if tNewMsg = VOID then
+    me.disconnect()
+    return error(me, "getNetMessage() returned VOID.", #xtraMsgHandler)
+  end if
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
   tSubject = tNewMsg.getaProp(#subject)

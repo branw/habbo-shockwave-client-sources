@@ -41,7 +41,7 @@ on openRemoveWindow me, tFriendListCopy, tListLimitsPntr
   tText = replaceChunks(tText, "%mylimit%", string(pLimitPntr.getProp(#own)))
   tText = replaceChunks(tText, "%clublimit%", string(pLimitPntr.getProp(#club)))
   if not (getText("buddyremove_hc_info_url") starts "http") then
-    tWndObj.getElement("buddyremove_hc_more_info").Hide()
+    tWndObj.getElement("buddyremove_hc_more_info").hide()
   end if
   tElem.setText(tText)
   tWndObj.registerClient(me.getID())
@@ -77,7 +77,7 @@ on setUpMassRemoveWindow me
     return tWndObj.close()
   end if
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].addProp(#Remove, 0)
+    pBuddyList[i].addProp(#remove, 0)
   end repeat
   pPageCount = pBuddyList.count / pOnScreenNum
   if pBuddyList.count mod pOnScreenNum <> 0 then
@@ -120,14 +120,14 @@ on updateView me
     tElem1 = tWndObj.getElement(tElem1ID)
     tElem2 = tWndObj.getElement(tElem2ID)
     if tStartNr + i > pBuddyList.count then
-      tElem1.Hide()
-      tElem2.Hide()
+      tElem1.hide()
+      tElem2.hide()
       next repeat
     end if
     tElem1.show()
     tElem2.show()
     tElem1.setText(pBuddyList[tStartNr + i].name)
-    if not pBuddyList[tStartNr + i].Remove then
+    if not pBuddyList[tStartNr + i].remove then
       pRemoveCheckBoxList[i] = 0
       me.updateCheckButton(tElem2ID, "button.checkbox.off")
       next repeat
@@ -139,13 +139,13 @@ on updateView me
   tElem.setText(getText("buddyremove_pagecounter") && pPageNr && "/" && pPageCount)
   tElem = tWndObj.getElement("console_friendremove_prev")
   if pPageNr = 1 then
-    tElem.Hide()
+    tElem.hide()
   else
     tElem.show()
   end if
   tElem = tWndObj.getElement("console_friendremove_next")
   if pPageNr = pPageCount then
-    tElem.Hide()
+    tElem.hide()
   else
     tElem.show()
   end if
@@ -167,8 +167,8 @@ on hideNames me
   repeat with i = 1 to pOnScreenNum
     tElem1 = tWndObj.getElement("console_friendremove_name" & i)
     tElem2 = tWndObj.getElement("friendremove_checkbox" & i)
-    tElem1.Hide()
-    tElem2.Hide()
+    tElem1.hide()
+    tElem2.hide()
   end repeat
   return 1
 end
@@ -204,12 +204,12 @@ on checkBoxClicked me, tid, ttype
   tBoxID = "friendremove_checkbox" & tNum
   if pRemoveCheckBoxList[tNum] = 0 then
     pRemoveCheckBoxList[tNum] = 1
-    pBuddyList[tStartNr + tNum].Remove = 1
+    pBuddyList[tStartNr + tNum].remove = 1
     pChosen = pChosen + 1
     me.updateCheckButton(tBoxID, "button.checkbox.on")
   else
     pRemoveCheckBoxList[tNum] = 0
-    pBuddyList[tStartNr + tNum].Remove = 0
+    pBuddyList[tStartNr + tNum].remove = 0
     pChosen = pChosen - 1
     me.updateCheckButton(tBoxID, "button.checkbox.off")
   end if
@@ -233,10 +233,10 @@ on updateToChooseCounter me
   tElem2 = tWndObj.getElement("console_friendremove_header")
   if tToRemove < 1 then
     tElem1.show()
-    tElem2.Hide()
+    tElem2.hide()
   else
     tElem2.show()
-    tElem1.Hide()
+    tElem1.hide()
     tText = getText("buddyremove_header")
     tText = replaceChunks(tText, "%amount%", string(tToRemove))
     tElem2.setText(tText)
@@ -247,7 +247,7 @@ end
 on getStayCount me
   tStay = 0
   repeat with i = 1 to pBuddyList.count
-    if not pBuddyList[i].Remove then
+    if not pBuddyList[i].remove then
       tStay = tStay + 1
     end if
   end repeat
@@ -290,7 +290,7 @@ on showConfirmationWindow me
   tElem.setText(tText)
   tText = EMPTY
   repeat with i = 1 to pBuddyList.count
-    if not pBuddyList[i].Remove then
+    if not pBuddyList[i].remove then
       tText = tText & pBuddyList[i].name & ", "
     end if
   end repeat
@@ -302,7 +302,7 @@ end
 on commitRemove me
   pRemoveList = []
   repeat with i = 1 to pBuddyList.count
-    if pBuddyList[i].Remove then
+    if pBuddyList[i].remove then
       pRemoveList.add(pBuddyList[i].id)
     end if
   end repeat
@@ -383,7 +383,7 @@ end
 
 on selectAllFriends me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].Remove = 1
+    pBuddyList[i].remove = 1
   end repeat
   pChosen = pBuddyList.count
   me.updateView()
@@ -392,7 +392,7 @@ end
 
 on invertSelection me
   repeat with i = 1 to pBuddyList.count
-    pBuddyList[i].Remove = not pBuddyList[i].Remove
+    pBuddyList[i].remove = not pBuddyList[i].remove
   end repeat
   pChosen = pBuddyList.count - pChosen
   me.updateView()

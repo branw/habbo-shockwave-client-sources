@@ -17,7 +17,7 @@ on handle_opengameboard me, tMsg
   tProps = [:]
   tProps[#id] = tLine.item[1]
   tProps[#name] = tLine.item[2]
-  tProps[#Data] = tMsg.content.line[1..tMsg.content.line.count]
+  tProps[#data] = tMsg.content.line[1..tMsg.content.line.count]
   the itemDelimiter = tDelim
   me.getComponent().openGameBoard(tProps)
 end
@@ -33,7 +33,7 @@ on handle_closegameboard me, tMsg
   tProps = [:]
   tProps[#id] = tLine.item[1]
   tProps[#name] = tLine.item[2]
-  tProps[#Data] = tMsg.content.line[1..tMsg.content.line.count]
+  tProps[#data] = tMsg.content.line[1..tMsg.content.line.count]
   the itemDelimiter = tDelim
   me.getComponent().closeGameBoard(tProps)
 end
@@ -42,7 +42,7 @@ on handle_itemmsg me, tMsg
   tProps = [:]
   tProps[#id] = tMsg.content.line[1]
   tProps[#command] = tMsg.content.line[2]
-  tProps[#Data] = tMsg.content.line[3..tMsg.content.line.count]
+  tProps[#data] = tMsg.content.line[3..tMsg.content.line.count]
   me.getComponent().processItemMessage(tProps)
 end
 

@@ -19,7 +19,7 @@ on construct me
   pNaviHistory = []
   pHideFullRoomsFlag = 0
   pUpdateInterval = getIntVariable("navigator.updatetime")
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariableValue("connection.info.id", #info)
   getObject(#session).set("lastroom", "Entry")
   registerMessage(#userlogin, me.getID(), #updateState)
   registerMessage(#show_navigator, me.getID(), #showNavigator)
@@ -51,11 +51,11 @@ on showNavigator me
 end
 
 on hideNavigator me
-  return me.getInterface().hideNavigator(#Hide)
+  return me.getInterface().hideNavigator(#hide)
 end
 
 on showhidenavigator me
-  return me.getInterface().showhidenavigator(#Hide)
+  return me.getInterface().showhidenavigator(#hide)
 end
 
 on getState me
@@ -283,10 +283,10 @@ on getFlatPassword me, tFlatID
   if tFlatInfo[#door] <> "password" then
     return 0
   end if
-  if voidp(tFlatInfo[#Password]) then
+  if voidp(tFlatInfo[#password]) then
     return 0
   else
-    return tFlatInfo[#Password]
+    return tFlatInfo[#password]
   end if
 end
 
@@ -303,7 +303,7 @@ on delayedAlert me, tAlert, tDelay
   if tDelay > 0 then
     createTimeout(#temp, tDelay, #delayedAlert, me.getID(), tAlert, 1)
   else
-    executeMessage(#alert, [#Msg: tAlert])
+    executeMessage(#alert, [#msg: tAlert])
   end if
 end
 
@@ -560,7 +560,7 @@ on sendupdateFlatInfo me, tPropList
   getConnection(pConnectionId).send("UPDATEFLAT", tFlatMsg)
   tFlatMsg = string(tPropList[#flatId]) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & tPropList[#description] & RETURN
-  tFlatMsg = tFlatMsg & "password=" & tPropList[#Password] & RETURN
+  tFlatMsg = tFlatMsg & "password=" & tPropList[#password] & RETURN
   tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture] & RETURN
   tFlatMsg = tFlatMsg & "maxvisitors=" & tPropList[#maxVisitors]
   getConnection(pConnectionId).send("SETFLATINFO", tFlatMsg)
