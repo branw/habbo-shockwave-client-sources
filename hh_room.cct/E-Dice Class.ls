@@ -53,7 +53,7 @@ on diceThrown me, tValue
     pValue = tValue
   else
     pActive = 1
-    pValue = 0
+    pValue = tValue
   end if
 end
 
@@ -63,7 +63,7 @@ on update me
       return 
     end if
     tsprite = me.pSprList[2]
-    if pValue <= 0 then
+    if pValue < 0 then
       if tsprite.castNum = getmemnum("edice_b_0_1_1_0_7") then
         tmember = member(getmemnum("edice_b_0_1_1_0_0"))
       else
