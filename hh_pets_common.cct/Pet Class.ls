@@ -129,7 +129,7 @@ on setup me, tdata
     pIDPrefix = pName.char[1..offset(numToChar(4), pName)]
     pName = pName.char[offset(numToChar(4), pName) + 1..length(pName)]
   end if
-  pCanvasSize = [60, 62, 32, -18]
+  pCanvasSize = [62, 62, 32, -18]
   if not me.setPartLists(tdata[#figure]) then
     return error(me, "Couldn't create part lists!", #setup)
   end if
