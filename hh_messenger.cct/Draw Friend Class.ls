@@ -116,9 +116,9 @@ on clickAt me, locX, locY
     end if
   end if
   if point(locX, locY).inside(pFollowLinkRect) then
-    tID = integer(pData.id)
+    tid = integer(pData.id)
     tConn = getConnection(getVariable("connection.info.id"))
-    tConn.send("FOLLOW_FRIEND", [#integer: tID])
+    tConn.send("FOLLOW_FRIEND", [#integer: tid])
   end if
 end
 
