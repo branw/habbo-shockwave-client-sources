@@ -5,7 +5,7 @@ on construct me
   pFrame = 0
   pTimeOutID = "showAdTimeOut"
   pBlendFlag = 0
-  pDLCounter = 1
+  pDLCounter = 0
   pMemberIDBase = "billboard-image"
   pMemberID = pMemberIDBase & pDLCounter
   registerMessage(#leaveRoom, me.getID(), #removeAd)
@@ -67,6 +67,7 @@ on Init me, tSourceURL, tClickURL, tRegisteredLayout
       pState = 0
       return error(me, "Incorrect URL!", #Init)
     end if
+    pDLCounter = pDLCounter + 1
     pMemberID = pMemberIDBase & pDLCounter
     if tSourceURL contains "?" then
       tSeparator = "&"
@@ -74,7 +75,7 @@ on Init me, tSourceURL, tClickURL, tRegisteredLayout
       tSeparator = "?"
     end if
     tSourceURL = tSourceURL & tSeparator & "r=" & random(9999999999.0)
-    pAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1)
+    pAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
     if not (pAdMemNum > 0) then
       pState = 0
       return error(me, "Incorrect URL!", #Init)
@@ -169,7 +170,6 @@ on removeAd me
   if memberExists(pMemberID) then
     removeMember(pMemberID)
   end if
-  pDLCounter = pDLCounter + 1
   if timeoutExists(pTimeOutID) then
     removeTimeout(pTimeOutID)
   end if
@@ -267,7 +267,7 @@ end
 on eventProc me, tEvent, tSprID, tParm
   if tEvent = #mouseUp then
     if not voidp(pClickURL) then
-      openNetPage(pClickURL)
+      queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
     end if
   else
     if tEvent = #mouseEnter or tEvent = #mouseWithin then

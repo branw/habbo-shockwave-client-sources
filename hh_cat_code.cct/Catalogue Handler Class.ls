@@ -42,6 +42,7 @@ on handle_catalogpage me, tMsg
   tProductList = []
   tTextList = [:]
   tTextList.sort()
+  tDealNumber = 1
   repeat with tLineNum = 1 to tCount
     the itemDelimiter = ":"
     tLine = tMsg.content.line[tLineNum]
@@ -98,6 +99,22 @@ on handle_catalogpage me, tMsg
         tTemp["dimensions"] = tdata.item[8]
         tTemp["purchaseCode"] = tdata.item[9]
         tTemp["partColors"] = tdata.item[10]
+        if tdata.item.count > 10 then
+          tItemCount = tdata.item[11]
+          if tdata.item.count >= 11 + tItemCount * 3 then
+            tDealList = []
+            tDealItem = [:]
+            repeat with i = 0 to tItemCount - 1
+              tDealItem["class"] = tdata.item[11 + i * 3 + 1]
+              tDealItem["count"] = tdata.item[11 + i * 3 + 2]
+              tDealItem["partColors"] = tdata.item[11 + i * 3 + 3]
+              tDealList[i + 1] = tDealItem.duplicate()
+            end repeat
+            tTemp["dealList"] = tDealList
+            tTemp["dealNumber"] = tDealNumber
+          end if
+          tDealNumber = tDealNumber + 1
+        end if
         tProductList.add(tTemp)
     end case
   end repeat

@@ -165,6 +165,7 @@ end
 on clear me
   removeUpdate(me.getID())
   unregisterMessage(#activeObjectRemoved, me.getID())
+  me.cancelMove()
   pActive = 0
   pPause = 0
   pClientID = EMPTY
@@ -375,6 +376,7 @@ on cancelMove me
         return 0
       end if
       tObj.moveTo(tLocX, tLocY, tLocH)
+      tObj.removeGhostEffect()
     "placeActive", "placeItem":
       getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
   end case

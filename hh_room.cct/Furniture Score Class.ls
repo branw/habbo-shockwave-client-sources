@@ -72,6 +72,9 @@ on setScore me, tScore, tSpriteList
 end
 
 on select me
+  if me.pSprList.count < 1 then
+    return 0
+  end if
   tUpdate = 0
   tScore = pScore
   tloc = point(the mouseH - me.pSprList[1].left, the mouseV - me.pSprList[1].top)

@@ -77,13 +77,16 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
     return me.applyDarkenColor(member(getmemnum(tMemStr)).image, tColor)
   end if
   tMem = member(getmemnum(tMemStr))
-  tRendered = image(tMem.width, tMem.height, 32)
-  tRendered.copyPixels(tMem.image, tMem.rect, tMem.rect)
+  tOffset = point(50, 50)
+  tRect = rect(tOffset.locH, tOffset.locV, tMem.rect.width + tOffset.locH, tMem.rect.height + tOffset.locV)
+  tRendered = image(tMem.rect.width + tOffset.locH * 2, tMem.rect.height + tOffset.locV * 2, 32)
+  tRendered.copyPixels(tMem.image, tRect, tMem.rect)
   repeat with i = 1 to pPossibleParts.count
     if memberExists(tMemStr & "_" & pPossibleParts[i]) then
-      tRendered = me.addLayerToImage(tRendered, i, tMemStr, tColorList)
+      tRendered = me.addLayerToImage(tRendered, i, tMemStr, tColorList, tOffset)
     end if
   end repeat
+  tRendered = tRendered.trimWhiteSpace()
   return tRendered
 end
 
@@ -118,7 +121,7 @@ on getLastColor me, tColorList
   return tColor
 end
 
-on addLayerToImage me, tImg, tNum, tMemStr, tColorList
+on addLayerToImage me, tImg, tNum, tMemStr, tColorList, tOffset
   tAbc = pPossibleParts[tNum]
   if tColorList = VOID then
     tColorList = []
@@ -130,6 +133,7 @@ on addLayerToImage me, tImg, tNum, tMemStr, tColorList
   end if
   tImg2 = member(getmemnum(tMemStr & "_" & tAbc)).image
   tRegp = member(getmemnum(tMemStr & "_" & tAbc)).regPoint - member(getmemnum(tMemStr)).regPoint
+  tRegp = tRegp - tOffset
   tRect = tImg2.rect - rect(tRegp[1], tRegp[2], tRegp[1], tRegp[2])
   tMatte = tImg2.createMatte()
   tColorObj = rgb(tColor)

@@ -49,6 +49,8 @@ on handle_error me, tMsg
   tErr = tMsg.content
   error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
   case tErr of
+    "info: No place for stuff":
+      me.getInterface().stopObjectMover()
     "Incorrect flat password":
       if threadExists(#navigator) then
         getThread(#navigator).getComponent().flatAccessResult(tErr)
@@ -195,6 +197,8 @@ on handle_users me, tMsg
         end if
       "b":
         tList[tuser][#badge] = tdata
+      "a":
+        tList[tuser][#webID] = tdata
       otherwise:
         if tLine.word[1] = "[bot]" then
           tList[tuser][#class] = "bot"
@@ -211,12 +215,14 @@ on handle_users me, tMsg
   else
     tName = getObject(#session).get(#userName)
     repeat with tuser in tList
+      if tuser[#name] = tName then
+        getObject(#session).set("user_index", tuser[#id])
+      end if
       me.getComponent().validateUserObjects(tuser)
       if me.getComponent().getPickedCryName() = tuser[#name] then
         me.getComponent().showCfhSenderDelayed(tuser[#id])
       end if
       if tuser[#name] = tName then
-        getObject(#session).set("user_index", tuser[#id])
         me.getInterface().eventProcUserObj(#selection, tuser[#id], #userEnters)
       end if
     end repeat
@@ -824,19 +830,42 @@ end
 
 on handle_roomqueuedata me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tQueueSet = tConn.GetStrFrom()
-  tNumberOfQueues = tConn.GetIntFrom()
-  tQueueData = [:]
-  repeat with t = 1 to tNumberOfQueues
-    tQueueID = tConn.GetStrFrom()
-    tQueueLength = tConn.GetIntFrom()
-    tQueueData[tQueueID] = tQueueLength
+  tSetCount = tConn.GetIntFrom()
+  tQueueCollection = []
+  repeat with i = 1 to tSetCount
+    tQueueSetName = tConn.GetStrFrom()
+    tQueueTarget = tConn.GetIntFrom()
+    tNumberOfQueues = tConn.GetIntFrom()
+    tQueueData = [:]
+    tQueueSet = [:]
+    repeat with t = 1 to tNumberOfQueues
+      tQueueID = tConn.GetStrFrom()
+      tQueueLength = tConn.GetIntFrom()
+      tQueueData[tQueueID] = tQueueLength
+    end repeat
+    tQueueSet["name"] = tQueueSetName
+    tQueueSet["target"] = tQueueTarget
+    tQueueSet["data"] = tQueueData
+    tQueueCollection[i] = tQueueSet
   end repeat
-  me.getInterface().updateQueueWindow(tQueueSet, tQueueData)
+  me.getInterface().updateQueueWindow(tQueueCollection)
 end
 
 on handle_youarespectator me
   return me.getComponent().setSpectatorMode(1)
+end
+
+on handle_removespecs me
+  me.getInterface().showRemoveSpecsNotice()
+end
+
+on handle_figure_change me, tMsg
+  tConn = tMsg.connection
+  tUserID = tConn.GetIntFrom()
+  tUserFigure = tConn.GetStrFrom()
+  tUserSex = tConn.GetStrFrom()
+  tUserCustomInfo = tConn.GetStrFrom()
+  me.getComponent().updateCharacterFigure(tUserID, tUserFigure, tUserSex, tUserCustomInfo)
 end
 
 on regMsgList me, tBool
@@ -899,6 +928,8 @@ on regMsgList me, tBool
   tMsgs.setaProp(258, #handle_interstitialdata)
   tMsgs.setaProp(259, #handle_roomqueuedata)
   tMsgs.setaProp(254, #handle_youarespectator)
+  tMsgs.setaProp(283, #handle_removespecs)
+  tMsgs.setaProp(266, #handle_figure_change)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -951,6 +982,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GETPETSTAT", 128)
   tCmds.setaProp("SETBADGE", 158)
   tCmds.setaProp("GETINTERST", 182)
+  tCmds.setaProp("ROOM_QUEUE_CHANGE", 211)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

@@ -173,6 +173,13 @@ on ghostObject me
   end repeat
 end
 
+on removeGhostEffect me
+  repeat with tSpr in pSprList
+    tSpr.visible = 1
+    tSpr.blend = 100
+  end repeat
+end
+
 on prepare me, tdata
   return 1
 end

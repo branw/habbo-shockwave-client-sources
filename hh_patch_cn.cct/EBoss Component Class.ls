@@ -37,9 +37,7 @@ on partnerRegistrationRequired me, tArg
   return tPartnerRegistration
 end
 
-on partnerRegistration me, tMsg
-  tConn = tMsg.connection
-  tUserID = tConn.GetStrFrom()
+on partnerRegistration me, tUserID
   pUserId = tUserID
   me.showDialog()
 end

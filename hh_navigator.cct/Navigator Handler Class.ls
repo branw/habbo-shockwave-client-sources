@@ -12,6 +12,7 @@ on handle_flatinfo me, tMsg
   tFlat[#ableothersmovefurniture] = tConn.GetIntFrom()
   tFlat[#door] = tConn.GetIntFrom()
   tFlat[#flatId] = string(tConn.GetIntFrom())
+  tFlat[#id] = "f_" & tFlat[#flatId]
   tFlat[#owner] = tConn.GetStrFrom()
   tFlat[#marker] = tConn.GetStrFrom()
   tFlat[#name] = tConn.GetStrFrom()
@@ -39,8 +40,9 @@ on handle_flatinfo me, tMsg
   if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).get(#user_name) then
     executeMessage(#setEnterRoomAlert, "alert_no_category")
   end if
-  tMode = me.getInterface().getNaviView()
-  me.getComponent().updateSingleFlatInfo(tFlat, tMode)
+  me.getComponent().updateSingleSubNodeInfo(tFlat)
+  me.getComponent().getInfoBroker().processNavigatorData(tFlat)
+  return 1
 end
 
 on handle_flat_results me, tMsg
@@ -75,7 +77,7 @@ on handle_flat_results me, tMsg
       tResult[#id] = #src
   end case
   the itemDelimiter = tDelim
-  me.getComponent().saveFlatResults(tResult)
+  me.getComponent().saveNodeInfo(tResult)
 end
 
 on handle_favouriteroomresults me, tMsg
@@ -96,7 +98,7 @@ on handle_favouriteroomresults me, tMsg
     end if
     exit repeat
   end repeat
-  return me.getComponent().saveFlatResults(tResult)
+  return me.getComponent().saveNodeInfo(tResult)
 end
 
 on handle_noflatsforuser me, tMsg
@@ -141,6 +143,7 @@ on handle_navnodeinfo me, tMsg
   end repeat
   me.getComponent().updateCategoryIndex(tCategoryIndex)
   me.getComponent().saveNodeInfo(tNodeInfo)
+  me.getComponent().getInfoBroker().processNavigatorData(tNodeInfo)
   return 1
 end
 
@@ -218,7 +221,6 @@ on handle_userflatcats me, tMsg
     tList.addProp(string(tNodeId), tNodeName)
   end repeat
   getObject(#session).set("user_flat_cats", tList)
-  executeMessage(#userflatcats_received, tList)
   return 1
 end
 
@@ -295,6 +297,18 @@ on handle_parentchain me, tMsg
   return me.getComponent().updateCategoryIndex(tCategoryIndex)
 end
 
+on handle_roomforward me, tMsg
+  tConn = tMsg.connection
+  tIsPublic = tConn.GetIntFrom()
+  if tIsPublic > 0 then
+    tStrRoomType = #public
+  else
+    tStrRoomType = #private
+  end if
+  tStrRoomId = string(tConn.GetIntFrom())
+  return executeMessage(#roomForward, tStrRoomId, tStrRoomType)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(16, #handle_flat_results)
@@ -313,6 +327,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(225, #handle_success)
   tMsgs.setaProp(226, #handle_failure)
   tMsgs.setaProp(227, #handle_parentchain)
+  tMsgs.setaProp(286, #handle_roomforward)
   tCmds = [:]
   tCmds.setaProp("SBUSYF", 13)
   tCmds.setaProp("SUSERF", 16)
@@ -332,11 +347,11 @@ on regMsgList me, tBool
   tCmds.setaProp("REMOVEALLRIGHTS", 155)
   tCmds.setaProp("GETPARENTCHAIN", 156)
   if tBool then
-    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   end if
   return 1
 end

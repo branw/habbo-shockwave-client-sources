@@ -233,6 +233,7 @@ on solveCatalogueMembers me, tdata
       if not voidp(tProductData["purchaseCode"]) then
         tPrewMember = "ctlg_pic_"
         tPurchaseCode = tProductData["purchaseCode"]
+        tDealNumber = tProductData["dealNumber"]
         if memberExists(tPrewMember & tPurchaseCode) then
           tdata["productList"][f]["prewImage"] = getmemnum(tPrewMember & tPurchaseCode)
         else
@@ -261,10 +262,13 @@ on solveCatalogueMembers me, tdata
         if tdata["productList"][f]["smallPrewImg"] = 0 then
           if memberExists(tSmallMem) then
             tdata["productList"][f]["smallPrewImg"] = getmemnum(tSmallMem)
-            next repeat
+          else
+            tdata["productList"][f]["smallPrewImg"] = getmemnum("no_icon_small")
           end if
-          tdata["productList"][f]["smallPrewImg"] = getmemnum("no_icon_small")
         end if
+      end if
+      if tDealNumber > 0 then
+        tdata["productList"][f]["smallPrewImg"] = 0
       end if
     end repeat
   end if

@@ -1,4 +1,4 @@
-property pFrameworkId, pRoomGeometry
+property pFrameworkId, pRoomGeometry, pLastGameClickCoordinate, pConnection
 
 on construct me
   pFrameworkId = getVariable("bb.gamesystem.id")
@@ -62,10 +62,23 @@ on eventProcRoom me, tEvent, tSprID, tParam
 end
 
 on sendMoveGoal me, tloc
-  if getObject(pFrameworkId) = 0 then
+  tFramework = getObject(pFrameworkId)
+  if tFramework = 0 then
     return 0
   end if
-  return getObject(pFrameworkId).sendMoveGoal(tloc[1], tloc[2])
+  tStatus = tFramework.getGamestatus()
+  if pLastGameClickCoordinate = [tloc, tStatus] then
+    return 1
+  end if
+  pLastGameClickCoordinate = [tloc, tStatus]
+  if not objectp(pConnection) then
+    return error(me, "Info connection has disappeared!", #sendMoveGoal)
+  end if
+  if tStatus = #game_started then
+    return pConnection.send("GAMEEVENT", [#integer: tloc[1], #integer: tloc[2]])
+  else
+    return pConnection.send("MOVE", [#short: tloc[1], #short: tloc[2]])
+  end if
 end
 
 on handleSpectatorModeOff me

@@ -14,6 +14,9 @@ on prepare me, tdata
   if pState = 3 then
     pAnimStartTime = the milliSeconds
   end if
+  if me.pSprList.count < 2 then
+    return 0
+  end if
   repeat with tSpriteNo = 2 to count(me.pSprList)
     removeEventBroker(me.pSprList[tSpriteNo].spriteNum)
   end repeat
@@ -39,6 +42,9 @@ on update me
     else
       pFrameCounter = pFrameCounter + 1
       if pFrameCounter > pMaxSkipFrames then
+        if me.pSprList.count < 4 then
+          return 0
+        end if
         pFrameCounter = 0
         pAnimFrame = pAnimFrame + 1
         if pAnimFrame > 2 then

@@ -27,29 +27,30 @@ on update me
   if me.pSprList.count < 2 then
     return 
   end if
-  tCurName = me.pSprList[2].member.name
-  tNewName = tCurName.char[1..length(tCurName) - 1] & pActive
-  tMemNum = getmemnum(tNewName)
-  if pActive then
-    tDelim = the itemDelimiter
-    the itemDelimiter = "_"
-    if tNewName.item[6] = "0" or tNewName.item[6] = "6" then
-      me.pSprList[2].locZ = me.pSprList[1].locZ + 502
-    else
-      if tNewName.item[6] <> "0" and tNewName.item[6] <> "6" then
-        me.pSprList[2].locZ = me.pSprList[1].locZ + 2
+  tIsGateSprite = []
+  repeat with i = 1 to me.pSprList.count
+    tCurName = me.pSprList[i].member.name
+    tNewName = tCurName.char[1..length(tCurName) - 1] & pActive
+    tMemNum = getmemnum(tNewName)
+    if abs(tMemNum) > 0 then
+      tmember = member(abs(tMemNum))
+      me.pSprList[i].castNum = tMemNum
+      me.pSprList[i].width = tmember.width
+      me.pSprList[i].height = tmember.height
+      if pActive then
+        tIsGateSprite.append(i)
       end if
     end if
-    the itemDelimiter = tDelim
-  else
-    me.pSprList[2].locZ = me.pSprList[1].locZ + 1
+  end repeat
+  tDirection = 0
+  if me.pDirection.count > 0 then
+    tDirection = me.pDirection[1]
   end if
-  if tMemNum > 0 then
-    tmember = member(tMemNum)
-    me.pSprList[2].castNum = tMemNum
-    me.pSprList[2].width = tmember.width
-    me.pSprList[2].height = tmember.height
-  end if
+  tlocz = me.pLoczList[1][tDirection + 1]
+  tSpriteLocZ = me.pSprList[1].locZ
+  repeat with i = 2 to me.pSprList.count
+    me.pSprList[i].locZ = tSpriteLocZ + (me.pLoczList[i][tDirection + 1] - tlocz)
+  end repeat
   pChanges = 0
 end
 

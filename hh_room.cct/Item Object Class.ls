@@ -55,6 +55,9 @@ on define me, tProps
       pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
   end case
   me.solveMembers()
+  if me.prepare(tProps) = 0 then
+    return 0
+  end if
   me.updateLocation()
   return 1
 end
@@ -104,6 +107,124 @@ end
 
 on select me
   return 1
+end
+
+on prepare me, tdata
+  return 1
+end
+
+on solveColors me, tpartColors
+  if voidp(tpartColors) then
+    tpartColors = "0,0,0"
+  end if
+  pPartColors = []
+  tDelim = the itemDelimiter
+  the itemDelimiter = ","
+  repeat with i = 1 to tpartColors.item.count
+    pPartColors.add(string(tpartColors.item[i]))
+  end repeat
+  repeat with j = pPartColors.count to 4
+    pPartColors.add("*ffffff")
+  end repeat
+  the itemDelimiter = tDelim
+end
+
+on solveInk me, tPart, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 8
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, tClass & ".props is not valid!", #solveInk)
+    return 8
+  else
+    if voidp(tPropList[tPart]) then
+      return 8
+    end if
+    if not voidp(tPropList[tPart][#ink]) then
+      return tPropList[tPart][#ink]
+    end if
+  end if
+  return 8
+end
+
+on solveBlend me, tPart, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 100
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, tClass & ".props is not valid!", #solveBlend)
+    return 100
+  else
+    if voidp(tPropList[tPart]) then
+      return 100
+    end if
+    if not voidp(tPropList[tPart][#blend]) then
+      return tPropList[tPart][#blend]
+    end if
+  end if
+  return 100
+end
+
+on solveLocZ me, tPart, tdir, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 0
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, tClass & ".props is not valid!", #solveLocZ)
+    return 0
+  else
+    if voidp(tPropList[tPart]) then
+      return 0
+    end if
+    if voidp(tPropList[tPart][#zshift]) then
+      return 0
+    end if
+    if tPropList[tPart][#zshift].count <= tdir then
+      tdir = 0
+    end if
+  end if
+  return tPropList[tPart][#zshift][tdir + 1]
+end
+
+on solveLocShift me, tPart, tdir, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 0
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, tClass & ".props is not valid!", #solveLocShift)
+    return 0
+  else
+    if voidp(tPropList[tPart]) then
+      return 0
+    end if
+    if voidp(tPropList[tPart][#locshift]) then
+      return 0
+    end if
+    if tPropList[tPart][#locshift].count <= tdir then
+      return 0
+    end if
+    tShift = value(tPropList[tPart][#locshift][tdir + 1])
+    if ilk(tShift) = #point then
+      return tShift
+    end if
+  end if
+  return 0
 end
 
 on solveMembers me
@@ -204,7 +325,7 @@ on updateLocation me
               tPartTypes = [#wallright]
           end case
           tLounge = tVisualizer.getProperty(#layout)
-          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 and pDirection = #right then
+          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 then
             pWallY = 0
           end if
           tPartProps = tVisualizer.getPartAtLocation(pWallX, pWallY, tPartTypes)

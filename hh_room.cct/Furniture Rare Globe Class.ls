@@ -18,6 +18,9 @@ on updateStuffdata me, tValue
   else
     pActive = 1
   end if
+  if me.pSprList.count < 2 then
+    return 0
+  end if
   me.pSprList[2].castNum = 0
   pChanges = 1
 end

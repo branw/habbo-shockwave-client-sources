@@ -36,16 +36,40 @@ on showVoteQuestion me, tQuestion, tChoiceList
   if windowExists(pHubuWndID) then
     removeWindow(pHubuWndID)
   end if
-  createWindow(pHubuWndID, "hubu_poll.window")
+  createWindow(pHubuWndID, "hubu_poll_base.window")
   tWndObj = getWindow(pHubuWndID)
-  tWndObj.moveTo(6, 306)
+  tWndObj.merge("hubu_poll_timebar.window")
+  tWndObj.getElement("kiila").setProperty(#visible, 0)
+  tElement = tWndObj.getElement("hubu_time")
+  tFont = tElement.getFont()
+  tFont.lineHeight = tFont.fontSize + 2
+  tElement.setFont(tFont)
+  repeat with i = 1 to tChoiceList.count
+    tWndObj.merge("hubu_poll_question_" & i & ".window")
+    tWndObj.getElement("nothingbar" & i).setProperty(#visible, 0)
+    tElement = tWndObj.getElement("hubu_a" & i)
+    tHeightNow = tElement.getProperty(#image).rect.height
+    tFont = tElement.getFont()
+    tFont.lineHeight = tFont.fontSize + 2
+    tElement.setFont(tFont)
+    tElement.setText(tChoiceList[i])
+    tNewHeight = tElement.getProperty(#image).rect.height
+    if tNewHeight > tHeightNow then
+      tWndObj.pClientRect[2] = tWndObj.pClientRect[2] + (tNewHeight - tHeightNow)
+      tElement.setProperty(#height, tNewHeight)
+      tElement.setText(tChoiceList[i])
+    end if
+    tWndObj.getElement("button_" & i).setProperty(#blend, 100)
+  end repeat
+  tWndObj.moveTo(6, 480 - tWndObj.getProperty(#height))
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcHubu, me.getID(), #mouseUp)
   tWndObj.getElement("hubu_q").setText(tQuestion)
-  repeat with i = 1 to tChoiceList.count
-    tWndObj.getElement("hubu_a" & i).setText(tChoiceList[i])
-    tWndObj.getElement("button_" & i).setProperty(#blend, 100)
-  end repeat
+  tElement = tWndObj.getElement("hubu_statusbar")
+  tFont = tElement.getFont()
+  tFont.lineHeight = tFont.fontSize + 2
+  tElement.setFont(tFont)
+  tElement.setText(getText("hubu_odotetaan"))
   pTimerStart = the milliSeconds
   pTimerBarHeight = tWndObj.getElement("time_bar").getProperty(#height)
   pTimerBarLocY = tWndObj.getElement("time_bar").getProperty(#locY)
@@ -56,7 +80,9 @@ end
 on showVoteWait me
   tWndObj = getWindow(pHubuWndID)
   repeat with i = 1 to 6
-    tWndObj.getElement("button_" & i).setProperty(#blend, 50)
+    if tWndObj.getElement("button_" & i) <> 0 then
+      tWndObj.getElement("button_" & i).setProperty(#blend, 50)
+    end if
   end repeat
   return 1
 end

@@ -137,7 +137,7 @@ on animate me, tTime
 end
 
 on update me
-  if me.pSprList.count < 2 then
+  if me.pSprList.count < 3 then
     return 
   end if
   if pDoorOpentimer > 0 then

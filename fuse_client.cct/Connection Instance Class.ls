@@ -1,11 +1,13 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD
 global _player
 
 on construct me
+  pDecipherOn = 0
   pEncryptionOn = 0
   pMsgStruct = getStructVariable("struct.message")
   pMsgStruct.setaProp(#connection, me)
   pDecoder = 0
+  pEncoder = 0
   pLastContent = EMPTY
   pConnectionShouldBeKilled = 0
   pCommandsPntr = getStructVariable("struct.pointer")
@@ -69,6 +71,19 @@ on getDecoder me
   return pDecoder
 end
 
+on setEncoder me, tEncoder
+  if not objectp(tEncoder) then
+    return error(me, "Encoder object expected:" && tEncoder, #setEncoder)
+  else
+    pEncoder = tEncoder
+    return 1
+  end if
+end
+
+on getEncoder me
+  return pEncoder
+end
+
 on setLogMode me, tMode
   if tMode.ilk <> #integer then
     return error(me, "Invalid argument:" && tMode, #setLogMode)
@@ -123,7 +138,6 @@ on send me, tCmd, tMsg
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
   end if
-  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
   tMsg = tCmd & tMsg
   tLength = 0
   repeat with tChar = 1 to length(tMsg)
@@ -134,8 +148,8 @@ on send me, tCmd, tMsg
   tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
-  if pEncryptionOn and objectp(pDecoder) then
-    tMsg = pDecoder.encipher(tMsg)
+  if pEncryptionOn and objectp(pEncoder) then
+    tMsg = pEncoder.encipher(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -210,14 +224,13 @@ on sendNew me, tCmd, tParmArr
   if pLogMode > 0 then
     me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
   end if
-  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
   tMsg = tCmd & tMsg
   tL1 = numToChar(bitOr(bitAnd(tLength, 63), 64))
   tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
   tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
   tMsg = tL3 & tL2 & tL1 & tMsg
-  if pEncryptionOn and objectp(pDecoder) then
-    tMsg = pDecoder.encipher(tMsg)
+  if pEncryptionOn and objectp(pEncoder) then
+    tMsg = pEncoder.encipher(tMsg)
   end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
@@ -244,6 +257,8 @@ on getProperty me, tProp
       return pPort
     #decoder:
       return me.getDecoder()
+    #encoder:
+      return me.getEncoder()
     #logmode:
       return me.getLogMode()
     #listener:
@@ -252,6 +267,8 @@ on getProperty me, tProp
       return pCommandsPntr
     #message:
       return pMsgStruct
+    #deciphering:
+      return pDecipherOn
   end case
   return 0
 end
@@ -260,6 +277,8 @@ on setProperty me, tProp, tValue
   case tProp of
     #decoder:
       return me.setDecoder(tValue)
+    #encoder:
+      return me.setEncoder(tValue)
     #logmode:
       return me.setLogMode(tValue)
     #listener:
@@ -276,6 +295,8 @@ on setProperty me, tProp, tValue
       else
         return 0
       end if
+    #deciphering:
+      pDecipherOn = tValue
   end case
   return 0
 end
@@ -365,6 +386,9 @@ on xtraMsgHandler me
     me.disconnect()
     return 0
   end if
+  if pEncryptionOn and pDecipherOn then
+    tContent = pDecoder.decipher(tContent)
+  end if
   me.msghandler(tContent)
 end
 
@@ -400,7 +424,6 @@ on forwardMsg me, tSubject, tParams
   if pLogMode > 0 then
     me.log("-->" && tSubject & RETURN & tParams)
   end if
-  getObject(#session).set("con_lastreceived", tSubject && "-" && the long time)
   tParams = getStringServices().convertSpecialChars(tParams)
   tCallbackList = pListenersPntr.getaProp(#value).getaProp(tSubject)
   if tCallbackList.ilk <> #list then
@@ -423,11 +446,19 @@ on forwardMsg me, tSubject, tParams
 end
 
 on log me, tMsg
-  if not (the runMode contains "Author") then
-    return 0
+  if not pD then
+    the debugPlaybackEnabled = 0
+    if not (the runMode contains "Author") then
+      return 1
+    end if
   end if
   case pLogMode of
+    1:
+      put "[Connection" && me.getID() & "] :" && tMsg
     2:
+      if not (the runMode contains "Author") then
+        return 1
+      end if
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
       end if

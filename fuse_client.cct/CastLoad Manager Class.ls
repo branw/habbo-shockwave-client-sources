@@ -12,6 +12,7 @@ on construct me
   pNullCastName = "empty"
   pSysCastNum = castLib("fuse_client").number
   pBinCastNum = castLib(getVariable("dynamic.bin.cast")).number
+  me.verifyReset()
   return 1
 end
 
@@ -273,6 +274,7 @@ on setImportedCast me, tCastNum, tCastName, tFileName
     getResourceManager().preIndexMembers(tCastNum)
     pLoadedCasts[tCastName] = string(tCastNum)
   end if
+  me.verifyReset()
 end
 
 on getAvailableEmptyCast me
@@ -330,6 +332,16 @@ on ResetOneDynamicCast me, tCastNum
   castLib(pNullCastName && tCastNum - 2).fileName = getMoviePath() & pNullCastName & pFileExtension
   pAvailableDynCasts.addProp(pNullCastName & tCastNum - 2, tCastNum)
   return 1
+end
+
+on verifyReset me
+  repeat with tEmptyCastNum = 1 to the number of castLibs
+    if castLib(tEmptyCastNum).fileName contains pNullCastName then
+      if the number of castMembers of castLib tEmptyCastNum > 0 then
+        return resetClient()
+      end if
+    end if
+  end repeat
 end
 
 on solveNetErrorMsg me, tErrorCode

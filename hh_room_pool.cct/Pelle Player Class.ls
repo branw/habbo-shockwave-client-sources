@@ -22,6 +22,7 @@ on initPlayer me, jname, jdata
   pName = jname
   pJumpData = decompressString(jdata)
   pJumpData = "0000" & pJumpData & "0000000000"
+  plastPressKey = VOID
   me.openHidePlayBackWindow()
   receiveUpdate(me.getID())
   return 1

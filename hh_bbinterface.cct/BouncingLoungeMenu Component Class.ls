@@ -93,6 +93,23 @@ on getUserTeamIndex me
   return me.getPlayerTeamIndex([#name: me.getUserName()])
 end
 
+on gameCanStart me
+  tdata = me.getGameSystem().getObservedInstance()
+  if tdata = 0 then
+    return 0
+  end if
+  tOneTeamOK = 0
+  repeat with tTeam in tdata[#teams]
+    if tTeam[#players].count > 0 then
+      if tOneTeamOK = 1 then
+        return 1
+      end if
+      tOneTeamOK = 1
+    end if
+  end repeat
+  return 0
+end
+
 on getPlayerTeamIndex me, tSearchData
   if me.getGameSystem() = 0 then
     return 0

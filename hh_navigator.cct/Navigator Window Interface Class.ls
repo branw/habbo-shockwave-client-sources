@@ -72,6 +72,9 @@ on setProperty me, tProp, tValue, tView
   if tView = 0 then
     return 0
   end if
+  if (tView = #src or tView = #own or tView = #fav) and tProp = #categoryId then
+    tValue = tView
+  end if
   if pProps[tView] = VOID then
     pProps[tView] = [:]
   end if
@@ -98,7 +101,7 @@ on hideNavigator me, tHideOrRemove
     if tHideOrRemove = #Remove then
       removeWindow(pWindowTitle)
     else
-      getWindow(pWindowTitle).Hide()
+      getWindow(pWindowTitle).hide()
     end if
   end if
   return 1
@@ -138,6 +141,7 @@ on ChangeWindowView me, tWindowName
     return tWndObj.close()
   end if
   pLastWindowName = tWindowName
+  tPassword = 0
   case tWindowName of
     "nav_gr_password", "nav_gr_trypassword", "nav_gr_passwordincorrect":
       tName = me.getComponent().getNodeProperty(me.getProperty(#viewedNodeId), #name)
@@ -145,6 +149,7 @@ on ChangeWindowView me, tWindowName
         tName = EMPTY
       end if
       getWindow(me.pWindowTitle).getElement("nav_roomname_text").setText(tName)
+      tPassword = 1
     "nav_remove_rights":
       nothing()
     otherwise:
@@ -155,6 +160,12 @@ on ChangeWindowView me, tWindowName
   end if
   tCategoryId = me.getProperty(#categoryId)
   tRoomInfoState = me.getProperty(#roomInfoState)
+  if tPassword then
+    tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #mouseDown)
+    tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #mouseUp)
+    tWndObj.registerProcedure(#eventProcNavigatorPrivate, me.getID(), #keyDown)
+    return 1
+  end if
   tNaviView = me.getNaviView()
   case tNaviView of
     #unit:
@@ -163,9 +174,9 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcNavigatorPublic, me.getID(), #keyDown)
       me.getComponent().createNaviHistory(tCategoryId)
       me.updateRoomList(tCategoryId, VOID)
-      if tRoomInfoState = #Hide then
+      if tRoomInfoState = #hide then
         me.setProperty(#roomInfoState, #show)
-        me.setRoomInfoArea(#Hide)
+        me.setRoomInfoArea(#hide)
       else
         me.showNodeInfo(me.getProperty(#viewedNodeId))
       end if
@@ -180,9 +191,9 @@ on ChangeWindowView me, tWindowName
       else
         me.getComponent().updateInterface(tCategoryId)
       end if
-      if tRoomInfoState = #Hide then
+      if tRoomInfoState = #hide then
         me.setProperty(#roomInfoState, #show)
-        me.setRoomInfoArea(#Hide)
+        me.setRoomInfoArea(#hide)
       else
         me.showNodeInfo(me.getProperty(#viewedNodeId))
       end if
@@ -369,15 +380,15 @@ on showNodeInfo me, tNodeId
         tHeaderTxt = getText("nav_private_helptext_hd")
     end case
     if tWndObj.elementExists("nav_modify_button") then
-      tWndObj.getElement("nav_modify_button").Hide()
+      tWndObj.getElement("nav_modify_button").hide()
     end if
     if tWndObj.elementExists("nav_addtofavourites_button") then
-      tWndObj.getElement("nav_addtofavourites_button").Hide()
+      tWndObj.getElement("nav_addtofavourites_button").hide()
     end if
     if tWndObj.elementExists("nav_removefavourites_button") then
-      tWndObj.getElement("nav_removefavourites_button").Hide()
+      tWndObj.getElement("nav_removefavourites_button").hide()
     end if
-    tWndObj.getElement("nav_go_button").Hide()
+    tWndObj.getElement("nav_go_button").hide()
   else
     case tView of
       #unit:
@@ -523,7 +534,7 @@ on createImgResources me
   tWriter.define([#wordWrap: 0, #color: rgb("#7B9498"), #alignment: #right])
   pHideFullLinkImages = [:]
   pHideFullLinkImages[#show] = tWriter.render(getText("nav_showfull")).duplicate()
-  pHideFullLinkImages[#Hide] = tWriter.render(getText("nav_hidefull")).duplicate()
+  pHideFullLinkImages[#hide] = tWriter.render(getText("nav_hidefull")).duplicate()
   removeWriter("nav_showfull")
   tWriter = VOID
   createWindow("naviTempWindow")
@@ -742,7 +753,7 @@ on setHideFullRoomsLink me
   if tstate then
     tImage = pHideFullLinkImages[#show]
   else
-    tImage = pHideFullLinkImages[#Hide]
+    tImage = pHideFullLinkImages[#hide]
   end if
   tOffX = tImage.width - tElem.getProperty(#width)
   tOffY = 0
@@ -765,7 +776,7 @@ on setRoomInfoArea me, tstate
     return 0
   end if
   me.setProperty(#roomInfoState, tstate)
-  if tstate = #Hide then
+  if tstate = #hide then
     me.setProperty(#viewedNodeId, VOID)
   end if
   tWndObj = getWindow(me.pWindowTitle)

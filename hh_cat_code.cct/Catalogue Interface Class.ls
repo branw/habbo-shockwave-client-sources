@@ -35,9 +35,7 @@ on deconstruct me
   if objectExists(pPageProgramID) then
     removeObject(pPageProgramID)
   end if
-  me.hideCatalogue()
-  me.hideOrderInfo()
-  me.hidePurchaseOk()
+  me.hideAllWindows()
   removeWriter(pWriterPages)
   unregisterMessage(#enterRoom, me.getID())
   unregisterMessage(#leaveRoom, me.getID())
@@ -58,6 +56,12 @@ end
 
 on showCatalogue me
   if not windowExists(pCatalogID) then
+    tList = [:]
+    tList["showDialog"] = 1
+    executeMessage(#getHotelClosingStatus, tList)
+    if tList["retval"] <> 0 then
+      return 1
+    end if
     me.ChangeWindowView()
     return 1
   else
@@ -766,8 +770,9 @@ on ShowSmallIcons me, tstate, tPram
       tmember = pCurrentPageData["productList"][f]["smallPrewImg"]
       tClass = pCurrentPageData["productList"][f]["class"]
       tpartColors = pCurrentPageData["productList"][f]["partColors"]
+      tDealNumber = pCurrentPageData["productList"][f]["dealNumber"]
       tid = "ctlg_small_img_" & f - pProductOffset
-      if tmember <> 0 then
+      if tmember <> 0 or tDealNumber > 0 then
         if tWndObj.elementExists(tid) then
           tElem = tWndObj.getElement(tid)
           if not voidp(tstate) then
@@ -778,7 +783,19 @@ on ShowSmallIcons me, tstate, tPram
           if tClass <> EMPTY then
             tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
           else
-            tRenderedImage = member(tmember).image
+            if tmember <> 0 then
+              tRenderedImage = member(tmember).image
+            else
+              if not objectExists("ctlg_dealpreviewObj") then
+                tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
+                if tObj = 0 then
+                  return error(me, "Failed object creation!", #showHideDialog)
+                end if
+              else
+                tObj = getObject("ctlg_dealpreviewObj")
+              end if
+              tRenderedImage = tObj.renderDealPreviewImage(tDealNumber)
+            end if
           end if
           tWid = tElem.getProperty(#width)
           tHei = tElem.getProperty(#height)
@@ -821,60 +838,73 @@ on showPreviewImage me, tProps, tElemID
   if tProps["prewImage"] > 0 then
     tImage = member(tProps["prewImage"]).image
   else
-    if voidp(tProps["class"]) then
-      return error(me, "Class property missing", #showPreviewImage)
-    else
-      tClass = tProps["class"]
-    end if
-    if voidp(tProps["direction"]) then
-      return error(me, "Direction property missing", #showPreviewImage)
-    else
-      tProps["direction"] = "2,2,2"
-      tDirection = value("[" & tProps["direction"] & "]")
-      if tDirection.count < 3 then
-        tDirection = [0, 0, 0]
+    if not voidp(tProps["dealList"]) then
+      if not objectExists("ctlg_dealpreviewObj") then
+        tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
+        if tObj = 0 then
+          return error(me, "Failed object creation!", #showHideDialog)
+        end if
+      else
+        tObj = getObject("ctlg_dealpreviewObj")
       end if
-    end if
-    if voidp(tProps["dimensions"]) then
-      return error(me, "Dimensions property missing", #showPreviewImage)
+      tObj.define(tProps["dealList"])
+      tImage = tObj.getPicture()
     else
-      tDimensions = value("[" & tProps["dimensions"] & "]")
-      if tDimensions.count < 2 then
-        tDimensions = [1, 1]
+      if voidp(tProps["class"]) then
+        return error(me, "Class property missing", #showPreviewImage)
+      else
+        tClass = tProps["class"]
       end if
-    end if
-    if voidp(tProps["partColors"]) then
-      return error(me, "PartColors property missing", #showPreviewImage)
-    else
-      tpartColors = tProps["partColors"]
-      if tpartColors = EMPTY or tpartColors = "0,0,0" then
-        tpartColors = "*ffffff"
+      if voidp(tProps["direction"]) then
+        return error(me, "Direction property missing", #showPreviewImage)
+      else
+        tProps["direction"] = "2,2,2"
+        tDirection = value("[" & tProps["direction"] & "]")
+        if tDirection.count < 3 then
+          tDirection = [0, 0, 0]
+        end if
       end if
-    end if
-    if voidp(tProps["objectType"]) then
-      return error(me, "objectType property missing", #showPreviewImage)
-    else
-      tObjectType = tProps["objectType"]
-    end if
-    tdata = [:]
-    tdata[#id] = "ctlg_previewObj"
-    tdata[#class] = tClass
-    tdata[#name] = tClass
-    tdata[#Custom] = tClass
-    tdata[#direction] = tDirection
-    tdata[#dimensions] = tDimensions
-    tdata[#colors] = tpartColors
-    tdata[#objectType] = tObjectType
-    if not objectExists("ctlg_previewObj") then
-      tObj = createObject("ctlg_previewObj", ["Product Preview Class"])
-      if tObj = 0 then
-        return error(me, "Failed object creation!", #showHideDialog)
+      if voidp(tProps["dimensions"]) then
+        return error(me, "Dimensions property missing", #showPreviewImage)
+      else
+        tDimensions = value("[" & tProps["dimensions"] & "]")
+        if tDimensions.count < 2 then
+          tDimensions = [1, 1]
+        end if
       end if
-    else
-      tObj = getObject("ctlg_previewObj")
+      if voidp(tProps["partColors"]) then
+        return error(me, "PartColors property missing", #showPreviewImage)
+      else
+        tpartColors = tProps["partColors"]
+        if tpartColors = EMPTY or tpartColors = "0,0,0" then
+          tpartColors = "*ffffff"
+        end if
+      end if
+      if voidp(tProps["objectType"]) then
+        return error(me, "objectType property missing", #showPreviewImage)
+      else
+        tObjectType = tProps["objectType"]
+      end if
+      tdata = [:]
+      tdata[#id] = "ctlg_previewObj"
+      tdata[#class] = tClass
+      tdata[#name] = tClass
+      tdata[#Custom] = tClass
+      tdata[#direction] = tDirection
+      tdata[#dimensions] = tDimensions
+      tdata[#colors] = tpartColors
+      tdata[#objectType] = tObjectType
+      if not objectExists("ctlg_previewObj") then
+        tObj = createObject("ctlg_previewObj", ["Product Preview Class"])
+        if tObj = 0 then
+          return error(me, "Failed object creation!", #showHideDialog)
+        end if
+      else
+        tObj = getObject("ctlg_previewObj")
+      end if
+      tObj.define(tdata.duplicate())
+      tImage = tObj.getPicture()
     end if
-    tObj.define(tdata.duplicate())
-    tImage = tObj.getPicture()
   end if
   if tImage.ilk = #image then
     tDestImg = tElem.getProperty(#image)
@@ -1117,6 +1147,12 @@ on selectProduct me, tOrderNum, tFeedFlag
   end if
   pLastProductNum = tProductNum
   return 1
+end
+
+on hideAllWindows me
+  me.hideCatalogue()
+  me.hideOrderInfo()
+  me.hidePurchaseOk()
 end
 
 on eventProcCatalogue me, tEvent, tSprID, tParam

@@ -2,7 +2,7 @@ property pWindowID, pTimeOutID, pOpenWindow, pScoreData, pCountdownEndTime, pJoi
 
 on construct me
   pJoinedPlayers = []
-  pWindowID = getText("bb_title_BBscores")
+  pWindowID = getText("gs_title_finalscores")
   pTimeOutID = "bb_endgame_resetGameTimeout"
   createWriter("bb_plain_norm_left", getStructVariable("struct.font.plain"))
   pWriterPlainNormLeft = getWriter("bb_plain_norm_left")
@@ -28,7 +28,7 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #gameend:
       pJoinedPlayers = []
@@ -154,7 +154,7 @@ on renderFinalScoresText me
     return 0
   end if
   if me.getGameSystem().getSpectatorModeFlag() then
-    repeat with tButtonID in ["bb_button_playAgn", "bb_button_leaveGam2"]
+    repeat with tButtonID in ["bb_button_playAgn", "bb_button_leaveGam2", "gs_button_buytickets"]
       tWndObj.getElement(tButtonID).hide()
     end repeat
   end if
@@ -193,7 +193,7 @@ on renderFinalScoresText me
     end repeat
   end repeat
   if not tTie then
-    tElem = tWndObj.getElement("bb_bestplayer_name")
+    tElem = tWndObj.getElement("gs_bestplayer_name")
     if tElem <> 0 then
       tUserObj = tRoomComponent.getUserObject(tBestPlayer[#id])
       if tUserObj <> 0 then
@@ -203,14 +203,14 @@ on renderFinalScoresText me
           tPlayerImage.copyPixels(tTempImage, tTempImage.rect + rect(7, -7, 7, -7), tTempImage.rect)
         end if
         tElem.setText(tUserObj.getName())
-        tElem = tWndObj.getElement("bb_bestplayer_score")
+        tElem = tWndObj.getElement("gs_bestplayer_score")
         tElem.setText(tBestPlayer[#score])
       end if
     end if
   else
-    tElem = tWndObj.getElement("bb_bestplayer_title")
+    tElem = tWndObj.getElement("gs_bestplayer_title")
     if tElem <> 0 then
-      tElem.setText(getText("bb_score_tie"))
+      tElem.setText(getText("gs_score_tie"))
     end if
   end if
   tElem = tWndObj.getElement("bb_icon_winner")
@@ -311,7 +311,7 @@ on showJoinedPlayersNum me
   if tElem = 0 then
     return 0
   end if
-  return tElem.setText(replaceChunks(getText("bb_info_joinedPlayers"), "\x", pJoinedPlayers.count))
+  return tElem.setText(replaceChunks(getText("gs_joinedplayers"), "\x", pJoinedPlayers.count))
 end
 
 on startResetCountdown me, tSecondsLeft
@@ -354,7 +354,7 @@ on renderCountdownTimer me
   end if
   tTime = me.convertToMinSec(tEndTime - the milliSeconds)
   tTimeStr = tTime[1] & ":" & tTime[2]
-  tElem.setText(replaceChunks(getText("bb_info_timeToJoin"), "\x", tTimeStr))
+  tElem.setText(replaceChunks(getText("gs_timetojoin"), "\x", tTimeStr))
 end
 
 on eventProc me, tEvent, tSprID, tParam
@@ -371,7 +371,7 @@ on eventProc me, tEvent, tSprID, tParam
       me.getGameSystem().enterLounge()
     "bb_link_shrink", "bb_link_expand":
       me.toggleWindowMode()
-    "bb_buy_tickets_button":
+    "gs_button_buytickets":
       executeMessage(#show_ticketWindow)
   end case
 end

@@ -56,11 +56,17 @@ end
 
 on setOn me
   pActive = 1
+  if me.pLoczList.count < 2 then
+    return 0
+  end if
   me.pLoczList[2] = [200, 200, 0, 0, 0, 0, 200, 200]
 end
 
 on setOff me
   pActive = 0
+  if me.pLoczList.count < 2 then
+    return 0
+  end if
   me.pLoczList[2] = [0, 0, 0, 0, 0, 0, 0, 0]
 end
 

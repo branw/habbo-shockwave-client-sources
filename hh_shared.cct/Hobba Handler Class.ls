@@ -24,7 +24,7 @@ on handle_cryforhelp me, tMsg
     tProps[#casts] = tMarker
     tProps[#port] = tConn.GetIntFrom()
     tProps[#door] = tConn.GetIntFrom()
-    tProps[#room_id] = #public
+    tProps[#room_id] = tProps[#door]
   else
     if ttype = 1 then
       tProps[#type] = #private
@@ -37,7 +37,7 @@ on handle_cryforhelp me, tMsg
         tProps[#casts] = tMarker
         tProps[#port] = tConn.GetIntFrom()
         tProps[#door] = tConn.GetIntFrom()
-        tProps[#room_id] = #public
+        tProps[#room_id] = tProps[#door]
       end if
     end if
   end if

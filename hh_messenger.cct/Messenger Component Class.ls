@@ -479,7 +479,7 @@ on resume me
 end
 
 on handleFriendlistConcurrency me
-  executeMessage(#alert, [#msg: "console_buddylist_concurrency", #modal: 1])
+  executeMessage(#alert, [#Msg: "console_buddylist_concurrency", #modal: 1])
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
   end if

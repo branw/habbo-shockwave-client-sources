@@ -100,7 +100,7 @@ on setcursor me, ttype
   return 1
 end
 
-on openNetPage me, tURL_key
+on openNetPage me, tURL_key, tTarget
   if not stringp(tURL_key) then
     return 0
   end if
@@ -116,7 +116,13 @@ on openNetPage me, tURL_key
       return error(me, "URL prefix not defined, invalid link.", #openNetPage)
     end if
   end if
-  gotoNetPage(tURL, "_new")
+  if voidp(tTarget) then
+    tTarget = "_new"
+  end if
+  if tTarget = "self" then
+    tTarget = VOID
+  end if
+  gotoNetPage(tURL, tTarget)
   put "Open page:" && tURL
   return 1
 end

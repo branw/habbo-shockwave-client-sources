@@ -169,7 +169,7 @@ on handle_messenger_error me, tMsg
         return me.getInterface().openBuddyMassremoveWindow()
       else
         if tReason = 2 then
-          executeMessage(#alert, [#msg: "console_buddylimit_requester", #modal: 1])
+          executeMessage(#alert, [#Msg: "console_buddylimit_requester", #modal: 1])
         else
           if tReason = 42 then
             return me.getComponent().handleFriendlistConcurrency()

@@ -1,6 +1,8 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
 
 on construct me
+  pID = 0
+  pWebID = VOID
   pName = EMPTY
   pPartList = []
   pPartIndex = [:]
@@ -112,6 +114,26 @@ on define me, tdata
   return 1
 end
 
+on changeFigureAndData me, tdata
+  pSex = tdata[#sex]
+  pCustom = tdata[#Custom]
+  tmodels = tdata[#figure]
+  repeat with tPart in pPartList
+    tPartId = tPart.getPartID()
+    tNewModelItem = tmodels[tPartId]
+    if ilk(tNewModelItem) = #propList then
+      tmodel = tNewModelItem["model"]
+      tColor = tNewModelItem["color"]
+      tPart.changePartData(tmodel, tColor)
+      pColors[tPartId] = tColor
+    end if
+  end repeat
+  pChanges = 1
+  me.render()
+  me.reDraw()
+  pInfoStruct[#image] = me.getPicture()
+end
+
 on setup me, tdata
   pName = tdata[#name]
   pClass = tdata[#class]
@@ -124,6 +146,9 @@ on setup me, tdata
   pLocY = tdata[#y]
   pLocH = tdata[#h]
   pBadge = tdata[#badge]
+  if not voidp(tdata.getaProp(#webID)) then
+    pWebID = tdata[#webID]
+  end if
   pPeopleSize = getVariable("human.size." & integer(pXFactor))
   if not pPeopleSize then
     error(me, "People size not found, using default!", #setup)
@@ -323,6 +348,10 @@ on getInfo me
   return pInfoStruct
 end
 
+on getWebID me
+  return pWebID
+end
+
 on getSprites me
   return [pSprite, pShadowSpr, pMatteSpr]
 end
@@ -339,6 +368,8 @@ on getProperty me, tPropID
       return pMainAction
     #moving:
       return me.pMoving
+    #badge:
+      return me.pBadge
     #swimming:
       return me.pSwim
   end case
@@ -347,6 +378,10 @@ end
 
 on setProperty me, tPropID, tValue
   -- ERROR: Could not identify jmp
+  return 0
+end
+
+on isInSwimsuit me
   return 0
 end
 

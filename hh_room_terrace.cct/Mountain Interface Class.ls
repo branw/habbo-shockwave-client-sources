@@ -94,7 +94,7 @@ on doTheDew me, tUserName
     return error(me, "Couldn't extract sprites from user object:" && tUserName, #doTheDew)
   end if
   pUserName = tUserName
-  tUserObj.refresh(12, 21, tUserObj.pLocH, 4, 4)
+  tUserObj.Refresh(12, 21, tUserObj.pLocH, 4, 4)
   tUserObj.fuseAction_wave()
   call(#doHandWorkRight, tUserObj.pPartList, "wav")
   tUserObj.prepare()

@@ -108,7 +108,7 @@ on petNameUnacceptable me
   if tWndObj.elementExists("dedication_text") then
     tWndObj.getElement("dedication_text").setText(EMPTY)
   end if
-  return executeMessage(#alert, [#msg: "catalog_pet_unacceptable", #id: "ctlg_petunacceptable"])
+  return executeMessage(#alert, [#Msg: "catalog_pet_unacceptable", #id: "ctlg_petunacceptable"])
 end
 
 on definePet me, tProps
@@ -229,10 +229,10 @@ on eventProc me, tEvent, tSprID, tProp
         tText = replaceChunks(tText, RETURN, "\r")
       end if
       if tText.length < 1 then
-        return executeMessage(#alert, [#msg: "catalog_give_petname", #id: "ctlg_petmsg"])
+        return executeMessage(#alert, [#Msg: "catalog_give_petname", #id: "ctlg_petmsg"])
       else
         if tText.length > 15 then
-          return executeMessage(#alert, [#msg: "catalog_pet_name_length", #id: "ctlg_petmsg"])
+          return executeMessage(#alert, [#Msg: "catalog_pet_name_length", #id: "ctlg_petmsg"])
         end if
       end if
       tText = tText.char[1..15]

@@ -105,6 +105,7 @@ on prepare me
     call(#update, pUserObjList)
     me.updateSlideObjects(the milliSeconds)
     call(#update, pActiveObjList)
+    call(#update, pItemObjList)
   end if
 end
 
@@ -212,6 +213,7 @@ on leaveRoom me, tJumpingToSubUnit
     getObject(pBalloonId).removeBalloons()
   end if
   me.getInterface().hideAll()
+  getObject(#session).Remove("user_index")
   getObject(#session).set("room_owner", 0)
   getObject(#session).set("room_controller", 0)
   return 1
@@ -436,11 +438,10 @@ on sendChat me, tChat
   if getObject(#session).get("user_rights").getOne("fuse_debug_window") then
     tKeywords = me.getInterface().getKeywords()
     case tChat.word[1] of
-      tKeywords[1], tKeywords[2]:
-        if float((the productVersion).char[1..3]) >= 8.5 then
-          the debugPlaybackEnabled = 1
-        end if
+      "!!" & tKeywords[1], "!!" & tKeywords[2]:
         tInfoID = getVariable("connection.info.id")
+        getConnection(#info).pD = 1
+        the debugPlaybackEnabled = 1
         case tChat.word[1] of
           tKeywords[1]:
             if connectionExists(tInfoID) then
@@ -452,17 +453,6 @@ on sendChat me, tChat
             end if
         end case
         return 1
-      tKeywords[3]:
-        if not memberExists("System Debug Class") then
-          return 0
-        end if
-        if not objectExists("loggertool") then
-          createObject("loggertool", "Debug System Class")
-        end if
-        if getObject("loggertool") = 0 then
-          return 1
-        end if
-        return getObject("loggertool").initDebug()
     end case
     tKeywords = VOID
   end if
@@ -481,6 +471,10 @@ on sendChat me, tChat
     tMode = "CHAT"
     if tChat.word[2] = "x" then
       if tSelected = EMPTY then
+        tMode = "WHISPER"
+        tMsg = "User not found."
+        tid = getObject(#session).get("user_index")
+        me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tid, #message: tMsg])
         return 1
       end if
       tOffsetX = offset("x", tChat)
@@ -583,6 +577,9 @@ on setSpectatorMode me, tstate
   if tModeMgrObj = 0 then
     return error(me, "Spectator System missing!", #setSpectatorMode)
   end if
+  if tstate then
+    getObject(#session).set("user_index", -1000)
+  end if
   tRoomData = me.getRoomData()
   if tRoomData = 0 then
     tRoomType = #public
@@ -607,6 +604,44 @@ end
 on showCfhSenderDelayed me, tid
   pPickedCryName = EMPTY
   return me.getInterface().showCfhSenderDelayed(tid)
+end
+
+on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
+  if voidp(tUserID) or voidp(tUserFigure) or voidp(tUserCustomInfo) then
+    return 0
+  end if
+  tUserID = string(tUserID)
+  tSession = getObject(#session)
+  tFigureParser = getObject("Figure_System")
+  tParsedFigure = tFigureParser.parseFigure(tUserFigure, tsex, "user")
+  if tSession.get("lastroom") = "Entry" then
+    tSession.set("user_figure", tParsedFigure)
+    tSession.set("user_sex", tsex)
+    tSession.set("user_customData", tUserCustomInfo)
+    executeMessage(#updateFigureData)
+  else
+    if voidp(pUserObjList[tUserID]) then
+      return 0
+    end if
+    tUserObj = pUserObjList[tUserID]
+    if tUserObj.isInSwimsuit() then
+      return 0
+    end if
+    tloc = tUserObj.getLocation()
+    tdir = tUserObj.getDirection()
+    tuser = [:]
+    tuser[#figure] = tParsedFigure
+    tuser[#Custom] = tUserCustomInfo
+    tuser[#sex] = tsex
+    tUserObj.changeFigureAndData(tuser)
+    tScale = #large
+    if me.getInterface().getGeometry().getTileWidth() < 64 then
+      tScale = #small
+    end if
+    tChangeEffect = createObject(#random, "Change Clothes Effect Class")
+    tUserSprites = tUserObj.getSprites()
+    tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+  end if
 end
 
 on loadRoomCasts me
@@ -952,6 +987,11 @@ on createRoomObject me, tdata, tList, tClass
     tCustomCls = tCustomCls.item[1]
     the itemDelimiter = tDelim
   end if
+  if not voidp(tdata[#type]) then
+    if getObject(pClassContId).exists(tCustomCls & tdata[#type]) then
+      tCustomCls = tCustomCls & tdata[#type]
+    end if
+  end if
   if getObject(pClassContId).exists(tCustomCls) then
     tClasses = value(getObject(pClassContId).get(tCustomCls))
   else
@@ -962,9 +1002,10 @@ on createRoomObject me, tdata, tList, tClass
     return error(me, "Failed to create room object:" && tdata, #createRoomObject)
   end if
   tObject.setID(tdata[#id])
-  tObject.define(tdata.duplicate())
-  if the result = 0 then
-    return 1
+  tSuccess = tObject.define(tdata.duplicate())
+  if not tSuccess then
+    tObject.deconstruct()
+    return error(me, "Failed to define room object:" && tdata, #createRoomObject)
   end if
   tList[tObject.getID()] = tObject
   return 1
@@ -991,18 +1032,31 @@ on getRoomObject me, tid, tList
 end
 
 on roomObjectExists me, tid, tList
+  if not (listp(tList) or voidp(tid)) then
+    return 0
+  end if
+  if ilk(tid) = #string then
+    if tid = EMPTY then
+      return 0
+    end if
+  else
+    if tid < 1 then
+      return 0
+    end if
+  end if
   return not voidp(tList[tid])
 end
 
 on startTeleport me, tTeleId, tFlatID
   getObject(#session).set("target_door_ID", tTeleId)
   getObject(#session).set("target_flat_ID", tFlatID)
-  registerMessage(symbol("receivedFlatStructf_" & tFlatID), me.getID(), #processTeleportStruct)
-  executeMessage(#requestFlatStruct, tFlatID)
+  return executeMessage(#requestRoomData, tFlatID, #private, [me.getID(), #processTeleportStruct])
 end
 
 on processTeleportStruct me, tFlatStruct
-  unregisterMessage(symbol("receivedFlatStructf_" & getObject(#session).get("target_flat_ID")))
+  if not listp(tFlatStruct) then
+    return 0
+  end if
   tFlatStruct[#id] = tFlatStruct[#flatId]
   tFlatStruct.addProp(#teleport, getObject(#session).get("target_door_ID"))
   getObject(#session).Remove("target_flat_id")

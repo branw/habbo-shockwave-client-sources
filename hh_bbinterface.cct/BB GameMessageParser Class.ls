@@ -6,7 +6,7 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #msgstruct_instancelist:
       return me.handle_instancelist(tdata)
@@ -165,6 +165,7 @@ on handle_fullgamestatus me, tMsg
     end repeat
   end repeat
   tdata.addProp(#flood, tWorld)
+  tNumSubturns = tConn.GetIntFrom()
   tNumEvents = tConn.GetIntFrom()
   tList = []
   repeat with i = 1 to tNumEvents
@@ -172,7 +173,7 @@ on handle_fullgamestatus me, tMsg
     tEvent.addProp(#type, tConn.GetIntFrom())
     case tEvent[#type] of
       0:
-        tEvent.addProp(#Data, me.parse_fullgamestatus_player(tConn))
+        tEvent.addProp(#data, me.parse_fullgamestatus_player(tConn))
       1:
         tEvent.addProp(#id, tConn.GetIntFrom())
       2:
@@ -235,6 +236,7 @@ on handle_gamestatus me, tMsg
     tList.add(tConn.GetIntFrom())
   end repeat
   tdata.addProp(#scores, tList)
+  tNumSubturns = tConn.GetIntFrom()
   tNumEvents = tConn.GetIntFrom()
   tList = []
   repeat with i = 1 to tNumEvents
@@ -242,7 +244,7 @@ on handle_gamestatus me, tMsg
     tEvent.addProp(#type, tConn.GetIntFrom())
     case tEvent[#type] of
       0:
-        tEvent.addProp(#Data, me.parse_fullgamestatus_player(tConn))
+        tEvent.addProp(#data, me.parse_fullgamestatus_player(tConn))
       1:
         tEvent.addProp(#id, tConn.GetIntFrom())
       2:

@@ -24,7 +24,7 @@ on update me
   if not pChanges then
     return 
   end if
-  if me.pSprList.count < 4 then
+  if me.pSprList.count < 5 then
     return 
   end if
   the itemDelimiter = "_"

@@ -44,13 +44,13 @@ on checkConnection me
     return error(me, "MUS connection not found:" && pConnectionId, #checkConnection)
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
-    tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#Password)
+    tUserID = getObject(#session).get(#user_user_id)
+    tMachineID = getSpecialServices().getMachineID()
     if pUseCrypto then
-      tUserName = pCrypto.encipher(tUserName)
-      tPassword = pCrypto.encipher(tPassword)
+      tUserID = pCrypto.encipher(tUserID)
+      tMachineID = pCrypto.encipher(tMachineID)
     end if
-    getMultiuser(pConnectionId).send("LOGIN" && tUserName && tPassword)
+    getMultiuser(pConnectionId).send("LOGIN" && tUserID && tMachineID)
     me.next()
   else
     me.delay(1000, #checkConnection)
@@ -146,6 +146,8 @@ on helloReply me, tMsg
     pUseCrypto = 0
   else
     pCrypto.setKey(tSecretKey)
+    tPremixString = "j5bty8i7s0gkca3m53z7b0bh3xonkxpun0s5qjn0gkntvqzzpwi1nqagpa7tjopes0hm5t870kam370hxnxu05j0ktqzw1qgatoe0mf"
+    pCrypto.preMixEncodeSbox(tPremixString, 17)
     pUseCrypto = 1
   end if
   pHandshakeFinished = 1

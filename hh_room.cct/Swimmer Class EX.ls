@@ -369,3 +369,7 @@ on action_mv me, tProps
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
 end
+
+on isInSwimsuit me
+  return 1
+end

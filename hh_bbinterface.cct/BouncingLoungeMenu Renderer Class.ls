@@ -1,4 +1,4 @@
-property pMainWindowId, pGoButtonImage, pJoinButtonImage, pWriterPlainNormLeft, pWriterListPlainNormLeft, pWriterPlainNormRight, pWriterPlainBoldLeft, pWriterLinkRight
+property pMainWindowId, pGoButtonImages, pJoinButtonImage, pWriterPlainNormLeft, pWriterListPlainNormLeft, pWriterPlainNormRight, pWriterPlainBoldLeft, pWriterLinkRight
 
 on construct me
   pMainWindowId = "bb"
@@ -34,7 +34,7 @@ on deconstruct me
   pWriterPlainBoldLeft = VOID
   removeWriter("bb_link_right")
   pWriterLinkRight = VOID
-  pGoButtonImage = VOID
+  pGoButtonImages = VOID
   pJoinButtonImage = VOID
   return 1
 end
@@ -45,12 +45,16 @@ on defineWindow me, tid
 end
 
 on renderButtonImages me
-  pGoButtonImage = image(92, 12, 8)
-  tImage = pWriterLinkRight.render(getText("bb_link_go"))
-  tLocH = 80 - tImage.width
-  pGoButtonImage.copyPixels(tImage, tImage.rect + rect(tLocH, 0, tLocH, 0), tImage.rect)
-  tImage = member(getmemnum("bb_arr")).image
-  pGoButtonImage.copyPixels(tImage, tImage.rect + rect(84, 1, 84, 1), tImage.rect)
+  pGoButtonImages = [:]
+  repeat with tstate in [#created, #started, #finished]
+    tGoButtonImage = image(92, 12, 8)
+    tImage = pWriterLinkRight.render(getText("gs_button_go_" & tstate))
+    tLocH = 80 - tImage.width
+    tGoButtonImage.copyPixels(tImage, tImage.rect + rect(tLocH, 0, tLocH, 0), tImage.rect)
+    tImage = member(getmemnum("bb_arr")).image
+    tGoButtonImage.copyPixels(tImage, tImage.rect + rect(84, 1, 84, 1), tImage.rect)
+    pGoButtonImages.addProp(tstate, tGoButtonImage)
+  end repeat
   pJoinButtonImage = image(191, 16, 8)
   pJoinButtonImage.fill(1, 1, 193, 16, paletteIndex(86))
   tImage = pWriterLinkRight.render(getText("bb_link_join"))
@@ -101,8 +105,11 @@ on renderInstanceList me, tList, tStartIndex, tCount
       end if
       tTextImg = pWriterPlainBoldLeft.render(tItem[#name])
       tImage.copyPixels(tTextImg, tTextImg.rect + rect(32, 3 + tAddOffset, 32, 3 + tAddOffset), tTextImg.rect)
-      tLocH = tImage.width - pGoButtonImage.width - 5
-      tImage.copyPixels(pGoButtonImage, pGoButtonImage.rect + rect(tLocH, 19, tLocH, 19), pGoButtonImage.rect, [#ink: 36])
+      tGoButtonImage = pGoButtonImages[tItem[#state]]
+      if tGoButtonImage <> VOID then
+        tLocH = tImage.width - tGoButtonImage.width - 5
+        tImage.copyPixels(tGoButtonImage, tGoButtonImage.rect + rect(tLocH, 19, tLocH, 19), tGoButtonImage.rect, [#ink: 36])
+      end if
       tElem.setProperty(#cursor, "cursor.finger")
     else
       tText2 = "---"
@@ -190,20 +197,25 @@ end
 
 on renderInstanceDetailButton me, tButtonState, tGameState
   tResult = image(191, 16, 8)
+  tBlend = 255
   case tButtonState of
-    #start:
+    #start, #start_dimmed:
       tBg = member(getmemnum("bb_lnk_px_3")).image
-      tText = getText("bb_button_start")
+      tText = getText("gs_button_start")
+      if tButtonState = #start_dimmed then
+        tBlend = 100
+        tButtonState = #start
+      end if
     #spectate:
       if tGameState = #started then
         tBg = member(getmemnum("bb_lnk_px_3")).image
       else
         tBg = member(getmemnum("bb_lnk_px_2")).image
       end if
-      tText = getText("bb_button_spectate")
+      tText = getText("gs_button_spectate")
     #spectateInfo:
       tBg = member(getmemnum("bb_lnk_px_2")).image
-      tText = getText("bb_text_spectate")
+      tText = getText("gs_text_spectate")
     otherwise:
       case tGameState of
         #started:
@@ -224,9 +236,9 @@ on renderInstanceDetailButton me, tButtonState, tGameState
   if tButtonState = #start or tButtonState = #spectate then
     tImage = pWriterLinkRight.render(tText)
     tLocH = tWidth - tImage.width - 10
-    tResult.copyPixels(tImage, tImage.rect + rect(tLocH - 5, 3, tLocH - 5, 3), tImage.rect)
+    tResult.copyPixels(tImage, tImage.rect + rect(tLocH - 5, 3, tLocH - 5, 3), tImage.rect, [#blendLevel: tBlend])
     tImage = member(getmemnum("bb_arr")).image
-    tResult.copyPixels(tImage, tImage.rect + rect(tWidth - 12, 4, tWidth - 12, 4), tImage.rect, [#ink: 36])
+    tResult.copyPixels(tImage, tImage.rect + rect(tWidth - 12, 4, tWidth - 12, 4), tImage.rect, [#ink: 36, #blendLevel: tBlend])
   else
     if tText <> #empty then
       tImage = pWriterPlainBoldLeft.render(tText)
@@ -292,7 +304,7 @@ on renderInstanceDetailTeams me, tParams, tUserName, tHost, tOwnTeam
       tTextImg = pWriterPlainNormRight.render(tText)
       tOffsetH = 158
       tImage.copyPixels(tTextImg, tTextImg.rect + rect(tOffsetH, -3 + tAddedOffset, tOffsetH, -3 + tAddedOffset), tTextImg.rect)
-      tTextImg = pWriterListPlainNormLeft.render(getText("bb_scores_team_" & tParams[#teams][tTeamNum][#id]))
+      tTextImg = pWriterListPlainNormLeft.render(getText("gs_scores_team_" & tParams[#teams][tTeamNum][#id]))
       tOffsetV = tImage.height - 18
       tImage.copyPixels(tTextImg, tTextImg.rect + rect(30, tOffsetV, 30, tOffsetV), tTextImg.rect, [#ink: 36])
       tTextImg = pWriterPlainNormRight.render(string(tParams[#teams][tTeamNum][#score]))

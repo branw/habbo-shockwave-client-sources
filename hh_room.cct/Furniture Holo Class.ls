@@ -53,8 +53,8 @@ on update me
 end
 
 on setHoloLight me
-  if me.pSprList.count = 0 then
-    return 
+  if me.pSprList.count < 4 then
+    return 0
   end if
   tNameA = me.pSprList[1].member.name
   tNameB = me.pSprList[2].member.name

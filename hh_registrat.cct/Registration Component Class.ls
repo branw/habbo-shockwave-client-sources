@@ -1,4 +1,4 @@
-property pState, pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pRegMsgStruct, pCheckingName, pAgeCheckFlag, pParentEmailNeededFlag, pParentEmailAddress
+property pState, pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pRegMsgStruct, pCheckingName, pAgeCheckFlag, pParentEmailNeededFlag, pParentEmailAddress, pUserIDFromRegistration
 
 on construct me
   pValidPartProps = [:]
@@ -44,13 +44,13 @@ end
 on setBlockTime me, tdata
   setPref("blocktime", tdata)
   me.closeFigureCreator()
-  executeMessage(#alert, [#title: "alert_win_coppa", #msg: "alert_reg_age", #id: "underage", #modal: 1])
+  executeMessage(#alert, [#title: "alert_win_coppa", #Msg: "alert_reg_age", #id: "underage", #modal: 1])
   return removeConnection(getVariable("connection.info.id"))
 end
 
 on continueBlocking me
   me.closeFigureCreator()
-  executeMessage(#alert, [#title: "alert_win_coppa", #msg: "alert_reg_blocked", #id: "underage", #modal: 1])
+  executeMessage(#alert, [#title: "alert_win_coppa", #Msg: "alert_reg_blocked", #id: "underage", #modal: 1])
   return removeConnection(getVariable("connection.info.id"))
 end
 
@@ -93,7 +93,7 @@ on checkUserName me, tNameStr
     if not getObject(#string_validator).validateString(tNameStr) then
       tFailed = getObject(#string_validator).getFailedChar()
       setText("alert_InvalidChar", replaceChunks(getText("alert_InvalidUserName"), "\x", tFailed))
-      executeMessage(#alert, [#msg: "alert_InvalidChar", #id: "nameinvalid"])
+      executeMessage(#alert, [#Msg: "alert_InvalidChar", #id: "nameinvalid"])
       return 0
     end if
   end if
@@ -105,6 +105,7 @@ on checkUserName me, tNameStr
 end
 
 on sendNewFigureDataToServer me, tPropList
+  tPropList = tPropList.duplicate()
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found", #sendNewFigureDataToServer)
   end if
@@ -151,6 +152,7 @@ on sendNewFigureDataToServer me, tPropList
 end
 
 on sendFigureUpdateToServer me, tPropList
+  tPropList = tPropList.duplicate()
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found", #sendFigureUpdateToServer)
   end if
@@ -489,4 +491,22 @@ on updateState me, tstate, tProps
       return 1
   end case
   return error(me, "Unknown state:" && tstate, #updateState)
+end
+
+on tryLoginAfterRegistration me
+  tLoginThread = getThread(#login)
+  if tLoginThread = 0 then
+    error(me, "Login thread not found!", #tryLoginAfterRegistration)
+    return 0
+  end if
+  tLoginComponent = tLoginThread.getComponent()
+  tLoginComponent.pOkToLogin = 1
+  tTmp = [:]
+  executeMessage(#partnerRegistrationRequired, tTmp)
+  if tTmp["retval"] then
+    tUserID = pUserIDFromRegistration
+    executeMessage(#partnerRegistration, tUserID)
+  else
+    executeMessage(#performLogin)
+  end if
 end
