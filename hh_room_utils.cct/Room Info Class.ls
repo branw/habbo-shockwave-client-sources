@@ -58,14 +58,17 @@ on updateRatingData me
   end if
   tRoomRatings = getThread(#room).getComponent().getRoomRating()
   if tRoomRatings[#rate] = -1 then
-    tWndObj.getElement("room_info_rating_value").setProperty(#visible, 0)
     tWndObj.getElement("room_info_rate_plus").setProperty(#visible, 1)
     tWndObj.getElement("room_info_rate_minus").setProperty(#visible, 1)
+    tWndObj.getElement("room_info_rate_room").setProperty(#visible, 1)
+    tWndObj.getElement("room_info_rate_value").setProperty(#visible, 0)
   else
-    tWndObj.getElement("room_info_rating_value").setProperty(#visible, 1)
     tWndObj.getElement("room_info_rate_plus").setProperty(#visible, 0)
     tWndObj.getElement("room_info_rate_minus").setProperty(#visible, 0)
-    tWndObj.getElement("room_info_rating_value").setText(string(tRoomRatings[#rate]))
+    tWndObj.getElement("room_info_rate_room").setProperty(#visible, 0)
+    tWndObj.getElement("room_info_rate_value").setProperty(#visible, 1)
+    tRateText = getText("room_info_rated") && tRoomRatings[#rate]
+    tWndObj.getElement("room_info_rate_value").setText(tRateText)
   end if
 end
 
