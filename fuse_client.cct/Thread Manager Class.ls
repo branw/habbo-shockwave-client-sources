@@ -136,17 +136,18 @@ on closeThread me, tCastNumOrID
   if voidp(tThread) then
     return error(me, "Thread not found:" && tid, #closeThread)
   end if
+  tObjMgr = getObjectManager()
   if objectp(tThread.interface) then
-    getObjectManager().remove(tThread.interface.getID())
+    tObjMgr.remove(tThread.interface.getID())
   end if
   if objectp(tThread.component) then
-    getObjectManager().remove(tThread.component.getID())
+    tObjMgr.remove(tThread.component.getID())
   end if
   if objectp(tThread.handler) then
-    getObjectManager().remove(tThread.handler.getID())
+    tObjMgr.remove(tThread.handler.getID())
   end if
   if objectp(tThread.parser) then
-    getObjectManager().remove(tThread.parser.getID())
+    tObjMgr.remove(tThread.parser.getID())
   end if
   pThreadList.deleteProp(tid)
   return 1
@@ -172,16 +173,18 @@ on buildThreadObj me, tid, tClassList, tThreadObj
   tBase.construct()
   tBase[#ancestor] = tThreadObj
   tBase.setID(tid)
-  getObjectManager().registerObject(tid, tBase)
+  tResMgr = getResourceManager()
+  tObjMgr = getObjectManager()
+  tObjMgr.registerObject(tid, tBase)
   tClassList.addAt(1, tBase)
   repeat with tClass in tClassList
     if objectp(tClass) then
       tObject = tClass
       tInitFlag = 0
     else
-      tMemNum = getResourceManager().getmemnum(tClass)
+      tMemNum = tResMgr.getmemnum(tClass)
       if tMemNum < 1 then
-        unregisterObject(tid)
+        tObjMgr.unregisterObject(tid)
         return error(me, "Script not found:" && tMemNum, #buildThreadObj)
       end if
       tObject = script(tMemNum).new()
@@ -189,8 +192,8 @@ on buildThreadObj me, tid, tClassList, tThreadObj
     end if
     tObject[#ancestor] = tTemp
     tTemp = tObject
-    getObjectManager().unregisterObject(tid)
-    getObjectManager().registerObject(tid, tObject)
+    tObjMgr.unregisterObject(tid)
+    tObjMgr.registerObject(tid, tObject)
     if tInitFlag then
       tObject.construct()
     end if

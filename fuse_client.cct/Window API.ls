@@ -7,11 +7,11 @@ on deconstructWindowManager
 end
 
 on getWindowManager
-  tObjMngr = getObjectManager()
-  if not tObjMngr.managerExists(#window_manager) then
+  tMgr = getObjectManager()
+  if not tMgr.managerExists(#window_manager) then
     return constructWindowManager()
   end if
-  return tObjMngr.getManager(#window_manager)
+  return tMgr.getManager(#window_manager)
 end
 
 on createWindow tid, tLayout, tLocX, tLocY, tSpecial

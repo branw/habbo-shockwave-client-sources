@@ -51,8 +51,6 @@ end
 
 on send me, tMsg
   if pConnectionOk and objectp(pXtra) then
-    tMsg = replaceChunks(tMsg, "Š", "&auml;")
-    tMsg = replaceChunks(tMsg, "š", "&ouml;")
     if pLogMode > 0 then
       me.log("<--" && tMsg)
     end if
