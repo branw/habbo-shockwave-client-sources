@@ -592,6 +592,9 @@ on setPartLists me, tmodels
 end
 
 on setOwnHiliter me, tstate
+  if not getObject(#session).exists("user_index") then
+    return 0
+  end if
   if me.getID() <> getObject(#session).get("user_index") then
     return 0
   end if

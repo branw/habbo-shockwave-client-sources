@@ -168,6 +168,12 @@ on executeGameObjectEvent me, tEvent, tdata
       me.stopMovement()
       me.startThrowAnimation(tdata)
     #start_create_snowball:
+      if not me.getStateAllowsMoving() then
+        return 1
+      end if
+      if me.pGameObjectSyncValues[#activity_state] = 1 then
+        return 1
+      end if
       me.pGameObjectSyncValues[#activity_state] = 1
       me.pGameObjectSyncValues[#activity_timer] = getIntVariable("ACTIVITY_TIMER_CREATING", 20)
       me.stopMovement()
@@ -396,7 +402,6 @@ on checkForSnowballCollisions me
   tOwnId = me.getObjectId()
   tlocation = me.getLocation()
   repeat with tBallObjectId in tBallObjectIdList
-    tHit = 1
     tBallObject = tGameSystem.getGameObject(tBallObjectId)
     tThrowerId = string(tBallObject.getGameObjectProperty(#int_thrower_id))
     if tThrowerId <> tOwnId then

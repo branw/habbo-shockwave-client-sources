@@ -24,7 +24,7 @@ end
 on deconstruct me
   removeUpdate(me.getID())
   repeat while pObjects.count > 0
-    me.removeGameObject(pObjects.getPropAt(1))
+    me.removeGameObject(pObjects[1].getObjectId())
   end repeat
   pCollision = VOID
   pSquareRoot = VOID
@@ -74,8 +74,9 @@ on createGameObject me, tObjectId, ttype, tdata
   if not listp(tdata) then
     tdata = [:]
   end if
-  tObjectId = string(tObjectId)
-  if pObjectTypeIndex[tObjectId] <> VOID then
+  tObjectId = integer(tObjectId)
+  tObjectStrId = string(tObjectId)
+  if pObjectTypeIndex.getaProp(tObjectId) <> VOID then
     return error(me, "Game object by id already exists! Id:" && tObjectId, #createGameObject)
   end if
   tClass = getClassVariable(me.getSystemId() & "." & ttype & ".class")
@@ -93,11 +94,12 @@ on createGameObject me, tObjectId, ttype, tdata
   if tObject = 0 then
     return error(me, "Unable to create game object!", #createGameObject)
   end if
-  tObject.setID(tObjectId)
-  tObject.setObjectId(tObjectId)
+  tObject.setID(tObjectStrId)
+  tObject.setObjectId(tObjectStrId)
   tObject.setGameSystemReference(me.getFacade())
   pObjects.setaProp(tObjectId, tObject)
-  pObjectTypeIndex.addProp(tObjectId, ttype)
+  pObjects.sort()
+  pObjectTypeIndex.setaProp(tObjectId, ttype)
   if tdata[#z] = VOID then
     tZ = 0
   else
@@ -106,7 +108,7 @@ on createGameObject me, tObjectId, ttype, tdata
   tObject.pGameObjectLocation = me.getWorld().initLocation()
   tObject.pGameObjectNextTarget = me.getWorld().initLocation()
   tObject.pGameObjectFinalTarget = me.getWorld().initLocation()
-  me.updateGameObject(tObjectId, tdata.duplicate())
+  me.updateGameObject(tObjectStrId, tdata.duplicate())
   return tObject
 end
 
@@ -130,27 +132,28 @@ on updateGameObject me, tObjectId, tdata
 end
 
 on removeGameObject me, tObjectId
-  tObjectId = string(tObjectId)
-  ttype = pObjectTypeIndex[tObjectId]
+  tObjectId = integer(tObjectId)
+  tObjectStrId = string(tObjectId)
+  ttype = pObjectTypeIndex.getaProp(tObjectId)
   if ttype = VOID then
     return 1
   end if
-  pObjects[tObjectId].deconstruct()
+  tObject = me.getGameObject(tObjectStrId)
+  if objectp(tObject) then
+    tObject.deconstruct()
+  end if
   pObjects.deleteProp(tObjectId)
   pObjectTypeIndex.deleteProp(tObjectId)
   return 1
 end
 
 on executeSubturnMoves me, tSync, tSubturn
-  tWorld = me.getWorld()
   tRemoveList = []
   repeat with i = 1 to pObjects.count
-    tObjectId = pObjects.getPropAt(i)
-    tGameObjectType = pObjectTypeIndex[tObjectId]
-    tGameObject = pObjects[tObjectId]
+    tGameObject = pObjects[i]
     tGameObject.calculateFrameMovement()
     if tGameObject.getActive() = 0 then
-      tRemoveList.add(tObjectId)
+      tRemoveList.add(tGameObject.getObjectId())
     end if
   end repeat
   repeat with tObjectId in tRemoveList
@@ -160,23 +163,25 @@ on executeSubturnMoves me, tSync, tSubturn
 end
 
 on getGameObject me, tObjectId
-  tObjectId = string(tObjectId)
-  return pObjects[tObjectId]
+  if pObjects = VOID then
+    return 0
+  end if
+  return pObjects.getaProp(integer(tObjectId))
 end
 
 on getGameObjectIdsOfType me, ttype
   tResult = []
   repeat with i = 1 to pObjectTypeIndex.count
     if pObjectTypeIndex[i] = ttype or ttype = #all then
-      tResult.append(pObjectTypeIndex.getPropAt(i))
+      tResult.append(string(pObjectTypeIndex.getPropAt(i)))
     end if
   end repeat
   return tResult
 end
 
 on getGameObjectType me, tObjectId
-  tObjectId = string(tObjectId)
-  return pObjectTypeIndex[tObjectId]
+  tObjectId = integer(tObjectId)
+  return pObjectTypeIndex.getaProp(tObjectId)
 end
 
 on dump me
