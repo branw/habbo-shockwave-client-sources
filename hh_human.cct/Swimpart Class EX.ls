@@ -8,53 +8,69 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart
 end
 
 on update me, tForcedUpdate, tRectMod
-  callAncestor(#update, [me], 1, tRectMod)
+  callAncestor(#update, [me], tForcedUpdate, tRectMod)
   if pUnderWater and me.pBody.pSwim then
-    pSwimProps[#maskImage] = me.pDrawProps[#maskImage]
-    if me.pFlipH then
-      tDrawRect = me.pCacheRectA
-      tQuad = [point(tDrawRect[3], tDrawRect[2]), point(tDrawRect[1], tDrawRect[2]), point(tDrawRect[1], tDrawRect[4]), point(tDrawRect[3], tDrawRect[4])]
-      me.pBody.pBuffer.copyPixels(me.pCacheImage, tQuad, me.pCacheRectB, pSwimProps)
-    else
-      tDrawRect = me.pCacheRectA
-      me.pBody.pBuffer.copyPixels(me.pCacheImage, tDrawRect, me.pCacheRectB, pSwimProps)
-    end if
+    repeat with i = 1 to me.pLayerPropList.count
+      tdata = me.pLayerPropList[i]
+      tDrawProps = tdata["drawProps"]
+      pSwimProps[#maskImage] = tDrawProps[#maskImage]
+      tDrawArea = me.getDrawArea(i)
+      if tdata["cacheImage"] <> 0 then
+        me.pBody.pBuffer.copyPixels(tdata["cacheImage"], tDrawArea, tdata["cacheImage"].rect, pSwimProps)
+      end if
+    end repeat
   end if
 end
 
 on render me
   callAncestor(#render, [me])
-  if memberExists(me.pMemString) then
-    if me.pBody.pSwim then
-      pSwimProps[#maskImage] = me.pDrawProps[#maskImage]
-      if me.pFlipH then
-        tDrawRect = me.pCacheRectA
-        tQuad = [point(tDrawRect[3], tDrawRect[2]), point(tDrawRect[1], tDrawRect[2]), point(tDrawRect[1], tDrawRect[4]), point(tDrawRect[3], tDrawRect[4])]
-        me.pBody.pBuffer.copyPixels(me.pCacheImage, tQuad, me.pCacheRectB, pSwimProps)
-      else
-        tDrawRect = me.pCacheRectA
-        me.pBody.pBuffer.copyPixels(me.pCacheImage, tDrawRect, me.pCacheRectB, pSwimProps)
+  repeat with i = 1 to me.pLayerPropList.count
+    tdata = me.pLayerPropList[i]
+    if memberExists(tdata["memString"]) then
+      if me.pBody.pSwim then
+        pSwimProps[#maskImage] = tdata["drawProps"][#maskImage]
+        tDrawArea = me.getDrawArea(i)
+        if tdata["cacheImage"] <> 0 then
+          me.pBody.pBuffer.copyPixels(tdata["cacheImage"], tDrawArea, tdata["cacheImage"].rect, pSwimProps)
+        end if
       end if
     end if
-  end if
+  end repeat
 end
 
 on defineInk me, tInk
   callAncestor(#defineInk, [me], tInk)
-  pSwimProps[#ink] = me.pDrawProps[#ink]
-  return 1
+  if me.pLayerPropList.count > 0 then
+    pSwimProps[#ink] = me.pLayerPropList[1]["drawProps"][#ink]
+    return 1
+  end if
+  return 0
 end
 
 on setUnderWater me, tUnderWater
   pUnderWater = tUnderWater
 end
 
-on getMemberNumber me, tdir, tHumanSize, tAction, tAnimFrame
-  tArray = callAncestor(#getMemberNumber, [me], tdir, tHumanSize, tAction, tAnimFrame)
+on getMemberNumber me, tdir, tHumanSize, tAction, tAnimFrame, tLayerIndex
+  tArray = callAncestor(#getMemberNumber, [me], tdir, tHumanSize, tAction, tAnimFrame, tLayerIndex)
   tMemNum = tArray[#memberNumber]
   if tMemNum = 0 then
-    tmodel = "0" & me.pmodel.char[2..3]
-    tArray = callAncestor(#getMemberNumber, [me], tdir, tHumanSize, tAction, tAnimFrame, tmodel)
+    if voidp(tLayerIndex) then
+      tLayerIndex = 1
+    end if
+    if tLayerIndex < 1 or tLayerIndex > me.pLayerPropList.count then
+      tLayerIndex = 1
+    end if
+    if me.pLayerPropList.count >= tLayerIndex then
+      tmodel = me.pLayerPropList[tLayerIndex]["model"]
+    end if
+    if not voidp(tmodel) then
+      tmodel = tmodel.char[2..tmodel.length]
+      repeat while tmodel.char[1] = "0"
+        tmodel = tmodel.char[2..tmodel.length]
+      end repeat
+    end if
+    tArray = callAncestor(#getMemberNumber, [me], tdir, tHumanSize, tAction, tAnimFrame, tLayerIndex, tmodel)
   end if
   return tArray
 end

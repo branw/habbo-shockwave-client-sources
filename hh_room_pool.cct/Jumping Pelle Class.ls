@@ -61,10 +61,12 @@ on Init me, tName, tMemberModels, tplayerMode, tKeyList
   pJumpSpeed = 2
   pAnimFixV = [[0, 0, 1, 0], [0, 1, 0, 1], [0, 1, 0, 1], [0, 0, 0, 0], [0, 1, 0, 1], [0, 1, 0, 1], [0, 0, 0, 1], [0, 0, 0, 0]]
   repeat with i = 1 to tMemberModels.count
-    if tMemberModels[i]["model"] <> "000" then
-      tPart = tMemberModels.getPropAt(i)
-      pModels.addProp(tPart, tMemberModels[i]["model"])
-      pColors.addProp(tPart, tMemberModels[i]["color"])
+    if not voidp(tMemberModels[i]) then
+      if tMemberModels[i]["model"] <> "000" then
+        tPart = tMemberModels.getPropAt(i)
+        pModels.addProp(tPart, tMemberModels[i]["model"])
+        pColors.addProp(tPart, tMemberModels[i]["color"])
+      end if
     end if
   end repeat
   pPelleImg = image(60, 60, 32, rgb(155, 155, 255))

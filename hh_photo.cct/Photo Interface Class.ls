@@ -1,9 +1,11 @@
-property pWindowID, pmode, pCamMember, pCamShotImage, pDisplaymem, pZoomLevel, pNextHNoiseSetup, pNextVNoiseSetup, pHNoiseCenter, pVNoiseCenter, pDialogId, pHandItemData
+property pWindowID, pmode, pCamMember, pCamShotImage, pDisplaymem, pZoomLevel, pHNoiseCenter, pVNoiseCenter, pDialogId, pHandItemData, pNoiseDirH, pNoiseDirV
 
 on construct me
   pCamMember = member(createMember("__cam_display_mem", #bitmap))
   pWindowID = #photo_camera_window
   pDialogId = #camera_dialog
+  pNoiseDirH = 1
+  pNoiseDirV = 1
   return 1
 end
 
@@ -78,32 +80,28 @@ on update me
     tDispHeight = tWndObj.getElement("cam_display").getProperty(#height)
     tDispLocX = tWndObj.getElement("cam_display").getProperty(#locH)
     tDispLocY = tWndObj.getElement("cam_display").getProperty(#locV)
-    if the milliSeconds - pNextHNoiseSetup > 0 then
-      pNextHNoiseSetup = the milliSeconds + random(12000)
-      pHNoiseCenter = abs(random(tDispWidth / 2)) + tDispWidth / 4
+    tVertElem = tWndObj.getElement("cam_display_noise_vertical")
+    tLocX = tVertElem.getProperty(#locH)
+    tLocY = tVertElem.getProperty(#locV) + pNoiseDirV
+    if tLocY >= tDispLocY + tDispHeight - tVertElem.getProperty(#height) then
+      pNoiseDirV = -1
+    else
+      if tLocY <= tDispLocY then
+        pNoiseDirV = 1
+      end if
     end if
-    if the milliSeconds - pNextVNoiseSetup > 0 then
-      pNextVNoiseSetup = the milliSeconds + random(12000)
-      pVNoiseCenter = abs(random(tDispHeight / 2)) + tDispHeight / 4
+    tVertElem.moveTo(tLocX, tLocY)
+    tHorElem = tWndObj.getElement("cam_display_noise_horizontal")
+    tLocX = tHorElem.getProperty(#locH) + pNoiseDirH
+    tLocY = tHorElem.getProperty(#locV)
+    if tLocX >= tDispLocX + tDispWidth - tHorElem.getProperty(#width) then
+      pNoiseDirH = -1
+    else
+      if tLocX <= tDispLocX then
+        pNoiseDirH = 1
+      end if
     end if
-    tLocX = tWndObj.getElement("cam_display_noise_vertical").getProperty(#locH)
-    tLocY = pHNoiseCenter + cos((pNextVNoiseSetup - the milliSeconds) / 10000.0 * 2 * PI) * tDispHeight / 4
-    if tLocY > tDispLocY + tDispHeight then
-      tLocY = tDispLocY + tDispHeight
-    end if
-    if tLocY < tDispLocY then
-      tLocY = tDispLocY
-    end if
-    tWndObj.getElement("cam_display_noise_vertical").moveTo(tLocX, tLocY)
-    tLocX = pVNoiseCenter + sin((pNextHNoiseSetup - the milliSeconds) / 10000.0 * 2 * PI) * tDispWidth / 4
-    tLocY = tWndObj.getElement("cam_display_noise_horizontal").getProperty(#locV)
-    if tLocX > tDispLocX + tDispWidth then
-      tLocX = tDispLocX + tDispWidth
-    end if
-    if tLocX < tDispLocX then
-      tLocX = tDispLocX
-    end if
-    tWndObj.getElement("cam_display_noise_horizontal").moveTo(tLocX, tLocY)
+    tHorElem.moveTo(tLocX, tLocY)
   end if
 end
 

@@ -8,14 +8,22 @@ on construct me
     if tPartList = 0 then
       tPartList = getVariable("human.parts.sh." & i)
     end if
+    tPartListNew = ["bl"]
     if tPartList <> 0 then
-      tPartListNew = ["bl"]
       repeat with tPart in tPartList
         tPartListNew.add(tPart)
       end repeat
     end if
     setVariable("bouncing.human.parts.sh." & i, tPartListNew)
   end repeat
+  tPartListNew = ["bl"]
+  tPartList = getVariable("human.parts.sh")
+  if tPartList <> 0 then
+    repeat with tPart in tPartList
+      tPartListNew.add(tPart)
+    end repeat
+  end if
+  setVariable("bouncing.human.parts.sh", tPartListNew)
   return 1
 end
 

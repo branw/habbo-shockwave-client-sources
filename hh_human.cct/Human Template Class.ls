@@ -14,6 +14,7 @@ on define me, tdata
   me.pName = "template"
   me.pClass = tdata[#class]
   me.pDirection = tdata[#direction][1]
+  me.pHeadDir = me.pDirection
   me.pLastDir = me.pDirection
   me.pPeopleSize = getVariable("human.size." & tdata[#type])
   if not me.pPeopleSize then

@@ -196,7 +196,7 @@ on updateFrontPage me
   if windowExists(pWindowTitle) then
     if pOpenWindow = "console_myinfo.window" then
       tNumOfNewMsg = string(me.getComponent().getNumOfMessages()) && getText("console_newmessages", "new message(s)")
-      tNumOfBuddyRequest = string(me.getComponent().getNumOfBuddyRequest()) && getText("console_requests", "Friend Request(s)")
+      tNumOfBuddyRequest = string(me.getComponent().getPendingRequestCount()) && getText("console_requests", "Friend Request(s)")
       tWndObj = getWindow(pWindowTitle)
       tWndObj.getElement("console_myinfo_messages_link").setText(tNumOfNewMsg)
       tWndObj.getElement("console_myinfo_requests_link").setText(tNumOfBuddyRequest)
@@ -308,12 +308,7 @@ end
 
 on enterFriendRequestList me
   tRenderer = me.getFriendRequestRenderer()
-  if tRenderer.unfinishedSelectionExists() then
-    tRenderer.updateView()
-  else
-    tRequestList = me.getComponent().getFriendRequests()
-    tRenderer.define(pWindowTitle, tRequestList)
-  end if
+  tRenderer.Init(pWindowTitle)
 end
 
 on getFriendRequestRenderer me
@@ -322,6 +317,14 @@ on getFriendRequestRenderer me
   end if
   tRenderer = getObject(pRequestRenderID)
   return tRenderer
+end
+
+on updateRequests me
+  if pOpenWindow <> "console_request_list.window" then
+    return 0
+  end if
+  tRenderer = me.getFriendRequestRenderer()
+  tRenderer.updateView()
 end
 
 on updateBuddyListImg me
@@ -467,40 +470,6 @@ on openBuddyMassremoveWindow me
   end if
 end
 
-on purgeFriendRequestSelections me, tInverted
-  if voidp(tInverted) then
-    tInverted = 0
-  end if
-  tRenderer = me.getFriendRequestRenderer()
-  if voidp(tRenderer) then
-    return error(me, "Friend request list not available", #purgeFriendRequestSelections, #major)
-  end if
-  if tInverted then
-    tAcceptedList = tRenderer.getDeselectedList()
-    tDeclinedList = tRenderer.getSelectedList()
-  else
-    tAcceptedList = tRenderer.getSelectedList()
-    tDeclinedList = tRenderer.getDeselectedList()
-  end if
-  tMsgList = [#integer: tAcceptedList.count]
-  repeat with tItem in tAcceptedList
-    tMsgList.addProp(#integer, integer(tItem[#id]))
-  end repeat
-  getConnection(getVariable("connection.info.id")).send("MESSENGER_ACCEPTBUDDY", tMsgList)
-  tMsgList = [#integer: 0, #integer: tDeclinedList.count]
-  repeat with tItem in tDeclinedList
-    tMsgList.addProp(#integer, integer(tItem[#id]))
-  end repeat
-  getConnection(getVariable("connection.info.id")).send("MESSENGER_DECLINEBUDDY", tMsgList)
-  tRenderer.clearRequests()
-  me.getComponent().clearFriendRequests(tAcceptedList)
-  me.getComponent().clearFriendRequests(tDeclinedList)
-  me.getComponent().tellRequestCount()
-  if me.getComponent().getFriendRequestUpdateRequired() then
-    me.getComponent().send_AskForFriendRequests()
-  end if
-end
-
 on ChangeWindowView me, tWindowName
   tWndObj = getWindow(pWindowTitle)
   if objectp(tWndObj) then
@@ -534,12 +503,13 @@ on ChangeWindowView me, tWindowName
       me.updateMyHeadPreview(getObject(#session).GET("user_figure"), "console_myhead_image")
       tName = getObject(#session).GET("user_name")
       tNewMsgCount = string(me.getComponent().getNumOfMessages()) && getText("console_newmessages", "new message(s)")
-      tNewReqCount = string(me.getComponent().getNumOfBuddyRequest()) && getText("console_requests", "Friend Request(s)")
+      tNewReqCount = string(me.getComponent().getPendingRequestCount()) && getText("console_requests", "Friend Request(s)")
       tMission = me.getComponent().getMyPersistenMsg()
       tWndObj.getElement("console_myinfo_name").setText(tName)
       tWndObj.getElement("console_myinfo_mission_field").setText(tMission)
       tWndObj.getElement("console_myinfo_messages_link").setText(tNewMsgCount)
       tWndObj.getElement("console_myinfo_requests_link").setText(tNewReqCount)
+      me.getComponent().clearRequests()
     "console_getmessage.window":
       pLastGetMsg = [:]
     "console_friends.window":
@@ -568,20 +538,13 @@ on ChangeWindowView me, tWindowName
       createTimeout(pTimeOutID, 100, #changeWindowDelayedUpdate, me.getID(), VOID, 1)
     "console_request_list.window":
       me.enterFriendRequestList()
-    "console_confirm_friend_requests.window":
-      tRenderer = me.getFriendRequestRenderer()
-      if pSelectionIsInverted then
-        tDeclinedList = tRenderer.getSelectedList()
-        tAcceptedList = tRenderer.getDeselectedList()
-      else
-        tAcceptedList = tRenderer.getSelectedList()
-        tDeclinedList = tRenderer.getDeselectedList()
-      end if
-      tWindowObj = getWindow(pWindowTitle)
-      tAcceptedText = getText("console_fr_accepted_count") & ": " & tAcceptedList.count
-      tDeclinedText = getText("console_fr_declined_count") & ": " & tDeclinedList.count
-      tWindowObj.getElement("console_fr_accepted_count").setText(tAcceptedText)
-      tWindowObj.getElement("console_fr_declined_count").setText(tDeclinedText)
+    "console_request_massoperations.window":
+      tMessageCount = me.getComponent().getPendingRequestCount()
+      tTitleText = getText("console_request_massoperation_title")
+      tTitleText = replaceChunks(tTitleText, "%messageCount%", string(tMessageCount))
+      tWndObj = getWindow(pWindowTitle)
+      tElem = tWndObj.getElement("console_request_massoperation_title")
+      tElem.setText(tTitleText)
     "console_compose.window":
       if pSelectedBuddies.count = 0 then
         return me.ChangeWindowView("console_friends.window")
@@ -644,30 +607,6 @@ on getBuddyListPoint me, tpoint
   return point(tpoint.locH, tpoint.locV mod pBuddylistItemHeight)
 end
 
-on setAllRequestSelectionsTo me, tValue
-  tRenderer = me.getFriendRequestRenderer()
-  tRenderer.setAllRequestSelectionsTo(tValue)
-  tRenderer.updateView()
-end
-
-on acceptSelectedRequests me
-  pSelectionIsInverted = 0
-  if not me.getFriendRequestRenderer().isSelectedAmountValid(pSelectionIsInverted) then
-    executeMessage(#alert, "console_fr_limit_exceeded_error")
-  else
-    me.ChangeWindowView("console_confirm_friend_requests.window")
-  end if
-end
-
-on rejectSelectedRequests me
-  pSelectionIsInverted = 1
-  if not me.getFriendRequestRenderer().isSelectedAmountValid(pSelectionIsInverted) then
-    executeMessage(#alert, "console_fr_limit_exceeded_error")
-  else
-    me.ChangeWindowView("console_confirm_friend_requests.window")
-  end if
-end
-
 on eventProcMessenger me, tEvent, tElemID, tParm
   if tEvent = #mouseDown then
     case tElemID of
@@ -685,7 +624,7 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           me.renderMessage(me.getComponent().getNextMessage())
         end if
       "console_myinfo_requests_link":
-        if me.getComponent().getNumOfBuddyRequest() = 0 then
+        if me.getComponent().getPendingRequestCount() = 0 then
           return 
         end if
         me.ChangeWindowView("console_request_list.window")
@@ -720,19 +659,17 @@ on eventProcMessenger me, tEvent, tElemID, tParm
     end case
   else
     if tEvent = #mouseUp then
-      if tElemID contains "fr_check_" then
-        tDelim = the itemDelimiter
-        the itemDelimiter = "_"
-        tItemNo = tElemID.item[3]
-        me.getFriendRequestRenderer().itemEvent(tItemNo)
-        the itemDelimiter = tDelim
+      if tElemID contains "request_accept" then
+        tItemNo = integer(tElemID.char[tElemID.length])
+        me.getFriendRequestRenderer().confirmRequest(tItemNo, 1)
       end if
-      if tElemID contains "fr_name_" then
-        tDelim = the itemDelimiter
-        the itemDelimiter = "_"
-        tItemNo = tElemID.item[3]
-        the itemDelimiter = tDelim
-        tUserID = me.getFriendRequestRenderer().getUserIdForSelectionNo(tItemNo)
+      if tElemID contains "request_decline" then
+        tItemNo = integer(tElemID.char[tElemID.length])
+        me.getFriendRequestRenderer().confirmRequest(tItemNo, 0)
+      end if
+      if tElemID contains "request_name" then
+        tItemNo = integer(tElemID.char[tElemID.length])
+        tUserID = me.getFriendRequestRenderer().getUserId(tItemNo)
         tHomepageURL = getVariable("link.format.userpage")
         tHomepageURL = replaceChunks(tHomepageURL, "%ID%", tUserID)
         openNetPage(tHomepageURL)
@@ -747,11 +684,6 @@ on eventProcMessenger me, tEvent, tElemID, tParm
             end if
           end if
           me.hideMessenger()
-        "console_accept_selection":
-          me.purgeFriendRequestSelections(pSelectionIsInverted)
-          me.ChangeWindowView("console_myinfo.window")
-        "console_modify_selection":
-          me.ChangeWindowView("console_request_list.window")
         "console_fr_previous":
           me.getFriendRequestRenderer().showPreviousPage()
         "console_fr_next":
@@ -801,14 +733,18 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           end if
         "console_getmessage_report":
           me.ChangeWindowView("console_reportmessage.window")
-        "console_fr_deselect_all":
-          me.setAllRequestSelectionsTo(0)
-        "console_fr_select_all":
-          me.setAllRequestSelectionsTo(1)
-        "console_fr_accept_selected":
-          me.acceptSelectedRequests()
-        "console_fr_reject_selected":
-          me.rejectSelectedRequests()
+        "friend_request_options_button":
+          me.ChangeWindowView("console_request_massoperations.window")
+        "friend_request_ok_button":
+          me.ChangeWindowView("console_myinfo.window")
+        "console_fr_accept_all":
+          me.getComponent().acceptAllRequests()
+          me.ChangeWindowView("console_myinfo.window")
+        "console_fr_decline_all":
+          me.getComponent().declineAllRequests()
+          me.ChangeWindowView("console_myinfo.window")
+        "friend_request_mass_operation_cancel":
+          me.ChangeWindowView("console_request_list.window")
         "messenger_friends_compose_button":
           if pSelectedBuddies.count < 1 then
             return 0

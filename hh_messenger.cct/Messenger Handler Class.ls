@@ -133,6 +133,7 @@ on handle_buddy_request_result me, tMsg
     tErrorCode = tConn.GetIntFrom()
     tErrorList.setaProp(tSenderName, tErrorCode)
   end repeat
+  me.getComponent().receive_BuddyRequestResult(tErrorList)
   if tFailureCount < 1 then
     return 1
   end if
@@ -215,12 +216,6 @@ end
 
 on handle_add_buddy me, tMsg
   tBuddyData = me.get_user_info(tMsg)
-  tPendAcc = me.getComponent().pItemList[#pendingBuddyAccept]
-  if ilk(tPendAcc) = #propList then
-    if tPendAcc[#name] = tBuddyData[#name] then
-      me.getComponent().pItemList[#pendingBuddyAccept] = EMPTY
-    end if
-  end if
   return me.getComponent().receive_AppendBuddy([#buddies: tBuddyData])
 end
 
@@ -412,6 +407,7 @@ on get_buddy_request me, tMsg
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#name] = tConn.GetStrFrom()
   tdata[#webID] = tConn.GetStrFrom()
+  tdata[#state] = #pending
   return tdata
 end
 

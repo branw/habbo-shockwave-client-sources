@@ -84,8 +84,8 @@ on Refresh me, tX, tY, tH
   me.pChanges = 1
 end
 
-on getClearedFigurePartList me, tmodels
-  return me.getSpecificClearedFigurePartList(tmodels, "swimmer.parts")
+on getPartListNameBase me
+  return "swimmer.parts"
 end
 
 on setPartLists me, tmodels
@@ -94,13 +94,17 @@ on setPartLists me, tmodels
   pPelleFigure = [:]
   tDirectionOld = me.pDirection
   tActionOld = me.pMainAction
-  me.pDirection = 4
+  me.pDirection = 3
   me.pMainAction = "std"
   me.arrangeParts()
-  repeat with i = 1 to me.pPartIndex.count
-    tPartSymbol = me.pPartIndex.getPropAt(i)
-    tPartObj = me.pPartList[me.pPartIndex[i]]
-    pPelleFigure.addProp(tPartSymbol, tmodels[tPartSymbol])
+  repeat with i = 1 to me.pPartList.count
+    tPartObj = me.pPartList[i]
+    tPartSymbol = tPartObj.pPart
+    tPartModel = tPartObj.getModel()
+    tPartColor = tPartObj.getColor()
+    if tPartModel.count >= 1 then
+      pPelleFigure.addProp(tPartSymbol, ["model": tPartModel[1], "color": tPartColor])
+    end if
     if me.pPartListSubSet["head"].findPos(tPartSymbol) then
       tPartObj.setUnderWater(0)
       next repeat
@@ -198,7 +202,7 @@ on render me
   end if
   me.pChanges = 0
   if me.pMainAction = "sit" then
-    me.pShadowSpr.castNum = getmemnum(me.pPeopleSize & "_sit_sd_001_" & me.pFlipList[me.pDirection + 1] & "_0")
+    me.pShadowSpr.castNum = getmemnum(me.pPeopleSize & "_sit_sd_1_" & me.pFlipList[me.pDirection + 1] & "_0")
   else
     if me.pShadowSpr.member <> me.pDefShadowMem then
       me.pShadowSpr.castNum = me.pDefShadowMem.number
@@ -259,12 +263,19 @@ on fixSwimmerFigure me, tFigure
   tFigure["ch"] = ["model": tphModel, "color": tColor]
   repeat with f in ["bd", "lh", "rh"]
     if voidp(tFigure[f]) then
-      tFigure[f] = ["model": "001", "color": rgb("#EEEEEE")]
+      tFigure[f] = ["model": "1", "color": rgb("#EEEEEE")]
     end if
   end repeat
-  tFigure["bd"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
-  tFigure["lh"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
-  tFigure["rh"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
+  tBodyModel = tFigure["bd"]["model"]
+  if ilk(tBodyModel) <> #string then
+    tBodyModel = EMPTY
+  end if
+  repeat while tBodyModel.length < 3
+    tBodyModel = "0" & tBodyModel
+  end repeat
+  tFigure["bd"]["model"] = "s" & tBodyModel.char[2..3]
+  tFigure["lh"]["model"] = "s" & tBodyModel.char[2..3]
+  tFigure["rh"]["model"] = "s" & tBodyModel.char[2..3]
   return tFigure
 end
 

@@ -1,7 +1,8 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pShowUserTags, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ, pTagListObjID, pTagListObj, pTagLists, pClosed, pTagRequestTimeout
 
 on construct me
   pWindowList = []
+  pTagRequestTimeout = 60000
   pCreatorID = "room.object.displayer.window.creator"
   createObject(pCreatorID, "Room Object Window Creator Class")
   pBadgeObjID = "room.obj.disp.badge.mngr"
@@ -27,6 +28,9 @@ on construct me
   registerMessage(#itemObjectsUpdated, me.getID(), #refreshView)
   registerMessage(#activeObjectsUpdated, me.getID(), #refreshView)
   registerMessage(#updateClubStatus, me.getID(), #refreshView)
+  registerMessage(#remove_user, me.getID(), #refreshView)
+  registerMessage(#activeObjectRemoved, me.getID(), #refreshView)
+  registerMessage(#itemObjectRemoved, me.getID(), #refreshView)
   pWindowCreator = getObject(pCreatorID)
   pTagListObj = getObject(pTagListObjID)
   pTagLists = [:]
@@ -79,6 +83,10 @@ on showObjectInfo me, tObjType, tRefresh
     "user":
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       tWindowTypes = getVariableValue("object.display.windows.human")
+      if tObj <> 0 then
+        tUserID = integer(tObj.getWebID())
+        me.updateUserTags(tUserID)
+      end if
     "bot":
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       tWindowTypes = getVariableValue("object.display.windows.bot")
@@ -129,7 +137,12 @@ on showObjectInfo me, tObjType, tRefresh
           tTagsElem = tTagsWindow.getElement("room_obj_disp_tags")
           pTagListObj.setWidth(tTagsElem.getProperty(#width))
           pTagListObj.setHeight(tTagsElem.getProperty(#height))
-          tTagList = pTagLists.getaProp(tObj.getWebID())
+          tUserTagData = pTagLists.getaProp(tObj.getWebID())
+          if not listp(tUserTagData) then
+            tTagList = []
+          else
+            tTagList = tUserTagData[#tags]
+          end if
           tTagListImage = pTagListObj.createTagList(tTagList)
           tTagsElem.feedImage(tTagListImage)
         end if
@@ -201,6 +214,21 @@ on showHideTags me
   me.refreshView()
 end
 
+on updateUserTags me, tUserID
+  tLastUpdateTime = 0
+  tTimeNow = the milliSeconds
+  tUserData = pTagLists.getaProp(tUserID)
+  if listp(tUserData) then
+    tLastUpdateTime = tUserData[#lastUpdate]
+  else
+    pTagLists[string(tUserID)] = [#tags: [], #lastUpdate: 0]
+  end if
+  if tTimeNow - tLastUpdateTime > pTagRequestTimeout then
+    pTagLists[string(tUserID)][#lastUpdate] = tTimeNow
+    getConnection(#Info).send("GET_USER_TAGS", [#integer: tUserID])
+  end if
+end
+
 on alignWindows me
   if pWindowList.count = 0 then
     return 0
@@ -267,9 +295,13 @@ on groupLogoDownloaded me, tGroupId
 end
 
 on updateTagList me, tUserID, tTagList
-  tOldList = pTagLists.getaProp(tUserID)
+  tUserTagData = pTagLists.getaProp(tUserID)
+  if voidp(tUserTagData) then
+    tUserTagData = [#tags: [], #lastUpdate: 0]
+  end if
+  tOldList = tUserTagData[#tags]
   if tOldList <> tTagList then
-    pTagLists.setaProp(tUserID, tTagList)
+    pTagLists.setaProp(tUserID, [#tags: tTagList, #lastUpdate: the milliSeconds])
     me.refreshView()
   end if
 end

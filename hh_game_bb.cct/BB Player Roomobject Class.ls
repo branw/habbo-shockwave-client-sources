@@ -44,7 +44,7 @@ on roomObjectAction me, tAction, tdata
       me.pChanges = 1
       me.pDirChange = 1
       repeat with tBodyPart in me.pPartList
-        tBodyPart.pMemString = EMPTY
+        tBodyPart.resetMemberCache()
       end repeat
       me.pMember.image.fill(me.pMember.image.rect, me.pAlphaColor)
       me.render()
@@ -182,9 +182,9 @@ on render me, tForceUpdate
   if pBallState then
     call(#update, me.pPartList)
   else
-    repeat with tPartPos = 1 to me.pPartIndex.count
-      if me.pPartIndex.getPropAt(tPartPos) <> "bl" then
-        call(#update, [me.pPartList[me.pPartIndex[tPartPos]]])
+    repeat with tPart in me.pPartList
+      if tPart.pPart <> "bl" then
+        call(#update, tPart)
       end if
     end repeat
   end if
@@ -212,7 +212,7 @@ on setBallColor me, tColor
   if tBallPart <> VOID then
     tBallPart.setColor(tColor)
   end if
-  tBallPart.pMemString = EMPTY
+  tBallPart.resetMemberCache()
   me.pChanges = 1
   me.pDirChange = 1
   me.render()
@@ -221,56 +221,10 @@ end
 
 on setPartLists me, tmodels
   me.resetAction()
-  me.pMainAction = "sit"
-  callAncestor(#setPartLists, [me], tmodels)
-  tPartDefinition = ["bl"]
-  if voidp(tmodels["bl"]) then
-    tPartDefinition = []
+  if not voidp(tmodels["bl"]) then
+    pOrigBallColor = tmodels["bl"]["color"]
   end if
-  repeat with i = 1 to tPartDefinition.count
-    tPartSymbol = tPartDefinition[i]
-    if voidp(tmodels[tPartSymbol]) then
-      tmodels[tPartSymbol] = [:]
-    end if
-    if voidp(tmodels[tPartSymbol]["model"]) then
-      tmodels[tPartSymbol]["model"] = "001"
-    end if
-    if voidp(tmodels[tPartSymbol]["color"]) then
-      tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
-    end if
-    if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and me.pXFactor < 33 then
-      tmodels[tPartSymbol]["model"] = "001"
-    end if
-    if tPartSymbol = "bl" then
-      tPartObj = createObject(#temp, me.pBallClass)
-      pOrigBallColor = tmodels[tPartSymbol]["color"]
-    else
-      tPartObj = createObject(#temp, me.pPartClass)
-    end if
-    if stringp(tmodels[tPartSymbol]["color"]) then
-      tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
-    end if
-    if tmodels[tPartSymbol]["color"].ilk <> #color then
-      tColor = rgb(tmodels[tPartSymbol]["color"])
-    else
-      tColor = tmodels[tPartSymbol]["color"]
-    end if
-    if tColor.red + tColor.green + tColor.blue > 238 * 3 then
-      tColor = rgb("EEEEEE")
-    end if
-    if (["ls", "lh", "rs", "rh"]).getPos(tPartSymbol) = 0 then
-      tAction = me.pMainAction
-    else
-      tAction = "crr"
-    end if
-    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, me.pDirection, tAction, me)
-    me.pPartList.add(tPartObj)
-    me.pColors.setaProp(tPartSymbol, tColor)
-  end repeat
-  me.pPartIndex = [:]
-  repeat with i = 1 to me.pPartList.count
-    me.pPartIndex[me.pPartList[i].pPart] = i
-  end repeat
+  callAncestor(#setPartLists, [me], tmodels)
   call(#reset, me.pPartList)
   me.definePartListAction(me.pPartListSubSet["sit"], "sit")
   me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
@@ -284,6 +238,18 @@ end
 
 on getPicture me, tImg
   return me.getPartialPicture(#Full, tImg, 4, "sh")
+end
+
+on getPartClass me, tPartSymbol
+  if tPartSymbol = "bl" then
+    return pBallClass
+  else
+    return me.pPartClass
+  end if
+end
+
+on getPartListNameBase me
+  return "bouncing.human.parts"
 end
 
 on Refresh me, tX, tY, tH

@@ -6,7 +6,7 @@ on construct me
   pSignState = VOID
   pChatmode = "CHAT"
   if not objectExists("Figure_System_Pool") then
-    createObject("Figure_System_Pool", ["Figure System Class"])
+    createObject("Figure_System_Pool", ["OLD Figure System Class"])
     getObject("Figure_System_Pool").define(["type": "member", "source": "swimfigure_ids_"])
   end if
   return removeWindow(pBottomBarId)
@@ -59,8 +59,6 @@ on createFigurePrew me
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
   tFigure = getObject(#session).GET("user_figure").duplicate()
-  tFigure["hd"]["model"] = "001"
-  tFigure["fc"]["model"] = "001"
   if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else

@@ -789,7 +789,11 @@ on renderRoomList me, tList
     tNameVertMargin = 0
   end if
   tNameImage = me.pWriterPrivPlain.render(tNameTxt)
-  tTargetImg.copyPixels(tNameImage, tNameImage.rect + rect(17, -5 + tNameVertMargin, 17, -5 + tNameVertMargin), tNameImage.rect)
+  tNameRect = tNameImage.rect.duplicate()
+  if tNameRect.width > 230 then
+    tNameRect[3] = 230
+  end if
+  tTargetImg.copyPixels(tNameImage, tNameRect + rect(17, -5 + tNameVertMargin, 17, -5 + tNameVertMargin), tNameRect)
   return tTargetImg
 end
 

@@ -283,7 +283,7 @@ on expandHistoryItem me, tClickedItem
   if tClickedItem > pNaviHistory.count then
     tClickedItem = pNaviHistory.count
   end if
-  if tClickedItem = 0 then
+  if tClickedItem <= 0 then
     return 0
   end if
   if pNaviHistory[tClickedItem] = #entry then

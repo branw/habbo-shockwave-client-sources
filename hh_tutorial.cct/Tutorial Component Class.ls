@@ -4,7 +4,9 @@ on construct me
   me.pEnabled = 0
   me.pRunning = 0
   me.pWaitingForPrefs = 1
-  me.pDefaultTutorial = getVariable("tutorial.name.new_user_flow")
+  if variableExists("tutorial.name.new_user_flow") then
+    me.pDefaultTutorial = getVariable("tutorial.name.new_user_flow")
+  end if
   me.pMessages = [:]
   me.pMessages.setaProp(#userlogin, #getUserProperties)
   me.pMessages.setaProp(#restart_tutorial, #restartTutorial)
@@ -63,6 +65,9 @@ on getUserProperties me
 end
 
 on startDefaultTutorial me
+  if voidp(me.pDefaultTutorial) then
+    return 0
+  end if
   me.startTutorial(me.pDefaultTutorial)
 end
 

@@ -1331,10 +1331,6 @@ on eventProcUserObj me, tEvent, tSprID, tParam
       me.showArrowHiliter(tSprID)
     end if
     tloc = tObject.getLocation()
-    if tObject.getClass() = "user" then
-      tUserID = integer(tObject.getWebID())
-      me.getComponent().getRoomConnection().send("GET_USER_TAGS", [#integer: tUserID])
-    end if
     if tParam = #userEnters then
       tloc = [5, 5]
     end if

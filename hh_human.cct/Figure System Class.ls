@@ -1,17 +1,15 @@
-property pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pValidPartsList, pValidSetIDList, pSelectablePartsList, pSelectableSetIDList
+property pFigurePartListLoadedFlag, pAvailableSetListLoadedFlag, pFigureData
 
 on construct me
   pFigurePartListLoadedFlag = 0
   pAvailableSetListLoadedFlag = 0
-  pValidPartsList = [:]
-  pValidSetIDList = [:]
-  pSelectablePartsList = [:]
-  pSelectableSetIDList = [:]
   setVariable("figurepartlist.loaded", 0)
+  setVariable("figure.xml.loaded", 0)
   me.regMsgList(1)
   me.loadPartSetXML()
   me.loadActionSetXML()
   me.loadAnimationSetXML()
+  pFigureData = createObject(#temp, "Figure Data Class")
   return 1
 end
 
@@ -31,9 +29,6 @@ on define me, tProps
   case tProps["type"] of
     "url":
       me.loadFigurePartList(tProps["source"])
-    "member":
-      tMemberName = tProps["source"]
-      me.createValidPartList(tMemberName)
     "proplist":
       tProlist = tProps["source"]
       initializeValidPartLists(tProlist)
@@ -42,178 +37,9 @@ on define me, tProps
   end case
 end
 
-on isFigureSystemReady me
-  if pAvailableSetListLoadedFlag = 1 then
-    return 1
-  else
-    me.getAvailableSetList()
-    return 0
-  end if
-end
-
-on getAvailableSetList me
-  if pFigurePartListLoadedFlag = 1 and pAvailableSetListLoadedFlag = 0 then
-    if connectionExists(getVariable("connection.info.id")) then
-      getConnection(getVariable("connection.info.id")).send("GETAVAILABLESETS")
-    end if
-  end if
-end
-
-on setAvailableSetList me, tList
-  if pFigurePartListLoadedFlag and not voidp(tList) then
-    me.initializeSelectablePartList(tList)
-    pAvailableSetListLoadedFlag = 1
-    executeMessage(#figure_ready)
-  end if
-end
-
-on getPreventedPartsBySetID me, tsex, tModelID
-  if tsex = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  tmodellist = pValidSetIDList[tsex]
-  if not voidp(integer(tModelID)) then
-    tModelID = integer(tModelID)
-  end if
-  tmodel = getaProp(tmodellist, tModelID)
-  if ilk(tmodel) = #propList then
-    tHiddenParts = tmodel[#hideparts]
-  else
-    tHiddenParts = []
-  end if
-  return tHiddenParts
-end
-
-on GenerateFigureDataToServerMode me, tFigure, tsex
-  tFigure = me.checkAndFixFigure(tFigure, tsex)
-  tFigureToServer = EMPTY
-  repeat with tPart in ["hr", "hd", "lg", "sh", "ch"]
-    if not voidp(tFigure[tPart]) then
-      if not voidp(tFigure[tPart]["setid"]) and not voidp(tFigure[tPart]["colorid"]) then
-        tSetID = tFigure[tPart]["setid"]
-        tColorId = tFigure[tPart]["colorid"]
-        if not stringp(tSetID) then
-          tSetID = string(tSetID)
-        end if
-        if not stringp(tColorId) then
-          tColorId = string(tColorId)
-        end if
-        if tSetID.length = 1 then
-          tSetID = "00" & tSetID
-        else
-          if tSetID.length = 2 then
-            tSetID = "0" & tSetID
-          end if
-        end if
-        if tColorId.char.count = 1 then
-          tColorId = "0" & tColorId
-        end if
-        tFigureToServer = tFigureToServer & tSetID & tColorId
-      end if
-    end if
-  end repeat
-  return ["figuretoServer": tFigureToServer, "parsedfigure": tFigure]
-end
-
-on generateFigureDataToOldServerMode me, tFigure, tsex, tCheckValidParts
-  if voidp(tsex) then
-    tsex = "M"
-  end if
-  if tsex contains "f" or tsex contains "F" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(tCheckValidParts) then
-    tCheckValidParts = 0
-  end if
-  if tCheckValidParts then
-    tNewFigure = me.GenerateFigureDataToServerMode(tFigure, tsex)
-    tFigureData = me.ConvertServerModeFigureData(tNewFigure["parsedfigure"], tsex)
-  else
-    tFigureData = tFigure
-  end if
-  tTemp = the itemDelimiter
-  the itemDelimiter = ","
-  tNewFigure = "sd=001/0"
-  if listp(tFigureData) then
-    repeat with f = 1 to tFigureData.count
-      tPart = tFigureData.getPropAt(f)
-      tmodel = tFigureData[tPart]["model"]
-      tColor = tFigureData[tPart]["color"]
-      if tPart <> "sd" then
-        if tmodel.length = 1 then
-          tmodel = "00" & tmodel
-        else
-          if tmodel.length = 2 then
-            tmodel = "0" & tmodel
-          end if
-        end if
-        if tColor = rgb("#EEEEEE") then
-          tColor = rgb(255, 255, 255)
-        end if
-        tColor = string(tColor)
-        if tColor.item.count < 3 then
-          put "VIKAA SILMISS€"
-        else
-          tR = value(tColor.item[1].char[5..length(tColor.item[1])])
-          tG = value(tColor.item[2])
-          tB = value(tColor.item[3].char[1..length(tColor.item[3]) - 1])
-          tColor = string(tR) & "," & string(tG) & "," & string(tB)
-        end if
-        if tPart = "ey" then
-          tColor = "0"
-        end if
-        tNewFigure = tNewFigure & "&" & tPart & "=" & tmodel & "/" & tColor
-      end if
-    end repeat
-  else
-    error(me, "Weirdness in figure data!!!", #generateFigureDataToOldServerMode, #minor)
-    tNewFigure = tFigureData
-  end if
-  the itemDelimiter = tTemp
-  return ["figuretoServer": tNewFigure]
-end
-
-on validateFigure me, tFigure, tsex
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pSelectablePartsList[tsex]) then
-    return tFigure
-  end if
-  if tFigure.ilk <> #propList then
-    tFigure = [:]
-  end if
-  tTempFigure = [:]
-  repeat with f = 1 to tFigure.count
-    if not voidp(tFigure[f]["setid"]) then
-      if voidp(tFigure[f]["setid"]) then
-        tColor = 1
-      else
-        tColor = tFigure[f]["colorid"]
-      end if
-      tPart = tFigure.getPropAt(1)
-      tSetID = tFigure[f]["setid"]
-      if not voidp(pSelectableSetIDList[tsex].getaProp(integer(tSetID))) then
-        tTempFigure[string(tSetID)] = tColor
-      end if
-    end if
-  end repeat
-  tFigure = me.parseNewTypeFigure(tTempFigure, tsex)
-  return tFigure
-end
-
-on parseFigure me, tFigureData, tsex, tClass, tCommand
+on parseFigure me, tFigureData, tsex, tClass
   if voidp(tClass) then
     tClass = "user"
-  end if
-  if voidp(tCommand) then
-    tCommand = EMPTY
   end if
   case tClass of
     "user", "pelle":
@@ -227,6 +53,22 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
           tColorId = tPart.char[4..5]
           tTempFigure[tSetID] = value(tColorId)
         end repeat
+      else
+        tDelim = the itemDelimiter
+        the itemDelimiter = "."
+        tPartCount = tFigureData.item.count
+        repeat with i = 1 to tPartCount
+          the itemDelimiter = "."
+          tPartData = tFigureData.item[i]
+          the itemDelimiter = "-"
+          if tPartData.item.count >= 3 then
+            tSetType = tPartData.item[1]
+            tSetID = tPartData.item[2]
+            tColorId = tPartData.item[3]
+            tTempFigure[tSetID] = tColorId
+          end if
+        end repeat
+        the itemDelimiter = tDelim
       end if
       tFigure = me.parseNewTypeFigure(tTempFigure, tsex)
     "bot":
@@ -241,6 +83,9 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
         the itemDelimiter = "/"
         tValue = [:]
         tValue["model"] = tDesc.item[1]
+        repeat while tValue["model"].char[1] = "0"
+          tValue["model"] = tValue["model"].char[2..tValue["model"].length]
+        end repeat
         tColor = tDesc.item[2].line[1]
         the itemDelimiter = ","
         if tColor.item.count = 1 then
@@ -266,310 +111,78 @@ on parseFigure me, tFigureData, tsex, tClass, tCommand
         tFigure[tProp] = tValue
         the itemDelimiter = "&"
       end repeat
-      tHairChangeList = [:]
-      tHairChangeList["007"] = ["ha": "001", "fa": "001"]
-      tHairChangeList["014"] = ["ha": "002"]
-      tHairChangeList["015"] = ["ha": "003"]
-      tHairChangeList["021"] = ["ha": "004"]
-      tHairChangeList["022"] = ["ha": "005"]
-      tHairChangeList["996"] = ["ha": "006"]
-      tHairChangeList["458"] = ["ha": "008", "fa": "002"]
-      tHairChangeList["013"] = ["ha": "010"]
-      tHairChangeList["505"] = ["ha": "011", "fa": "002"]
-      tHairChangeList["502"] = ["ha": "012"]
-      if not voidp(tFigure["hr"]) then
-        tPos = tHairChangeList.findPos(tFigure["hr"]["model"])
-        if tPos > 0 then
-          tChangeList = tHairChangeList[tPos]
-          repeat with k = 1 to tChangeList.count
-            tPart = tChangeList.getPropAt(k)
-            if voidp(tFigure[tPart]) then
-              tFigure[tPart] = tFigure["hr"]
-            end if
-          end repeat
-          tFigure["hr"] = VOID
-        end if
-      end if
-      if voidp(tFigure["hrb"]) and not voidp(tFigure["hr"]) then
-        tFigure["hrb"] = tFigure["hr"]
-      end if
-      tRequiredParts = ["hr", "hrb", "hd", "ey", "fc", "bd", "lh", "rh", "ch", "ls", "rs", "lg", "sh", "fa", "ea", "he", "ca"]
-      repeat with tItem in tRequiredParts
-        if not listp(tFigure[tItem]) then
-          tFigure[tItem] = [:]
-        end if
-        if not ilk(tFigure[tItem]["color"], #color) then
-          tFigure[tItem]["color"] = rgb(238, 238, 238)
-        end if
-        if not stringp(tFigure[tItem]["model"]) then
-          tFigure[tItem]["model"] = "000"
-        end if
-      end repeat
   end case
   return tFigureData
   return tFigure
 end
 
 on parseNewTypeFigure me, tFigure, tsex
-  tMainPartsList = [:]
-  if voidp(tsex) then
-    tsex = "M"
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  tChangeList = member("figure_part_replace_list").text
-  if not voidp(tChangeList) then
-    tChangeList = value(replaceChunks(tChangeList, RETURN, EMPTY))
-  end if
-  tReverseMap = [:]
-  if not voidp(pValidPartsList[tsex]["hr"]) then
-    tHairList = pValidPartsList[tsex]["hr"]
-    repeat with tHairData in tHairList
-      tSetID = tHairData["s"]
-      tParts = tHairData["p"]
-      if not voidp(tParts["hr"]) then
-        tReverseMap.addProp(tSetID, tParts["hr"])
-      end if
-    end repeat
-  end if
-  if voidp(tChangeList) then
-    tChangeList = [:]
-  end if
-  repeat with f = tFigure.count down to 1
-    tSetID = tFigure.getPropAt(f)
-    tPos = tReverseMap.findPos(tSetID)
-    if tPos > 0 then
-      tMappedID = tReverseMap[tPos]
-      tPos = tChangeList.findPos(tMappedID)
-      if tPos > 0 then
-        tdata = tFigure[f]
-        tFigure.deleteAt(f)
-        repeat with tNewPart in tChangeList[tPos]
-          if not voidp(integer(tNewPart)) then
-            repeat with i = 1 to tReverseMap.count
-              if tReverseMap[i] = tNewPart then
-                tNewPart = string(tReverseMap.getPropAt(i))
-                exit repeat
-              end if
-            end repeat
-          end if
-          repeat while tNewPart.length < 1
-            tNewPart = "0" & tNewPart
-          end repeat
-          tFigure.addProp(tNewPart, tdata)
-        end repeat
-      end if
-    end if
-  end repeat
+  tTempFigure = [:]
+  tHiddenLayers = [:]
   repeat with f = 1 to tFigure.count
     tSetID = tFigure.getPropAt(f)
-    tColorId = value(tFigure[tSetID])
+    tColorId = tFigure[tSetID]
     if voidp(tColorId) then
       tColorId = 1
     end if
-    if not voidp(pValidSetIDList[tsex][tSetID]) then
-      tMainPart = pValidSetIDList[tsex].getProp(tSetID)[#part]
-      tlocation = pValidSetIDList[tsex].getProp(tSetID)[#location]
-      tchangeparts = pValidPartsList[tsex][tMainPart][tlocation]["p"]
-      tColorList = pValidPartsList[tsex][tMainPart][tlocation]["c"]
-      if tMainPart = "hr" then
-        if voidp(tchangeparts["hrb"]) and not voidp(tchangeparts["hr"]) then
-          tchangeparts["hrb"] = tchangeparts["hr"]
-        end if
-      end if
-      tMainPartsList[tMainPart] = ["changeparts": tchangeparts, "setid": tSetID, "colorlist": tColorList, "colorID": tColorId]
+    tColor = pFigureData.getColor(tColorId)
+    if tColor = 0 then
+      tColor = rgb("#EEEEEE")
+    else
+      tColor = rgb(tColor)
     end if
-  end repeat
-  tTempFigure = [:]
-  repeat with k = 1 to tMainPartsList.count
-    tMainPart = tMainPartsList.getPropAt(k)
-    if not voidp(tMainPartsList[tMainPart]) then
-      tSetID = tMainPartsList[tMainPart]["setid"]
-      tColorId = tMainPartsList[tMainPart]["colorID"]
-      tColorList = tMainPartsList[tMainPart]["colorlist"]
-      tchangeparts = tMainPartsList[tMainPart]["changeparts"]
-      if value(tColorId) < 1 then
-        tColorId = 1
-      end if
-      if not listp(tColorList) then
-        tColor = rgb("#EEEEEE")
-        tColorId = 1
-        error(me, "Weirdness in the list of figure parts!", #parseNewTypeFigure, #minor)
-      else
-        if tColorId > tColorList.count then
-          tColorId = 1
-        end if
-        if not listp(tColorList[tColorId]) then
-          if voidp(tColorList[tColorId]) then
-            tColor = rgb("#EEEEEE")
-          end if
-          tColor = rgb(tColorList[tColorId])
-        end if
-      end if
-      repeat with i = 1 to tchangeparts.count
-        tPart = tchangeparts.getPropAt(i)
-        tmodel = tchangeparts[tPart]
-        if tmodel.char.count = 1 then
-          tmodel = "00" & tmodel
-        else
-          if tmodel.char.count = 2 then
-            tmodel = "0" & tmodel
-          end if
-        end if
-        if listp(tColorList[tColorId]) then
-          if tColorList[tColorId].count >= i then
-            tPartColor = rgb(tColorList[tColorId][i])
-          else
-            tPartColor = rgb(tColorList[tColorId][1])
-          end if
-          tTempFigure[tPart] = ["model": tmodel, "color": tPartColor, "setid": tSetID, "colorid": tColorId]
+    tPartCount = pFigureData.getSetPartCount(tSetID)
+    repeat with i = 1 to tPartCount
+      tPartData = pFigureData.getSetPartData(tSetID, i)
+      if tPartData <> 0 then
+        tmodel = tPartData["id"]
+        tPart = tPartData["type"]
+        if tPartData["colorable"] then
+          tTempFigure.addProp(tPart, ["model": tmodel, "color": tColor, "setid": tSetID, "colorid": tColorId])
           next repeat
         end if
-        tTempFigure[tPart] = ["model": tmodel, "color": tColor, "setid": tSetID, "colorid": tColorId]
-      end repeat
+        tTempFigure.addProp(tPart, ["model": tmodel, "color": rgb("#EEEEEE"), "setid": tSetID, "colorid": tColorId])
+      end if
+    end repeat
+    tHidden = pFigureData.getSetHiddenLayers(tSetID)
+    tSetType = pFigureData.getSetType(tSetID)
+    if tHidden <> 0 and tSetType <> 0 then
+      tHiddenLayers[tSetType] = tHidden
     end if
   end repeat
-  tTempFigure = me.checkAndFixFigure(tTempFigure, tsex)
+  tTempFigure = me.checkAndFixFigure(tTempFigure, tHiddenLayers)
   return tTempFigure
 end
 
-on getDefaultFigure me, tsex
-  return me.checkAndFixFigure([:], tsex)
-end
-
-on getCountOfPart me, tPart, tsex
-  if voidp(tPart) or voidp(tsex) then
-    return error(me, "can«t get part count because tPart or tSex is VOID:" && tPart && tsex, #getCountOfPart, #major)
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pSelectablePartsList[tsex]) then
-    return 0
-  end if
-  if not voidp(pSelectablePartsList[tsex][tPart]) then
-    return pSelectablePartsList[tsex][tPart].count
-  else
-    return error(me, "Can«t get part count:" && tPart && tsex, #getCountOfPart, #major)
-  end if
-end
-
-on getPartColors me, tSetID, tsex
-  if voidp(tSetID) or voidp(tsex) then
-    return error(me, "Can«t get part colors because setID or tSex is VOID" && tSetID && tsex, #getPartColors, #major)
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pValidPartsList[tsex]) then
-    return 0
-  end if
-  repeat with tPartList in pValidPartsList[tsex]
-    repeat with tPart in tPartList
-      if tPart["s"] = tSetID then
-        return tPart["c"]
-      end if
-    end repeat
+on checkDataLoaded me
+  tList = ["partsets.xml.loaded", "draworder.xml.loaded", "animation.xml.loaded", "figure.xml.loaded"]
+  repeat with tName in tList
+    if not variableExists(tName) then
+      return 0
+    end if
+    if getVariable(tName) <> 1 then
+      return 0
+    end if
   end repeat
-  return VOID
-end
-
-on getCountOfPartColors me, tPart, tSetID, tsex
-  if voidp(tPart) or voidp(tSetID) or voidp(tsex) then
-    return error(me, "Can«t get part color count because tPart or setid or tSex is VOID" && tPart && tsex, #getCountOfPartColors, #major)
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pSelectablePartsList[tsex]) then
+  tStamp = EMPTY
+  repeat with tNo = 1 to 100
+    tChar = numToChar(random(48) + 74)
+    tStamp = tStamp & tChar
+  end repeat
+  tFuseReceipt = getSpecialServices().getReceipt(tStamp)
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  if tReceipt <> tFuseReceipt then
+    error(me, "Invalid build structure", #checkDataLoaded, #critical)
     return 0
   end if
-  if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "Figure part not found" && tPart, #getCountOfPartColors, #major)
-  end if
-  if voidp(pSelectableSetIDList[tsex].getaProp(tSetID)) then
-    return error(me, "SetID not found" && tSetID, #getCountOfPartColors, #major)
-  end if
-  tSetOrderNum = pSelectableSetIDList[tsex].getProp(tSetID)[#location]
-  if not voidp(pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"]) then
-    return pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"].count
-  else
-    return error(me, "Can«t get part color count" && tPart && tSetID && tsex, #getCountOfPartColors, #major)
-  end if
-end
-
-on getModelOfPartByOrderNum me, tPart, tOrderNum, tsex
-  if voidp(tOrderNum) or voidp(tPart) or voidp(tsex) then
-    return error(me, "Can«t get the model of part becouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getModelOfPartByOrderNum, #major)
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pSelectablePartsList[tsex]) then
-    return 0
-  end if
-  if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "figure part not found" && tPart, #getModelOfPartByOrderNum, #major)
-  end if
-  if tOrderNum < 1 then
-    tOrderNum = pSelectablePartsList[tsex][tPart].count
-  end if
-  if tOrderNum > pSelectablePartsList[tsex][tPart].count then
-    tOrderNum = 1
-  end if
-  if not voidp(pSelectablePartsList[tsex][tPart][tOrderNum]) then
-    tChangePartPropList = pSelectablePartsList[tsex][tPart][tOrderNum]["p"]
-    tSetID = pSelectablePartsList[tsex][tPart][tOrderNum]["s"]
-    tSelectedPart = tOrderNum
-    tColor = pSelectablePartsList[tsex][tPart][tOrderNum]["c"][1]
-    return ["selectedpart": tSelectedPart, "changeparts": tChangePartPropList, "ordernum": tOrderNum, "firstcolor": tColor, "setid": tSetID]
-  end if
-end
-
-on getColorOfPartByOrderNum me, tPart, tOrderNum, tSetID, tsex
-  if voidp(tOrderNum) or voidp(tPart) or voidp(tsex) then
-    return error(me, "Can«t get part color beaouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getColorOfPartByOrderNum, #major)
-  end if
-  if voidp(tSetID) then
-    return error(me, "Can«t get part color because tSetID is VOID" && tsex, #getColorOfPartByOrderNum, #major)
-  end if
-  if tsex.char[1] = "F" or tsex.char[1] = "f" then
-    tsex = "F"
-  else
-    tsex = "M"
-  end if
-  if voidp(pSelectablePartsList[tsex]) then
-    return 0
-  end if
-  if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "Figure part not found:" && tPart, #getColorOfPartByOrderNum, #major)
-  end if
-  if voidp(pSelectableSetIDList[tsex].getaProp(tSetID)) then
-    return error(me, "SetID not found:" && tSetID, #getCountOfPartColors, #major)
-  end if
-  tSetOrderNum = pSelectableSetIDList[tsex].getProp(tSetID)[#location]
-  if tOrderNum < 1 then
-    tOrderNum = pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"].count
-  end if
-  if tOrderNum > pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"].count then
-    tOrderNum = 1
-  end if
-  if not voidp(pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"][tOrderNum]) then
-    tChangePartPropList = pSelectablePartsList[tsex][tPart][tSetOrderNum]["p"]
-    tColor = pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"][tOrderNum]
-    return ["color": tColor, "changeparts": tChangePartPropList, "ordernum": tOrderNum]
-  end if
+  setVariable("figurepartlist.loaded", 1)
+  return 1
 end
 
 on loadFigurePartList me, tURL
@@ -606,279 +219,117 @@ on partListLoaded me
     tValidpartList = VOID
     error(me, "Failure while loading part list", #partListLoaded, #major)
   else
-    try()
     tContent = member(getmemnum(tMemName)).text
-    tContent = replaceChunks(tContent, RETURN, EMPTY)
-    tValidpartList = value(tContent)
-    if catch() then
-      tValidpartList = VOID
-    end if
-    if voidp(tValidpartList) then
-      outputList(tContent)
+    if not pFigureData.parseData(tContent) then
+      return error(me, "Failure while parsing part list", #partListLoaded, #critical)
     end if
   end if
-  me.initializeValidPartLists(tValidpartList)
   pFigurePartListLoadedFlag = 1
-  setVariable("figurepartlist.loaded", 1)
+  setVariable("figure.xml.loaded", 1)
+  me.checkDataLoaded()
   if memberExists(tMemName) then
     removeMember(tMemName)
   end if
 end
 
-on checkAndFixFigure me, tFigure, tsex
+on checkAndFixFigure me, tFigure, tHiddenLayers
   if tFigure.ilk <> #propList then
     tFigure = [:]
   end if
-  repeat with tPart in ["hr", "hd", "ey", "fc", "bd", "lh", "rh", "ch", "ls", "rs", "lg", "sh"]
-    case tPart of
-      "ls", "ch", "rs":
-        tMainPart = "ch"
-      "hd", "ey", "fc", "bd", "lh", "rh":
-        tMainPart = "hd"
-      otherwise:
-        tMainPart = tPart
-    end case
-    tChageParts = pValidPartsList[tsex][tMainPart][1]["p"]
-    tmodel = pValidPartsList[tsex][tMainPart][1]["p"][tPart]
-    tColorList = pValidPartsList[tsex][tMainPart][1]["c"][1]
-    tSetID = pValidPartsList[tsex][tMainPart][1]["s"]
-    if not listp(tColorList) then
-      tColorList = list(tColorList)
+  tFigure = tFigure.duplicate()
+  if tHiddenLayers.ilk <> #propList then
+    tHiddenLayers = [:]
+  end if
+  tPartDefinition = getVariableValue("human.parts.h")
+  if tPartDefinition = 0 then
+    tPartDefinition = []
+  end if
+  tHiddenLayersOrdered = [:]
+  repeat with i = tPartDefinition.count down to 1
+    tPartSymbol = tPartDefinition[i]
+    if not voidp(tHiddenLayers[tPartSymbol]) then
+      tHiddenLayersOrdered.addProp(tPartSymbol, tHiddenLayers[tPartSymbol])
     end if
-    if not voidp(tChageParts.findPos(tPart)) then
-      tColorId = tChageParts.findPos(tPart)
-    else
-      tColorId = 1
-    end if
-    if tColorList.count >= tColorId then
-      tColor = rgb(tColorList[tColorId])
-    else
-      tColor = rgb(tColorList[1])
-    end if
-    if tmodel.length = 1 then
-      tmodel = "00" & tmodel
-    else
-      if tmodel.length = 2 then
-        tmodel = "0" & tmodel
+  end repeat
+  repeat with i = 1 to tHiddenLayersOrdered.count
+    tRemoveList = tHiddenLayersOrdered[i]
+    repeat with tPart in tRemoveList
+      repeat while tFigure.findPos(tPart) > 0
+        tFigure.deleteProp(tPart)
+      end repeat
+      if tHiddenLayersOrdered.findPos(tPart) > i then
+        tHiddenLayersOrdered.deleteProp(tPart)
       end if
-    end if
-    if voidp(tFigure[tPart]) then
-      tFigure[tPart] = ["model": tmodel, "color": tColor, "setid": tSetID, "colorid": 1]
-      next repeat
-    end if
-    if tFigure[tPart].ilk <> #propList then
-      tFigure[tPart] = [:]
-    end if
-    if voidp(tFigure[tPart]["model"]) or voidp(tFigure[tPart]["color"]) or voidp(tFigure[tPart]["setid"]) or voidp(tFigure[tPart]["colorid"]) then
-      tFigure[tPart] = ["model": tmodel, "color": tColor, "setid": tSetID, "colorid": 1]
+    end repeat
+  end repeat
+  tRemoveList = getVariable("human.parts.removeList")
+  if ilk(tRemoveList) <> #propList then
+    tRemoveList = [:]
+  end if
+  repeat with i = 1 to tRemoveList.count
+    tPart = tRemoveList.getPropAt(i)
+    if tFigure.findPos(tPart) > 0 then
+      tRemovePart = tRemoveList[i]
+      tFigure.deleteProp(tRemovePart)
     end if
   end repeat
   return tFigure
 end
 
-on createValidPartList me, tmember
-  pValidPartsList = [:]
-  pValidSetIDList = [:]
-  pSelectablePartsList = [:]
-  pSelectableSetIDList = [:]
-  tTempItemdelimiter = the itemDelimiter
-  repeat with tsex in ["Male", "Female"]
-    if not memberExists(tmember & tsex) then
-      error(me, "Can't create list of valid figure parts, member not found:" && tmember & tsex, #createValidPartList, #major)
-      next repeat
-    end if
-    tFigureIds = member(getmemnum(tmember & tsex)).text
-    tsex = tsex.char[1]
-    if voidp(pValidPartsList[tsex]) then
-      pValidPartsList[tsex] = [:]
-    end if
-    ttempProp = VOID
-    tPartId = VOID
-    tMainPart = VOID
-    tMultiPartProps = VOID
-    tPartType = VOID
-    ttempColor = []
-    repeat with f = 1 to tFigureIds.line.count
-      tLine = tFigureIds.line[f]
-      if tLine.char[1] <> "*" and tLine.char.count > 7 then
-        the itemDelimiter = ":"
-        if not voidp(ttempProp) then
-          ttempColor.add(tLine.item[2])
-        end if
-        next repeat
-      end if
-      if tLine.char[1] = "*" or f = tFigureIds.line.count then
-        if not voidp(tMainPart) then
-          if voidp(pValidPartsList[tsex][tMainPart]) then
-            pValidPartsList[tsex][tMainPart] = []
-          end if
-        end if
-        if not voidp(ttempProp) and ttempColor <> [:] then
-          pValidPartsList[tsex][tMainPart].add(["s": value(tPartId), "p": tMultiPartProps, "c": ttempColor, "t": tPartType])
-          if voidp(pValidSetIDList[tsex]) then
-            pValidSetIDList[tsex] = [:]
-          end if
-          if voidp(pValidSetIDList[tsex][tPartId]) then
-            pValidSetIDList[tsex].addProp(value(tPartId), [#part: tMainPart, #location: pValidPartsList[tsex][tMainPart].count])
-          end if
-        end if
-        ttempColor = []
-        tMultiPartProps = [:]
-        the itemDelimiter = "/"
-        tPartId = tLine.item[2].char[8..tLine.item[2].char.count]
-        ttempProp = tLine.item[3]
-        the itemDelimiter = "="
-        tMainPart = ttempProp.item[1]
-        tMainPartModel = ttempProp.item[2]
-        the itemDelimiter = "/"
-        tMultiPartProps.addProp(tMainPart, tMainPartModel)
-        if tLine.item.count > 3 then
-          repeat with tMultiParts = 4 to tLine.item.count
-            tPartItem = tLine.item[tMultiParts]
-            ttempProp = ttempProp & "/" & tPartItem
-            the itemDelimiter = "="
-            tMultiPartProps.addProp(tPartItem.item[1], tPartItem.item[2])
-            the itemDelimiter = "/"
-          end repeat
-        end if
-      end if
-    end repeat
-  end repeat
-  the itemDelimiter = tTempItemdelimiter
-  pSelectablePartsList = pValidPartsList
-  pSelectableSetIDList = pValidSetIDList
-end
-
-on initializeValidPartLists me, tPlist
-  if not (tPlist.ilk = #propList) then
-    error(me, "Can't initialize valid part list", #initializeValidPartLists, #minor)
-    if memberExists("DefaultPartList") then
-      tPlist = value(member(getmemnum("DefaultPartList")).text)
-    else
-      return error(me, "not found default part list", #initializeValidPartLists, #major)
-    end if
-  end if
-  pValidPartsList = tPlist
-  tChangeList = member("figure_part_replace_list").text
-  if not voidp(tChangeList) then
-    tChangeList = value(replaceChunks(tChangeList, RETURN, EMPTY))
-  end if
-  if voidp(tChangeList) then
-    tChangeList = [:]
-  end if
-  tReverseMap = ["M": [:], "F": [:]]
-  repeat with tsex in ["M", "F"]
-    if not voidp(pValidPartsList[tsex]["hr"]) then
-      tHairList = pValidPartsList[tsex]["hr"]
-      repeat with tHairData in tHairList
-        tSetID = tHairData["s"]
-        tParts = tHairData["p"]
-        if not voidp(tParts["hr"]) then
-          tPartId = tParts["hr"]
-          tPos = tChangeList.findPos(tPartId)
-          if tPos > 0 then
-            tReverseMap[tsex].addProp(tPartId, tSetID)
-          end if
-        end if
-      end repeat
-    end if
-  end repeat
-  tExtraList = member("figure_accessories_extra").text
-  if not voidp(tExtraList) then
-    tExtraList = value(replaceChunks(tExtraList, RETURN, EMPTY))
-    if not voidp(tExtraList) then
-      repeat with tsex in ["M", "F"]
-        if not voidp(pValidPartsList[tsex]) then
-          tList = tExtraList[tsex]
-          if not voidp(tList) then
-            repeat with i = 1 to tList.count
-              ttype = tList.getPropAt(i)
-              if voidp(pValidPartsList[tsex][ttype]) then
-                pValidPartsList[tsex][ttype] = []
-              end if
-              repeat with tSet in tList[i]
-                tColorList = VOID
-                repeat with j = 1 to tChangeList.count
-                  repeat with tReplacePart in tChangeList[j]
-                    if tReplacePart = tSet["s"] then
-                      tPartId = tChangeList.getPropAt(j)
-                      tSetID = tReverseMap[tsex][tPartId]
-                      if not voidp(tSetID) then
-                        tColorList = me.getPartColors(tSetID, tsex)
-                      end if
-                      exit repeat
-                    end if
-                  end repeat
-                  if not voidp(tColorList) then
-                    exit repeat
-                  end if
-                end repeat
-                if not voidp(tColorList) then
-                  tSet["c"] = tColorList.duplicate()
-                end if
-                pValidPartsList[tsex][ttype].add(tSet)
-              end repeat
-            end repeat
-          end if
-        end if
-      end repeat
-    end if
-  end if
-  pValidSetIDList = [:]
-  repeat with tsex in ["M", "F"]
-    pValidSetIDList[tsex] = [:]
-    repeat with tPartSet = 1 to pValidPartsList[tsex].count
-      tProp = pValidPartsList[tsex].getPropAt(tPartSet)
-      tDesc = pValidPartsList[tsex][tProp]
-      repeat with tP = 1 to tDesc.count
-        tSetID = tDesc[tP]["s"]
-        tAffectedParts = tDesc[tP]["del"]
-        if tAffectedParts = VOID then
-          tAffectedParts = []
-        end if
-        pValidSetIDList[tsex].addProp(tSetID, [#part: tProp, #location: tP, #hideparts: tAffectedParts])
-      end repeat
-    end repeat
-  end repeat
-end
-
-on initializeSelectablePartList me, tSetIDList
-  if not (tSetIDList.ilk = #list) then
-    return error(me, "Can't initialize selectable partlist", #initializeSelectablePartList, #major)
-  end if
-  tTempSetIDList = [:]
-  tTempSetIDList["M"] = []
-  tTempSetIDList["F"] = []
-  repeat with tSetID in tSetIDList
-    if not voidp(pValidSetIDList["M"].findPos(tSetID)) then
-      tTempSetIDList["M"].add(tSetID)
-      next repeat
-    end if
-    tTempSetIDList["F"].add(tSetID)
-  end repeat
-  pSelectablePartsList = [:]
-  pSelectableSetIDList = [:]
-  repeat with tsex in ["M", "F"]
-    pSelectablePartsList[tsex] = [:]
-    pSelectableSetIDList[tsex] = [:]
-    tSelectableIDs = tTempSetIDList[tsex]
-    repeat with tSetID in tSelectableIDs
-      if not voidp(pValidSetIDList[tsex].findPos(tSetID)) then
-        tPart = pValidSetIDList[tsex].getProp(tSetID)[#part]
-        tlocation = pValidSetIDList[tsex].getProp(tSetID)[#location]
-        tPropList = pValidPartsList[tsex][tPart][tlocation]
-        if voidp(pSelectablePartsList[tsex][tPart]) then
-          pSelectablePartsList[tsex][tPart] = []
-        end if
-        pSelectablePartsList[tsex][tPart].add(tPropList)
-        pSelectableSetIDList[tsex].addProp(tSetID, [#part: tPart, #location: pSelectablePartsList[tsex][tPart].count])
-      end if
-    end repeat
-  end repeat
-end
-
 on loadPartSetXML me
-  tdata = member("partSets.XML").text
+  if variableExists("partsets.xml.loaded") then
+    if getVariable("partsets.xml.loaded") = 1 then
+      return 1
+    end if
+  end if
+  tURL = getVariable("figure.partsets.xml")
+  if tURL = 0 then
+    return error(me, "Can't load partset XML - no URL configured", #loadPartSetXML, #critical)
+  end if
+  tMem = tURL
+  tmember = queueDownload(tURL, tMem, #field, 1)
+  return registerDownloadCallback(tmember, #partSetLoaded, me.getID())
+end
+
+on loadActionSetXML me
+  if variableExists("draworder.xml.loaded") then
+    if getVariable("draworder.xml.loaded") = 1 then
+      return 1
+    end if
+  end if
+  tURL = getVariable("figure.draworder.xml")
+  if tURL = 0 then
+    return error(me, "Can't load action set XML - no URL configured", #loadActionSetXML, #critical)
+  end if
+  tMem = tURL
+  tmember = queueDownload(tURL, tMem, #field, 1)
+  return registerDownloadCallback(tmember, #actionSetLoaded, me.getID())
+end
+
+on loadAnimationSetXML me
+  if variableExists("animation.xml.loaded") then
+    if getVariable("animation.xml.loaded") = 1 then
+      return 1
+    end if
+  end if
+  tURL = getVariable("figure.animation.xml")
+  if tURL = 0 then
+    return error(me, "Can't load animation XML - no URL configured", #loadAnimationSetXML, #critical)
+  end if
+  tMem = tURL
+  tmember = queueDownload(tURL, tMem, #field, 1)
+  return registerDownloadCallback(tmember, #animationSetLoaded, me.getID())
+end
+
+on partSetLoaded me
+  tMemName = getVariable("figure.partsets.xml")
+  if tMemName = 0 then
+    return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
+  end if
+  if not memberExists(tMemName) then
+    return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
+  end if
+  tdata = member(tMemName).text
   if not voidp(tdata) then
     tPeopleSize = getVariable("human.size.64")
     tPeopleSize50 = getVariable("human.size.32")
@@ -897,10 +348,11 @@ on loadPartSetXML me
               tSmallList = []
               tSwimSmallList = []
               tFlipList = [:]
+              tRemoveList = [:]
               repeat with k = 1 to tElementPartSet.child.count
                 tElementPart = tElementPartSet.child[k]
                 if tElementPart.name = "part" then
-                  tAttributes = ["set-type": VOID, "swim": 1, "small": 1, "flipped-set-type": VOID]
+                  tAttributes = ["swim": 1, "small": 1]
                   repeat with l = 1 to tElementPart.attributeName.count
                     tName = tElementPart.attributeName[l]
                     tValue = tElementPart.attributeValue[l]
@@ -920,6 +372,9 @@ on loadPartSetXML me
                     if not voidp(tAttributes["flipped-set-type"]) then
                       tFlipList.addProp(tAttributes["set-type"], tAttributes["flipped-set-type"])
                     end if
+                    if not voidp(tAttributes["remove-set-type"]) then
+                      tRemoveList.addProp(tAttributes["set-type"], tAttributes["remove-set-type"])
+                    end if
                     next repeat
                   end if
                   error(me, "missing set-type attribute for part in partSet element!", #loadPartSetXML, #major)
@@ -930,6 +385,7 @@ on loadPartSetXML me
               setVariable("swimmer.parts." & tPeopleSize, tSwimList)
               setVariable("swimmer.parts." & tPeopleSize50, tSwimSmallList)
               setVariable("human.parts.flipList", tFlipList)
+              setVariable("human.parts.removeList", tRemoveList)
               next repeat
             end if
             if tElementPartSet.name = "activePartSet" then
@@ -968,10 +424,19 @@ on loadPartSetXML me
       end repeat
     end if
   end if
+  setVariable("partsets.xml.loaded", 1)
+  me.checkDataLoaded()
 end
 
-on loadActionSetXML me
-  tdata = member("actionSet.XML").text
+on actionSetLoaded me
+  tMemName = getVariable("figure.draworder.xml")
+  if tMemName = 0 then
+    return error(me, "Failure while loading actionset XML", #actionSetLoaded, #critical)
+  end if
+  if not memberExists(tMemName) then
+    return error(me, "Failure while loading actionset XML", #actionSetLoaded, #critical)
+  end if
+  tdata = member(tMemName).text
   if not voidp(tdata) then
     tPeopleSize = getVariable("human.size.64")
     tPeopleSize50 = getVariable("human.size.32")
@@ -1033,34 +498,20 @@ on loadActionSetXML me
       end repeat
     end if
   end if
+  setVariable("draworder.xml.loaded", 1)
+  me.checkDataLoaded()
 end
 
-on parsePartListXML me, tElement
-  tPartList = []
-  tIndex = 1
-  repeat with i = 1 to tElement.child.count
-    tElementPart = tElement.child[i]
-    if tElementPart.name = "part" then
-      tAttributes = ["set-type": VOID]
-      repeat with l = 1 to tElementPart.attributeName.count
-        tName = tElementPart.attributeName[l]
-        tValue = tElementPart.attributeValue[l]
-        tAttributes[tName] = tValue
-      end repeat
-      if not voidp(tAttributes["set-type"]) then
-        tPartList[tIndex] = tAttributes["set-type"]
-        tIndex = tIndex + 1
-        next repeat
-      end if
-      error(me, "missing set-type attribute for part!", #parsePartListXML, #major)
-    end if
-  end repeat
-  return tPartList
-end
-
-on loadAnimationSetXML me
+on animationSetLoaded me
   tAnimationData = [:]
-  tdata = member("animationSet.XML").text
+  tMemName = getVariable("figure.animation.xml")
+  if tMemName = 0 then
+    return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
+  end if
+  if not memberExists(tMemName) then
+    return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
+  end if
+  tdata = member(tMemName).text
   if not voidp(tdata) then
     tPeopleSize = getVariable("human.size.64")
     tPeopleSize50 = getVariable("human.size.32")
@@ -1113,6 +564,31 @@ on loadAnimationSetXML me
     end if
   end if
   setVariable("human.parts.animationList", tAnimationData)
+  setVariable("animation.xml.loaded", 1)
+  me.checkDataLoaded()
+end
+
+on parsePartListXML me, tElement
+  tPartList = []
+  tIndex = 1
+  repeat with i = 1 to tElement.child.count
+    tElementPart = tElement.child[i]
+    if tElementPart.name = "part" then
+      tAttributes = ["set-type": VOID]
+      repeat with l = 1 to tElementPart.attributeName.count
+        tName = tElementPart.attributeName[l]
+        tValue = tElementPart.attributeValue[l]
+        tAttributes[tName] = tValue
+      end repeat
+      if not voidp(tAttributes["set-type"]) then
+        tPartList[tIndex] = tAttributes["set-type"]
+        tIndex = tIndex + 1
+        next repeat
+      end if
+      error(me, "missing set-type attribute for part!", #parsePartListXML, #major)
+    end if
+  end repeat
+  return tPartList
 end
 
 on parseFrameListXML me, tElement

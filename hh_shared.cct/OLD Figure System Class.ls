@@ -7,7 +7,6 @@ on construct me
   pValidSetIDList = [:]
   pSelectablePartsList = [:]
   pSelectableSetIDList = [:]
-  setVariable("figurepartlist.loaded", 0)
   me.regMsgList(1)
   return 1
 end

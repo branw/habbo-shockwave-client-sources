@@ -26,6 +26,12 @@ on deconstruct me
   pHostSpriteData = [:]
 end
 
+on removeFromObjectManager me
+  if objectExists(me.getID()) then
+    removeObject(me.getID())
+  end if
+end
+
 on defineWithSprite me, tsprite, tSize
   if ilk(tsprite) <> #sprite then
     return 0
@@ -98,7 +104,7 @@ on update me
   tMoveTime = the milliSeconds - pAnimStartTime
   if tMoveTime > pTotalAnimTime then
     pRunAnimation = 0
-    me.deconstruct()
+    me.removeFromObjectManager()
     return 0
   end if
   tUpdatePhase = 0
@@ -121,9 +127,8 @@ on update me
     tLocY = integer(tMoveTime * tSpriteData[#IncrementY] + pScreenStartLoc.locV)
     tSpriteData[#sprite].loc = point(tLocX, tLocY)
   end repeat
-  if tMoveTime > 3.0 / 4 * pTotalAnimTime and pHostSpriteData[#sprite] <> VOID then
-    pHostSpriteData[#sprite].color = pHostSpriteData[#previousfcolor]
-    pHostSpriteData[#sprite].ink = pHostSpriteData[#previousink]
+  if tMoveTime > 3.0 / 4 * pTotalAnimTime then
+    me.removeFromObjectManager()
   else
     if tMoveTime > 2.0 / 4 * pTotalAnimTime and pHostSpriteData[#sprite] <> VOID then
       pHostSpriteData[#sprite].color = color(#rgb, 50, 50, 50)

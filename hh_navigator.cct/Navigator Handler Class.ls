@@ -41,9 +41,6 @@ on handle_flatinfo me, tMsg
   if tFlat[#absoluteMaxVisitors] < 1 then
     tFlat[#absoluteMaxVisitors] = 50
   end if
-  if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).GET(#user_name) then
-    executeMessage(#setEnterRoomAlert, "alert_no_category")
-  end if
   me.getComponent().updateSingleSubNodeInfo(tFlat)
   me.getComponent().getInfoBroker().processNavigatorData(tFlat)
   return 1
@@ -330,6 +327,10 @@ on handle_recommended_room_list me, tMsg
   tNodeInfo = [#children: [:], #id: #recom]
   tNumOfRooms = tConn.GetIntFrom()
   repeat with tRoomNum = 1 to tNumOfRooms
+    if tRoomNum > 3 then
+      error(me, "Server is providing too many (" & tNumOfRooms & ") room recommendations", #handle_recommended_room_list, #minor)
+      exit repeat
+    end if
     tRoomData = [:]
     tID = tConn.GetIntFrom()
     tRoomData.setaProp(#id, "f_" & tID)

@@ -12,7 +12,7 @@ on construct me
   pLocAnimList = [[2, 0], [2, 0], [2, 0], [2, 0], [2, 0], [2, 2], [2, 0], [2, 2], [2, 2], [2, 2], [2, 2]]
   pLocAnimIndx = 1
   if not objectExists("Figure_System_Mountain") then
-    createObject("Figure_System_Mountain", ["Figure System Class"])
+    createObject("Figure_System_Mountain", ["OLD Figure System Class"])
     getObject("Figure_System_Mountain").define(["type": "member", "source": "swimfigure_ids_"])
   end if
   tsprite = tVisual.getSprById("pool_teleport")
@@ -160,8 +160,6 @@ on createFigurePrew me
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
   tFigure = getObject(#session).GET("user_figure").duplicate()
-  tFigure["hd"]["model"] = "001"
-  tFigure["fc"]["model"] = "001"
   if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else

@@ -439,7 +439,7 @@ on changePurseWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcPurse, me.getID(), #mouseLeave)
       me.showPurseAd()
       if objectExists("Figure_Preview") then
-        getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", ["hd", "fc", "ey", "hr"])
+        getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", #head)
       end if
       if tWndObj.elementExists("header_name") then
         tWndObj.getElement("header_name").setText(getObject(#session).GET("user_name"))

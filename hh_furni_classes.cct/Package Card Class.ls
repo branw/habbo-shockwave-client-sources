@@ -79,6 +79,12 @@ on showContent me, tdata
   if pIconColor = EMPTY then
     pIconColor = VOID
   end if
+  case pIconType of
+    "ticket":
+      tMemNum = getmemnum("ticket_icon")
+    "film":
+      tMemNum = getmemnum("film_icon")
+  end case
   if pIconType contains "*" then
     tDelim = the itemDelimiter
     the itemDelimiter = "*"

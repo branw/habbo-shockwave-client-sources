@@ -209,10 +209,14 @@ on getExtVarPath me
 end
 
 on sendProcessTracking me, tStepValue
+  if not variableExists("processlog.enabled") then
+    return 0
+  end if
   if not getVariable("processlog.enabled") then
     return 0
   end if
-  getNetText("javascript:log(" & tStepValue & ")")
+  tJsHandler = script("javascriptLog").newJavaScriptLog()
+  tJsHandler.call(tStepValue)
 end
 
 on secretDecode me, tKey
