@@ -225,6 +225,9 @@ on createBalloon me, tMsg
         return error(me, "User object not found:" && tMsg[#id], #createBalloon)
       end if
       pBalloonColor = tUserObj.getPartColor("ch")
+      if ilk(pBalloonColor) <> #color then
+        pBalloonColor = rgb(232, 177, 55)
+      end if
       pHumanLoc = tUserObj.getPartLocation("hd")
       tMsg.setaProp(#name, tUserObj.getInfo().getaProp(#name))
       pLastBalloonId = pAvailableBalloons.getPropAt(1)
