@@ -203,6 +203,9 @@ on getProperty me, tProp
     #stripId:
       return pStripID
     #itemLocStr:
+      if pItemLocStr = 0 then
+        return 0
+      end if
       return deobfuscate(pItemLocStr)
     #loc:
       if pPause then
