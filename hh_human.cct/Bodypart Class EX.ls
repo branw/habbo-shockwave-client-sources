@@ -114,6 +114,7 @@ on update me, tForcedUpdate, tRectMod
       tMemString = pBody.pPeopleSize & "_" & tAction & "_" & tPart & "_" & pmodel & "_" & pDirection & "_" & tAnimCntr
       if getmemnum(tMemString) > 0 then
         tdir = pDirection
+        pFlipH = 0
       else
         if pDirection <> tdir then
           tPart = pFlipPart
@@ -222,17 +223,11 @@ end
 
 on defineAct me, tAct, tTargetPartList
   pAction = tAct
-  if pPart = "hd" and pAction = "sws" then
-    tKK = 1
-  end if
 end
 
 on defineActMultiple me, tAct, tTargetPartList
   if tTargetPartList.getOne(pPart) then
     pAction = tAct
-    if pPart = "hd" and pAction = "sws" then
-      tKK = 1
-    end if
   end if
 end
 
@@ -416,14 +411,21 @@ on animate me
   end if
   tPart = pPart
   if tdir <> pBody.pFlipList[tdir + 1] then
+    tDirOrig = tdir
+    tdir = pBody.pFlipList[tdir + 1]
     pFlipH = 1
     if pFlipPart <> EMPTY then
-      tPart = pFlipPart
+      tMemString = pBody.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & tPart & "_" & pmodel & "_" & tDirOrig & "_" & pAnimation[#frm][pAnimFrame]
+      if getmemnum(tMemString) > 0 then
+        tdir = tDirOrig
+        pFlipH = 0
+      else
+        tPart = pFlipPart
+      end if
     end if
   else
     pFlipH = 0
   end if
-  tdir = pBody.pFlipList[tdir + 1]
   pXFix = pAnimation[#OffX][pAnimFrame]
   pYFix = pAnimation[#OffY][pAnimFrame]
   tMemName = pBody.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & pAnimation[#frm][pAnimFrame]

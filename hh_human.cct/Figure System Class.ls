@@ -731,10 +731,50 @@ on loadPartSetXML me
     if voidp(errorString) then
       repeat with i = 1 to tParserObject.child.count
         tName = tParserObject.child[i].name
-        if tName = "activePartSets" then
+        if tName = "partSets" then
           repeat with j = 1 to tParserObject.child[i].child.count
             tElementPartSet = tParserObject.child[i].child[j]
             if tElementPartSet.name = "partSet" then
+              tFullList = []
+              tSwimList = []
+              tSmallList = []
+              tSwimSmallList = []
+              tFlipList = [:]
+              repeat with k = 1 to tElementPartSet.child.count
+                tElementPart = tElementPartSet.child[k]
+                if tElementPart.name = "part" then
+                  tAttributes = ["set-type": VOID, "swim": 1, "small": 1, "flipped-set-type": VOID]
+                  repeat with l = 1 to tElementPart.attributeName.count
+                    tName = tElementPart.attributeName[l]
+                    tValue = tElementPart.attributeValue[l]
+                    tAttributes[tName] = tValue
+                  end repeat
+                  if not voidp(tAttributes["set-type"]) then
+                    tFullList.add(tAttributes["set-type"])
+                    if value(tAttributes["swim"]) then
+                      tSwimList.add(tAttributes["set-type"])
+                      if value(tAttributes["small"]) then
+                        tSwimSmallList.add(tAttributes["set-type"])
+                      end if
+                    end if
+                    if value(tAttributes["small"]) then
+                      tSmallList.add(tAttributes["set-type"])
+                    end if
+                    if not voidp(tAttributes["flipped-set-type"]) then
+                      tFlipList.addProp(tAttributes["set-type"], tAttributes["flipped-set-type"])
+                    end if
+                    next repeat
+                  end if
+                  error(me, "missing set-type attribute for part in partSet element!", #loadPartSetXML, #major)
+                end if
+              end repeat
+              setVariable("human.parts." & tPeopleSize, tFullList)
+              setVariable("human.parts." & tPeopleSize50, tSmallList)
+              setVariable("swimmer.parts." & tPeopleSize, tSwimList)
+              setVariable("swimmer.parts." & tPeopleSize50, tSwimSmallList)
+              next repeat
+            end if
+            if tElementPartSet.name = "activePartSet" then
               tPartList = []
               tID = VOID
               repeat with l = 1 to tElementPartSet.attributeName.count
@@ -765,7 +805,7 @@ on loadPartSetXML me
                 setVariable("human.partset." & tID & "." & tPeopleSize50, tPartList)
                 next repeat
               end if
-              error(me, "missing id attribute for partSet!", #loadPartSetXML, #major)
+              error(me, "missing id attribute for activePartSet!", #loadPartSetXML, #major)
             end if
           end repeat
         end if
@@ -844,23 +884,16 @@ on parsePartListXML me, tElement
   repeat with i = 1 to tElement.child.count
     tElementPart = tElement.child[i]
     if tElementPart.name = "part" then
-      tIndex = VOID
-      tSetType = VOID
+      tAttributes = ["index": VOID, "set-type": VOID]
       repeat with l = 1 to tElementPart.attributeName.count
         tName = tElementPart.attributeName[l]
         tValue = tElementPart.attributeValue[l]
-        if tName = "index" then
-          tIndex = tValue
-          next repeat
-        end if
-        if tName = "set-type" then
-          tSetType = tValue
-        end if
+        tAttributes[tName] = tValue
       end repeat
-      if not voidp(tIndex) and not voidp(tSetType) then
-        tIndex = value(tIndex)
+      if not voidp(tAttributes["index"]) and not voidp(tAttributes["set-type"]) then
+        tIndex = value(tAttributes["index"])
         if tIndex > 0 then
-          tPartList[tIndex] = tSetType
+          tPartList[tIndex] = tAttributes["set-type"]
         end if
         next repeat
       end if

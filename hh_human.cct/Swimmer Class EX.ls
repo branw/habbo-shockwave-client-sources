@@ -58,20 +58,6 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   else
     me.pScreenLoc = me.pGeometry.getScreenCoordinate(tX, tY, tH)
   end if
-  if tDirBody <> me.pFlipList[tDirBody + 1] then
-    if tDirBody <> tDirHead then
-      case tDirHead of
-        4:
-          tDirHead = 2
-        5:
-          tDirHead = 1
-        6:
-          tDirHead = 4
-        7:
-          tDirHead = 5
-      end case
-    end if
-  end if
   call(#defineDir, me.pPartList, tDirBody)
   call(#defineDirMultiple, me.pPartList, tDirHead, me.pPartListSubSet["head"])
   me.pDirection = tDirBody
