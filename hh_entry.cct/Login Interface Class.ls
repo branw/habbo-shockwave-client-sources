@@ -18,7 +18,7 @@ end
 
 on showLogin me
   getObject(#session).set(#userName, EMPTY)
-  getObject(#session).set(#password, EMPTY)
+  getObject(#session).set(#Password, EMPTY)
   pTempPassword = EMPTY
   if createWindow(#login_a, "habbo_simple.window", 444, 100) then
     tWndObj = getWindow(#login_a)
@@ -95,8 +95,8 @@ on tryLogin me
     return 0
   end if
   getObject(#session).set(#userName, tUserName)
-  getObject(#session).set(#password, tPassword)
-  tWndObj.getElement("login_ok").hide()
+  getObject(#session).set(#Password, tPassword)
+  tWndObj.getElement("login_ok").Hide()
   tWndObj.getElement("login_connecting").setProperty(#blend, 100)
   tElem = tWndObj.getElement("login_forgotten")
   tElem.setProperty(#blend, 99)

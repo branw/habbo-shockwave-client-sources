@@ -42,7 +42,7 @@ on createObject tid
 end
 
 on removeObject tid
-  return getObjectManager().remove(tid)
+  return getObjectManager().Remove(tid)
 end
 
 on getObject tid
@@ -85,7 +85,7 @@ on createManager tid
 end
 
 on removeManager tid
-  return getObjectManager().remove(tid)
+  return getObjectManager().Remove(tid)
 end
 
 on getManager tid

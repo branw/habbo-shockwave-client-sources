@@ -13,8 +13,8 @@ on prepare me
   me.pButtonText = getText(me.pProps[#key])
   me.pBlend = me.pProps[#blend]
   me.pCachedImgs = [:]
-  if not voidp(me.pProps[#icon]) then
-    tMemNum = getmemnum(me.pProps[#icon])
+  if not voidp(me.pProps[#Icon]) then
+    tMemNum = getmemnum(me.pProps[#Icon])
     if tMemNum > 0 then
       pIconImg = member(tMemNum).image.duplicate()
     end if
@@ -86,9 +86,9 @@ on createButtonImg me, tText, tstate
     tTextMem.text = tText
   end if
   tOptImgWidth = 0
-  if not voidp(me.pProp[#icon]) and not voidp(pIconImg) then
-    tAlignment = me.pProp[#icon][#props].getPropAt(1)
-    tOptImgMargH = me.pProp[#icon][#props][tAlignment][#marginH]
+  if not voidp(me.pProp[#Icon]) and not voidp(pIconImg) then
+    tAlignment = me.pProp[#Icon][#props].getPropAt(1)
+    tOptImgMargH = me.pProp[#Icon][#props][tAlignment][#marginH]
     tOptImgWidth = pIconImg.width + tOptImgMargH
   end if
   if me.pFixedSize = 1 then
@@ -124,10 +124,10 @@ on createButtonImg me, tText, tstate
     tDstRect = rect(tStartPointX, tStartPointY, tEndPointX, tEndPointY)
     tNewImg.copyPixels(me.pButtonImg.getProp(i), tDstRect, me.pButtonImg.getProp(i).rect)
   end repeat
-  if not voidp(me.pProp[#icon]) and not voidp(pIconImg) then
-    tAlignment = me.pProp[#icon][#props].getPropAt(1)
+  if not voidp(me.pProp[#Icon]) and not voidp(pIconImg) then
+    tAlignment = me.pProp[#Icon][#props].getPropAt(1)
     tOptImgRect = pIconImg.rect
-    tOptImgMargH = me.pProp[#icon][#props][tAlignment][#marginH]
+    tOptImgMargH = me.pProp[#Icon][#props][tAlignment][#marginH]
     tOptImgMargV = tNewImg.height / 2 - tOptImgRect.height / 2
     case tAlignment of
       #right:
@@ -137,7 +137,7 @@ on createButtonImg me, tText, tstate
       #center:
         tDstRect = tOptImgRect + rect(tNewImg.width / 2, 0, tNewImg.width / 2, 0) - rect(pIconImg / 2, 0, pIconImg / 2, 0)
     end case
-    tInk = me.pProp[#icon][#props][tAlignment][#ink]
+    tInk = me.pProp[#Icon][#props][tAlignment][#ink]
     if voidp(tInk) then
       tInk = 36
     end if

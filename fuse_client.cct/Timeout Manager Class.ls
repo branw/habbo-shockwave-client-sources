@@ -60,14 +60,14 @@ on get me, tid
     if tObjMngr.exists(tTask[#client]) then
       call(tTask[#handler], tObjMngr.get(tTask[#client]), tTask[#argument])
     else
-      return me.remove(tid)
+      return me.Remove(tid)
     end if
   end if
 end
 
-on remove me, tid
+on Remove me, tid
   if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #remove)
+    return error(me, "Item not found:" && tid, #Remove)
   end if
   tObjMngr = getObjectManager()
   tObject = tObjMngr.get(me.pItemList[tid][#uniqueid])
@@ -75,7 +75,7 @@ on remove me, tid
     tObject.target = VOID
     tObject.forget()
     tObject = VOID
-    tObjMngr.remove(me.pItemList[tid][#uniqueid])
+    tObjMngr.Remove(me.pItemList[tid][#uniqueid])
   end if
   return me.pItemList.deleteProp(tid)
 end
@@ -98,7 +98,7 @@ on executeTimeOut me, tTimeout
   end if
   me.pItemList[tid][#count] = me.pItemList[tid][#count] + 1
   if me.pItemList[tid][#count] = me.pItemList[tid][#iterations] then
-    me.remove(tid)
+    me.Remove(tid)
   end if
   if voidp(tTask[#client]) then
     value(tTask[#handler] & "(" & tTask[#argument] & ")")
@@ -107,7 +107,7 @@ on executeTimeOut me, tTimeout
     if objectp(tObject) then
       call(tTask[#handler], tObject, tTask[#argument])
     else
-      return me.remove(tid)
+      return me.Remove(tid)
     end if
   end if
   return 1

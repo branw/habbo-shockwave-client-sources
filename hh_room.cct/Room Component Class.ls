@@ -227,18 +227,18 @@ on enterRoomDirect me, tdata
   pSaveData = tdata
   getObject(#session).set("lastroom", pSaveData)
   if pSaveData[#type] = #private then
-    tRoomId = integer(pSaveData[#id])
+    tRoomID = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomId = integer(pSaveData[#port])
+    tRoomID = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
 end
 
 on createUserObject me, tdata
@@ -377,11 +377,11 @@ on getShadowManager me
   end if
 end
 
-on roomExists me, tRoomId
-  if voidp(tRoomId) then
+on roomExists me, tRoomID
+  if voidp(tRoomID) then
     return pActiveFlag
   else
-    return pRoomId = tRoomId
+    return pRoomId = tRoomID
   end if
 end
 
@@ -555,18 +555,18 @@ on roomPrePartFinished me
     return 0
   end if
   if pSaveData[#type] = #private then
-    tRoomId = integer(pSaveData[#id])
+    tRoomID = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomId = integer(pSaveData[#port])
+    tRoomID = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
   return 1
 end
 

@@ -33,10 +33,10 @@ on create me, tid, tMetrics
   return 1
 end
 
-on remove me, tid
+on Remove me, tid
   tObj = pItemList[tid]
   if voidp(tObj) then
-    return error(me, "Writer not found:" && tid, #remove)
+    return error(me, "Writer not found:" && tid, #Remove)
   end if
   tObj.deconstruct()
   return pItemList.deleteProp(tid)

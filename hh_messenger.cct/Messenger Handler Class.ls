@@ -295,7 +295,7 @@ on get_console_message me, tMsg
   end if
   tdata[#FigureData] = tConn.GetStrFrom()
   tdata[#time] = tConn.GetStrFrom()
-  tdata[#message] = tConn.GetStrFrom()
+  tdata[#Message] = tConn.GetStrFrom()
   return tdata
 end
 
@@ -308,7 +308,7 @@ on get_campaign_message me, tMsg
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#url] = tConn.GetStrFrom()
   tdata[#link] = tConn.GetStrFrom()
-  tdata[#message] = tConn.GetStrFrom()
+  tdata[#Message] = tConn.GetStrFrom()
   return tdata
 end
 

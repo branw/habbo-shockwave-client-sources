@@ -18,12 +18,12 @@ end
 on notify me, ttype
   case ttype of
     1001:
-      executeMessage(#alert, [#msg: "epsnotify_1001"])
+      executeMessage(#alert, [#Msg: "epsnotify_1001"])
       if connectionExists(pConnectionId) then
         removeConnection(pConnectionId)
       end if
     552:
-      executeMessage(#alert, [#msg: getText("Alert_no_credits")])
+      executeMessage(#alert, [#Msg: getText("Alert_no_credits")])
   end case
 end
 
@@ -63,26 +63,26 @@ on setupStatusWindow me, ttype
   end if
   if tClubInfo[#PrepaidPeriods] = -1 then
     tElem = tWndObj.getElement("club_button_extend")
-    tElem.hide()
+    tElem.Hide()
   else
     tElem = tWndObj.getElement("club_isp_change")
-    tElem.hide()
+    tElem.Hide()
     tElem = tWndObj.getElement("club_isp_icon")
-    tElem.hide()
+    tElem.Hide()
     tElem = tWndObj.getElement("club_prepaid_periods")
     tElem.setText(string(tClubInfo[#PrepaidPeriods]))
   end if
   if tElapsed = 0 then
     tElem = tWndObj.getElement("club_elapsed_periods")
-    tElem.hide()
+    tElem.Hide()
     tElem = tWndObj.getElement("club_elapsed")
-    tElem.hide()
+    tElem.Hide()
   end if
   if tPrepaid = 0 then
     tElem = tWndObj.getElement("club_prepaid_periods")
-    tElem.hide()
+    tElem.Hide()
     tElem = tWndObj.getElement("club_prepaid")
-    tElem.hide()
+    tElem.Hide()
   end if
   if not (getText("club_info_url") starts "http") then
     getWindow(pDialogId).getElement("club_general_infolink").setProperty(#visible, 0)

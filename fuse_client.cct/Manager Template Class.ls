@@ -10,7 +10,7 @@ on deconstruct me
   tObjMngr = getObjectManager()
   repeat with i = 1 to pItemList.count
     if tObjMngr.exists(pItemList[i]) then
-      tObjMngr.remove(pItemList[i])
+      tObjMngr.Remove(pItemList[i])
     end if
   end repeat
   pItemList = []
@@ -32,12 +32,12 @@ on get me, tid
   return getObjectManager().get(tid)
 end
 
-on remove me, tid
+on Remove me, tid
   if not me.exists(tid) then
     return 0
   end if
   pItemList.deleteOne(tid)
-  return getObjectManager().remove(tid)
+  return getObjectManager().Remove(tid)
 end
 
 on exists me, tid

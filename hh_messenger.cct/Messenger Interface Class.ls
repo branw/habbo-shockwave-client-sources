@@ -236,7 +236,7 @@ on updateUserFind me, tMsg, tstate
     tMsg = getText("console_usersnotfound")
     tWinObj.getElement("console_search_friendrequest_button").deactivate()
     tWinObj.getElement("console_search_friendrequest_button").setProperty(#cursor, 0)
-    tWinObj.getElement("console_magnifier").hide()
+    tWinObj.getElement("console_magnifier").Hide()
     tWinObj.getElement("console_search_habbo_name_text").setText(tMsg)
     tWinObj.getElement("console_search_habbo_mission_text").setText(EMPTY)
     tWinObj.getElement("console_search_habbo_lasthere_text").setText(EMPTY)
@@ -443,7 +443,7 @@ on renderMessage me, tMsgStruct
     me.ChangeWindowView("console_getmessage.window")
   end if
   pLastGetMsg = tMsgStruct
-  tMsg = tMsgStruct[#message]
+  tMsg = tMsgStruct[#Message]
   tTime = tMsgStruct[#time]
   tSenderId = tMsgStruct[#senderID]
   tSenderSex = tMsgStruct[#sex]
@@ -565,7 +565,7 @@ on ChangeWindowView me, tWindowName
       end if
     "console_find.window":
       pLastSearch = [:]
-      tWndObj.getElement("console_magnifier").hide()
+      tWndObj.getElement("console_magnifier").Hide()
       tWndObj.getElement("console_search_friendrequest_button").deactivate()
       tWndObj.getElement("console_search_friendrequest_button").setProperty(#cursor, 0)
     "console_sentrequest.window":

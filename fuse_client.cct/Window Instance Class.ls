@@ -103,7 +103,7 @@ on lock me, tBoolean
   return 1
 end
 
-on hide me
+on Hide me
   if pVisible = 1 then
     pVisible = 0
     me.moveX(10000)
@@ -298,7 +298,7 @@ on setProperty me, tProp, tValue
       if tValue then
         me.show()
       else
-        me.hide()
+        me.Hide()
       end if
     #otherwise:
       return 0
@@ -344,7 +344,7 @@ on mouseUp me, tNull, tSprID
       else
         if tSprID contains "close" then
           if voidp(pClientID) then
-            return pWindowMngr.remove(me.getID())
+            return pWindowMngr.Remove(me.getID())
           else
             tSprID = "close"
           end if
