@@ -110,6 +110,7 @@ on resizeBy me, tOffW, tOffH
       pBuffer.regPoint = point(0, 0)
       pSprite.width = pwidth
       pSprite.height = pheight
+      pSprite.stretch = 0
       call(#resizeBy, pElemList, tOffW, tOffH)
     end if
   end if
@@ -190,7 +191,7 @@ on setProperty me, tProp, tValue
     #ink:
       pSprite.ink = tValue
     #cursor:
-      pSprite.setCursor(tValue)
+      pSprite.setcursor(tValue)
     #image:
       tRegPnt = pBuffer.regPoint
       pBuffer.image = tValue

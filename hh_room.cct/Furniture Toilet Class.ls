@@ -56,10 +56,12 @@ end
 
 on setOn me
   pActive = 1
+  me.pLoczList[2] = [200, 200, 0, 0, 0, 0, 200, 200]
 end
 
 on setOff me
   pActive = 0
+  me.pLoczList[2] = [0, 0, 0, 0, 0, 0, 0, 0]
 end
 
 on select me
@@ -69,9 +71,9 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "SWITCHON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCHON" & "/" & tStr)
   else
-    getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && me.pLocX && me.pLocY)
+    getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY])
   end if
   return 1
 end

@@ -1,4 +1,4 @@
-property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pReadyFlag
+property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag
 
 on construct me
   pWindowList = []
@@ -28,6 +28,9 @@ on deconstruct me
     if writerExists(pWriterLink) then
       removeWriter(pWriterLink)
     end if
+    if writerExists(pWriterBold) then
+      removeWriter(pWriterBold)
+    end if
   end if
   pWindowList = []
   pAlertList = []
@@ -55,10 +58,15 @@ on ShowAlert me, tProps
   else
     tActualID = "alert" && tProps[#id]
   end if
+  if tProps[#modal] = 1 then
+    tSpecial = #modal
+  else
+    tSpecial = VOID
+  end if
   if pAlertList.getOne(tActualID) then
     me.removeDialog(tActualID, pAlertList)
   end if
-  if not createWindow(tActualID) then
+  if not createWindow(tActualID, VOID, VOID, VOID, tSpecial) then
     return 0
   end if
   tWndObj = getWindow(tActualID)
@@ -67,34 +75,53 @@ on ShowAlert me, tProps
   if stringp(tProps[#title]) then
     tWndObj.merge("habbo_alert_a.window")
     tTitle = getText(tProps[#title], "...")
+    getWriter(pWriterBold).define([#alignment: #center])
+    tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
+    tTitleElem = tWndObj.getElement("alert_title")
+    tTitleElem.feedImage(tTitleImg)
+    tTitleWidth = tTitleImg.width
+    tTitleHeight = tTitleImg.height
   else
+    tTitleWidth = 0
+    tTitleHeight = 0
     tWndObj.merge("habbo_alert_b.window")
     tTitle = EMPTY
   end if
-  tElem = tWndObj.getElement("alert_text")
-  tWidth = tElem.getProperty(#width)
-  tHeight = tElem.getProperty(#height)
+  tTextElem = tWndObj.getElement("alert_text")
+  tWidth = tTextElem.getProperty(#width)
+  tHeight = tTextElem.getProperty(#height)
+  tTextElem.moveBy(0, tTitleHeight)
   tOffW = 0
   tOffH = 0
-  tElem.feedImage(tTextImg)
-  if tWidth < tTextImg.width then
-    tOffW = tTextImg.width - tWidth
+  tTextElem.feedImage(tTextImg)
+  if tTitleWidth > tTextImg.width then
+    if tWidth < tTitleWidth then
+      tOffW = tTitleWidth - tWidth
+    end if
+  else
+    if tWidth < tTextImg.width then
+      tOffW = tTextImg.width - tWidth
+    end if
   end if
-  if tHeight < tTextImg.height then
-    tOffH = tTextImg.height - tHeight
+  if tHeight < tTextImg.height + tTitleHeight then
+    tOffH = tTextImg.height + tTitleHeight - tHeight
   end if
   tWndObj.resizeBy(tOffW, tOffH)
+  if tTitle <> EMPTY then
+    tTitleV = tTitleElem.getProperty(#locV)
+    tTitleH = tTitleElem.getProperty(#locH)
+    tTitleElem.moveTo(tWndObj.getProperty(#width) / 2 - tTitleWidth / 2 - tTitleH, tTitleV)
+  end if
   tWndObj.center()
   tLocOff = pAlertList.count * 10
   tWndObj.moveBy(tLocOff, tLocOff)
   tWndObj.registerClient(me.getID())
-  tWndObj.registerProcedure(#eventProcAlert, me.getID(), #mouseUp)
-  pAlertList.add(tActualID)
-  if tTitle <> EMPTY then
-    if tWndObj.elementExists("alert_title") then
-      tWndObj.getElement("alert_title").setText(tTitle)
-    end if
+  if symbolp(tProps[#registerProcedure]) then
+    tWndObj.registerProcedure(tProps[#registerProcedure], me.getID(), #mouseUp)
+  else
+    tWndObj.registerProcedure(#eventProcAlert, me.getID(), #mouseUp)
   end if
+  pAlertList.add(tActualID)
   return 1
 end
 
@@ -106,40 +133,7 @@ on showDialog me, tWndID, tProps
     #alert, "alert", #modal_alert, "modal_alert":
       return me.ShowAlert(tProps)
     #purse, "purse":
-      tWndTitle = getText("win_purse", "Purse")
-      if windowExists(tWndTitle) then
-        return me.removeDialog(tWndTitle, pWindowList)
-      end if
-      me.createDialog(tWndTitle, pDefWndType, "habbo_purse.window", #eventProcPurse)
-      tWndObj = getWindow(tWndTitle)
-      if getObject(#session).exists("user_walletbalance") then
-        tCash = getObject(#session).get("user_walletbalance")
-      else
-        tCash = VOID
-      end if
-      if getObject(#session).get("user_rights").getOne("can_buy_credits") then
-        if not voidp(tCash) then
-          tTxt1 = replaceChunks(tWndObj.getElement("purse_cash").getText(), "\x1", tCash)
-        else
-          tTxt1 = getText("loading", "Loading...")
-        end if
-        tTxt2 = getText("purse_link")
-        tLink = getText("url_purselink")
-      else
-        if not voidp(tCash) then
-          tTxt1 = replaceChunks(getText("purse_cantbuy"), "\x1", tCash)
-        else
-          tTxt1 = getText("loading", "Loading...")
-        end if
-        tTxt2 = getText("purse_link_subscribe")
-        tLink = getText("url_purse_subscribe")
-      end if
-      if tWndObj.elementExists("purse_cash") then
-        tWndObj.getElement("purse_cash").setText(tTxt1)
-      end if
-      if tWndObj.elementExists("purse_cash") then
-        tWndObj.getElement("purse_link_text").setText(tTxt2)
-      end if
+      return executeMessage(#show_hide_purse)
     #help, "help":
       tWndTitle = getText("win_help", "Help")
       if windowExists(tWndTitle) then
@@ -161,7 +155,7 @@ on showDialog me, tWndID, tProps
       tLinkImg = getWriter(pWriterLink).render(tStr).duplicate()
       tWndObj.getElement("link_list").feedImage(tLinkImg)
       if threadExists(#room) then
-        if not getThread(#room).getComponent().getRoomConnection() then
+        if getThread(#room).getComponent().getRoomID() = EMPTY then
           tWndObj.getElement("help_callforhelp_textlink").hide()
         end if
       end if
@@ -171,18 +165,25 @@ on showDialog me, tWndID, tProps
         return me.removeDialog(tWndTitle, pWindowList)
       end if
       me.createDialog(tWndTitle, pDefWndType, "habbo_hobba_compose.window", #eventProcCallHelp)
+    #ban, "ban":
+      tProps[#registerProcedure] = #eventProcBan
+      return me.ShowAlert(tProps)
   end case
 end
 
 on buildResources me
   pWriterPlain = "dialog_writer_plain"
   pWriterLink = "dialog_writer_link"
+  pWriterBold = "dialog_writer_bold"
   tFontPlain = getStructVariable("struct.font.plain")
   tFontLink = getStructVariable("struct.font.link")
+  tFontBold = getStructVariable("struct.font.bold")
   tFontPlain.setaProp(#lineHeight, 14)
   tFontLink.setaProp(#lineHeight, 14)
+  tFontBold.setaProp(#lineHeight, 14)
   createWriter(pWriterPlain, tFontPlain)
   createWriter(pWriterLink, tFontLink)
+  createWriter(pWriterBold, tFontBold)
   pReadyFlag = 1
   return 1
 end
@@ -222,7 +223,7 @@ on eventProcPurse me, tEvent, tElemID, tParam, tWndID
   if tEvent = #mouseUp then
     case tElemID of
       "close", "purse_close":
-        return me.removeDialog(tWndID, pWindowList)
+        return executeMessage(#hide_purse)
       "purse_link_text":
         tSession = getObject(#session)
         if tSession.get("user_rights").getOne("can_buy_credits") then
@@ -281,6 +282,16 @@ on eventProcCallHelp me, tEvent, tElemID, tParam, tWndID
         tWndObj.unmerge()
         tWndObj.merge("habbo_hobba_alertsent.window")
         return 1
+    end case
+  end if
+end
+
+on eventProcBan me, tEvent, tElemID, tParam, tWndID
+  if tEvent = #mouseUp then
+    case tElemID of
+      "alert_ok", "close":
+        me.removeDialog(tWndID, pAlertList)
+        resetClient()
     end case
   end if
 end

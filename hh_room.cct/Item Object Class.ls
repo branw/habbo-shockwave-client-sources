@@ -40,10 +40,19 @@ on define me, tProps
   pFormatVer = tProps[#formatVersion]
   pDirection = tProps[#direction]
   pType = tProps[#type]
-  pName = pClass
+  case pClass of
+    "poster":
+      pName = getText("poster_" & pType & "_name", "poster_" & pType & "_name")
+      pCustom = getText("poster_" & pType & "_desc", "poster_" & pType & "_desc")
+    "post.it.vd", "post.it":
+      pName = getText("wallitem_" & pClass & "_name", "wallitem_" & pClass & "_name")
+      pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
+    "photo":
+      pName = getText("wallitem_" & pClass & "_name", "wallitem_" & pClass & "_name")
+      pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
+  end case
   me.solveMembers()
   me.updateLocation()
-  me.solveDescription()
   return 1
 end
 
@@ -60,12 +69,26 @@ on getInfo me
   tInfo[#name] = pName
   tInfo[#class] = pClass
   tInfo[#Custom] = pCustom
+  tInfo[#smallmember] = pClass & "_small"
   if memberExists(pClass & "_small") then
     tInfo[#image] = member(getmemnum(pClass & "_small")).image
   else
-    tInfo[#image] = pSprList[1].member.image
+    if pSprList.count > 0 then
+      tTestMem2 = pSprList[1].member.name.char[1..length(pSprList[1].member.name) - 11] & "small"
+      if memberExists(tTestMem2) then
+        tInfo[#image] = getMember(tTestMem2).image
+      else
+        tInfo[#image] = pSprList[1].member.image
+      end if
+    else
+      tInfo[#image] = getMember("no_icon_small").image
+    end if
   end if
   return tInfo
+end
+
+on getLocation me
+  return [pWallX, pWallY]
 end
 
 on getCustom me
@@ -90,32 +113,48 @@ on solveMembers me
       tMemName = pDirection && pClass
   end case
   return error(me, "Unknown item class:" && pClass, #solveMembers)
-  if memberExists(tMemName) then
-    tSpr = sprite(reserveSprite(me.getID()))
-    tSpr.ink = 8
-    if pClass = "post.it" then
-      if pType = EMPTY then
-        pType = "#FFFF33"
+  tMemNum = getmemnum(tMemName)
+  if tMemNum <> 0 then
+    if pSprList.count = 0 then
+      tSpr = sprite(reserveSprite(me.getID()))
+      tTargetID = getThread(#room).getInterface().getID()
+      setEventBroker(tSpr.spriteNum, me.getID())
+      if tMemNum < 1 then
+        tMemNum = abs(tMemNum)
+        tSpr.flipH = 1
       end if
-      tSpr.bgColor = rgb(pType)
-      tSpr.color = paletteIndex(255)
+      tSpr.castNum = tMemNum
+      tSpr.width = member(tMemNum).width
+      tSpr.height = member(tMemNum).height
+      tSpr.registerProcedure(#eventProcItemObj, tTargetID, #mouseDown)
+      tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseEnter)
+      tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseLeave)
+      pSprList.add(tSpr)
     else
-      if pClass = "post.it.vd" then
-        pType = "FFFFFF"
-        tSpr.bgColor = rgb(pType)
-        tSpr.color = rgb(0, 0, 0)
-      end if
+      tSpr = pSprList[1]
     end if
-    tTargetID = getThread(#room).getInterface().getID()
-    setEventBroker(tSpr.spriteNum, me.getID())
-    tSpr.setMember(member(tMemName))
-    tSpr.registerProcedure(#eventProcItemObj, tTargetID, #mouseDown)
-    tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseEnter)
-    tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseLeave)
-    pSprList.add(tSpr)
+    me.updateColor(pType)
     return 1
   end if
   return 0
+end
+
+on updateColor me, tHexstr
+  tSpr = pSprList[1]
+  tSpr.ink = 8
+  if pClass = "post.it" then
+    if tHexstr = EMPTY then
+      tHexstr = "#FFFF33"
+    end if
+    tSpr.bgColor = rgb(tHexstr)
+    tSpr.color = paletteIndex(255)
+  else
+    if pClass = "post.it.vd" then
+      tHexstr = "FFFFFF"
+      tSpr.bgColor = rgb(tHexstr)
+      tSpr.color = rgb(0, 0, 0)
+    end if
+  end if
 end
 
 on updateLocation me
@@ -140,10 +179,11 @@ on updateLocation me
         end if
       end repeat
   end case
+  tObjMover = getThread(#room).getInterface().getObjectMover()
   repeat with tSpr in pSprList
     tItemRp = tSpr.member.regPoint
     tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])
-    tPieceUnderSpr = getThread(#room).getInterface().getPassiveObjectIntersectingRect(tItemR)[1]
+    tPieceUnderSpr = tObjMover.getPassiveObjectIntersectingRect(tItemR)[1]
     if objectp(tPieceUnderSpr) then
       tlocz = tPieceUnderSpr.getSprites()[1].locZ
       if tPieceUnderSpr.getSprites().count > 1 then
@@ -156,18 +196,4 @@ on updateLocation me
     end if
     tSpr.locZ = getIntVariable("window.default.locz") - 10000
   end repeat
-end
-
-on solveDescription me
-  if pClass = "poster" then
-    if threadExists(#item_data_db) then
-      tdata = getThread(#item_data_db).getComponent().getPosterData(pType)
-      if not tdata then
-        return 0
-      end if
-      pName = tdata[#name]
-      pCustom = tdata[#text]
-    end if
-  end if
-  return 1
 end

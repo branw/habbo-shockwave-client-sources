@@ -59,6 +59,7 @@ on getPicture me, tImg
       tMemNum = tProps[#member]
       tImage = member(tMemNum).image
       tCanvas = tImage.duplicate()
+      tFlipItem = tProps[#flipH]
     "s":
       tTempLayerProps = [:]
       tTempLayerProps.sort()
@@ -91,7 +92,22 @@ on getPicture me, tImg
     tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tCanvas.width + tdestrect.width / 2, tdestrect.height / 2 + tCanvas.height)
     tImg.copyPixels(tCanvas, tdestrect, tCanvas.rect, [#ink: 36])
   end if
+  if tFlipItem then
+    tImg = me.flipImage(tImg)
+  end if
   return tImg.trimWhiteSpace()
+end
+
+on flipImage me, tImg_a
+  tPaletteRef = tImg_a.paletteRef
+  if tPaletteRef.ilk = #member then
+    tImg_b = image(tImg_a.width, tImg_a.height, tImg_a.depth, member(tPaletteRef))
+  else
+    tImg_b = image(tImg_a.width, tImg_a.height, 32)
+  end if
+  tQuad = [point(tImg_a.width, 0), point(0, 0), point(0, tImg_a.height), point(tImg_a.width, tImg_a.height)]
+  tImg_b.copyPixels(tImg_a, tQuad, tImg_a.rect)
+  return tImg_b
 end
 
 on solveColors me, tpartColors
@@ -111,17 +127,29 @@ on solveColors me, tpartColors
 end
 
 on solveInk me, tPart
-  tInkField = getmemnum(pClass & "_" & tPart & ".ink")
-  if tInkField > 0 then
-    return integer(field(tInkField))
+  if not memberExists(pClass & ".props") then
+    return 8
+  end if
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if tPropList[tPart] = VOID then
+    return 8
+  end if
+  if tPropList[tPart][#ink] <> VOID then
+    return tPropList[tPart][#ink]
   end if
   return 8
 end
 
 on solveBlend me, tPart
-  tBlendField = getmemnum(pClass & "_" & tPart & ".blend")
-  if tBlendField > 0 then
-    return integer(field(tBlendField))
+  if not memberExists(pClass & ".props") then
+    return 100
+  end if
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if tPropList[tPart] = VOID then
+    return 100
+  end if
+  if tPropList[tPart][#blend] <> VOID then
+    return tPropList[tPart][#blend]
   end if
   return 100
 end
@@ -174,7 +202,7 @@ on solveStuffMembers me
     if tMemNum <> 0 then
       pLoczList.add([])
       repeat with tdir = 0 to 7
-        pLoczList.getLast().add(me.solveLocZ(numToChar(i), tdir))
+        pLoczList.getLast().add(me.solveLocZ(numToChar(i), tdir) + i)
       end repeat
       if tMemNum < 1 then
         tMemNum = abs(tMemNum)
@@ -190,8 +218,8 @@ on solveStuffMembers me
       tProps[#blend] = me.solveBlend(numToChar(i))
       tProps[#flipH] = tFlipH
       if j <= pPartColors.count then
-        if string(pPartColors[j]).char[1] = "*" then
-          tProps[#bgColor] = rgb("#" & string(pPartColors[j]).char[2..length(string(pPartColors[j]))])
+        if string(pPartColors[j]).char[1] = "#" then
+          tProps[#bgColor] = rgb(pPartColors[j])
           tInk = 41
         else
           tProps[#bgColor] = paletteIndex(integer(pPartColors[j]))
@@ -214,9 +242,10 @@ on solveItemMembers me
   pLayerProps = []
   tMemName = "rightwall" && pClass
   tMemNum = getmemnum(tMemName)
+  tProps = [:]
+  tProps[#flipH] = tMemNum < 0
+  tProps[#member] = abs(tMemNum)
   if tMemNum <> 0 then
-    tProps = [:]
-    tProps[#member] = tMemNum
     pLayerProps.append(tProps)
   end if
   if pLayerProps.count > 0 then
@@ -227,11 +256,18 @@ on solveItemMembers me
 end
 
 on solveLocZ me, tPart, tdir
-  if not memberExists(pClass & "_" & tPart & ".zshift") then
+  if not memberExists(pClass & ".props") then
     return charToNum(tPart)
   end if
-  if (field(getmemnum(pClass & "_" & tPart & ".zshift"))).line.count = 1 then
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if tPropList[tPart] = VOID then
+    return 0
+  end if
+  if tPropList[tPart][#zshift] = VOID then
+    return 0
+  end if
+  if tPropList[tPart][#zshift].count <= tdir then
     tdir = 0
   end if
-  return charToNum(tPart) + integer((field(getmemnum(pClass & "_" & tPart & ".zshift"))).line[tdir + 1])
+  return tPropList[tPart][#zshift][tdir + 1]
 end

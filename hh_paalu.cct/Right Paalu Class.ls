@@ -7,6 +7,6 @@ end
 
 on select me
   if threadExists(#room) then
-    return getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && pTrgLoc[1] && pTrgLoc[2])
+    return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: pTrgLoc[1], #short: pTrgLoc[2]])
   end if
 end

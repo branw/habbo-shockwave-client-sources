@@ -9,6 +9,9 @@ on deconstruct me
   if not voidp(pMember) then
     removeMember(pMember.name)
   end if
+  if ilk(pSprite) = #sprite then
+    removeEventBroker(pSprite.spriteNum)
+  end if
   pSprite = VOID
   pMember = VOID
   return 1
@@ -20,6 +23,11 @@ on defineBalloon me
   pLoc = me.get(#loc)
   pSprite.loc = pLoc
   pSprite.member = pMember
+  setEventBroker(pSprite.spriteNum, me.get(#ownerID))
+  tTargetID = getThread(#room).getInterface().getID()
+  pSprite.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
+  pSprite.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseEnter)
+  pSprite.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseLeave)
   return 1
 end
 
@@ -36,6 +44,7 @@ on removeBalloon me
     return 0
   end if
   pSprite.loc = point(0, -1000)
+  removeEventBroker(pSprite.spriteNum)
   return 1
 end
 

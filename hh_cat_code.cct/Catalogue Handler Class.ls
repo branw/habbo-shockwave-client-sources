@@ -19,24 +19,6 @@ on handle_purchase_nobalance me, tMsg
   me.getComponent().purchaseReady("NOBALANCE", tMsg.getaProp(#content))
 end
 
-on handle_orderinfo me, tMsg
-  tProps = [:]
-  tProps[#code] = tMsg.message.line[2]
-  tProps[#price] = tMsg.message.line[3]
-  tProps[#class] = tMsg.message.line[4]
-  tName = tMsg.message.line[5]
-  if textExists("obj_name:" && tName) then
-    tProps[#name] = getText("obj_name:" && tName)
-  else
-    tProps[#name] = tName
-  end if
-  me.getComponent().redirectOrderInfo("OK", tProps)
-end
-
-on handle_orderinfo_error me, tMsg
-  me.getComponent().redirectOrderInfo("ERROR", tMsg.getaProp(#content))
-end
-
 on handle_catalogindex me, tMsg
   tCount = tMsg.content.line.count
   tDelim = the itemDelimiter
@@ -130,18 +112,40 @@ on handle_catalogpage me, tMsg
   me.getComponent().saveCataloguePage(tList)
 end
 
-on regMsgList me, tBool
-  tList = [:]
-  tList["PURCHASE_OK"] = #handle_purchase_ok
-  tList["PURCHASE_ERROR"] = #handle_purchase_error
-  tList["PURCHASE_NOBALANCE"] = #handle_purchase_nobalance
-  tList["ORDERINFO"] = #handle_orderinfo
-  tList["ORDERINFO_ERROR"] = #handle_orderinfo_error
-  tList["C_I"] = #handle_catalogindex
-  tList["C_P"] = #handle_catalogpage
-  if tBool then
-    return registerListener(getVariable("connection.info.id"), me.getID(), tList)
-  else
-    return unregisterListener(getVariable("connection.info.id"), me.getID(), tList)
+on handle_nameapproved me, tMsg
+  tParm = tMsg.connection.GetIntFrom(tMsg)
+  if tParm = 1 then
+    executeMessage(#petapproved)
   end if
+end
+
+on handle_nameunacceptable me, tMsg
+  tParm = tMsg.connection.GetIntFrom(tMsg)
+  if tParm = 1 then
+    executeMessage(#petunacceptable)
+  end if
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(67, #handle_purchase_ok)
+  tMsgs.setaProp(65, #handle_purchase_error)
+  tMsgs.setaProp(68, #handle_purchase_nobalance)
+  tMsgs.setaProp(126, #handle_catalogindex)
+  tMsgs.setaProp(127, #handle_catalogpage)
+  tMsgs.setaProp(36, #handle_nameapproved)
+  tMsgs.setaProp(37, #handle_nameunacceptable)
+  tCmds = [:]
+  tCmds.setaProp("GPRC", 100)
+  tCmds.setaProp("GCIX", 101)
+  tCmds.setaProp("GCAP", 102)
+  tCmds.setaProp("APPROVENAME", 42)
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  end if
+  return 1
 end

@@ -19,7 +19,6 @@ on construct me
     end if
     exit repeat
   end repeat
-  tButtonList = []
   return 1
 end
 
@@ -141,8 +140,8 @@ on renderProductColors me, tOrderNum
         the itemDelimiter = ","
         tColor = tProducts[f]["partColors"].item[tProducts[f]["partColors"].item.count]
         the itemDelimiter = tItemDeLimiter
-        if tColor.char[1] = "*" then
-          tColor = rgb("#" & string(tColor).char[2..string(tColor).length])
+        if tColor.char[1] = "#" then
+          tColor = rgb(tColor)
         else
           tColor = paletteIndex(integer(tColor))
         end if
@@ -241,6 +240,11 @@ on selectColor me, tOrderNum
 end
 
 on eventProc me, tEvent, tSprID, tProp
+  if tEvent = #mouseUp then
+    if tSprID = "close" then
+      return 0
+    end if
+  end if
   if tEvent = #mouseDown then
     if tSprID contains "ctlg_small_img_" then
       tItemDeLimiter = the itemDelimiter

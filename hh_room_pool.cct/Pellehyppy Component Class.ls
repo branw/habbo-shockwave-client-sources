@@ -75,18 +75,24 @@ on poolDownView me
 end
 
 on jumpingPlaceOk me
-  executeMessage(#roomStatistic, "jumpplace")
   me.getInterface().deactivateChatField()
-  getConnection(getVariable("connection.room.id")).send(#room, "JUMPSTART")
+  getConnection(getVariable("connection.room.id")).send("JUMPSTART")
   me.poolUpView("jump")
   createWindow(pJumpButtonsWnd, "ph_instructions.window", 20, 20)
   tWndObj = getWindow(pJumpButtonsWnd)
   tWndObj.registerClient(me.getID())
   tWndObj.moveZ(19000040)
   tWndObj.lock()
+  tPelleKeys = getVariableValue("swimjump.key.list")
+  if tPelleKeys.ilk <> #propList then
+    error(me, "Couldn't retrieve keymap for jump! Using default keys.", #jumpingPlaceOk)
+    tPelleKeys = [#run1: "A", #run2: "D", #dive1: "W", #dive2: "E", #dive3: "A", #dive4: "S", #dive5: "D", #dive6: "Z", #dive7: "X", #jump: "SPACE"]
+  end if
+  repeat with i = 1 to 9
+    tWndObj.getElement("ph_ui_text_" & i).setText(tPelleKeys[i])
+  end repeat
   tUserName = getObject(#session).get("user_name")
-  tUserObj = getThread(#room).getComponent().getUserObject(tUserName)
-  tFigure = tUserObj.getPelleFigure()
+  tFigure = getThread(#room).getComponent().getOwnUser().getPelleFigure()
   createObject(#jumpingpelle_obj, "Jumping Pelle Class", "Pelle KeyDown Class")
   getObject(#jumpingpelle_obj).Init(tUserName, tFigure, 0)
   return 1
@@ -99,20 +105,20 @@ on jumpPlayPack me, tMsg
   if not objectExists(#playpackpelle_obj) then
     createObject(#playpackpelle_obj, "Jumping Pelle Class", "Pelle Player Class")
   end if
-  tUserObj = getThread(#room).getComponent().getUserObject(tMsg["name"])
+  tUserObj = getThread(#room).getComponent().getUserObject(tMsg[#index])
   tFigure = tUserObj.getPelleFigure()
-  if tMsg["name"] = getObject(#session).get("user_name") then
+  if tMsg[#index] = getObject(#session).get("user_index") then
     me.poolUpView("playback")
   end if
-  getObject(#playpackpelle_obj).Init(tMsg["name"], tFigure, 1)
-  getObject(#playpackpelle_obj).initPlayer(tMsg["name"], tMsg["jumpdata"])
+  getObject(#playpackpelle_obj).Init(tUserObj.getName(), tFigure, 1)
+  getObject(#playpackpelle_obj).initPlayer(tUserObj.getName(), tMsg[#jumpdata])
   if objectExists(#pool_fuse_screen) then
-    getObject(#pool_fuse_screen).fuseShow_showtext(tMsg["name"])
+    getObject(#pool_fuse_screen).fuseShow_showtext(tUserObj.getName())
   end if
 end
 
 on sendSign me, tSign
-  getConnection(getVariable("connection.room.id")).send(#room, "Sign " & tSign)
+  getConnection(getVariable("connection.room.id")).send("SIGN", tSign)
 end
 
 on buyPoolTickets me, tName
@@ -125,21 +131,12 @@ on buyPoolTickets me, tName
   if voidp(tName) then
     tName = getObject(#session).get("user_name")
   end if
-  getConnection(getVariable("connection.info.id")).send(#info, "BTCKS /" & tName)
+  getConnection(getVariable("connection.info.id")).send("BTCKS", tName)
 end
 
 on sendJumpPerf me, tJumpData
-  tUserObj = getThread(#room).getComponent().getUserObject(getObject(#session).get("user_name"))
-  tName = getObject(#session).get("user_name")
-  tFigure = getObject(#session).get("user_figure").duplicate()
-  tPHFigure = tUserObj.pPhFigure
-  tFigure = me.generateFigureDataToOldServerMode(tFigure, getObject(#session).get("user_sex"), 0)["figuretoServer"]
-  tColor = string(tPHFigure["color"])
-  tR = value(tColor.item[1].char[5..tColor.item[1].length])
-  tG = value(tColor.item[2])
-  tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
-  tColor = tR & "," & tG & "," & tB
-  tPHFigure = "ch=" & tPHFigure["model"] & "/" & tColor
-  tJump = tName & RETURN & tFigure & RETURN & tPHFigure & RETURN & tJumpData
-  getConnection(getVariable("connection.room.id")).send(#room, "JUMPPERF" && tJump)
+  if not objectExists("Figure_System_Pool") then
+    return error(me, "Figure system Pool object not found", #sendJumpPerf)
+  end if
+  getConnection(getVariable("connection.room.id")).send("JUMPPERF", tJumpData)
 end

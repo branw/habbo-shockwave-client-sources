@@ -213,7 +213,7 @@ on setProperty me, tProp, tValue
     #ink:
       pSprite.ink = tValue
     #cursor:
-      pSprite.setCursor(tValue)
+      pSprite.setcursor(tValue)
     #image:
       pimage = tValue
       me.render()

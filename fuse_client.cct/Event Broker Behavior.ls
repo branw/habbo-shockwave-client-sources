@@ -62,7 +62,7 @@ on getCursor me
   return pSprite.cursor
 end
 
-on setCursor me, ttype
+on setcursor me, ttype
   if symbolp(ttype) then
     case ttype of
       #arrow:
@@ -126,14 +126,22 @@ on mouseDown me
   if not voidp(pProcList) then
     getObject(#session).set("client_lastclick", id && "->" && pProcList[#mouseDown][2] && "/" && the long time)
   end if
-  return me.redirectEvent(#mouseDown)
+  tResult = me.redirectEvent(#mouseDown)
+  if tResult then
+    stopEvent()
+  end if
+  return tResult
 end
 
 on mouseUp me
   if not voidp(pLink) then
     getSpecialServices().openNetPage(pLink)
   end if
-  return me.redirectEvent(#mouseUp)
+  tResult = me.redirectEvent(#mouseUp)
+  if tResult then
+    stopEvent()
+  end if
+  return tResult
 end
 
 on mouseUpOutSide me
@@ -141,6 +149,9 @@ on mouseUpOutSide me
 end
 
 on keyDown me
+  if me.pSprite.spriteNum <> the keyboardFocusSprite then
+    return 1
+  end if
   if me.redirectEvent(#keyDown) then
     return 1
   end if
@@ -148,6 +159,9 @@ on keyDown me
 end
 
 on keyUp me
+  if me.pSprite.spriteNum <> the keyboardFocusSprite then
+    return 1
+  end if
   if me.redirectEvent(#keyUp) then
     return 1
   end if

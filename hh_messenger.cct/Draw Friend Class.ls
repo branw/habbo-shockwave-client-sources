@@ -1,10 +1,9 @@
-property pData, pID, pName, pSex, pMsg, pSmsOK, pEmailOK, pOnline, pUnit, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pUnitNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText
+property pData, pID, pName, pSex, pMsg, pEmailOK, pOnline, pUnit, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pUnitNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText
 
 on construct me
   pData = [:]
   pID = EMPTY
   pMsg = EMPTY
-  pSmsOK = 0
   pEmailOK = 0
   pOnline = 0
   pUnit = EMPTY
@@ -27,7 +26,6 @@ end
 
 on define me, tdata, tProps
   pData = tdata
-  pSmsOK = tdata.smsOk
   pEmailOK = tdata.emailOk
   pID = tdata.id
   pName = tdata.name
@@ -81,7 +79,7 @@ on select me, tClickPoint, tBuffer, tPosition
       pSelected = 1
       tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#EEEEEE")])
     end if
-    getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected, pEmailOK, pSmsOK)
+    getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected, pEmailOK)
   end if
 end
 
@@ -100,11 +98,7 @@ on render me, tBuffer, tPosition
   else
     pNeedUpdate = 0
     if pNameNeedUpdate then
-      if pSmsOK then
-        tText = pName && numToChar(177) && "-"
-      else
-        tText = pName && "-"
-      end if
+      tText = pName && "-"
       pCacheNameImg = pWriterName.render(tText).duplicate()
       pNameNeedUpdate = 0
       tX1 = pLeftMarg

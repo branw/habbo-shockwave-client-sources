@@ -1,4 +1,4 @@
-property direction, memberPrefix, memberModels, moving, destLScreen, startLScreen, moveStart, moveTime, talking, pModels, pDirections, pSprites, pInks, lParts, pActions, pColors, pLocZShifts, counter, pAnimFixH, pAnimFixV, pFlipped, mainAction, restingHeight, controller, userController, myEy, pLocFix, iLocZFix, swimSuitModels, swim, swimSdHeight, swimAnimCountDir, StayAndSwim, sign, signSpr, signDir, pModLevel, isModerator, name, pPelleImg, jumpAction, jumpAnimFrame, runAnimList, AnimListCounter, pSmallJumpList, changes, plastPressKey, pSpeed, pStatus, pnewLocV, pJumpSpeed, pVelocityV, pjumpBoardEnd, pjumpBoardStart, locX, locY, height, pMyLoc, pStartloc, pJumpDirection, pJumpLastDirection, pJumpMode, pJumpLoop, pJumpMaxAnimFrames, pJumpData, pPlayerMode, pLastJumpDirection, myLocZ, pScreenUpOrDown, pRemoveJumperTime, pBgScreenBuffer, pSpr, pXFactor, pYFactor, pPeopleSize, pMyName, pPelleBgImg, pJumpReady, pBigSplash, pBigSplashActive
+property direction, memberPrefix, memberModels, moving, destLScreen, startLScreen, moveStart, moveTime, talking, pModels, pDirections, pSprites, pInks, lParts, pActions, pColors, pLocZShifts, counter, pAnimFixH, pAnimFixV, pFlipped, mainAction, restingHeight, controller, userController, myEy, pLocFix, iLocZFix, swimSuitModels, swim, swimSdHeight, swimAnimCountDir, StayAndSwim, sign, signSpr, signDir, pModLevel, isModerator, name, pPelleImg, jumpAction, jumpAnimFrame, runAnimList, AnimListCounter, pSmallJumpList, changes, plastPressKey, pSpeed, pStatus, pnewLocV, pJumpSpeed, pVelocityV, pjumpBoardEnd, pjumpBoardStart, locX, locY, height, pMyLoc, pStartloc, pJumpDirection, pJumpLastDirection, pJumpMode, pJumpLoop, pJumpMaxAnimFrames, pJumpData, pPlayerMode, pLastJumpDirection, myLocZ, pScreenUpOrDown, pRemoveJumperTime, pBgScreenBuffer, pSpr, pXFactor, pYFactor, pPeopleSize, pMyName, pPelleBgImg, pJumpReady, pBigSplash, pBigSplashActive, pPelleKeys
 
 on deconstruct me
   if ilk(pSpr, #sprite) then
@@ -7,7 +7,7 @@ on deconstruct me
   return 1
 end
 
-on Init me, tName, tMemberModels, tplayerMode
+on Init me, tName, tMemberModels, tplayerMode, tKeyList
   pJumpReady = 0
   pBigSplashActive = 0
   pMyName = getObject(#session).get("user_name")
@@ -79,6 +79,11 @@ on Init me, tName, tMemberModels, tplayerMode
   pBgScreenBuffer.copyPixels(member(getmemnum("pelle_bg3")).image, pBgScreenBuffer.rect, pBgScreenBuffer.rect, [#maskImage: member(getmemnum("pelle_bg3")).image.createMatte(), #ink: 8])
   pKeyTimerStat = 0
   me.UpdatePelle()
+  pPelleKeys = getVariableValue("swimjump.key.list")
+  if pPelleKeys.ilk <> #propList then
+    error(me, "Couldn't retrieve keymap for jump! Using default keys.", #jumpingPlaceOk)
+    pPelleKeys = [#run1: "A", #run2: "D", #dive1: "W", #dive2: "E", #dive3: "A", #dive4: "S", #dive5: "D", #dive6: "Z", #dive7: "X", #jump: "SPACE"]
+  end if
   return 1
 end
 
@@ -142,7 +147,7 @@ on StopJumping me
                 exit repeat
               end if
             end repeat
-            pJumpData = pJumpData.char[temp..length(pJumpData)]
+            pJumpData = "0" & pJumpData.char[temp..length(pJumpData)]
             sendJumpData = compressString(pJumpData)
             getThread(#pellehyppy).getComponent().sendJumpPerf(sendJumpData)
             pJumpData = EMPTY
@@ -359,11 +364,32 @@ on jumpBoardCollisionD me, tNum
   return pStartloc.locV + integer((pStartloc.locH - tNum) / 2)
 end
 
-on MykeyDown me, tPelleKey
+on translateKey me, tPelleKey
+  if tPelleKey = SPACE then
+    return SPACE
+  end if
+  tKeyList = ["a", "d", "w", "e", "a", "s", "d", "z", "x"]
+  repeat with i = 1 to pPelleKeys.count
+    if tPelleKey = pPelleKeys[i] then
+      return tKeyList[i]
+    end if
+  end repeat
+  return "0"
+end
+
+on MykeyDown me, tPelleKey, tTimeElapsed, tNoTranslation
+  if not tNoTranslation then
+    tPelleKey = me.translateKey(tPelleKey)
+  end if
   if pStatus = #Run then
     case tPelleKey of
       "a", "d":
-        if tPelleKey <> plastPressKey then
+        if tPelleKey = "a" then
+          tWantedLastRunKey = "d"
+        else
+          tWantedLastRunKey = "a"
+        end if
+        if plastPressKey = tWantedLastRunKey then
           jumpAction = "run"
           pSpeed = pSpeed + 0.59999999999999998
           if pSpeed > 4 then
@@ -508,7 +534,7 @@ on NotKeyDown me
       else
         presskey = "a"
       end if
-      me.MykeyDown(presskey)
+      me.MykeyDown(presskey, VOID, 1)
     else
       pJumpData = pJumpData & "a"
     end if

@@ -3,14 +3,18 @@ property pWndID, pObjList, pObjMode, pWriterObj, pListHeight
 on construct me
   pWndID = "Chooser."
   pObjMode = #user
-  pObjList = []
+  pObjList = [:]
   tMetrics = getStructVariable("struct.font.plain")
   tMetrics.setaProp(#lineHeight, 14)
   createWriter(me.getID() && "Writer", tMetrics)
   pWriterObj = getWriter(me.getID() && "Writer")
-  createWindow(pWndID, "habbo_system.window", 5, 345)
+  if not createWindow(pWndID, "habbo_system.window", 5, 345) then
+    return 0
+  end if
   tWndObj = getWindow(pWndID)
-  tWndObj.merge("chooser.window")
+  if not tWndObj.merge("chooser.window") then
+    return tWndObj.close()
+  end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcChooser, me.getID(), #mouseUp)
   registerMessage(#leaveRoom, me.getID(), #clear)
@@ -27,7 +31,7 @@ on deconstruct me
   end if
   pWriterObj = VOID
   removeWriter(me.getID() && "Writer")
-  pObjList = []
+  pObjList = [:]
   unregisterMessage(#leaveRoom, me.getID())
   unregisterMessage(#changeRoom, me.getID())
   unregisterMessage(#enterRoom, me.getID())
@@ -56,17 +60,17 @@ on update me
   if not windowExists(pWndID) then
     return removeObject(me.getID())
   end if
-  pObjList = []
+  pObjList = [:]
   pObjList.sort()
   tObjList = getThread(#room).getComponent().getUserObject(#list)
   repeat with tObj in tObjList
-    pObjList.add(tObj.getID())
+    pObjList.setaProp(tObj.getName(), tObj.getID())
   end repeat
   tObjStr = EMPTY
-  repeat with tName in pObjList
-    tObjStr = tObjStr && tName & RETURN
+  repeat with i = 1 to pObjList.count
+    tObjStr = tObjStr && pObjList.getPropAt(i) & RETURN
   end repeat
-  tObjStr = tObjStr.line[1..tObjStr.line.count - 1]
+  delete char -30003 of tObjStr
   tImg = pWriterObj.render(tObjStr)
   tElem = getWindow(pWndID).getElement("list")
   tElem.feedImage(tImg)
@@ -75,7 +79,7 @@ on update me
 end
 
 on clear me
-  pObjList = []
+  pObjList = [:]
   pListHeight = 0
   getWindow(pWndID).getElement("list").feedImage(image(1, 1, 8))
   return 1

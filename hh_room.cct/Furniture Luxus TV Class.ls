@@ -104,6 +104,6 @@ on select me
     else
       tOnString = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "FIREON" & "/" & tOnString)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & tOnString)
   end if
 end

@@ -1,6 +1,9 @@
 property pActive, pSwitch, pTimer, pLastFrm, pLastAnm, pKill
 
 on prepare me, tdata
+  if me.pSprList.count < 3 then
+    return 0
+  end if
   removeEventBroker(me.pSprList[1].spriteNum)
   removeEventBroker(me.pSprList[2].spriteNum)
   removeEventBroker(me.pSprList[3].spriteNum)
@@ -47,8 +50,8 @@ on update me
         tNewNameB = tItem & "_" & "b" & "_" & tdata & "_" & pSwitch
         tNewNameC = tItem & "_" & "c" & "_" & tdata & "_" & pSwitch
         the itemDelimiter = tDelim
-        me.pSprList[2].locZ = me.pSprList[1].locZ + 2
-        me.pSprList[3].locZ = me.pSprList[2].locZ + 2
+        me.pSprList[2].locZ = me.pSprList[1].locZ + 5
+        me.pSprList[3].locZ = me.pSprList[2].locZ + 5
         if memberExists(tNewNameA) then
           tmember = member(getmemnum(tNewNameA))
           me.pSprList[1].castNum = tmember.number
@@ -113,7 +116,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "SWITCH" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCH" & "/" & tStr)
   end if
   return 1
 end

@@ -58,7 +58,7 @@ on hideCard me
 end
 
 on openPresent me
-  return getThread(#room).getComponent().getRoomConnection().send(#room, "PRESENTOPEN /" & pPackageID)
+  return getThread(#room).getComponent().getRoomConnection().send("PRESENTOPEN", pPackageID)
 end
 
 on showContent me, tdata
@@ -68,51 +68,21 @@ on showContent me, tdata
   ttype = tdata[#type]
   tCode = tdata[#code]
   tMemNum = VOID
-  if ttype starts "credits" then
-    tmember = getmemnum("credits_icon")
+  if ttype contains "*" then
+    tDelim = the itemDelimiter
+    the itemDelimiter = "*"
+    ttype = ttype.item[1]
+    the itemDelimiter = tDelim
+  end if
+  if memberExists(tCode & "_small") then
+    tMemNum = getmemnum(tCode & "_small")
   else
-    if ttype starts "deal" then
-      tDealID = ttype.char[6..length(ttype)]
-      tMemNum = getmemnum("deal_icon_" & tDealID)
-      if tMemNum = 0 then
-        if memberExists("poster" && tDealID & "_small") then
-          tMemNum = getmemnum("poster" && tDealID & "_small")
-        else
-          tMemNum = getmemnum("poster_small")
-        end if
-      end if
-    else
-      if ttype starts "poster" then
-        tMemNum = getmemnum("poster" && tCode.word[tCode.word.count] & "_small")
-      else
-        if ttype = "null" then
-          if memberExists(tCode.word[2] & "_small") then
-            tMemNum = getmemnum(tCode.word[2] & "_small")
-          end if
-        else
-          tTryDealName = "deal" && tCode.word[2] & "_small"
-          if memberExists(tTryDealName) then
-            tMemNum = getmemnum(tTryDealName)
-          else
-            if memberExists(ttype & "_small") then
-              tMemNum = getmemnum(ttype & "_small")
-            else
-              if ttype contains "*" then
-                a = offset("*", ttype)
-                tMemNum = getmemnum(ttype.char[1..a - 1] & "_small")
-              end if
-            end if
-          end if
-        end if
-      end if
+    if memberExists("ctlg_pic_small_" & tCode) then
+      tMemNum = getmemnum("ctlg_pic_small_" & tCode)
     end if
   end if
   if tMemNum = 0 then
-    if memberExists("no_icon_small") then
-      tImg = member(getmemnum("no_icon_small")).image.duplicate()
-    else
-      tImg = image(1, 1, 8)
-    end if
+    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, VOID, tdata[#type])
   else
     tImg = member(tMemNum).image.duplicate()
   end if

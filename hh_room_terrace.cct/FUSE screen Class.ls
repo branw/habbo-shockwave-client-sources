@@ -1,4 +1,4 @@
-property pSprite, pScrImg, pwidth, pheight, pVX, pVY, pTargetObj, pTargetSpr, pXFactor, pZoom, pSpeed, pFlexible, pTransitBuffer, pTransitState, pTargetPoint, pLastCropPoint, pFadeSpeed, pTransition, pTextImgBuffer, pTextShowState, pTextShowTime, pTextBlend, StateOfAd, adShowTime, adMember, adLink, adIdNum, AdWaitScore, pTextBgBoxImg, pPaaluPlayers
+property pSprite, pScrImg, pwidth, pheight, pVX, pVY, pTargetObj, pTargetSpr, pXFactor, pZoom, pSpeed, pFlexible, pTransitBuffer, pTransitState, pTargetPoint, pLastCropPoint, pFadeSpeed, pTransition, pTextImgBuffer, pTextShowState, pTextShowTime, pTextBlend, StateOfAd, adShowTime, adMember, adLink, adIdNum, AdWaitScore, pTextBgBoxImg, pPaaluPlayers, pWriterID
 
 on construct me
   pheight = 108
@@ -18,19 +18,33 @@ on construct me
   pTextBgBoxImg = image(1, 1, 24)
   pTargetSpr = pSprite
   pTextBgBoxImg.fill(pTextBgBoxImg.rect, rgb(0, 0, 0))
-  member(getmemnum("fuse_screen")).image = member(getmemnum("fuse_screen_logo")).image
+  if memberExists("fuse_screen_logo") then
+    pScrImg.copyPixels(member(getmemnum("fuse_screen_logo")).image, pScrImg.rect, pScrImg.rect)
+  end if
   pTransition = 0
   pTextShowState = 0
   StateOfAd = 0
   AdWaitScore = 0
   adIdNum = VOID
   pPaaluPlayers = [:]
-  me.fuseShow_transition("fade")
-  return receivePrepare(me.getID())
+  pWriterID = getUniqueID()
+  tMetrics = getStructVariable("struct.font.bold")
+  tMetrics.setaProp(#color, rgb("#FFFF99"))
+  tMetrics.setaProp(#bgColor, rgb(0, 0, 0))
+  if not createWriter(pWriterID, tMetrics) then
+    return error(me, "Couldn't create writer for screen!", #construct)
+  else
+    getWriter(pWriterID).define([#alignment: #center, #rect: rect(0, 0, 108, 10)])
+    me.fuseShow_transition("fade")
+    receivePrepare(me.getID())
+    return 1
+  end if
 end
 
 on deconstruct me
-  return removePrepare(me.getID())
+  removeWriter(pWriterID)
+  removePrepare(me.getID())
+  return 1
 end
 
 on activatePaaluPlayer me, tName, tObj
@@ -95,15 +109,16 @@ on fuseShow_showtext me, tText
       repeat with f = 1 to tText.item.count
         tTemp = tTemp & tText.item[f] & RETURN
       end repeat
-      member(getmemnum("fuse_screen.text")).text = tTemp.line[1..tTemp.line.count - 1]
-    else
-      member(getmemnum("fuse_screen.text")).text = tText
+      tText = tTemp.line[1..tTemp.line.count - 1]
     end if
-    pTextShowState = 1
-    pTextImgBuffer = member(getmemnum("fuse_screen.text")).image.duplicate()
-    pTextShowTime = 5000 + the milliSeconds
-    pTextBlend = 100
     the itemDelimiter = tDelim
+    tWriObj = getWriter(pWriterID)
+    if tWriObj <> 0 then
+      pTextShowState = 1
+      pTextImgBuffer = tWriObj.render(tText)
+      pTextShowTime = 5000 + the milliSeconds
+      pTextBlend = 100
+    end if
   end if
 end
 
@@ -140,7 +155,7 @@ on mouseDown me
     if adLink contains "http:" then
       openNetPage(adLink)
     end if
-    getConnection(getVariable("connection.info.id")).send(#info, "ADCLICK" && adIdNum)
+    getConnection(getVariable("connection.info.id")).send("ADCLICK", adIdNum)
   end if
 end
 

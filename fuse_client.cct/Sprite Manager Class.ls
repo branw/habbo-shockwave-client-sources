@@ -35,6 +35,7 @@ on reserveSprite me, tClientID
   tSprite = sprite(tSprNum)
   pFreeSprList.deleteAt(1)
   puppetSprite(tSprNum, 1)
+  tSprite.stretch = 0
   tSprite.locV = -1000
   tSprite.visible = 1
   pClientList[tSprNum] = tClientID
@@ -49,12 +50,16 @@ on releaseSprite me, tSprNum
     return error(me, "Attempting to release free sprite!", #releaseSprite)
   end if
   tSprite = sprite(tSprNum)
+  tSprite.member = member(0)
   tSprite.scriptInstanceList = []
+  tSprite.rect = rect(0, 0, 1, 1)
   tSprite.locZ = tSprNum
   tSprite.visible = 0
   tSprite.castNum = 0
   tSprite.cursor = 0
+  tSprite.blend = 100
   puppetSprite(tSprNum, 0)
+  tSprite.locZ = VOID
   pFreeSprList.append(tSprNum)
   pClientList[tSprNum] = 0
   return 1
@@ -121,7 +126,6 @@ on preIndexChannels me
     pClientList.add(0)
     puppetSprite(i, 1)
     sprite(i).visible = 0
-    sprite(i).locZ = i
   end repeat
   pFreeSprList = pTotalSprList.duplicate()
   pTotalSprList.sort()

@@ -16,8 +16,6 @@ on construct me
   pWallPreviewIdList.add("catalog_thumb_wall_pattern")
   pWallPreviewIdList.add("catalog_wall_preview_a_left")
   pWallPreviewIdList.add("catalog_wall_preview_b_right")
-  me.setWallPaper("pattern", 1)
-  me.setFloorPattern("pattern", 1)
   return 1
 end
 
@@ -53,6 +51,8 @@ on define me, tPageProps
       end if
     end if
   end if
+  me.setWallPaper("pattern", 1)
+  me.setFloorPattern("pattern", 1)
 end
 
 on setWallPaper me, ttype, tChange
@@ -181,6 +181,11 @@ on setFloorPattern me, ttype, tChange
 end
 
 on eventProc me, tEvent, tSprID, tProp
+  if tEvent = #mouseUp then
+    if tSprID = "close" then
+      return 0
+    end if
+  end if
   if tEvent = #mouseDown then
     case tSprID of
       "ctlg_wall_pattern_prev":

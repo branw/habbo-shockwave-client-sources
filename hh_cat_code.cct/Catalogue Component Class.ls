@@ -98,7 +98,9 @@ on purchaseProduct me, tGiftProps
       tGift = EMPTY
     end if
     if not voidp(tGiftProps["gift_msg"]) then
-      tGift = tGift & tGiftProps["gift_msg"] & RETURN
+      tGiftMsg = tGiftProps["gift_msg"]
+      tGiftMsg = getStringServices().convertSpecialChars(tGiftMsg, 1)
+      tGift = tGift & tGiftMsg & RETURN
     else
       tGift = EMPTY
     end if
@@ -106,17 +108,18 @@ on purchaseProduct me, tGiftProps
     tGift = "0"
   end if
   tOrderStr = EMPTY
-  tOrderStr = "GPRC /" & RETURN
   tOrderStr = tOrderStr & pCatalogProps["editmode"] & RETURN
   tOrderStr = tOrderStr & pCatalogProps["lastPageID"] & RETURN
   tOrderStr = tOrderStr & me.getLanguage() & RETURN
   tOrderStr = tOrderStr & pProductOrderData["purchaseCode"] & RETURN
-  tOrderStr = tOrderStr & pProductOrderData["extra_parm"] & RETURN
+  tExtra = pProductOrderData["extra_parm"]
+  tExtra = getStringServices().convertSpecialChars(tExtra, 1)
+  tOrderStr = tOrderStr & tExtra & RETURN
   tOrderStr = tOrderStr & tGift
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
-  return getConnection(getVariable("connection.info.id")).send(#info, tOrderStr)
+  return getConnection(getVariable("connection.info.id")).send("GPRC", tOrderStr)
 end
 
 on retrieveCatalogueIndex me
@@ -130,7 +133,7 @@ on retrieveCatalogueIndex me
     me.getInterface().saveCatalogueIndex(pCatalogProps["catalogueIndex"])
   else
     if connectionExists(getVariable("connection.info.id")) then
-      return getConnection(getVariable("connection.info.id")).send(#info, "GCIX /" & tEditmode & "/" & tLanguage)
+      return getConnection(getVariable("connection.info.id")).send("GCIX", tEditmode & "/" & tLanguage)
     else
       return 0
     end if
@@ -150,7 +153,7 @@ on retrieveCataloguePage me, tPageID
     me.getInterface().cataloguePageData(pCatalogProps[tPageID])
   else
     if connectionExists(getVariable("connection.info.id")) then
-      return getConnection(getVariable("connection.info.id")).send(#info, "GCAP /" & tEditmode & "/" & tPageID & "/" & tLanguage)
+      return getConnection(getVariable("connection.info.id")).send("GCAP", tEditmode & "/" & tPageID & "/" & tLanguage)
     else
       return 0
     end if
@@ -204,14 +207,10 @@ end
 on solveCatalogueMembers me, tdata
   tLanguage = me.getLanguage()
   if not voidp(tdata["headerImage"]) then
-    if memberExists(tdata["headerImage"] & "_" & tLanguage) then
-      tdata["headerImage"] = getmemnum(tdata["headerImage"] & "_" & tLanguage)
+    if memberExists(tdata["headerImage"]) then
+      tdata["headerImage"] = getmemnum(tdata["headerImage"])
     else
-      if memberExists(tdata["headerImage"]) then
-        tdata["headerImage"] = getmemnum(tdata["headerImage"])
-      else
-        tdata["headerImage"] = 0
-      end if
+      tdata["headerImage"] = 0
     end if
   end if
   if not voidp(tdata["teaserImgList"]) then
@@ -219,10 +218,6 @@ on solveCatalogueMembers me, tdata
     tMemList = []
     if tImageNameList.count > 0 then
       repeat with tImg in tImageNameList
-        if memberExists(tImg & "_" & tLanguage) then
-          tMemList.add(getmemnum(tImg & "_" & tLanguage))
-          next repeat
-        end if
         if memberExists(tImg) then
           tMemList.add(getmemnum(tImg))
           next repeat
@@ -238,33 +233,34 @@ on solveCatalogueMembers me, tdata
       if not voidp(tProductData["purchaseCode"]) then
         tPrewMember = "ctlg_pic_"
         tPurchaseCode = tProductData["purchaseCode"]
-        if memberExists(tPrewMember & tLanguage & "_" & tPurchaseCode) then
-          tdata["productList"][f]["prewImage"] = getmemnum(tPrewMember & tLanguage & "_" & tPurchaseCode)
+        if memberExists(tPrewMember & tPurchaseCode) then
+          tdata["productList"][f]["prewImage"] = getmemnum(tPrewMember & tPurchaseCode)
         else
-          if memberExists(tPrewMember & tPurchaseCode) then
-            tdata["productList"][f]["prewImage"] = getmemnum(tPrewMember & tPurchaseCode)
-          else
-            tdata["productList"][f]["prewImage"] = 0
-          end if
+          tdata["productList"][f]["prewImage"] = 0
         end if
-        if memberExists(tPrewMember & "small_" & tLanguage & tPurchaseCode) then
-          tdata["productList"][f]["smallPrewImg"] = getmemnum(tPrewMember & "small_" & tLanguage & "_" & tPurchaseCode)
+        tdata["productList"][f]["smallColorFlag"] = 1
+        if memberExists(tPrewMember & "small_" & tPurchaseCode) then
+          tdata["productList"][f]["smallPrewImg"] = getmemnum(tPrewMember & "small_" & tPurchaseCode)
         else
-          if memberExists(tPrewMember & "small_" & tPurchaseCode) then
-            tdata["productList"][f]["smallPrewImg"] = getmemnum(tPrewMember & "small_" & tPurchaseCode)
-          else
-            tdata["productList"][f]["smallPrewImg"] = 0
-          end if
+          tdata["productList"][f]["smallPrewImg"] = 0
         end if
       end if
       if not voidp(tProductData["class"]) then
         tClass = tProductData["class"]
         if tClass contains "*" then
+          tSmallMem = tClass & "_small"
           tClass = tClass.char[1..offset("*", tClass) - 1]
+          if not memberExists(tSmallMem) then
+            tSmallMem = tClass & "_small"
+          else
+            tdata["productList"][f]["smallColorFlag"] = 0
+          end if
+        else
+          tSmallMem = tClass & "_small"
         end if
         if tdata["productList"][f]["smallPrewImg"] = 0 then
-          if memberExists(tClass & "_small") then
-            tdata["productList"][f]["smallPrewImg"] = getmemnum(tClass & "_small")
+          if memberExists(tSmallMem) then
+            tdata["productList"][f]["smallPrewImg"] = getmemnum(tSmallMem)
             next repeat
           end if
           tdata["productList"][f]["smallPrewImg"] = getmemnum("no_icon_small")

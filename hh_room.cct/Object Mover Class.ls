@@ -1,4 +1,4 @@
-property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLocList, pLoczList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr
+property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLoczList, pLocShiftList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr, pOrigCoord
 
 on construct me
   pActive = 0
@@ -7,13 +7,14 @@ on construct me
   pStripID = EMPTY
   pMoveProc = #moveActive
   pSprList = []
-  pLocList = []
   pLoczList = []
+  pLocShiftList = []
   pGeometry = VOID
   pLastLoc = point(0, 0)
   pSavedDim = 1
   pSavedDir = 2
   pItemLocStr = 0
+  pOrigCoord = [0, 0, 0]
   return 1
 end
 
@@ -27,11 +28,12 @@ on deconstruct me
   pMoveProc = #moveActive
   pClientID = EMPTY
   pSprList = []
-  pLocList = []
   pLoczList = []
+  pLocShiftList = []
   pGeometry = VOID
   pSavedDim = 1
   pSavedDir = 2
+  pOrigCoord = [0, 0, 0]
   return 1
 end
 
@@ -61,6 +63,10 @@ on define me, tClientID, tStripID, tObjType
       pMoveProc = #moveActive
       tClientObj = getThread(#room).getComponent().getActiveObject(tClientID)
       pLoczList = tClientObj.pLoczList
+      pLocShiftList = tClientObj.pLocShiftList
+      if objectp(tClientObj) then
+        call(#prepareForMove, [tClientObj])
+      end if
     "item":
       pMoveProc = #moveItem
       tClientObj = getThread(#room).getComponent().getItemObject(tClientID)
@@ -79,6 +85,19 @@ on define me, tClientID, tStripID, tObjType
     error(me, "List with sprites expected:" && tOrigSprList, #define)
     tOrigSprList = []
   end if
+  pOrigCoord = [tClientObj.pLocX, tClientObj.pLocY, tClientObj.pLocH]
+  if tOrigSprList.count < 1 then
+    pClientID = EMPTY
+    pClientObj = EMPTY
+    tConnection = getThread(#room).getComponent().getRoomConnection()
+    if tConnection <> 0 then
+      tConnection.send("GETSTRIP", "new")
+    end if
+    return error(me, "No sprites found for drawing object for moving.", #define)
+  end if
+  if getSpriteManager().getProperty(#freeSprCount) < tOrigSprList.count + 1 then
+    return 0
+  end if
   repeat with i = 1 to tOrigSprList.count
     tSpr = sprite(reserveSprite(me.getID()))
     setEventBroker(tSpr.spriteNum, "ObjMoverSpr" & i)
@@ -95,21 +114,17 @@ on define me, tClientID, tStripID, tObjType
     tOrigSprList[i].loc = point(-4000, -4000)
     pSprList.add(tSpr)
   end repeat
-  if tOrigSprList.count > 0 then
-    tSmallName = tOrigSprList[1].member.name.char[1..length(tOrigSprList[1].member.name) - 11] & "small"
-    if not memberExists(tSmallName) then
-      tSmallName = tOrigSprList[1].member.name
-    end if
-    tSmallMem = member(getmemnum(tSmallName))
-    pSmallSpr = sprite(reserveSprite(me.getID()))
-    pSmallSpr.member = tSmallMem
-    pSmallSpr.width = tSmallMem.width
-    pSmallSpr.height = tSmallMem.height
-    pSmallSpr.ink = 36
-    pSmallSpr.blend = 60
-    pSmallSpr.loc = point(-1000, -1000)
-    pSmallSpr.locZ = 20000000
-  end if
+  tInfo = tClientObj.getInfo()
+  tMemNum = getObject("Preview_renderer").getPreviewMember(tInfo[#image])
+  tSmallMem = member(tMemNum)
+  pSmallSpr = sprite(reserveSprite(me.getID()))
+  pSmallSpr.member = tSmallMem
+  pSmallSpr.width = tSmallMem.width
+  pSmallSpr.height = tSmallMem.height
+  pSmallSpr.ink = 36
+  pSmallSpr.blend = 60
+  pSmallSpr.loc = point(-1000, -1000)
+  pSmallSpr.locZ = 20000000
   if tObjType = "active" then
     pSavedDim = tClientObj.pDimensions
     pSavedDir = tClientObj.pDirection[1]
@@ -138,6 +153,7 @@ on define me, tClientID, tStripID, tObjType
   end if
   pActive = 1
   pPause = 0
+  registerMessage(#activeObjectRemoved, me.getID(), #checkObjectExists)
   receiveUpdate(me.getID())
   return 1
 end
@@ -148,12 +164,14 @@ end
 
 on clear me
   removeUpdate(me.getID())
+  unregisterMessage(#activeObjectRemoved, me.getID())
   pActive = 0
   pPause = 0
   pClientID = EMPTY
   pStripID = EMPTY
   pSavedDim = 1
   pSavedDir = 2
+  pOrigCoord = [0, 0, 0]
   repeat with i = 1 to pSprList.count
     releaseSprite(pSprList[i].spriteNum)
   end repeat
@@ -215,6 +233,9 @@ on moveActive me
     return 
   end if
   pLastLoc = the mouseLoc
+  pClientObj.ghostObject()
+  pClientObj.updateLocation()
+  call(#prepareForMove, [pClientObj])
   tloc = pGeometry.getWorldCoordinate(the mouseH, the mouseV)
   if listp(tloc) then
     if listp(pSavedDim[1]) then
@@ -277,7 +298,17 @@ on moveItem me
       pItemLocStr = ":w=" & tWallObjLoc[1] & "," & tWallObjLoc[2] && "l=" & tProps[#localCoordinate][1] & "," & tProps[#localCoordinate][2] && tProps.direction.char[1]
     end if
     tName = pSprList[1].member.name
-    pSprList[1].castNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
+    tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
+    if tMemNum = 0 then
+      return 0
+    end if
+    if tMemNum < 1 then
+      tMemNum = abs(tMemNum)
+      pSprList[1].flipH = 1
+    else
+      pSprList[1].flipH = 0
+    end if
+    pSprList[1].castNum = tMemNum
     if tProps[#wallSprites] <> 0 then
       tSprites = tProps[#wallSprites]
       tlocz = tSprites[1].locZ
@@ -299,6 +330,23 @@ on moveTrade me
   pMoveProc = #moveTrade
   pSmallSpr.blend = 100
   me.showSmallPic()
+end
+
+on cancelMove me
+  tClickAction = getThread(#room).getInterface().getProperty(#clickAction)
+  case tClickAction of
+    "moveActive", "moveItem":
+      tLocX = pOrigCoord[1]
+      tLocY = pOrigCoord[2]
+      tLocH = pOrigCoord[3]
+      tObj = getThread(#room).getComponent().getActiveObject(pClientID)
+      if tObj = 0 then
+        return 0
+      end if
+      tObj.moveTo(tLocX, tLocY, tLocH)
+    "placeActive", "placeItem":
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "new")
+  end case
 end
 
 on showSmallPic me
@@ -326,6 +374,7 @@ on showActualPic me, tloc
     if pSprList[i].rotation = 180 then
       pSprList[i].locH = tScreenCoord[1] + pGeometry.pXFactor
     end if
+    pSprList[i].loc = pSprList[i].loc + pLocShiftList[i][pSavedDir + 1]
     tZ = pLoczList[i][pSavedDir + 1]
     pSprList[i].locZ = tScreenCoord[3] + pClientObj.pLocH * 1000 + tZ - 1
   end repeat
@@ -336,15 +385,21 @@ on getWallSpriteItemWithin me, tSpr
   tRoomComponent = getThread(#room).getComponent()
   tItemRp = tSpr.member.regPoint
   tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])
-  tWallObjectUnder = tRoomInterface.getPassiveObjectIntersectingRect(tItemR)[1]
+  tWallObjectUnder = me.getPassiveObjectIntersectingRect(tItemR)[1]
   if tWallObjectUnder = 0 then
     return [#direction: "rightwall", #wallSprite: 0, #insideWall: 0]
   end if
   tDirection = tWallObjectUnder.getDirection()
   tCorner = 0
-  tWallCheckSpr = tWallObjectUnder.getSprites()[1]
-  if tDirection[1] = 3 or tWallObjectUnder.getSprites().count > 1 then
-    if tWallObjectUnder.getSprites().count = 1 then
+  tWallCheckSprList = tWallObjectUnder.getSprites()
+  tWallCheckSpr = tWallCheckSprList[1]
+  if tWallCheckSprList.count > 1 then
+    if tWallCheckSprList[1].rect = tWallCheckSprList[2].rect then
+      tWallCheckSprList.deleteAt(2)
+    end if
+  end if
+  if tDirection[1] = 3 or tWallCheckSprList.count > 1 then
+    if tWallCheckSprList.count = 1 then
       if tSpr.locH < tWallCheckSpr.locH then
         tWallDir = 0
       else
@@ -393,7 +448,7 @@ on getWallSpriteItemWithin me, tSpr
       tDirName = "rightwall"
   end case
   tRects = [rect(tCornerA[1], tCornerA[2], tCornerA[1] + 1, tCornerA[2] + 1), rect(tCornerB[1], tCornerB[2], tCornerB[1] + 1, tCornerB[2] + 1)]
-  tWallInfo = [tRoomInterface.getPassiveObjectIntersectingRect(tRects[1]), tRoomInterface.getPassiveObjectIntersectingRect(tRects[2])]
+  tWallInfo = [me.getPassiveObjectIntersectingRect(tRects[1]), me.getPassiveObjectIntersectingRect(tRects[2])]
   tWallObjs = [tWallInfo[1][1], tWallInfo[2][1]]
   if tCorner = 1 then
     if tWallObjs[1] = tWallObjs[2] and tWallInfo[1][2] <> tWallInfo[2][2] then
@@ -403,7 +458,7 @@ on getWallSpriteItemWithin me, tSpr
   repeat with i = 1 to 2
     tWallObj = tWallObjs[i]
     tRect = tRects[i]
-    if tWallObj = VOID then
+    if voidp(tWallObj) then
       return [#direction: tDirName, #wallSprites: tWallObjectUnder.getSprites(), #insideWall: 0]
       next repeat
     end if
@@ -426,4 +481,31 @@ on getWallSpriteItemWithin me, tSpr
   tWallSpr = tWallObjs[1].getSprites()[1]
   tLocalCoordinate = point(tSpr.loc[1] - tWallSpr.left, tSpr.loc[2] - tWallSpr.top)
   return [#direction: tDirName, #wallSprites: tWallObjectUnder.getSprites(), #insideWall: 1, #wallObject: tWallObjs[1], #localCoordinate: tLocalCoordinate]
+end
+
+on getPassiveObjectIntersectingRect me, tItemR
+  tPieceList = getThread(#room).getComponent().getPassiveObject(#list)
+  tPieceObjUnder = VOID
+  tPieceSprUnder = 0
+  tPieceUnderLocZ = -1000000000
+  repeat with tPiece in tPieceList
+    tSprites = tPiece.getSprites()
+    repeat with tPieceSpr in tSprites
+      tRp = sprite(tPieceSpr).member.regPoint
+      tR = rect(sprite(tPieceSpr).locH, sprite(tPieceSpr).locV, sprite(tPieceSpr).locH, sprite(tPieceSpr).locV) + rect(-tRp[1], -tRp[2], sprite(tPieceSpr).member.width - tRp[1], sprite(tPieceSpr).member.height - tRp[2])
+      if intersect(tItemR, tR) <> rect(0, 0, 0, 0) and tPieceUnderLocZ < tPieceSpr.locZ then
+        tPieceObjUnder = tPiece
+        tPieceSprUnder = tPieceSpr
+        tPieceUnderLocZ = tPieceSpr.locZ
+      end if
+    end repeat
+  end repeat
+  return [tPieceObjUnder, tPieceSprUnder]
+end
+
+on checkObjectExists me
+  tObj = getThread(#room).getComponent().getActiveObject(pClientID)
+  if tObj = 0 then
+    getThread(#room).getInterface().stopObjectMover()
+  end if
 end

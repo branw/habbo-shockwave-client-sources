@@ -12,6 +12,10 @@ on construct me
   pCurLoc = pActLoc
   pLocAnimList = [[2, 0], [2, 0], [2, 0], [2, 0], [2, 0], [2, 2], [2, 0], [2, 2], [2, 2], [2, 2], [2, 2]]
   pLocAnimIndx = 1
+  if not objectExists("Figure_System_Mountain") then
+    createObject("Figure_System_Mountain", ["Figure System Class"])
+    getObject("Figure_System_Mountain").define(["type": "member", "source": "swimfigure_ids_"])
+  end if
   tSprite = tVisual.getSprById("pool_teleport")
   if ilk(tSprite, #sprite) then
     tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
@@ -30,6 +34,9 @@ on construct me
 end
 
 on deconstruct me
+  if objectExists("Figure_System_Mountain") then
+    removeObject("Figure_System_Mountain")
+  end if
   if windowExists(pKoppiWndID) then
     removeWindow(pKoppiWndID)
   end if
@@ -40,6 +47,9 @@ on deconstruct me
 end
 
 on openPukukoppi me
+  if not objectExists("Figure_System_Mountain") then
+    return error(me, "Figure system object not found", #openPukukoppi)
+  end if
   pSwimSuitIndex = 1
   if getObject(#session).get("user_sex") = "F" then
     pSwimSuitModel = "s01"
@@ -51,7 +61,7 @@ on openPukukoppi me
   else
     tSetID = 10
   end if
-  tPartProps = me.getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -170,6 +180,9 @@ on executeReturn me
 end
 
 on createFigurePrew me
+  if not objectExists("Figure_Preview") then
+    return error(me, "Figure preview not found!", #createFigurePrew)
+  end if
   tFigure = getObject(#session).get("user_figure").duplicate()
   tFigure["hd"]["model"] = "001"
   tFigure["fc"]["model"] = "001"
@@ -184,7 +197,7 @@ on createFigurePrew me
   tWndObj = getWindow(pKoppiWndID)
   tFigure["ch"]["color"] = pSwimSuitColor
   tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
-  tHumanImg = getThread(#registration).getComponent().getHumanPartImg(tPartList, tFigure, 2, "sh")
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
   tWidth = tWndObj.getElement("preview_img").getProperty(#width)
   tHeight = tWndObj.getElement("preview_img").getProperty(#height)
   tPrewImg = image(tWidth, tHeight, 16)
@@ -196,12 +209,15 @@ on createFigurePrew me
 end
 
 on changeSwimSuitColor me, tPart, tButtonDir
+  if not objectExists("Figure_System_Mountain") then
+    return error(me, "Figure system Mountain object not found", #changeSwimSuitColor)
+  end if
   if getObject(#session).get("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tMaxValue = me.getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
+  tMaxValue = getObject("Figure_System_Mountain").getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
   if tButtonDir = 0 then
     pSwimSuitIndex = 1
   else
@@ -215,7 +231,7 @@ on changeSwimSuitColor me, tPart, tButtonDir
       end if
     end if
   end if
-  tPartProps = me.getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Mountain").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -228,8 +244,8 @@ on eventProcPukukoppi me, tEvent, tSprID, tParam
     case tSprID of
       "exit":
         me.closePukukoppi()
-        getConnection(getVariable("connection.room.id")).send(#room, "UPDATE" && "ph_figure=")
-        getConnection(getVariable("connection.room.id")).send(#room, "CLOSE_UIMAKOPPI")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "go":
         me.closePukukoppi()
         tTempDelim = the itemDelimiter
@@ -240,14 +256,14 @@ on eventProcPukukoppi me, tEvent, tSprID, tParam
         tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
-        tswimsuit = "ph_figure=ch=" & pSwimSuitModel & "/" & tColor
-        getConnection(getVariable("connection.room.id")).send(#room, "UPDATE" && tswimsuit)
-        getConnection(getVariable("connection.room.id")).send(#room, "CLOSE_UIMAKOPPI")
+        tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", tswimsuit)
+        getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "dew":
-        getConnection(getVariable("connection.room.id")).send(#room, "UPDATE" && "ph_figure=")
-        getConnection(getVariable("connection.room.id")).send(#room, "CHANGESHRT")
-        getConnection(getVariable("connection.info.id")).send(#room, "REFRESHFIGURE")
-        getConnection(getVariable("connection.room.id")).send(#room, "CLOSE_UIMAKOPPI")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("CHANGESHRT")
+        getConnection(getVariable("connection.info.id")).send("REFRESHFIGURE")
+        getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "prev":
         me.changeSwimSuitColor("ch", -1)
       "next":
@@ -267,9 +283,9 @@ on eventProcDew me, tEvent, tSprID, tParam
         end if
         if tObj.pClass = "pelle" then
           if tObj.isSwimming() then
-            getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && 12 && 11)
+            getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: 12, #short: 11])
           else
-            getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && 11 && 11)
+            getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: 11, #short: 11])
           end if
         end if
       "ticket_box":
@@ -293,7 +309,7 @@ on eventProcTickets me, tEvent, tSprID, tParam, tWndID
       if tSprID = "ph_tickets_buy_button" then
         tUserName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
         if connectionExists(getVariable("connection.info.id")) then
-          getConnection(getVariable("connection.info.id")).send(#info, "BTCKS /" & tUserName)
+          getConnection(getVariable("connection.info.id")).send("BTCKS", tUserName)
         end if
         if windowExists(pTicketWndID) then
           return removeWindow(pTicketWndID)

@@ -12,9 +12,12 @@ on prepare me, tdata
 end
 
 on select me
+  if me.pSprList.count < 2 then
+    return 0
+  end if
   if rollover(me.pSprList[2]) then
     if the doubleClick then
-      tUserObj = getThread(#room).getComponent().getUserObject(getObject(#session).get("user_name"))
+      tUserObj = getThread(#room).getComponent().getOwnUser()
       if not tUserObj then
         return 1
       end if
@@ -23,19 +26,19 @@ on select me
           repeat with tY = me.pLocY - 1 to me.pLocY + 1
             if tY = me.pLocY or tX = me.pLocX then
               if getThread(#room).getInterface().getGeometry().emptyTile(tX, tY) then
-                getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && tX && tY)
+                getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: tX, #move: tY])
                 return 1
               end if
             end if
           end repeat
         end repeat
       else
-        getThread(#room).getComponent().getRoomConnection().send(#room, "THROW_DICE /" & me.getID())
+        getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
       end if
     end if
   else
     if rollover(me.pSprList[1]) and the doubleClick then
-      getThread(#room).getComponent().getRoomConnection().send(#room, "DICE_OFF /" & me.getID())
+      getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
       return 1
     end if
   end if

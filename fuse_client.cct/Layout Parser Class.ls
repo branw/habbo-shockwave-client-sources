@@ -71,6 +71,7 @@ on parse_window me, tFieldName
     end if
     tElements[tSymbol].add(tElem)
   end repeat
+  tResMngr = getResourceManager()
   repeat with tElem in tLayDefinition[#elements]
     if stringp(tElem[#txtColor]) then
       tElem[#txtColor] = rgb(tElem[#txtColor])
@@ -88,7 +89,6 @@ on parse_window me, tFieldName
     tElem[#bgColor] = rgb(tElem[#bgColor])
     tPalette = tElem[#palette]
     if stringp(tPalette) then
-      tResMngr = getResourceManager()
       if not tResMngr.exists(tPalette && "Duplicate") then
         tPalMemNum = tResMngr.getmemnum(tPalette)
         if tPalMemNum > 0 then
@@ -157,6 +157,12 @@ on parse_window me, tFieldName
           tElem[#scaleV] = #scale
         #moveVstrechH:
           tElem[#scaleH] = #scale
+          tElem[#scaleV] = #move
+        #moveHcenterV:
+          tElem[#scaleH] = #move
+          tElem[#scaleV] = #center
+        #moveVcenterH:
+          tElem[#scaleH] = #center
           tElem[#scaleV] = #move
       end case
       tElem.deleteProp(#strech)

@@ -347,7 +347,15 @@ on animate me
   if not pAnimation then
     return EMPTY
   end if
-  tdir = me.pFlipList[pDirection + 1] + pAnimation[#OffD][pAnimFrame]
+  tdir = pDirection + pAnimation[#OffD][pAnimFrame]
+  if tdir > 7 then
+    tdir = tdir - tdir mod 7
+  else
+    if tdir < 0 then
+      tdir = 7 + tdir + 1
+    end if
+  end if
+  tdir = me.pFlipList[tdir + 1]
   pXFix = pAnimation[#OffX][pAnimFrame]
   pYFix = pAnimation[#OffY][pAnimFrame]
   tMemName = me.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & pPart & "_" & pmodel & "_" & tdir & "_" & pAnimation[#frm][pAnimFrame]

@@ -6,7 +6,7 @@ on construct me
 end
 
 on deconstruct me
-  pOpenGameProps = VOID
+  pOpenGameProps = [:]
   return 1
 end
 
@@ -20,7 +20,7 @@ on sendGameOpen me
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && pOpenGameProps[#id] && "OPEN")
+  getConnection(getVariable("connection.room.id")).send("IIM", pOpenGameProps[#id] && "OPEN")
   return 1
 end
 
@@ -34,7 +34,7 @@ on sendGameClose me
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && pOpenGameProps[#id] && "CLOSE")
+  getConnection(getVariable("connection.room.id")).send("IIM", pOpenGameProps[#id] && "CLOSE")
   pOpenGameProps = [:]
   return 1
 end
@@ -58,6 +58,10 @@ on openGameBoard me, tMsg
       if me.sendGameOpen() then
         me.openBattleShip(pOpenGameProps)
       end if
+    "poker":
+      if me.sendGameOpen() then
+        me.openPoker(pOpenGameProps)
+      end if
     otherwise:
       error(me, "Unknown game:" && pOpenGameProps[#name], #openGameBoard)
   end case
@@ -72,6 +76,8 @@ on closeGameBoard me, tMsg
       me.getInterface().closeGame()
     "BattleShip":
       me.getInterface().closeGame()
+    "Poker":
+      me.getInterface().closeGame()
   end case
   me.sendGameClose()
 end
@@ -83,9 +89,9 @@ on processItemMessage me, tMsg
   case pOpenGameProps[#name] of
     "TicTacToe":
       if tMsg[#command] contains "BOARDDATA" then
-        pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
-        pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
-        pOpenGameProps[#gameboard] = tMsg[#data].line[3..tMsg[#data].line.count]
+        pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
+        pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
+        pOpenGameProps[#gameboard] = tMsg[#Data].line[3..tMsg[#Data].line.count]
         if pOpenGameProps[#bothTypeChosen] then
           me.getInterface().updateTicTacToe(pOpenGameProps)
         else
@@ -100,11 +106,11 @@ on processItemMessage me, tMsg
         else
           if tMsg[#command] contains "OPPONENTS" then
             me.restartTicTacToe()
-            pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
-            pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
+            pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
+            pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
             me.getInterface().selectedTypeTicTacToe(pOpenGameProps[#player1], pOpenGameProps)
             me.getInterface().selectedTypeTicTacToe(pOpenGameProps[#player2], pOpenGameProps)
-            if tMsg[#data].line[1].length > 3 and tMsg[#data].line[2].length > 3 then
+            if tMsg[#Data].line[1].length > 3 and tMsg[#Data].line[2].length > 3 then
               pOpenGameProps[#bothTypeChosen] = 1
             else
               pOpenGameProps[#bothTypeChosen] = 0
@@ -125,9 +131,9 @@ on processItemMessage me, tMsg
           if voidp(pOpenGameProps[#mySelectedType]) then
             return 0
           end if
-          pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
-          pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
-          pOpenGameProps[#gameboard] = tMsg[#data].line[3..tMsg[#data].line.count]
+          pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
+          pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
+          pOpenGameProps[#gameboard] = tMsg[#Data].line[3..tMsg[#Data].line.count]
           me.getInterface().updateChess(pOpenGameProps)
         else
           if tMsg[#command] contains "TYPERESERVED" then
@@ -157,7 +163,7 @@ on processItemMessage me, tMsg
             return 0
           end if
         end if
-        if tMsg[#data].char[1] = pOpenGameProps[#myTurnNum] then
+        if tMsg[#Data].char[1] = pOpenGameProps[#myTurnNum] then
           pOpenGameProps[#myturn] = 1
           me.getInterface().battleShipMyTurn()
           if not voidp(pOpenGameProps[#player1Data]) then
@@ -172,8 +178,8 @@ on processItemMessage me, tMsg
         end if
       else
         if tMsg[#command] contains "OPPONENTS" then
-          repeat with i = 1 to tMsg[#data].line.count
-            tLine = tMsg[#data].line[i]
+          repeat with i = 1 to tMsg[#Data].line.count
+            tLine = tMsg[#Data].line[i]
             if tLine.word[2] = getObject(#session).get("user_name") then
               pOpenGameProps[#myTurnNum] = tLine.word[1]
             end if
@@ -209,12 +215,12 @@ on processItemMessage me, tMsg
                   me.getInterface().battleShipShowStatusText(tText)
                 else
                   if tMsg[#command] contains "GAMEEND" then
-                    pOpenGameProps[#winner] = tMsg[#data].word[1]
+                    pOpenGameProps[#winner] = tMsg[#Data].word[1]
                     pOpenGameProps[#gameEnd] = 1
                   else
                     if tMsg[#command] contains "SITUATION" then
-                      tOpponent1Data = tMsg[#data].line[2]
-                      tOpponent2Data = tMsg[#data].line[4]
+                      tOpponent1Data = tMsg[#Data].line[2]
+                      tOpponent2Data = tMsg[#Data].line[4]
                       pOpenGameProps[#player1Data] = []
                       pOpenGameProps[#player2Data] = []
                       repeat with j in [1, 2]
@@ -260,6 +266,19 @@ on processItemMessage me, tMsg
           end if
         end if
       end if
+    "Poker":
+      case 1 of
+        tMsg[#command] contains "YOURCARDS":
+          return me.getInterface().PokerListMyCards(tMsg[#command])
+        tMsg[#command] contains "OPPONENTS":
+          return me.getInterface().PokerHandleOpponents(tMsg[#Data])
+        tMsg[#command] contains "CHANGED":
+          return me.getInterface().pokerChangeCards(tMsg[#Data])
+        tMsg[#command] contains "REVEALCARDS":
+          return me.getInterface().PokerRevealCards(tMsg[#Data])
+        tMsg[#command] contains "OPPONENT_LOGOUT":
+          return me.getInterface().PokerOpponentLeaves(tMsg[#Data].item[1])
+      end case
     otherwise:
       put ">>>>>>>>>>", tMsg
   end case
@@ -269,15 +288,15 @@ on openTicTacToe me, tProps
   me.getInterface().openGameWindow("TicTacToe", tProps)
 end
 
-on chooseSideTicTacToe me, tSide
+on chooseSideTicTacToe me, tside
   tid = pOpenGameProps[#id]
-  if voidp(tid) or voidp(tSide) then
+  if voidp(tid) or voidp(tside) then
     return 0
   end if
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "CHOOSETYPE" && tSide)
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "CHOOSETYPE" && tside)
 end
 
 on makeMoveTicTacToe me, tX, tY
@@ -291,7 +310,7 @@ on makeMoveTicTacToe me, tX, tY
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "SETSECTOR" && pOpenGameProps[#mySelectedType] && tX && tY)
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "SETSECTOR" && pOpenGameProps[#mySelectedType] && tX && tY)
 end
 
 on restartTicTacToe me
@@ -302,7 +321,7 @@ on restartTicTacToe me
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "RESTART")
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "RESTART")
 end
 
 on openChess me, tProps
@@ -317,7 +336,7 @@ on makeMoveChess me, tMove
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "MOVEPIECE" && tMove)
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "MOVEPIECE" && tMove)
 end
 
 on sendChessByEmail me
@@ -328,7 +347,7 @@ on sendChessByEmail me
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "SENDHISTORY")
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "SENDHISTORY")
 end
 
 on restartChess me
@@ -340,7 +359,7 @@ on restartChess me
     return 0
   end if
   me.getInterface().startChess(pOpenGameProps)
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "RESTART")
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "RESTART")
 end
 
 on notRestartChess me
@@ -371,7 +390,7 @@ on sendBattleShipPlaceShip me, tMove
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "PLACESHIP" && tMove)
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "PLACESHIP" && tMove)
 end
 
 on restartBattleShip me
@@ -405,6 +424,47 @@ on sendBattleShipShoot me, tX, tY
       return 0
     end if
   end if
-  getConnection(getVariable("connection.room.id")).send(#room, "IIM" && tid && "SHOOT" && tX && tY)
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "SHOOT" && tX && tY)
   return 1
+end
+
+on openPoker me, tProps
+  me.getInterface().openGameWindow("Poker", tProps)
+end
+
+on startPoker me
+  tid = pOpenGameProps[#id]
+  if voidp(tid) then
+    return 0
+  end if
+  if not connectionExists(getVariable("connection.room.id")) then
+    return 0
+  end if
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "STARTOVER")
+end
+
+on restartPoker me
+  tid = pOpenGameProps[#id]
+  if voidp(tid) then
+    return 0
+  end if
+  if not connectionExists(getVariable("connection.room.id")) then
+    return 0
+  end if
+  tTemp = [:]
+  tTemp[#id] = pOpenGameProps[#id]
+  tTemp[#name] = pOpenGameProps[#name]
+  me.sendGameClose()
+  me.openGameBoard(tTemp)
+end
+
+on pokerChangeCards me, tCards
+  tid = pOpenGameProps[#id]
+  if voidp(tid) then
+    return 0
+  end if
+  if not connectionExists(getVariable("connection.room.id")) then
+    return 0
+  end if
+  getConnection(getVariable("connection.room.id")).send("IIM", tid && "CHANGE" && tCards)
 end

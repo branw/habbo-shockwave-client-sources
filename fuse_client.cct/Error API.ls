@@ -41,10 +41,6 @@ on setDebugLevel tLevel
   return getErrorManager().setDebugLevel(tLevel)
 end
 
-on setErrorEmailAddress tAddress
-  return getErrorManager().setErrorEmailAddress(tAddress)
-end
-
 on printErrors
   return getErrorManager().print()
 end

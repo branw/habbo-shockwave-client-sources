@@ -2,14 +2,17 @@ property pChanges, pActive, pTvFrame, pChannelNum
 
 on prepare me, tdata
   pTvFrame = 0
-  if tdata["CHANNEL"] = "ON" then
+  if integerp(integer(tdata["CHANNEL"])) then
     pChanges = 1
     pActive = 1
     pChannelNum = integer(tdata["CHANNEL"])
+    if ([1, 2, 3]).getOne(pChannelNum) = 0 then
+      pChannelNum = 1
+    end if
   else
     pChanges = 0
     pActive = 0
-    pChannel = 1
+    pChannelNum = 1
   end if
   return 1
 end
@@ -73,12 +76,12 @@ end
 on setOn me
   pActive = 1
   pChannelNum = random(3)
-  getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "CHANNEL" & "/" & pChannelNum)
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "CHANNEL" & "/" & pChannelNum)
 end
 
 on setOff me
   pActive = 0
-  getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "CHANNEL" & "/" & "OFF")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "CHANNEL" & "/" & "OFF")
 end
 
 on select me

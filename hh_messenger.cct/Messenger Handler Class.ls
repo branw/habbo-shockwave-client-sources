@@ -6,6 +6,10 @@ on deconstruct me
   return me.regMsgList(0)
 end
 
+on handle_ok me, tMsg
+  tMsg.connection.send("MESSENGER_INIT")
+end
+
 on handle_messengerready me, tMsg
   me.getComponent().receive_MessengerReady("MESSENGERREADY")
 end
@@ -15,9 +19,9 @@ on handle_buddylist me, tMsg
   tBuddies = [:]
   tDelim = the itemDelimiter
   the itemDelimiter = ","
-  i = 2
-  repeat while i <= tMsg.message.line.count
-    tLine = tMsg.message.line[i]
+  i = 1
+  repeat while i <= tMsg.content.line.count
+    tLine = tMsg.content.line[i]
     if length(tLine) > 4 then
       the itemDelimiter = "/"
       tSupp = tLine.item[tLine.item.count]
@@ -27,22 +31,21 @@ on handle_buddylist me, tMsg
       tProps[#name] = tLine.word[2]
       tProps[#msg] = tLine.item[1].word[3..tLine.item[1].word.count]
       tProps[#emailOk] = tSupp contains "email_ok"
-      tProps[#smsOk] = tSupp contains "sms_ok"
       tProps[#msgs] = 0
       tProps[#update] = 1
-      if tLine contains "sex=F" then
+      if tSupp contains "sex=F" or tSupp contains "sex=f" then
         tProps[#sex] = "F"
       else
         tProps[#sex] = "M"
       end if
       the itemDelimiter = TAB
-      tUnit = tMsg.message.line[i + 1].item[1]
+      tUnit = tMsg.content.line[i + 1].item[1]
       if tUnit = "ENTERPRISESERVER" then
         tProps[#unit] = "Messenger"
       else
         tProps[#unit] = tUnit
       end if
-      tProps[#last_access_time] = tMsg.message.line[i + 1].item[2]
+      tProps[#last_access_time] = tMsg.content.line[i + 1].item[2]
       the itemDelimiter = ","
       if length(tUnit) > 2 then
         tMessage.online.add(tLine.word[2])
@@ -70,11 +73,11 @@ on handle_buddylist me, tMsg
   the itemDelimiter = tDelim
   tMsg.setaProp(#content, tMessage)
   case tMsg.getaProp(#subject) of
-    "BLU":
+    17:
       if tMessage.buddies.count > 0 then
         me.getComponent().receive_BuddyList(#update, tMessage)
       end if
-    "A_BD":
+    137:
       me.getComponent().receive_AppendBuddy(tMessage)
     otherwise:
       me.getComponent().receive_BuddyList(#new, tMessage)
@@ -87,12 +90,12 @@ end
 
 on handle_messenger_msg me, tMsg
   tProps = [:]
-  tProps[#id] = tMsg.message.line[2]
-  tProps[#senderID] = tMsg.message.line[3]
-  tProps[#recipients] = tMsg.message.line[4]
-  tProps[#time] = tMsg.message.line[5]
-  tProps[#message] = tMsg.message.line[6..tMsg.message.line.count - 2]
-  tProps[#FigureData] = tMsg.message.line[tMsg.message.line.count - 1]
+  tProps[#id] = tMsg.content.line[1]
+  tProps[#senderID] = tMsg.content.line[2]
+  tProps[#recipients] = tMsg.content.line[3]
+  tProps[#time] = tMsg.content.line[4]
+  tProps[#message] = tMsg.content.line[5..tMsg.content.line.count - 1]
+  tProps[#FigureData] = tMsg.content.line[tMsg.content.line.count]
   me.getComponent().receive_Message(tProps)
 end
 
@@ -104,13 +107,36 @@ on handle_nosuchuser me, tMsg
   end case
 end
 
-on handle_messengersmsaccount me, tMsg
-  me.getComponent().receive_SmsAccount(tMsg.getaProp(#content))
+on handle_memberinfo me, tMsg
+  case tMsg.content.line[1].word[1] of
+    "MESSENGER":
+      tProps = [:]
+      tStr = tMsg.getaProp(#content)
+      tStr = tStr.line[2..tStr.line.count]
+      tProps[#name] = tStr.line[1]
+      tProps[#customText] = QUOTE & tStr.line[2] & QUOTE
+      tProps[#lastAccess] = tStr.line[3]
+      tProps[#location] = tStr.line[4]
+      tProps[#FigureData] = tStr.line[5]
+      tProps[#sex] = tStr.line[6]
+      if tProps[#sex] contains "f" or tProps[#sex] contains "F" then
+        tProps[#sex] = "F"
+      else
+        tProps[#sex] = "M"
+      end if
+      if tProps[#location] = "ENTERPRISESERVER" then
+        tProps[#location] = "messenger"
+      end if
+      if objectExists("Figure_System") then
+        tProps[#FigureData] = getObject("Figure_System").parseFigure(tProps[#FigureData], tProps[#sex], "user")
+      end if
+      me.getComponent().receive_UserFound(tProps)
+  end case
 end
 
 on handle_buddyaddrequests me, tMsg
   tProps = [:]
-  tStr = tMsg.message.line[2..tMsg.message.line.count]
+  tStr = tMsg.content.line[1..tMsg.content.line.count]
   tDelim = the itemDelimiter
   the itemDelimiter = "/"
   tProps[#name] = tStr.word[1].item[2]
@@ -120,31 +146,6 @@ end
 
 on handle_mypersistentmsg me, tMsg
   me.getComponent().receive_PersistentMsg(tMsg.getaProp(#content))
-end
-
-on handle_userprofile me, tMsg
-  tProfile = [:]
-  tDelim = the itemDelimiter
-  the itemDelimiter = TAB
-  repeat with i = 2 to tMsg.message.line.count
-    tLine = tMsg.message.line[i]
-    if tLine.item.count > 3 then
-      tDataID = integer(tLine.item[1])
-      tGroupID = integer(tLine.item[2])
-      tText = tLine.item[3]
-      tValue = integer(tLine.item[4])
-      if voidp(tProfile.getaProp(tGroupID)) then
-        tProfile.setaProp(tGroupID, [#name: EMPTY, #open: 0, #id: tGroupID, #group: tGroupID, #data: [:]])
-      end if
-      if tGroupID = tDataID then
-        tProfile.getaProp(tGroupID).name = tText
-        next repeat
-      end if
-      tProfile.getaProp(tGroupID).data.setaProp(tDataID, [#name: tText, #value: tValue, #id: tDataID, #group: tGroupID])
-    end if
-  end repeat
-  the itemDelimiter = tDelim
-  me.getComponent().receive_UserProfile(tProfile)
 end
 
 on handle_campaign_msg me, tMsg
@@ -161,29 +162,40 @@ on handle_campaign_msg me, tMsg
   me.getComponent().receive_CampaignMsg(tdata)
 end
 
-on handle_system_msg me, tMsg
-  put "TODO:" & tMsg.getaProp(#message)
-end
-
 on regMsgList me, tBool
-  tList = [:]
-  tList["MESSENGERREADY"] = #handle_messengerready
-  tList["BUDDYLIST"] = #handle_buddylist
-  tList["BLU"] = #handle_buddylist
-  tList["A_BD"] = #handle_buddylist
-  tList["R_BD"] = #handle_remove_buddy
-  tList["MESSENGER_MSG"] = #handle_messenger_msg
-  tList["MYPERSISTENTMSG"] = #handle_mypersistentmsg
-  tList["MESSENGERSMSACCOUNT"] = #handle_messengersmsaccount
-  tList["BUDDYADDREQUESTS"] = #handle_buddyaddrequests
-  tList["NOSUCHUSER"] = #handle_nosuchuser
-  tList["USERPROFILE"] = #handle_userprofile
-  tList["CAMPAIGN_MSG"] = #handle_campaign_msg
-  tList["MESSENGER_SYSTEMMSG"] = #handle_system_msg
-  tList["SYSTEMMSG"] = #handle_system_msg
+  tMsgs = [:]
+  tMsgs.setaProp(3, #handle_ok)
+  tMsgs.setaProp(12, #handle_buddylist)
+  tMsgs.setaProp(13, #handle_mypersistentmsg)
+  tMsgs.setaProp(15, #handle_messengerready)
+  tMsgs.setaProp(17, #handle_buddylist)
+  tMsgs.setaProp(128, #handle_memberinfo)
+  tMsgs.setaProp(132, #handle_buddyaddrequests)
+  tMsgs.setaProp(133, #handle_campaign_msg)
+  tMsgs.setaProp(134, #handle_messenger_msg)
+  tMsgs.setaProp(137, #handle_buddylist)
+  tMsgs.setaProp(138, #handle_remove_buddy)
+  tMsgs.setaProp(147, #handle_nosuchuser)
+  tCmds = [:]
+  tCmds.setaProp("MESSENGER_INIT", 12)
+  tCmds.setaProp("MESSENGER_SENDUPDATE", 15)
+  tCmds.setaProp("MESSENGER_C_CLICK", 30)
+  tCmds.setaProp("MESSENGER_C_READ", 31)
+  tCmds.setaProp("MESSENGER_MARKREAD", 32)
+  tCmds.setaProp("MESSENGER_SENDMSG", 33)
+  tCmds.setaProp("MESSENGER_SENDEMAILMSG", 34)
+  tCmds.setaProp("MESSENGER_ASSIGNPERSMSG", 36)
+  tCmds.setaProp("MESSENGER_ACCEPTBUDDY", 37)
+  tCmds.setaProp("MESSENGER_DECLINEBUDDY", 38)
+  tCmds.setaProp("MESSENGER_REQUESTBUDDY", 39)
+  tCmds.setaProp("MESSENGER_REMOVEBUDDY", 40)
+  tCmds.setaProp("FINDUSER", 41)
   if tBool then
-    return registerListener(getVariable("connection.info.id"), me.getID(), tList)
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
   else
-    return unregisterListener(getVariable("connection.info.id"), me.getID(), tList)
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
   end if
+  return 1
 end

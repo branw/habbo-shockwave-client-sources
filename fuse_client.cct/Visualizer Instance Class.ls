@@ -296,6 +296,7 @@ on buildVisual me, tLayout
     end if
   end if
   tLayout = tLayout[#elements]
+  tSpriteList = []
   repeat with i = 1 to tLayout.count
     tMemNum = getResourceManager().getmemnum(tLayout[i][#member])
     if tMemNum < 1 then
@@ -304,6 +305,13 @@ on buildVisual me, tLayout
     end if
     tElem = tLayout[i]
     tSpr = sprite(getSpriteManager().reserveSprite(me.getID()))
+    if tSpr.spriteNum < 1 then
+      repeat with t_rSpr in tSpriteList
+        releaseSprite(t_rSpr.spriteNum, me.getID())
+      end repeat
+      tSpriteList = [:]
+      return error(me, "Failed to build visual. System out of sprites!", #buildVisual)
+    end if
     tSpr.castNum = tMemNum
     tSpr.ink = tElem[#ink]
     tSpr.locH = tElem[#locH] + pLocX
@@ -355,7 +363,7 @@ on buildVisual me, tLayout
       if tElem[#Active] = 1 or voidp(tElem[#Active]) and voidp(tElem[#type]) then
         getSpriteManager().setEventBroker(tSpr.spriteNum, tElem[#id])
         if not voidp(tElem[#cursor]) then
-          tSpr.setCursor(tElem[#cursor])
+          tSpr.setcursor(tElem[#cursor])
         end if
         if not voidp(tElem[#link]) then
           tSpr.setLink(tElem[#link])
@@ -364,6 +372,9 @@ on buildVisual me, tLayout
       pActSprList[tLayout[i][#id]] = tSpr
     end if
     pSpriteData[i] = [:]
+    tSpriteList.append(tSpr)
+  end repeat
+  repeat with tSpr in tSpriteList
     pSpriteList.append(tSpr)
   end repeat
   return me.refresh()

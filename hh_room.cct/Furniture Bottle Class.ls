@@ -1,6 +1,13 @@
 property pChanges, pRolling, pRollDir, pRollingDirection, pRollingStartTime, pRollAnimDir
 
 on prepare me, tdata
+  if tdata.findPos("DIR") then
+    me.pDirection[1] = integer(tdata["DIR"])
+    me.pDirection[2] = integer(tdata["DIR"])
+    if me.pDirection[1] < 0 or me.pDirection > 7 then
+      me.pDirection[1] = 0
+    end if
+  end if
   pChanges = 0
   pRolling = 0
   pRollDir = me.pDirection[1]
@@ -52,6 +59,9 @@ on roll me
 end
 
 on setDir me, tNewDir
+  if tNewDir < 0 or tNewDir > 7 then
+    tNewDir = 0
+  end if
   pRollDir = tNewDir
   if pRolling then
     pRollingStartTime = the milliSeconds
@@ -67,7 +77,7 @@ end
 on select me
   if the doubleClick then
     tNewDir = random(8) - 1
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.id & "/" & "DIR" & "/" & tNewDir)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "DIR" & "/" & tNewDir)
   end if
   return 1
 end

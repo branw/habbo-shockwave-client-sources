@@ -19,28 +19,20 @@ on construct me
   pFirstInit = 1
   registerMessage(#userlogin, me.getID(), #showEntryBar)
   registerMessage(#messenger_ready, me.getID(), #activateIcon)
-  registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
-  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
-  registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
-  registerMessage(#updateFigureData, me.getID(), #updateEntryBar)
-  registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#messenger_ready, me.getID())
-  unregisterMessage(#updateCreditCount, me.getID())
-  unregisterMessage(#updateMessageCount, me.getID())
-  unregisterMessage(#updateBuddyrequestCount, me.getID())
-  unregisterMessage(#updateFigureData, me.getID())
-  unregisterMessage(#updateClubStatus, me.getID())
   return me.hideAll()
 end
 
 on showHotel me
   if not visualizerExists(pEntryVisual) then
-    createVisualizer(pEntryVisual, "entry_uk.visual")
+    if not createVisualizer(pEntryVisual, "entry.visual") then
+      return 0
+    end if
     tVisObj = getVisualizer(pEntryVisual)
     pSignSprList = []
     pSignSprList.add(tVisObj.getSprById("entry_sign"))
@@ -69,18 +61,18 @@ on showHotel me
       tSpr = tVisObj.getSprById("cloud" & i)
       if tSpr <> 0 then
         tObj = createObject(#temp, "Entry Cloud Class")
-        tObj.define(tSpr)
+        tObj.define(tSpr, i)
         pItemObjList.add(tObj)
       else
         exit repeat
       end if
       i = i + 1
     end repeat
-    me.remAnimTask(#closeView)
-    pViewOpenTime = the milliSeconds + 500
-    receivePrepare(me.getID())
-    me.delay(500, #addAnimTask, #openView)
   end if
+  me.remAnimTask(#closeView)
+  pViewOpenTime = the milliSeconds + 500
+  receivePrepare(me.getID())
+  me.delay(500, #addAnimTask, #openView)
   return 1
 end
 
@@ -98,17 +90,29 @@ end
 
 on showEntryBar me
   if not windowExists(pBottomBar) then
-    createWindow(pBottomBar, "entry_bar.window", 0, 535)
+    if not createWindow(pBottomBar, "entry_bar.window", 0, 535) then
+      return 0
+    end if
     tWndObj = getWindow(pBottomBar)
     tWndObj.lock(1)
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcEntryBar, me.getID(), #mouseUp)
     me.addAnimTask(#animEntryBar)
   end if
+  registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
+  registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
+  registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
+  registerMessage(#updateFigureData, me.getID(), #updateEntryBar)
+  registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
   return me.updateEntryBar()
 end
 
 on hideEntrybar me
+  unregisterMessage(#updateCreditCount, me.getID())
+  unregisterMessage(#updateMessageCount, me.getID())
+  unregisterMessage(#updateBuddyrequestCount, me.getID())
+  unregisterMessage(#updateFigureData, me.getID())
+  unregisterMessage(#updateClubStatus, me.getID())
   if timeoutExists(#flash_messenger_icon) then
     removeTimeout(#flash_messenger_icon)
   end if
@@ -174,10 +178,10 @@ on updateEntryBar me
     pFirstInit = 0
   end if
   me.updateCreditCount(tCrds)
-  me.updateMessageCount(0)
-  me.updateBuddyrequestCount(0)
-  me.createMyHeadIcon()
+  executeMessage(#messageUpdateRequest)
+  executeMessage(#buddyUpdateRequest)
   me.updateClubStatus(tClub)
+  me.createMyHeadIcon()
   return 1
 end
 
@@ -261,7 +265,11 @@ on animEntryBar me
     return me.remAnimTask(#animEntryBar)
   end if
   tWndObj = getWindow(pBottomBar)
-  tWndObj.moveBy(0, -5)
+  if the platform contains "windows" then
+    tWndObj.moveBy(0, -5)
+  else
+    tWndObj.moveTo(0, 485)
+  end if
   if tWndObj.getProperty(#locY) <= 485 then
     me.remAnimTask(#animEntryBar)
   end if
@@ -282,6 +290,12 @@ end
 on updateClubStatus me, tStatus
   tWndObj = getWindow(pBottomBar)
   if tWndObj <> 0 then
+    if not tWndObj.elementExists("club_bottombar_text1") then
+      return 0
+    end if
+    if not tWndObj.elementExists("club_bottombar_text2") then
+      return 0
+    end if
     if listp(tStatus) then
       case tStatus[#status] of
         "active":
@@ -311,16 +325,14 @@ on updateMessageCount me, tCount
     tFont = tElem.getFont()
     if pNewMsgCount > 0 then
       tFont.setaProp(#fontStyle, [#underline])
-      tElem.getProperty(#sprite).setCursor("cursor.finger")
+      tElem.setProperty(#cursor, "cursor.finger")
     else
       tFont.setaProp(#fontStyle, [#plain])
-      tElem.getProperty(#sprite).setCursor(0)
+      tElem.setProperty(#cursor, 0)
     end if
     tElem.setFont(tFont)
     tElem.setText(tText)
-    if pNewMsgCount > 0 then
-      me.flashMessengerIcon()
-    end if
+    me.flashMessengerIcon()
   end if
 end
 
@@ -334,16 +346,14 @@ on updateBuddyrequestCount me, tCount
     tFont = tElem.getFont()
     if pNewBuddyRequests > 0 then
       tFont.setaProp(#fontStyle, [#underline])
-      tElem.getProperty(#sprite).setCursor("cursor.finger")
+      tElem.setProperty(#cursor, "cursor.finger")
     else
       tFont.setaProp(#fontStyle, [#plain])
-      tElem.getProperty(#sprite).setCursor(0)
+      tElem.setProperty(#cursor, 0)
     end if
     tElem.setFont(tFont)
     tElem.setText(tText)
-    if pNewBuddyRequests > 0 then
-      me.flashMessengerIcon()
-    end if
+    me.flashMessengerIcon()
   end if
 end
 
@@ -359,13 +369,22 @@ on flashMessengerIcon me
     end if
     if pNewMsgCount = 0 and pNewBuddyRequests = 0 then
       tmember = "mes_dark_icon"
-      removeTimeout(#flash_messenger_icon)
+      if timeoutExists(#flash_messenger_icon) then
+        removeTimeout(#flash_messenger_icon)
+      end if
     else
-      if not timeoutExists(#flash_messenger_icon) then
-        createTimeout(#flash_messenger_icon, 500, #flashMessengerIcon, me.getID(), VOID, 0)
+      if pNewMsgCount > 0 then
+        if not timeoutExists(#flash_messenger_icon) then
+          createTimeout(#flash_messenger_icon, 500, #flashMessengerIcon, me.getID(), VOID, 0)
+        end if
+      else
+        tmember = "mes_lite_icon"
+        if timeoutExists(#flash_messenger_icon) then
+          removeTimeout(#flash_messenger_icon)
+        end if
       end if
     end if
-    tWndObj.getElement("messenger_icon_image").getProperty(#sprite).setMember(member(getmemnum(tmember)))
+    tWndObj.getElement("messenger_icon_image").setProperty(#image, member(getmemnum(tmember)).image.duplicate())
   end if
 end
 
@@ -401,8 +420,8 @@ on deActivateAllIcons me
 end
 
 on createMyHeadIcon me
-  if threadExists(#registration) then
-    getThread(#registration).getComponent().createHumanPartPreview(pBottomBar, "ownhabbo_icon_image", ["hd", "fc", "ey", "hr"])
+  if objectExists("Figure_Preview") then
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBar, "ownhabbo_icon_image", ["hd", "fc", "ey", "hr"])
   end if
 end
 

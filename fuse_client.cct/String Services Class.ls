@@ -50,24 +50,34 @@ on convertToHigherCase me, tString
   return tValueStr
 end
 
-on convertSpecialChars me, tString
-  repeat with i = count(pConvList) down to 1
-    tChunkA = pConvList.getPropAt(i)
-    tChunkB = pConvList[tChunkA]
-    tTmpStr = tString
-    tNewStr = EMPTY
-    repeat while tTmpStr contains tChunkA
-      tPos = offset(tChunkA, tTmpStr) - 1
-      if tPos > 0 then
-        put tTmpStr.char[1..tPos] after tNewStr
+on convertSpecialChars me, tString, tDirection
+  tRetString = EMPTY
+  tLength = tString.length
+  if voidp(tDirection) then
+    tDirection = 0
+  end if
+  if tDirection = 0 then
+    repeat with pos = 1 to tLength
+      tChar = char pos of tString
+      tConv = pConvList[tChar]
+      if not voidp(tConv) then
+        put tConv after tRetString
+        next repeat
       end if
-      put tChunkB after tNewStr
-      delete (tTmpStr).char[1..tPos + length(tChunkA)]
+      put tChar after tRetString
     end repeat
-    put tTmpStr after tNewStr
-    tString = tNewStr
-  end repeat
-  return tString
+  else
+    repeat with pos = 1 to tLength
+      tChar = char pos of tString
+      tPos = pConvList.getPos(tChar)
+      if tPos > 0 then
+        put pConvList.getPropAt(tPos) after tRetString
+        next repeat
+      end if
+      put tChar after tRetString
+    end repeat
+  end if
+  return tRetString
 end
 
 on convertIntToHex me, tInt

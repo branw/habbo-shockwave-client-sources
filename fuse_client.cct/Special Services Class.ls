@@ -1,4 +1,4 @@
-property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pDecoder
+property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pUniqueSeed, pDecoder
 
 on construct me
   pCatchFlag = 0
@@ -8,6 +8,7 @@ on construct me
   pToolTipSpr = VOID
   pCurrCursor = 0
   pLastCursor = 0
+  pUniqueSeed = 0
   pDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
   pDecoder.setKey("sulake1Unique2Key3Generator")
   return 1
@@ -76,7 +77,7 @@ on renderToolTip me, tNextID
   end if
 end
 
-on setCursor me, ttype
+on setcursor me, ttype
   case ttype of
     VOID:
       ttype = 0
@@ -123,18 +124,19 @@ on showLoadingBar me, tLoadID, tProps
 end
 
 on getUniqueID me
-  return pDecoder.encipher(string(the milliSeconds))
+  pUniqueSeed = pUniqueSeed + 1
+  return "uid:" & pUniqueSeed & ":" & the milliSeconds
 end
 
 on getMachineID me
-  me.try()
   tMachineID = getPref(getVariable("pref.value.id"))
   if voidp(tMachineID) then
-    tMachineID = me.getUniqueID()
+    tMachineID = pDecoder.encipher(string(the milliSeconds))
     setPref(getVariable("pref.value.id"), tMachineID)
   end if
-  if me.catch() then
-    getErrorManager().SendMailAlert("Failed #setPref!", tMachineID, #getMachineID)
+  if tMachineID.char[1..4] = "uid:" then
+    tMachineID = pDecoder.encipher(string(the milliSeconds))
+    setPref(getVariable("pref.value.id"), tMachineID)
   end if
   return tMachineID
 end

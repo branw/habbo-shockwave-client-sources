@@ -1,4 +1,4 @@
-property pWindowID, pMode, pCamMember, pCamShotImage, pDisplaymem, pZoomLevel, pNextHNoiseSetup, pNextVNoiseSetup, pHNoiseCenter, pVNoiseCenter, pDialogId, pHandItemData, pCS
+property pWindowID, pmode, pCamMember, pCamShotImage, pDisplaymem, pZoomLevel, pNextHNoiseSetup, pNextVNoiseSetup, pHNoiseCenter, pVNoiseCenter, pDialogId, pHandItemData
 
 on construct me
   pCamMember = member(createMember("__cam_display_mem", #bitmap))
@@ -33,13 +33,13 @@ on open me
   tWndObj.registerProcedure(#eventProcCameraMouseDown, me.getID(), #mouseDown)
   tWndObj.registerProcedure(#eventProcCameraMouseEnter, me.getID(), #mouseEnter)
   tWndObj.registerProcedure(#eventProcCameraMouseLeave, me.getID(), #mouseLeave)
-  pMode = #live
+  pmode = #live
   pDisplaymem = tWndObj.getElement("cam_display").getProperty(#buffer)
   me.setCameraToLiveMode()
   me.setButtonHilites()
   me.updateFilm()
   tWndObj.getElement("cam_savetxt").setProperty(#visible, 0)
-  getConnection(getVariable("connection.room.id")).send(#room, "CarryItem cam")
+  getConnection(getVariable("connection.room.id")).send("CARRYITEM", "20")
   registerMessage(#leaveRoom, me.getID(), #close)
   registerMessage(#changeRoom, me.getID(), #close)
   return receiveUpdate(me.getID())
@@ -47,9 +47,9 @@ end
 
 on close me
   if connectionExists(getVariable("connection.room.id")) then
-    getConnection(getVariable("connection.room.id")).send(#room, "STOP CarryItem")
+    getConnection(getVariable("connection.room.id")).send("STOP", "CarryItem")
   end if
-  pMode = #closed
+  pmode = #closed
   if windowExists(pWindowID) then
     removeWindow(pWindowID)
   end if
@@ -72,10 +72,12 @@ on update me
   if not windowExists(pWindowID) then
     return removeUpdate(me.getID())
   end if
-  if pMode = #live then
+  if pmode = #live then
     tWndObj = getWindow(pWindowID)
     tDispWidth = tWndObj.getElement("cam_display").getProperty(#width)
     tDispHeight = tWndObj.getElement("cam_display").getProperty(#height)
+    tDispLocX = tWndObj.getElement("cam_display").getProperty(#locH)
+    tDispLocY = tWndObj.getElement("cam_display").getProperty(#locV)
     if the milliSeconds - pNextHNoiseSetup > 0 then
       pNextHNoiseSetup = the milliSeconds + random(12000)
       pHNoiseCenter = abs(random(tDispWidth / 2)) + tDispWidth / 4
@@ -84,11 +86,23 @@ on update me
       pNextVNoiseSetup = the milliSeconds + random(12000)
       pVNoiseCenter = abs(random(tDispHeight / 2)) + tDispHeight / 4
     end if
-    tLocX = tWndObj.getElement("cam_display_noise_vertical").getProperty(#locX)
+    tLocX = tWndObj.getElement("cam_display_noise_vertical").getProperty(#locH)
     tLocY = pHNoiseCenter + cos((pNextVNoiseSetup - the milliSeconds) / 10000.0 * 2 * PI) * tDispHeight / 4
+    if tLocY > tDispLocY + tDispHeight then
+      tLocY = tDispLocY + tDispHeight
+    end if
+    if tLocY < tDispLocY then
+      tLocY = tDispLocY
+    end if
     tWndObj.getElement("cam_display_noise_vertical").moveTo(tLocX, tLocY)
     tLocX = pVNoiseCenter + sin((pNextHNoiseSetup - the milliSeconds) / 10000.0 * 2 * PI) * tDispWidth / 4
-    tLocY = tWndObj.getElement("cam_display_noise_horizontal").getProperty(#locY)
+    tLocY = tWndObj.getElement("cam_display_noise_horizontal").getProperty(#locV)
+    if tLocX > tDispLocX + tDispWidth then
+      tLocX = tDispLocX + tDispWidth
+    end if
+    if tLocX < tDispLocX then
+      tLocX = tDispLocX
+    end if
     tWndObj.getElement("cam_display_noise_horizontal").moveTo(tLocX, tLocY)
   end if
 end
@@ -130,10 +144,10 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
     "cam_close":
       me.close()
     "cam_shoot":
-      if pMode <> #live then
+      if pmode <> #live then
         return 
       end if
-      getConnection(getVariable("connection.room.id")).send(#room, "UseItem cam" & TAB & "1500")
+      getConnection(getVariable("connection.room.id")).send("USEITEM", "cam" & TAB & "1500")
       pZoomLevel = 1
       tWndObj.getElement("cam_display").setProperty(#visible, 0)
       tWndObj.getElement("cam_display_noise_horizontal").setProperty(#visible, 0)
@@ -144,6 +158,7 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
         tHandVis.hide()
       end if
       hideWindows()
+      executeMessage(#takingPhoto)
       tWndObj.show()
       updateStage()
       tRect = tWndObj.getElement("cam_display").getProperty(#rect)
@@ -152,13 +167,13 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       pCamShotImage.draw(pCamShotImage.rect.left, pCamShotImage.rect.top, pCamShotImage.rect.right, pCamShotImage.rect.bottom, [#color: rgb(0, 0, 0), #shapeType: #rect])
       pCamMember.image = pCamShotImage
       pCamMember.regPoint = point(0, 0)
-      pCS = me.getComponent().countCS(pCamMember.image)
       getThread(#room).getComponent().getBalloon().showBalloons()
       tHandVis = getThread(#room).getInterface().getContainer().getVisual()
       if tHandVis <> 0 then
         tHandVis.show()
       end if
       showWindows()
+      executeMessage(#photoTaken)
       tDispElem = tWndObj.getElement("cam_display")
       tDispElem.setProperty(#buffer, pCamMember)
       tDispElem.setProperty(#visible, 1)
@@ -167,34 +182,36 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       tDispElem.setProperty(#bgColor, rgb("FFCC66"))
       tDispElem.setProperty(#ink, 41)
       updateStage()
-      pMode = #still
+      pmode = #still
     "cam_release":
-      if pMode = #still then
+      if pmode = #still then
         me.setCameraToLiveMode()
-        pMode = #live
+        pmode = #live
       end if
     "cam_save":
-      if pMode = #still and me.getComponent().getFilm() > 0 then
+      if pmode = #still and me.getComponent().getFilm() > 0 then
         tWndObj.getElement("cam_display").setProperty(#blend, 50)
         tWndObj.getElement("cam_savetxt").setProperty(#visible, 1)
         tWndObj.getElement("cam_display").setProperty(#buffer, pDisplaymem)
-        me.getComponent().storePicture(pCamMember, tWndObj.getElement("photo_text").getText(), pCS)
-        pMode = #save
+        me.getComponent().storePicture(pCamMember, tWndObj.getElement("photo_text").getText())
+        pmode = #save
       else
         beep(1)
       end if
-      if pMode = #still and me.getComponent().getFilm() = 0 then
+      if pmode = #still and me.getComponent().getFilm() = 0 then
         executeMessage(#alert, [#msg: "cam_save_nofilm"])
       end if
     "cam_zoom_in":
-      if pMode = #still then
-        pZoomLevel = pZoomLevel + 1
+      if pmode = #still then
+        if pZoomLevel < 11 then
+          pZoomLevel = pZoomLevel + 1
+        end if
         me.zoom()
       else
         beep(1)
       end if
     "cam_zoom_out":
-      if pMode = #still then
+      if pmode = #still then
         pZoomLevel = pZoomLevel - 1
         if pZoomLevel < 1 then
           pZoomLevel = 1
@@ -211,7 +228,7 @@ on setButtonHilites me
   if not windowExists(pWindowID) then
     return 0
   end if
-  case pMode of
+  case pmode of
     #live:
       me.hilite(["cam_shoot"])
       me.unhilite(["cam_release", "cam_save", "cam_zoom_in", "cam_zoom_out", "cam_txtscreen"])
@@ -230,7 +247,7 @@ on saveOk me
   if not windowExists(pWindowID) then
     return 0
   end if
-  pMode = #live
+  pmode = #live
   me.setCameraToLiveMode()
   getWindow(pWindowID).getElement("cam_savetxt").setProperty(#visible, 0)
   me.setButtonHilites()
@@ -262,8 +279,7 @@ on zoom me
   tRect.bottom = tRect.top + tH
   tRect.left = pCamShotImage.width / 2 - tW / 2
   tRect.right = tRect.left + tW
-  pCamMember.image.copyPixels(pCamShotImage, pCamMember.image.rect, tRect)
-  pCS = me.getComponent().countCS(pCamMember.image)
+  pCamMember.image.copyPixels(pCamShotImage, pCamMember.image.rect, tRect, [#bgColor: rgb(238, 238, 238)])
 end
 
 on showHelpLine me, tElemID

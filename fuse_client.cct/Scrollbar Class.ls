@@ -203,7 +203,7 @@ on mouseWithin me
         tNewLiftRect = pButtonImg[#lift_up].rect + rect(pRects[#bottom].left - pRects[#lift].width, 0, pRects[#bottom].left - pRects[#lift].width, 0)
       end if
       if tNewLiftRect.left < pRects[#top].right then
-        newLIftRect = pButtonImg[#lift_up].rect + rect(pRects[#top].width, 0, pRects[#top].width, 0)
+        tNewLiftRect = pButtonImg[#lift_up].rect + rect(pRects[#top].width, 0, pRects[#top].width, 0)
       end if
     end if
     pRects[#lift] = tNewLiftRect
@@ -504,7 +504,6 @@ on resizeBy me, tOffH, tOffV
     pState = #waitMouseEvent
     pScrollOffset = 0
     pButtonStates = [#top: #up, #bottom: #up, #bar: #up, #lift: #up]
-    me.UpdateImageObjects(VOID, [#up, #down, #passive])
     if me.pType = "scrollbarv" then
       me.pwidth = pButtonImg["top_up"].width
       me.pheight = me.pSprite.height
@@ -518,6 +517,7 @@ on resizeBy me, tOffH, tOffV
     if me.pheight < 1 then
       me.pheight = 1
     end if
+    me.UpdateImageObjects(VOID, [#up, #down, #passive])
     me.pimage = image(me.pwidth, me.pheight, 8, me.pPalette)
     me.UpdateScrollBar([#top, #bottom, #bar, #lift], #up)
     tTempOffset = me.pBuffer.regPoint

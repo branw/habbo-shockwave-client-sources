@@ -69,8 +69,11 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
     getObjectManager().remove(tid)
     return 0
   end if
+  if not tItem.merge(tLayout) then
+    getObjectManager().remove(tid)
+    return 0
+  end if
   me.pItemList.add(tid)
-  tItem.merge(tLayout)
   pAvailableLocZ = pAvailableLocZ + tItem.getProperty(#sprCount)
   me.Activate()
   return 1
@@ -186,6 +189,7 @@ on modal me, tid, tLayout
       error(me, "Failed to create modal window layer!", #modal)
     end if
   end if
+  the keyboardFocusSprite = 0
   me.pActiveItem = tid
   me.Activate(tid)
   return 1
