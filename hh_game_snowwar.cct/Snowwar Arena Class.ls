@@ -30,7 +30,7 @@ on prepare me
       tRoomInt.hideRoomBar()
     end if
   end if
-  getConnection(#Info).send("G_OBJS")
+  getConnection(#info).send("G_OBJS")
   return 1
 end
 

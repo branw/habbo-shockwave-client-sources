@@ -935,10 +935,8 @@ on handle_group_membership_update me, tMsg
   tStatus = tConn.GetIntFrom()
   tuser = me.getComponent().getUserObject(tUserIndex)
   if not voidp(tuser) then
-    if tuser <> 0 then
-      tuser.setProperty(#groupid, tGroupId)
-      tuser.setProperty(#groupstatus, tStatus)
-    end if
+    tuser.setProperty(#groupid, tGroupId)
+    tuser.setProperty(#groupstatus, tStatus)
   end if
 end
 

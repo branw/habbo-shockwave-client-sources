@@ -241,7 +241,7 @@ on parentEmailIncorrect me
 end
 
 on openPasswordUpdate me, tForced, tMsg
-  me.openPwdEmailUpdate(#Password, tForced, tMsg)
+  me.openPwdEmailUpdate(#password, tForced, tMsg)
 end
 
 on openEmailUpdate me, tForced, tMsg
@@ -252,7 +252,7 @@ on openPwdEmailUpdate me, ttype, tForced, tMsg
   if tForced then
     pPwdEmailUpdateForced = 1
   end if
-  if ttype = #Password then
+  if ttype = #password then
     tWindowTitleStr = getText("reg_changePassword")
     tWndType = "reg_update_password.window"
   else
@@ -1080,7 +1080,7 @@ end
 
 on registrationReady me
   getObject(#session).set(#userName, pPropsToServer["name"])
-  getObject(#session).set(#Password, pPropsToServer["password"])
+  getObject(#session).set(#password, pPropsToServer["password"])
   getObject(#session).set("user_figure", pPropsToServer["figure"].duplicate())
   if pmode = "registration" or pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
     if objectExists("Figure_Preview") then
@@ -1569,7 +1569,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
       "reg_parentemail_link2":
         openNetPage("reg_parentemail_link_url2")
       "update_change_pwd":
-        me.openPwdEmailUpdate(#Password)
+        me.openPwdEmailUpdate(#password)
       "update_change_email":
         me.openPwdEmailUpdate(#email)
       "reg_tutorial_link":

@@ -8,7 +8,7 @@ on construct me
   pTimeLineUpdateTimer = "sound_machine_timeline_timer"
   pRoomActivityUpdateTimer = "sound_machine_room_activity_timer"
   pSampleNameBase = "sound_machine_sample_"
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariableValue("connection.info.id", #info)
   pSampleHorCount = 3
   pSampleVerCount = 3
   pSoundSetLimit = 4
