@@ -33,7 +33,7 @@ on deconstruct me
   return 1
 end
 
-on defineClient me, tid
+on defineClient me, tID
   return 1
 end
 
@@ -45,16 +45,16 @@ on update me
   call(#update, pObjects)
 end
 
-on executeGameObjectEvent me, tid, tEvent, tdata
-  if tid = #all then
+on executeGameObjectEvent me, tID, tEvent, tdata
+  if tID = #all then
     repeat with tGameObject in pObjects
       call(#executeGameObjectEvent, tGameObject, tEvent, tdata)
     end repeat
     return 1
   end if
-  tGameObject = me.getGameObject(tid)
+  tGameObject = me.getGameObject(tID)
   if tGameObject = 0 then
-    return error(me, "Cannot execute game object event:" && tEvent && "on:" && tid, #executeGameObjectEvent)
+    return error(me, "Cannot execute game object event:" && tEvent && "on:" && tID, #executeGameObjectEvent)
   end if
   call(#executeGameObjectEvent, tGameObject, tEvent, tdata)
   return 1

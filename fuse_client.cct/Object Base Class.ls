@@ -16,11 +16,11 @@ on deconstruct me
   return 1
 end
 
-on setID me, tid
+on setID me, tID
   if voidp(me.id) then
-    id = tid
+    id = tID
   else
-    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tid, #setID, #minor)
+    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tID, #setID, #minor)
   end if
 end
 
@@ -59,8 +59,8 @@ on print me
 end
 
 on executeDelay me, tTimeout
-  tid = tTimeout.name
-  tTask = delays[tid]
-  me.Cancel(tid)
+  tID = tTimeout.name
+  tTask = delays[tID]
+  me.Cancel(tID)
   call(tTask[#method], me, tTask[#argument])
 end

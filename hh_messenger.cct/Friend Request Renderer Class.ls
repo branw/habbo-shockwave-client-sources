@@ -22,7 +22,7 @@ on define me, tWindowName, tRequestList
   pRequestList = []
   repeat with tRequestNo = 1 to tRequestList.count
     tRequest = tRequestList[tRequestNo]
-    pRequestList.add([#name: tRequest[#name], #id: tRequest[#id], #selected: 0])
+    pRequestList.add([#name: tRequest[#name], #id: tRequest[#id], #webID: tRequest[#webID], #selected: 0])
   end repeat
   me.updateView()
 end
@@ -55,10 +55,6 @@ on getSelectedRequests me
   return me.getMaskedRequests(1)
 end
 
-on getRefusedRequests me
-  return me.getMaskedRequests(0)
-end
-
 on clearRequests me
   pRequestList = []
   pCurrentPageIndex = 1
@@ -69,15 +65,7 @@ on itemEvent me, tItemNumber
   me.toggleItemSelection(tItemNumber)
 end
 
-on invertSelections me
-  repeat with tRequestNo = 1 to pRequestList.count
-    pRequestList[tRequestNo][#selected] = not pRequestList[tRequestNo][#selected]
-  end repeat
-  me.updateView()
-  pUnfinishedSelectionExists = 1
-end
-
-on getAcceptedList me
+on getSelectedList me
   tList = []
   repeat with tItem in pRequestList
     if tItem[#selected] then
@@ -87,7 +75,7 @@ on getAcceptedList me
   return tList
 end
 
-on getDeclinedList me
+on getDeselectedList me
   tList = []
   repeat with tItem in pRequestList
     if not tItem[#selected] then
@@ -97,8 +85,14 @@ on getDeclinedList me
   return tList
 end
 
+on getUserIdForSelectionNo me, tSelectionNo
+  tRequestIndex = integer((pCurrentPageIndex - 1) * pRequestsPerPage + tSelectionNo)
+  tUserID = pRequestList[tRequestIndex][#webID]
+  return tUserID
+end
+
 on toggleItemSelection me, tItemNumber
-  tRequestIndex = (pCurrentPageIndex - 1) * pRequestsPerPage + tItemNumber
+  tRequestIndex = integer((pCurrentPageIndex - 1) * pRequestsPerPage + tItemNumber)
   if tRequestIndex > pRequestList.count then
     return 0
   end if
@@ -116,12 +110,28 @@ on toggleItemSelection me, tItemNumber
   pUnfinishedSelectionExists = 1
 end
 
-on isSelectedAmountValid me
+on setAllRequestSelectionsTo me, tValue
+  if voidp(tValue) then
+    tValue = 0
+  end if
+  repeat with tItemNo = 1 to pRequestList.count
+    pRequestList[tItemNo][#selected] = tValue
+  end repeat
+end
+
+on isSelectedAmountValid me, tInverted
+  if voidp(tInverted) then
+    tInverted = 0
+  end if
   tListLimits = getThread(#messenger).getInterface().getBuddyListLimits()
   tLimit = tListLimits[#own]
   tBuddyData = getThread(#messenger).getComponent().getBuddyData()
   tFriendsAmount = tBuddyData[#buddies].count
-  tSelectedAmount = me.getAcceptedList().count
+  if tInverted then
+    tSelectedAmount = me.getDeselectedList().count
+  else
+    tSelectedAmount = me.getSelectedList().count
+  end if
   tTotalCount = tFriendsAmount + tSelectedAmount
   if tTotalCount > tLimit then
     return 0

@@ -27,7 +27,7 @@ on define me, tdata
   me.setPartLists(tdata[#figure])
   pTeamId = string(tdata[#team_id])
   pAvatarId = string(tdata[#human_id])
-  if getObject(#session).get("game_number_of_teams", tdata) > 1 then
+  if getObject(#session).GET("game_number_of_teams", tdata) > 1 then
     tTeamColor = rgb(string(getVariable("snowwar.teamcolors.team" & pTeamId)))
     me.setPartColor("sh", tTeamColor)
   else
@@ -66,7 +66,7 @@ on select me
   if not getObject(#session).exists("user_game_index") then
     return 0
   end if
-  tUserIndex = getObject(#session).get("user_game_index")
+  tUserIndex = getObject(#session).GET("user_game_index")
   if tUserIndex = 0 then
     return error(me, "Own player missing the game object index!", #select)
   end if
@@ -611,7 +611,7 @@ on setOwnHiliter me, tstate
   if not getObject(#session).exists("user_index") then
     return 0
   end if
-  if me.getID() <> getObject(#session).get("user_index") then
+  if me.getID() <> getObject(#session).GET("user_index") then
     return 0
   end if
   if pHiliteSpriteNum = 0 then

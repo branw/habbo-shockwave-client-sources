@@ -457,11 +457,11 @@ on solveMembers me
   else
     return 0
   end if
-  tid = me.getID()
+  tID = me.getID()
   tRoomType = getObject(#session).GET("lastroom")[#type]
   if tRoomType <> #private then
     if tShadowNum <> 0 then
-      tSpr = sprite(reserveSprite(tid))
+      tSpr = sprite(reserveSprite(tID))
       pSprList.add(tSpr)
       pLoczList.add([-4000, -4000, -4000, -4000, -4000, -4000, -4000])
       pLocShiftList.add([0, 0, 0, 0, 0, 0, 0, 0])
@@ -484,7 +484,7 @@ on solveMembers me
     if voidp(tShadowManager) then
       return 0
     end if
-    tShadowManager.removeShadow(tid)
+    tShadowManager.removeShadow(tID)
     if tShadowNum <> 0 and pLocH = integer(pLocH) then
       tProps = [:]
       tScreenLocs = tRoomThread.getInterface().getGeometry().getScreenCoordinate(pLocX, pLocY, pLocH)
@@ -500,7 +500,7 @@ on solveMembers me
       tProps[#locV] = tScreenLocs[2]
       tProps[#width] = tmember.width
       tProps[#height] = tmember.height
-      tProps[#id] = tid
+      tProps[#id] = tID
       tShadowManager.addShadow(tProps)
       tShadowManager.render()
     end if

@@ -17,14 +17,14 @@ end
 
 on deconstruct me
   if pReadyFlag then
-    repeat with tid in pWindowList
-      if windowExists(tid) then
-        removeWindow(tid)
+    repeat with tID in pWindowList
+      if windowExists(tID) then
+        removeWindow(tID)
       end if
     end repeat
-    repeat with tid in pAlertList
-      if windowExists(tid) then
-        removeWindow(tid)
+    repeat with tID in pAlertList
+      if windowExists(tID) then
+        removeWindow(tID)
       end if
     end repeat
     if writerExists(pWriterPlain) then
@@ -302,7 +302,7 @@ on openPendingCFHWindow me, tMsg
   if voidp(tConn) then
     return error(me, "Invalid message.", #openPendingCFHWindow, #major)
   end if
-  tid = tConn.GetStrFrom()
+  tID = tConn.GetStrFrom()
   tTimestamp = tConn.GetStrFrom()
   tCFH = tConn.GetStrFrom()
   tWindowTitle = getText("win_callforhelp")
@@ -430,6 +430,10 @@ on showHelpWindow me
       tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
     end if
   end if
+  tTutorialEnabled = getObject(#session).GET("tutorial_enabled", 0)
+  if not tTutorialEnabled then
+    tWndObj.getElement("help_restart_tutorial").hide()
+  end if
 end
 
 on eventProcAlert me, tEvent, tElemID, tParam, tWndID
@@ -494,6 +498,8 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
         me.openHelpChoiceWindow()
       "help_choise_ok":
         me.helpChoiceMade()
+      "help_restart_tutorial":
+        executeMessage(#restart_tutorial)
       otherwise:
         if stringp(tElemID) then
           if tElemID.char[1..11] = "help_radio_" then

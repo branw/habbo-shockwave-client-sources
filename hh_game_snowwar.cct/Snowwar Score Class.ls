@@ -54,7 +54,7 @@ on getOwnScore me
   if not getObject(#session).exists("user_game_index") then
     return 0
   end if
-  tObjectID = getObject(#session).get("user_game_index")
+  tObjectID = getObject(#session).GET("user_game_index")
   tScore = me.getGameSystem().getGameObjectProperty(tObjectID, #score)
   return tScore
 end
@@ -133,8 +133,8 @@ on cacheTeamScores me
   pTeamScoreCache[pTeamCount] = 0
   tGameSystem = me.getGameSystem()
   tIdList = tGameSystem.getGameObjectIdsOfType("avatar")
-  repeat with tid in tIdList
-    tObject = tGameSystem.getGameObject(tid)
+  repeat with tID in tIdList
+    tObject = tGameSystem.getGameObject(tID)
     if tObject <> 0 then
       tTeamId = tObject.getGameObjectProperty("team_id") + 1
       tScore = tObject.getGameObjectProperty("score")

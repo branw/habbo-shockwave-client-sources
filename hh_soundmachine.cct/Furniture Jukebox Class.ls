@@ -1,5 +1,5 @@
-on setID me, tid
-  callAncestor(#setID, [me], tid)
+on setID me, tID
+  callAncestor(#setID, [me], tID)
   executeMessage(#sound_machine_created, me.getID(), 0)
   return 1
 end
@@ -13,44 +13,52 @@ end
 on define me, tProps
   tRetVal = callAncestor(#define, [me], tProps)
   if voidp(tProps[#stripId]) then
-    executeMessage(#sound_machine_defined, me.getID())
+    executeMessage(#jukebox_defined, me.getID())
   end if
   return 1
 end
 
 on select me
-  tOwner = 0
+  towner = 0
   tSession = getObject(#session)
   if tSession <> 0 then
     if tSession.GET("room_owner") then
-      tOwner = 1
+      towner = 1
     end if
   end if
-  if the doubleClick and tOwner then
-    tStateOn = 0
-    if me.pState = 2 then
-      tStateOn = 1
-    end if
-    executeMessage(#jukebox_selected, [#id: me.getID(), #furniOn: tStateOn])
+  if the doubleClick then
+    executeMessage(#jukebox_selected, [#id: me.getID(), #owner: towner])
   else
     return callAncestor(#select, [me])
   end if
   return 1
 end
 
-on changeState me, tStateOn
-  tNewState = 1
-  if tStateOn then
-    tNewState = 2
+on getInfo me
+  tInfo = callAncestor(#getInfo, [me])
+  if ilk(tInfo) <> #propList then
+    tInfo = [:]
   end if
-  return getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: string(tNewState)])
+  if voidp(tInfo[#custom]) then
+    tInfo[#custom] = EMPTY
+  end if
+  tInfo[#custom] = tInfo[#custom] & RETURN
+  tArray = [:]
+  executeMessage(#get_jukebox_song_info, tArray)
+  if not voidp(tArray[#songName]) then
+    tInfo[#custom] = tInfo[#custom] & tArray[#songName] & RETURN
+  end if
+  if not voidp(tArray[#author]) then
+    tInfo[#custom] = tInfo[#custom] & tArray[#author]
+  end if
+  return tInfo
 end
 
 on setState me, tNewState
   callAncestor(#setState, [me], tNewState)
-  tStateOn = 0
-  if me.pState = 2 then
-    tStateOn = 1
+  if voidp(tNewState) then
+    return 0
   end if
+  tStateOn = 1
   executeMessage(#sound_machine_set_state, [#id: me.getID(), #furniOn: tStateOn])
 end

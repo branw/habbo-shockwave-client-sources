@@ -56,7 +56,7 @@ on updateGameVisuals me
   if not getObject(#session).exists("user_game_index") then
     return 0
   end if
-  tObjectID = getObject(#session).get("user_game_index")
+  tObjectID = getObject(#session).GET("user_game_index")
   tHealth = me.getGameSystem().getGameObjectProperty(tObjectID, #hit_points)
   tBallCount = me.getGameSystem().getGameObjectProperty(tObjectID, #snowball_count)
   me.updateHealth(tHealth)
@@ -266,7 +266,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         if not getObject(#session).exists("user_game_index") then
           return 0
         end if
-        return me.getGameSystem().executeGameObjectEvent(getObject(#session).get("user_game_index"), #send_create_snowball)
+        return me.getGameSystem().executeGameObjectEvent(getObject(#session).GET("user_game_index"), #send_create_snowball)
       "gs_int_sound_image":
         setSoundState(not getSoundState())
         return me.updateSoundIcon()

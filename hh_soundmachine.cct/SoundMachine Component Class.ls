@@ -1,19 +1,25 @@
-property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId
+property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pExternalSongTimer, pMusicIndexRoom, pMusicIndexEditor, pMusicIndexTop, pTimelineInstanceExternal, pExternalSongID, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId
 
 on construct me
   pSoundMachineInstanceList = [:]
   pTimelineInstance = createObject("timeline instance", getClassVariable("soundmachine.song.timeline"))
   unregisterObject("timeline instance")
+  pTimelineInstanceExternal = createObject("timeline instance external", getClassVariable("soundmachine.song.timeline"))
+  unregisterObject("timeline instance external")
   pJukeboxManager = createObject("jukebox manager", getClassVariable("soundmachine.jukebox.manager"))
   unregisterObject("jukebox manager")
+  pMusicIndexRoom = 1
+  pMusicIndexEditor = pMusicIndexRoom + 10
+  pMusicIndexTop = pMusicIndexEditor + 10
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#B6DCDF")]
   createWriter(pWriterID, tMetrics)
   pTimeLineUpdateTimer = "sound_machine_timeline_timer"
   pRoomActivityUpdateTimer = "sound_machine_room_activity_timer"
+  pExternalSongTimer = "sound_machine_external_song_timer"
   pDiskList = []
-  pConnectionId = getVariableValue("connection.info.id", #info)
+  pConnectionId = getVariableValue("connection.info.id", #Info)
   pSampleHorCount = 3
   pSampleVerCount = 3
   pSoundSetLimit = 4
@@ -28,7 +34,10 @@ on construct me
   registerMessage(#sound_machine_removed, me.getID(), #soundMachineRemoved)
   registerMessage(#sound_machine_created, me.getID(), #soundMachineCreated)
   registerMessage(#sound_machine_defined, me.getID(), #soundMachineDefined)
-  registerMessage(#insert_song, me.getID(), #insertPlaylistSong)
+  registerMessage(#jukebox_defined, me.getID(), #jukeBoxDefined)
+  registerMessage(#listen_song, me.getID(), #listenSong)
+  registerMessage(#do_not_listen_song, me.getID(), #stopListenSong)
+  registerMessage(#get_disk_data, me.getID(), #getDiskData)
   return 1
 end
 
@@ -42,7 +51,11 @@ on deconstruct me
   if timeoutExists(pRoomActivityUpdateTimer) then
     removeTimeout(pRoomActivityUpdateTimer)
   end if
+  if timeoutExists(pExternalSongTimer) then
+    removeTimeout(pExternalSongTimer)
+  end if
   pTimelineInstance.deconstruct()
+  pTimelineInstanceExternal.deconstruct()
   pJukeboxManager.deconstruct()
   unregisterMessage(#sound_machine_selected, me.getID())
   unregisterMessage(#jukebox_selected, me.getID())
@@ -50,20 +63,42 @@ on deconstruct me
   unregisterMessage(#sound_machine_removed, me.getID())
   unregisterMessage(#sound_machine_created, me.getID())
   unregisterMessage(#sound_machine_defined, me.getID())
-  unregisterMessage(#insert_song, me.getID())
+  unregisterMessage(#jukebox_defined, me.getID())
+  unregisterMessage(#listen_song, me.getID())
+  unregisterMessage(#do_not_listen_song, me.getID())
+  unregisterMessage(#get_disk_data, me.getID())
   return 1
 end
 
 on reset me, tInitialReset
   pEditFailure = 0
+  pExternalSongID = VOID
   me.closeEdit(tInitialReset)
 end
 
-on editOpened me
+on resetJukebox me
+  if getConnection(pConnectionId) <> 0 then
+    return getConnection(pConnectionId).send("RESET_JUKEBOX")
+  end if
+end
+
+on initializeEdit me
+  me.clearTimeLine()
+  me.roomActivityUpdate(1)
   pEditorOpen = 1
+  tSongController = getObject(pSongControllerID)
+  if tSongController <> 0 then
+    tSongData = pTimelineInstance.getSilentSongData()
+    tSongController.playSong(pMusicIndexEditor - 1, tSongData, 1)
+  end if
 end
 
 on closeEdit me, tInitialReset
+  me.stopEditorSong()
+  tSongController = getObject(pSongControllerID)
+  if tSongController <> 0 then
+    tSongController.stopSong(pMusicIndexEditor - 1)
+  end if
   pEditorSongID = 0
   pEditorOpen = 0
   pHooveredSampleReady = 1
@@ -84,7 +119,6 @@ on closeEdit me, tInitialReset
   me.clearTimeLine()
   me.clearSoundSets()
   pSoundSetInventoryList = []
-  me.playSong()
   if not tInitialReset and not pEditFailure then
     if getConnection(pConnectionId) <> 0 then
       return getConnection(pConnectionId).send("SONG_EDIT_CLOSE")
@@ -139,6 +173,9 @@ on actionConfirmed me
   tRetVal = 0
   case pConfirmedAction of
     "eject":
+      if me.checkSoundSetReferences(pConfirmedActionParameter) then
+        me.stopEditorSong()
+      end if
       tRetVal = me.removeSoundSet(pConfirmedActionParameter)
       if tRetVal then
         me.getInterface().renderTimeLine()
@@ -149,6 +186,7 @@ on actionConfirmed me
       end if
     "clear":
       me.clearTimeLine()
+      me.stopEditorSong()
       me.getInterface().renderTimeLine()
     "save":
       me.saveEditorSong(pConfirmedActionParameter)
@@ -255,8 +293,21 @@ on getTimeString me, tSeconds
   return tStr
 end
 
-on getSoundSetName me, tid
-  return getText("furni_sound_set_" & tid & "_name")
+on getTimeStringBasic me, tSeconds
+  tMinStr = string(tSeconds / 60)
+  if tSeconds mod 60 <> 0 then
+    tSecStr = string(tSeconds mod 60)
+    if tSecStr.length = 1 then
+      tSecStr = "0" & tSecStr
+    end if
+  else
+    tSecStr = "00"
+  end if
+  return tMinStr & ":" & tSecStr
+end
+
+on getSoundSetName me, tID
+  return getText("furni_sound_set_" & tID & "_name")
 end
 
 on getEditorSongName me
@@ -270,7 +321,14 @@ on getCanSaveSong me
   return 0
 end
 
-on getPlayTime me
+on getCanInsertDisk me
+  if pDiskList.count > 0 then
+    return 1
+  end if
+  return 0
+end
+
+on getEditorPlayTime me
   if not pEditorSongPlaying then
     return 0
   end if
@@ -282,7 +340,7 @@ on getPlayTime me
 end
 
 on getPlayHeadPosition me
-  tPlayTime = me.getPlayTime()
+  tPlayTime = me.getEditorPlayTime()
   tSlotLength = me.getTimeLineSlotLength()
   if pEditorSongPlaying then
     tPos = (tPlayTime / tSlotLength + pPlayHeadPosX) mod pEditorSongLength
@@ -367,7 +425,11 @@ end
 
 on jukeBoxSelected me, tdata
   tFurniID = tdata[#id]
-  tFurniOn = tdata[#furniOn]
+  towner = tdata[#owner]
+  tJukeBoxManager = me.getJukeBoxManager(tFurniID)
+  if tJukeBoxManager <> 0 then
+    tJukeBoxManager.setOwner(towner)
+  end if
   tResult = me.getInterface().showJukebox()
   if tResult then
     pSoundMachineFurniID = tFurniID
@@ -379,45 +441,38 @@ on soundMachineSetState me, tdata
   tFurniOn = tdata[#furniOn]
   if pEditorOpen then
     me.soundMachineSelected([#id: tFurniID, #furniOn: tFurniOn])
-  else
-    tSoundMachine = me.getSoundMachine(tFurniID)
-    if tSoundMachine = 0 then
-      return error(me, "Instance not found", #soundMachineSetState, #major)
-    end if
-    tSoundMachine.setState(tFurniOn)
   end if
+  tSoundMachine = me.getSoundMachine(tFurniID)
+  if tSoundMachine = 0 then
+    return error(me, "Instance not found", #soundMachineSetState, #major)
+  end if
+  tSoundMachine.setState(tFurniOn)
   return 1
 end
 
 on soundMachineRemoved me, tFurniID
-  me.clearTimeLine()
   tSoundMachine = pSoundMachineInstanceList.getaProp(tFurniID)
   if not voidp(tSoundMachine) then
+    me.stopSong()
     removeObject("sound machine" && tFurniID)
     pSoundMachineInstanceList.deleteProp(tFurniID)
+    pSoundMachineFurniID = 0
+    me.getInterface().hideWindows()
   end if
-  pSoundMachineFurniID = 0
-  me.stopSong()
-  me.getInterface().hideSoundMachine()
-  me.getInterface().hidePlaylist()
 end
 
 on soundMachineCreated me, tFurniID, tLooping
-  me.clearTimeLine()
+  if pSoundMachineInstanceList.count > 0 then
+    return 0
+  end if
   tSoundMachine = me.getSoundMachine(tFurniID)
   if tSoundMachine = 0 then
-    if pSoundMachineInstanceList.count > 0 then
-      error(me, "Too many instances", #soundMachineCreated, #major)
-      repeat with tSoundMachine in pSoundMachineInstanceList
-        tSoundMachine.deconstruct()
-      end repeat
-      pSoundMachineInstanceList = [:]
-    end if
     tSoundMachine = createObject("sound machine" && tFurniID, getClassVariable("soundmachine.instance"))
     if tSoundMachine = 0 then
       return 0
     end if
     tSoundMachine.setLooping(tLooping)
+    tSoundMachine.setPlayStackIndex(pMusicIndexRoom)
     pSoundMachineInstanceList.addProp(tFurniID, tSoundMachine)
   end if
   return 1
@@ -436,6 +491,23 @@ on soundMachineDefined me, tFurniID
     return 0
   end if
   return tPlaylistManager.getPlaylistData()
+end
+
+on jukeBoxDefined me, tFurniID
+  tSoundMachine = me.getSoundMachine(tFurniID)
+  if tSoundMachine = 0 then
+    return error(me, "Instance not found", #soundMachineDefined, #major)
+  end if
+  if not tSoundMachine.Initialize() then
+    return 0
+  end if
+  tPlaylistManager = tSoundMachine.getPlaylistManager()
+  tJukeBoxManager = me.getJukeBoxManager()
+  if tPlaylistManager = 0 or tJukeBoxManager = 0 then
+    return 0
+  end if
+  tPlaylistManager.getPlaylistData()
+  tJukeBoxManager.getJukeboxDisks()
 end
 
 on changeFurniState me
@@ -546,12 +618,12 @@ on timeLineEvent me, tX, tY, tEvent
   else
     if tEvent = #mouseWithin then
       if tX <> pTimeLineCursorX or tY <> pTimeLineCursorY then
-        tid = 0
+        tID = 0
         tSample = me.getSample(pSelectedSoundSetSample, pSelectedSoundSet)
         if tSample <> 0 then
-          tid = tSample[#id]
+          tID = tSample[#id]
         end if
-        tInsert = me.getCanInsertSample(tX, tY, tid)
+        tInsert = me.getCanInsertSample(tX, tY, tID)
         if tInsert and (pTimeLineCursorX <> tX or pTimeLineCursorY <> tY) then
           pTimeLineCursorX = tX
           pTimeLineCursorY = tY
@@ -573,6 +645,17 @@ on timeLineEvent me, tX, tY, tEvent
         end if
       end if
     end if
+  end if
+  return 0
+end
+
+on renderUserDiskList me, tInitialRender
+  tPlaylistManager = me.getPlaylistManager()
+  if tPlaylistManager <> 0 then
+    if tInitialRender then
+      tPlaylistManager.setDiskList(pDiskList.duplicate())
+    end if
+    return tPlaylistManager.renderDiskList()
   end if
   return 0
 end
@@ -745,8 +828,8 @@ on renderTimeLineBar me, tWd, tHt, tMarginWd, tNameBaseList, tSampleNameBase, tB
 end
 
 on parseSongList me, tMsg
-  tid = 1
-  tPlaylistManager = me.getPlaylistManager(tid)
+  tID = 1
+  tPlaylistManager = me.getPlaylistManager(tID)
   if tPlaylistManager = 0 then
     return 0
   end if
@@ -757,8 +840,8 @@ end
 
 on parsePlaylist me, tMsg
   me.stopSong()
-  tid = 1
-  tSoundMachine = me.getSoundMachine(tid)
+  tID = 1
+  tSoundMachine = me.getSoundMachine(tID)
   if tSoundMachine = 0 then
     return 0
   end if
@@ -767,21 +850,30 @@ on parsePlaylist me, tMsg
   return tRetVal
 end
 
+on getUserDisks me
+  pDiskList = []
+  if getConnection(pConnectionId) <> 0 then
+    return getConnection(pConnectionId).send("GET_USER_SONG_DISCS")
+  end if
+  return 0
+end
+
 on parseUserDisks me, tMsg
   pDiskList = []
   tCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
-    tDisk = [#id: tid, #name: tName]
+    tName = convertSpecialChars(tName, 0)
+    tDisk = [#id: tID, #name: tName]
     pDiskList.add(tDisk)
   end repeat
   return 1
 end
 
 on parseJukeboxDisks me, tMsg
-  tid = 1
-  tJukeBoxManager = me.getJukeBoxManager(tid)
+  tID = 1
+  tJukeBoxManager = me.getJukeBoxManager(tID)
   if tJukeBoxManager = 0 then
     return 0
   end if
@@ -791,21 +883,27 @@ on parseJukeboxDisks me, tMsg
 end
 
 on insertPlaylistSong me, tSongID, tLength, tName, tAuthor
-  tid = 1
-  tSoundMachine = me.getSoundMachine(tid)
+  tID = 1
+  tSoundMachine = me.getSoundMachine(tID)
   if tSoundMachine = 0 then
     return 0
   end if
   return tSoundMachine.insertPlaylistSong(tSongID, tLength, tName, tAuthor)
 end
 
-on insertJukeboxDisk me, tIndex
+on insertJukeboxDisk me
+  tPlaylistManager = me.getPlaylistManager(pSoundMachineFurniID)
+  if tPlaylistManager = 0 then
+    return 0
+  end if
+  tIndex = tPlaylistManager.getSelectedDiskIndex()
   if tIndex < 1 or tIndex > pDiskList.count then
     return 0
   end if
   tDiskID = pDiskList[tIndex][#id]
-  tid = 1
-  tJukeBoxManager = me.getJukeBoxManager(tid)
+  pDiskList.deleteAt(tIndex)
+  tID = 1
+  tJukeBoxManager = me.getJukeBoxManager(tID)
   if tJukeBoxManager = 0 then
     return 0
   end if
@@ -825,8 +923,8 @@ end
 
 on handleListFull me, tCount, tListType
   if tListType = "songlist" then
-    tid = pTimelineInstance.getSongID()
-    if tid = 0 then
+    tID = pTimelineInstance.getSongID()
+    if tID = 0 then
       pEditFailure = 1
       me.getInterface().hideSoundMachine()
       pEditFailure = 0
@@ -843,10 +941,22 @@ on handleInvalidSongName me
   me.getInterface().ShowAlert("invalid_song_name")
 end
 
+on handleSongLocked me
+  me.getInterface().ShowAlert("song_locked")
+end
+
+on handleJukeBoxPlaylistFull me
+  me.getInterface().ShowAlert("jukebox_list_full")
+end
+
+on handleInvalidSongLength me
+  me.getInterface().ShowAlert("invalid_song_length")
+end
+
 on updateSetList me, tList
   pSoundSetInventoryList = []
-  repeat with tid in tList
-    tItem = [#id: tid]
+  repeat with tID in tList
+    tItem = [#id: tID]
     pSoundSetInventoryList.add(tItem)
   end repeat
   me.changeSetListPage(0)
@@ -899,11 +1009,11 @@ on loadSoundSet me, tIndex
 end
 
 on removeSoundSet me, tIndex
-  tid = me.getSoundSetID(tIndex)
-  if tid = 0 then
+  tID = me.getSoundSetID(tIndex)
+  if tID = 0 then
     return 0
   end if
-  pTimelineInstance.soundSetRemoved(tid)
+  pTimelineInstance.soundSetRemoved(tID)
   if pSelectedSoundSet = tIndex then
     pSelectedSoundSet = 0
     pSelectedSoundSetSample = 0
@@ -916,9 +1026,9 @@ on removeSoundSet me, tIndex
   end if
 end
 
-on updateSoundSet me, tIndex, tid, tSampleList
+on updateSoundSet me, tIndex, tID, tSampleList
   if tIndex >= 1 and tIndex <= pSoundSetLimit then
-    tSoundSet = [#id: tid]
+    tSoundSet = [#id: tID]
     tMachineSampleList = []
     repeat with tSampleID in tSampleList
       tMachineSampleList.add([#id: tSampleID, #length: 0])
@@ -971,15 +1081,15 @@ on resolveSamplePosition me, tSampleID
 end
 
 on insertSample me, tSlot, tChannel
-  tid = 0
+  tID = 0
   tSample = me.getSample(pSelectedSoundSetSample, pSelectedSoundSet)
   if tSample <> 0 then
-    tid = tSample[#id]
+    tID = tSample[#id]
   else
     return 0
   end if
-  if pTimelineInstance.insertSample(tSlot, tChannel, tid) then
-    me.stopSong()
+  if pTimelineInstance.insertSample(tSlot, tChannel, tID) then
+    me.stopEditorSong()
     return 1
   end if
   return 0
@@ -987,31 +1097,30 @@ end
 
 on removeSample me, tSlot, tChannel
   if pTimelineInstance.removeSample(tSlot, tChannel) then
-    me.stopSong()
+    me.stopEditorSong()
   end if
 end
 
 on checkSoundSetReferences me, tIndex
-  tid = me.getSoundSetID(tIndex)
-  if tid = 0 then
+  tID = me.getSoundSetID(tIndex)
+  if tID = 0 then
     return 0
   end if
-  tid = pSoundSetList[tIndex][#id]
-  return pTimelineInstance.checkSoundSetReferences(tid)
+  tID = pSoundSetList[tIndex][#id]
+  return pTimelineInstance.checkSoundSetReferences(tID)
 end
 
-on getCanInsertSample me, tX, tY, tid
-  return pTimelineInstance.getCanInsertSample(tX, tY, tid)
+on getCanInsertSample me, tX, tY, tID
+  return pTimelineInstance.getCanInsertSample(tX, tY, tID)
 end
 
 on clearTimeLine me
-  me.stopSong()
   pTimelineInstance.clearTimeLine()
   pPlayHeadPosX = 0
 end
 
-on updateEditorSong me, tid, tName
-  pTimelineInstance.updateSongID(tid)
+on updateEditorSong me, tID, tName
+  pTimelineInstance.updateSongID(tID)
   pTimelineInstance.updateSongName(tName)
 end
 
@@ -1085,7 +1194,7 @@ on getSampleIndex me, tSampleID
   return 0
 end
 
-on playSong me
+on playEditorSong me
   if pEditorOpen then
     if pEditorSongPlaying then
       return 1
@@ -1107,7 +1216,7 @@ on playSong me
     tSongController = getObject(pSongControllerID)
     if tSongController <> 0 then
       tSongData[#offset] = tPosition
-      tReady = tSongController.playSong(tSongData)
+      tReady = tSongController.playSong(pMusicIndexEditor, tSongData, 1)
       if tReady then
         pEditorSongPlaying = 1
         pEditorSongStartTime = the milliSeconds
@@ -1115,19 +1224,23 @@ on playSong me
       end if
     end if
     return tReady
-  else
-    tid = 1
-    tSoundMachine = me.getSoundMachine(tid)
-    if tSoundMachine = 0 then
-      return 0
-    end if
-    tSoundMachine.playSong()
   end if
+  return 0
 end
 
 on stopSong me
+  tID = 1
+  tSoundMachine = me.getSoundMachine(tID)
+  if tSoundMachine = 0 then
+    return 0
+  end if
+  tSoundMachine.stopSong()
+  return 1
+end
+
+on stopEditorSong me
   if pEditorSongPlaying then
-    tPlayTime = me.getPlayTime()
+    tPlayTime = me.getEditorPlayTime()
     tSlotLength = me.getTimeLineSlotLength()
     tPos = (tPlayTime / tSlotLength + pPlayHeadPosX) mod pEditorSongLength
     pPlayHeadPosX = tPos
@@ -1138,30 +1251,43 @@ on stopSong me
     pEditorSongStartTime = 0
     tSongController = getObject(pSongControllerID)
     if tSongController <> 0 then
-      tSongController.stopSong()
+      tSongController.stopSong(pMusicIndexEditor)
     end if
-  else
-    tid = 1
-    tSoundMachine = me.getSoundMachine(tid)
-    if tSoundMachine = 0 then
-      return 0
-    end if
-    tSoundMachine.stopSong()
   end if
-  return 1
+end
+
+on stopListenSong me
+  tSongController = getObject(pSongControllerID)
+  if tSongController <> 0 then
+    tSongController.stopSong(pMusicIndexTop)
+  end if
+end
+
+on listenSong me, tSongID
+  if tSongID = pExternalSongID then
+  end if
+  pExternalSongID = tSongID
+  if getConnection(pConnectionId) <> 0 then
+    return getConnection(pConnectionId).send("GET_SONG_INFO", [#integer: tSongID])
+  end if
+  return 0
 end
 
 on parseSongData me, tdata, tSongID, tSongName
-  tid = 1
-  tSoundMachine = me.getSoundMachine(tid)
-  if tSoundMachine = 0 then
-    return 0
+  tID = 1
+  tSoundMachine = me.getSoundMachine(tID)
+  if tSoundMachine <> 0 then
+    tSoundMachine.parseSongData(tdata, tSongID, tSongName)
+    tSoundMachine.processSongData()
   end if
-  tSoundMachine.parseSongData(tdata, tSongID, tSongName)
-  tSoundMachine.processSongData()
   if pEditorSongID = tSongID then
     pTimelineInstance.parseSongData(tdata, tSongID, tSongName)
     me.processEditorSongData()
+  end if
+  if pExternalSongID = tSongID then
+    pExternalSongID = VOID
+    pTimelineInstanceExternal.parseSongData(tdata, tSongID, tSongName)
+    me.processExternalSongData()
   end if
 end
 
@@ -1194,13 +1320,14 @@ on saveEditorSong me, tNewName
   tNewSong = pTimelineInstance.encodeTimeLineData()
   if tNewSong <> 0 then
     if getConnection(pConnectionId) <> 0 then
-      tid = pTimelineInstance.getSongID()
+      tID = pTimelineInstance.getSongID()
       tName = tNewName
       pTimelineInstance.resetChanged()
-      if tid = 0 then
+      tName = convertSpecialChars(tName, 1)
+      if tID = 0 then
         return getConnection(pConnectionId).send("SAVE_SONG_NEW", [#string: tName, #string: tNewSong])
       else
-        return getConnection(pConnectionId).send("SAVE_SONG_EDIT", [#integer: tid, #string: tName, #string: tNewSong])
+        return getConnection(pConnectionId).send("SAVE_SONG_EDIT", [#integer: tID, #string: tName, #string: tNewSong])
       end if
     else
       return 1
@@ -1225,6 +1352,30 @@ on processEditorSongData me
   end if
 end
 
+on processExternalSongData me
+  tReady = 1
+  if not pTimelineInstanceExternal.processSongData() then
+    tReady = 0
+  end if
+  if not tReady then
+    if not timeoutExists(pExternalSongTimer) then
+      createTimeout(pExternalSongTimer, 500, #processExternalSongData, me.getID(), VOID, 1)
+    end if
+  else
+    tSongData = pTimelineInstanceExternal.getSongData()
+    if tSongData = 0 then
+      return 0
+    end if
+    tReady = 0
+    tSongController = getObject(pSongControllerID)
+    if tSongController <> 0 then
+      tSongData[#offset] = 0
+      tReady = tSongController.playSong(pMusicIndexTop, tSongData, 0)
+    end if
+  end if
+  return tReady
+end
+
 on roomActivityUpdate me, tInitialUpdate
   tUpdate = me.getInterface().getEditorWindowExists()
   if tUpdate then
@@ -1235,4 +1386,30 @@ on roomActivityUpdate me, tInitialUpdate
       createTimeout(pRoomActivityUpdateTimer, 30 * 1000, #roomActivityUpdate, me.getID(), VOID, 1)
     end if
   end if
+end
+
+on getDiskData me, tArray
+  if ilk(tArray) = #propList then
+    if not voidp(tArray[#source]) then
+      tStuffData = tArray[#source]
+      tDelim = the itemDelimiter
+      the itemDelimiter = numToChar(10)
+      if tStuffData.item.count >= 6 then
+        tArray[#author] = tStuffData.item[1]
+        tArray[#burnDay] = tStuffData.item[2]
+        tArray[#burnMonth] = tStuffData.item[3]
+        tArray[#burnYear] = tStuffData.item[4]
+        tArray[#songLength] = tStuffData.item[5]
+        tArray[#songName] = tStuffData.item[6..tStuffData.item.count]
+        tmember = getMember("song_disk_play_icon")
+        if tmember <> 0 then
+          if tmember.type = #bitmap then
+            tArray[#playIcon] = tmember.image
+          end if
+        end if
+      end if
+      the itemDelimiter = tDelim
+    end if
+  end if
+  return tArray
 end

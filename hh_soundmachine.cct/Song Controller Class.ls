@@ -5,14 +5,12 @@ on construct me
   pSongPlayer = "song player"
   createObject(pSongPlayer, "Song Player Class")
   pLengthCache = [:]
-  return 
 end
 
 on deconstruct me
   if objectExists(pSongPlayer) then
     removeObject(pSongPlayer)
   end if
-  return 
 end
 
 on preloadSounds me, tSampleList
@@ -60,24 +58,24 @@ on stopSamplePreview me
   return getObject(pSongPlayer).stopSamplePreview()
 end
 
-on playSong me, tSongData
-  return getObject(pSongPlayer).startSong(tSongData)
+on playSong me, tStackIndex, tSongData, tLoop
+  return getObject(pSongPlayer).startSong(tStackIndex, tSongData, tLoop)
 end
 
-on stopSong me
-  return getObject(pSongPlayer).stopSong()
+on stopSong me, tStackIndex
+  return getObject(pSongPlayer).stopSong(tStackIndex, 1)
 end
 
-on initPlaylist me, tSongList, tPlayTime, tLoop
-  return getObject(pSongPlayer).initPlaylist(tSongList, tPlayTime, tLoop)
+on initPlaylist me, tStackIndex, tSongList, tPlayTime, tLoop
+  return getObject(pSongPlayer).initPlaylist(tStackIndex, tSongList, tPlayTime, tLoop)
 end
 
-on addPlaylistSong me, tid, tLength
-  return getObject(pSongPlayer).addPlaylistSong(tid, tLength)
+on addPlaylistSong me, tStackIndex, tID, tLength
+  return getObject(pSongPlayer).addPlaylistSong(tStackIndex, tID, tLength)
 end
 
-on updatePlaylistSong me, tid, tSongData
-  return getObject(pSongPlayer).updatePlaylistSong(tid, tSongData)
+on updatePlaylistSong me, tID, tSongData
+  return getObject(pSongPlayer).updatePlaylistSong(tID, tSongData)
 end
 
 on startSampleDownload me, tMemberName, tParentId

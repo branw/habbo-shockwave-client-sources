@@ -314,10 +314,10 @@ on handle_gameplayerinfo me, tMsg
   tdata = [:]
   tNumPlayers = tConn.GetIntFrom()
   repeat with i = 1 to tNumPlayers
-    tid = tConn.GetIntFrom()
+    tID = tConn.GetIntFrom()
     tValue = tConn.GetStrFrom()
     tSkill = tConn.GetStrFrom()
-    tdata.addProp(string(tid), [#id: tid, #skillvalue: tValue, #skilllevel: tSkill])
+    tdata.addProp(string(tID), [#id: tID, #skillvalue: tValue, #skilllevel: tSkill])
   end repeat
   return me.getGameSystem().sendGameSystemEvent(#gameplayerinfo, tdata)
 end

@@ -37,11 +37,11 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_PENDING_CALLS_FOR_HELP", 237)
   tCmds.setaProp("DELETE_PENDING_CALLS_FOR_HELP", 238)
   if tBool then
-    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   end if
   return 1
 end

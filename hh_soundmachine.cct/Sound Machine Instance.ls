@@ -1,4 +1,4 @@
-property pLoopPlaylist, pPlaylistManager, pSongList, pTimelineList, pSoundMachineFurniOn, pInitialized, pSongControllerID, pProcessSongTimer
+property pLoopPlaylist, pPlayStackIndex, pPlaylistManager, pSongList, pTimelineList, pFurniOn, pInitialized, pSongControllerID, pProcessSongTimer
 
 on construct me
   pPlaylistManager = createObject(#temp, getClassVariable("soundmachine.songlist.manager"))
@@ -8,6 +8,7 @@ on construct me
   pSongList = []
   pTimelineList = [:]
   pInitialized = 0
+  pPlayStackIndex = VOID
   return 1
 end
 
@@ -29,15 +30,21 @@ end
 
 on playSong me
   tSongController = getObject(pSongControllerID)
-  if pSoundMachineFurniOn then
-    if tSongController <> 0 then
-      tSongController.initPlaylist(pSongList.duplicate(), pPlaylistManager.getPlayTime(), pLoopPlaylist)
+  if pFurniOn then
+    if tSongController <> 0 and not voidp(pPlayStackIndex) then
+      me.updatePlaylist()
+      tSongController.initPlaylist(pPlayStackIndex, pSongList.duplicate(), pPlaylistManager.getPlayTime(), pLoopPlaylist)
       me.processSongData()
+      return 1
     end if
   end if
+  return 0
 end
 
 on stopSong me
+  if voidp(pPlayStackIndex) then
+    return 0
+  end if
   if not pLoopPlaylist then
     repeat with tTimeline in pTimelineList
       tTimeline.deconstruct()
@@ -47,17 +54,18 @@ on stopSong me
   end if
   tSongController = getObject(pSongControllerID)
   if tSongController <> 0 then
-    tSongController.stopSong()
+    tSongController.stopSong(pPlayStackIndex)
   end if
+  return 1
 end
 
 on setState me, tFurniOn
-  if tFurniOn = pSoundMachineFurniOn then
+  if tFurniOn = pFurniOn then
     return 0
   end if
-  pSoundMachineFurniOn = tFurniOn
+  pFurniOn = tFurniOn
   pPlaylistManager.resetPlayTime()
-  if pSoundMachineFurniOn then
+  if pFurniOn then
     if pLoopPlaylist then
       me.playSong()
     else
@@ -70,7 +78,7 @@ on setState me, tFurniOn
 end
 
 on getState me
-  return pSoundMachineFurniOn
+  return pFurniOn
 end
 
 on setLooping me, tLoop
@@ -81,12 +89,19 @@ on getLooping me
   return pLoopPlaylist
 end
 
+on setPlayStackIndex me, tStackIndex
+  pPlayStackIndex = tStackIndex
+end
+
 on getPlaylistManager me
   me.updatePlaylist()
   return pPlaylistManager
 end
 
 on parsePlaylist me, tMsg
+  if voidp(pPlayStackIndex) then
+    return 0
+  end if
   tRetVal = pPlaylistManager.parsePlaylist(tMsg)
   tCount = pPlaylistManager.getPlaylistCount()
   repeat with tTimeline in pTimelineList
@@ -125,21 +140,21 @@ on parsePlaylist me, tMsg
     if tIndex = 0 then
       tIndex = tCount
     end if
-    tid = pTimelineList.getPropAt(tIndex)
-    if tDownloadList.findPos(tid) = 0 then
-      tDownloadList.add(tid)
-      pPlaylistManager.downloadSong(tid)
+    tID = pTimelineList.getPropAt(tIndex)
+    if tDownloadList.findPos(tID) = 0 then
+      tDownloadList.add(tID)
+      pPlaylistManager.downloadSong(tID)
     end if
   end repeat
   tSongController = getObject(pSongControllerID)
   if tSongController <> 0 then
-    tSongController.initPlaylist(pSongList.duplicate(), pPlaylistManager.getPlayTime(), pLoopPlaylist)
+    tSongController.initPlaylist(pPlayStackIndex, pSongList.duplicate(), pPlaylistManager.getPlayTime(), pLoopPlaylist)
   end if
   return tRetVal
 end
 
 on updatePlaylist me
-  if not pLoopPlaylist then
+  if not pLoopPlaylist and pFurniOn then
     tPlayTime = pPlaylistManager.getPlayTime()
     tEndTime = 0
     tRemove = 0
@@ -162,30 +177,34 @@ on updatePlaylist me
   end if
 end
 
-on insertPlaylistSong me, tid, tLength, tName, tAuthor
+on insertPlaylistSong me, tID, tLength, tName, tAuthor
+  if voidp(pPlayStackIndex) then
+    return 0
+  end if
   if pLoopPlaylist then
     return 0
   end if
-  if not pPlaylistManager.insertPlaylistSong(tid, tLength, tName, tAuthor) then
+  me.updatePlaylist()
+  if not pPlaylistManager.insertPlaylistSong(tID, tLength, tName, tAuthor) then
     return 0
   end if
-  me.createTimelineInstance([#id: tid, #length: tLength])
+  me.createTimelineInstance([#id: tID, #length: tLength])
   if pTimelineList.count = 0 then
     return 0
   end if
   tTimeline = pTimelineList[1]
-  pPlaylistManager.downloadSong(tid)
+  pPlaylistManager.downloadSong(tID)
   tSongController = getObject(pSongControllerID)
   if tSongController <> 0 then
-    return tSongController.addPlaylistSong(tid, tLength * tTimeline.getSlotDuration())
+    return tSongController.addPlaylistSong(pPlayStackIndex, tID, tLength * tTimeline.getSlotDuration())
   end if
   return 0
 end
 
 on parseSongData me, tdata, tSongID, tSongName
   repeat with i = 1 to pTimelineList.count
-    tid = pTimelineList.getPropAt(i)
-    if tSongID = tid then
+    tID = pTimelineList.getPropAt(i)
+    if tSongID = tID then
       tTimeline = pTimelineList[i]
       tTimeline.parseSongData(tdata, tSongID, tSongName)
     end if
@@ -201,12 +220,12 @@ on processSongData me
       tReady = 0
       next repeat
     end if
-    if pSoundMachineFurniOn then
+    if pFurniOn then
       if tSongController <> 0 then
         tSongData = pTimelineList[i].getSongData()
-        tid = pTimelineList[i].getSongID()
+        tID = pTimelineList[i].getSongID()
         if tSongData <> 0 then
-          tSongController.updatePlaylistSong(tid, tSongData)
+          tSongController.updatePlaylistSong(tID, tSongData)
         end if
       end if
     end if

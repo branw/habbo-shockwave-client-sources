@@ -69,8 +69,8 @@ on handle_activeobject_update me, tMsg
   if not listp(tObj) then
     return 0
   end if
-  tid = tObj[#id]
-  return me.getComponent().bufferMessage(tMsgTemp, tid, "active")
+  tID = tObj[#id]
+  return me.getComponent().bufferMessage(tMsgTemp, tID, "active")
 end
 
 on handle_removeitem me, tMsg
@@ -78,8 +78,8 @@ on handle_removeitem me, tMsg
 end
 
 on handle_updateitem me, tMsg
-  tid = tMsg.content.word[1]
-  return me.getComponent().bufferMessage(tMsg, tid, "item")
+  tID = tMsg.content.word[1]
+  return me.getComponent().bufferMessage(tMsg, tID, "item")
 end
 
 on regMsgList me, tBool

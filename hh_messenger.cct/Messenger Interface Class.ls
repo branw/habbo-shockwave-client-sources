@@ -1,4 +1,4 @@
-property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeight, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pBodyPartObjects, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text, pTimeOutID, pRequestRenderID
+property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeight, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pBodyPartObjects, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text, pTimeOutID, pRequestRenderID, pSelectionIsInverted
 
 on construct me
   pWindowTitle = getText("win_messenger", "Habbo Console")
@@ -23,6 +23,7 @@ on construct me
   pMessengerInactive = 0
   pListRendering = 0
   pRequestRenderID = "ConsoleFriendRequestRenderer"
+  pSelectionIsInverted = 0
   pBuddyListLimits = [#own: 1000, #normal: 1000, #club: 1000]
   pWriterID_nobuddies = getUniqueID()
   pWriterID_consolemsg = getUniqueID()
@@ -157,23 +158,23 @@ on appendBuddy me, tdata
   return me.buildBuddyListImg()
 end
 
-on removeBuddy me, tid
-  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tid)) then
-    return error(me, "Buddy data not found:" && tid, #removeBuddy, #minor)
+on removeBuddy me, tID
+  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tID)) then
+    return error(me, "Buddy data not found:" && tID, #removeBuddy, #minor)
   end if
   repeat with i = 1 to pSelectedBuddies.count
-    if pSelectedBuddies[i][#id] = tid then
+    if pSelectedBuddies[i][#id] = tID then
       pSelectedBuddies.deleteAt(i)
       exit repeat
     end if
   end repeat
-  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tid).name
+  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tID).name
   if voidp(pBuddyDrawObjList[tName]) then
-    return error(me, "Buddy renderer not found:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer not found:" && tID, #removeBuddy, #minor)
   end if
   tPos = pBuddyListPntr.getaProp(#value).render.getPos(tName)
   if tPos = 0 then
-    return error(me, "Buddy renderer was lost:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer was lost:" && tID, #removeBuddy, #minor)
   end if
   pBuddyDrawObjList.deleteProp(tName)
   tW = pBuddyListBuffer.width
@@ -423,8 +424,8 @@ on createHeadPreview me, tElemID
   end if
 end
 
-on buddySelectOrNot me, tName, tid, tstate
-  tdata = [#name: tName, #id: tid]
+on buddySelectOrNot me, tName, tID, tstate
+  tdata = [#name: tName, #id: tID]
   if tstate then
     pSelectedBuddies.add(tdata)
   else
@@ -516,18 +517,26 @@ on openBuddyMassremoveWindow me
   end if
 end
 
-on purgeFriendRequestSelections me
+on purgeFriendRequestSelections me, tInverted
+  if voidp(tInverted) then
+    tInverted = 0
+  end if
   tRenderer = me.getFriendRequestRenderer()
   if voidp(tRenderer) then
     return error(me, "Friend request list not available", #purgeFriendRequestSelections, #major)
   end if
-  tAcceptedList = tRenderer.getAcceptedList()
+  if tInverted then
+    tAcceptedList = tRenderer.getDeselectedList()
+    tDeclinedList = tRenderer.getSelectedList()
+  else
+    tAcceptedList = tRenderer.getSelectedList()
+    tDeclinedList = tRenderer.getDeselectedList()
+  end if
   tMsgList = [#integer: tAcceptedList.count]
   repeat with tItem in tAcceptedList
     tMsgList.addProp(#integer, integer(tItem[#id]))
   end repeat
   getConnection(getVariable("connection.info.id")).send("MESSENGER_ACCEPTBUDDY", tMsgList)
-  tDeclinedList = tRenderer.getDeclinedList()
   tMsgList = [#integer: 0, #integer: tDeclinedList.count]
   repeat with tItem in tDeclinedList
     tMsgList.addProp(#integer, integer(tItem[#id]))
@@ -611,8 +620,13 @@ on ChangeWindowView me, tWindowName
       me.enterFriendRequestList()
     "console_confirm_friend_requests.window":
       tRenderer = me.getFriendRequestRenderer()
-      tAcceptedList = tRenderer.getAcceptedList()
-      tDeclinedList = tRenderer.getDeclinedList()
+      if pSelectionIsInverted then
+        tDeclinedList = tRenderer.getSelectedList()
+        tAcceptedList = tRenderer.getDeselectedList()
+      else
+        tAcceptedList = tRenderer.getSelectedList()
+        tDeclinedList = tRenderer.getDeselectedList()
+      end if
       tWindowObj = getWindow(pWindowTitle)
       tAcceptedText = getText("console_fr_accepted_count") & ": " & tAcceptedList.count
       tDeclinedText = getText("console_fr_declined_count") & ": " & tDeclinedList.count
@@ -680,6 +694,30 @@ on getBuddyListPoint me, tpoint
   return point(tpoint.locH, tpoint.locV mod pBuddylistItemHeight)
 end
 
+on setAllRequestSelectionsTo me, tValue
+  tRenderer = me.getFriendRequestRenderer()
+  tRenderer.setAllRequestSelectionsTo(tValue)
+  tRenderer.updateView()
+end
+
+on acceptSelectedRequests me
+  pSelectionIsInverted = 0
+  if not me.getFriendRequestRenderer().isSelectedAmountValid(pSelectionIsInverted) then
+    executeMessage(#alert, "console_fr_limit_exceeded_error")
+  else
+    me.ChangeWindowView("console_confirm_friend_requests.window")
+  end if
+end
+
+on rejectSelectedRequests me
+  pSelectionIsInverted = 1
+  if not me.getFriendRequestRenderer().isSelectedAmountValid(pSelectionIsInverted) then
+    executeMessage(#alert, "console_fr_limit_exceeded_error")
+  else
+    me.ChangeWindowView("console_confirm_friend_requests.window")
+  end if
+end
+
 on eventProcMessenger me, tEvent, tElemID, tParm
   if tEvent = #mouseDown then
     case tElemID of
@@ -689,6 +727,7 @@ on eventProcMessenger me, tEvent, tElemID, tParm
         me.ChangeWindowView("console_friends.window")
       "console.find.button":
         me.ChangeWindowView("console_find.window")
+        executeMessage(#tutorial_console_find_button_clicked)
       "console.help.button":
         me.ChangeWindowView("console_main_help.window")
       "console_myinfo_messages_link":
@@ -732,12 +771,22 @@ on eventProcMessenger me, tEvent, tElemID, tParm
     end case
   else
     if tEvent = #mouseUp then
-      if tElemID contains "fr_check_" or tElemID contains "fr_name_" then
+      if tElemID contains "fr_check_" then
         tDelim = the itemDelimiter
         the itemDelimiter = "_"
         tItemNo = tElemID.item[3]
         me.getFriendRequestRenderer().itemEvent(tItemNo)
         the itemDelimiter = tDelim
+      end if
+      if tElemID contains "fr_name_" then
+        tDelim = the itemDelimiter
+        the itemDelimiter = "_"
+        tItemNo = tElemID.item[3]
+        the itemDelimiter = tDelim
+        tUserID = me.getFriendRequestRenderer().getUserIdForSelectionNo(tItemNo)
+        tHomepageURL = getVariable("link.format.userpage")
+        tHomepageURL = replaceChunks(tHomepageURL, "%ID%", tUserID)
+        openNetPage(tHomepageURL)
       end if
       case tElemID of
         "close":
@@ -749,16 +798,8 @@ on eventProcMessenger me, tEvent, tElemID, tParm
             end if
           end if
           me.hideMessenger()
-        "console_fr_invert":
-          me.getFriendRequestRenderer().invertSelections()
-        "console_fr_accept":
-          if not me.getFriendRequestRenderer().isSelectedAmountValid() then
-            executeMessage(#alert, "console_fr_limit_exceeded_error")
-          else
-            me.ChangeWindowView("console_confirm_friend_requests.window")
-          end if
         "console_accept_selection":
-          me.purgeFriendRequestSelections()
+          me.purgeFriendRequestSelections(pSelectionIsInverted)
           me.ChangeWindowView("console_myinfo.window")
         "console_modify_selection":
           me.ChangeWindowView("console_request_list.window")
@@ -804,23 +845,14 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           end if
         "console_getmessage_report":
           me.ChangeWindowView("console_reportmessage.window")
-        "console_getfriendrequest_reject":
-          me.getComponent().send_DeclineBuddy(#one)
-          if me.getComponent().getNumOfBuddyRequest() > 0 then
-            me.ChangeWindowView("console_request_list.window")
-          else
-            me.ChangeWindowView("console_myinfo.window")
-          end if
-        "console_friendrequest_reject_all":
-          me.getComponent().send_DeclineBuddy(#all)
-          me.ChangeWindowView("console_myinfo.window")
-        "console_friendrequest_accept":
-          me.getComponent().send_AcceptBuddy()
-          if me.getComponent().getNumOfBuddyRequest() > 0 then
-            me.ChangeWindowView("console_getrequest.window")
-          else
-            me.ChangeWindowView("console_myinfo.window")
-          end if
+        "console_fr_deselect_all":
+          me.setAllRequestSelectionsTo(0)
+        "console_fr_select_all":
+          me.setAllRequestSelectionsTo(1)
+        "console_fr_accept_selected":
+          me.acceptSelectedRequests()
+        "console_fr_reject_selected":
+          me.rejectSelectedRequests()
         "messenger_friends_compose_button":
           if pSelectedBuddies.count < 1 then
             return 0

@@ -585,8 +585,10 @@ on resizeInterstitialWindow me
   if tAdHeight > tAdMaxH then
     tAdHeight = tAdMaxH
   end if
-  tAdImage = image(tAdWidth, tAdHeight, 32)
-  tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
+  if tAdMember.type = #bitmap then
+    tAdImage = image(tAdWidth, tAdHeight, 32)
+    tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
+  end if
   tWndWidth = 240
   tBorderWidth = 25
   tAdLocX = 0
@@ -858,6 +860,8 @@ on notify me, ttype
       executeMessage(#alert, [#Msg: "queue_tile_limit"])
     405:
       executeMessage(#alert, [#Msg: "room_alert_furni_limit", #id: "roomfullfurni", #modal: 1])
+    406:
+      executeMessage(#alert, [#Msg: "room_sound_furni_limit"])
   end case
 end
 
@@ -1036,13 +1040,13 @@ on placeFurniture me, tObjID, tObjType
   return 0
 end
 
-on showCfhSenderDelayed me, tid
-  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tid, 1)
+on showCfhSenderDelayed me, tID
+  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tID, 1)
 end
 
-on highLightCfhSender me, tid
-  if not voidp(tid) then
-    me.showArrowHiliter(tid)
+on highLightCfhSender me, tID
+  if not voidp(tID) then
+    me.showArrowHiliter(tID)
   end if
   return 1
 end
@@ -1124,8 +1128,8 @@ on validateEvent me, tEvent, tSprID, tloc
   return 1
 end
 
-on objectFinalized me, tid
-  if pSelectedObj = tid then
+on objectFinalized me, tID
+  if pSelectedObj = tID then
     if objectExists(pInfoStandId) then
       getObject(pInfoStandId).showObjectInfo(pSelectedType)
     end if

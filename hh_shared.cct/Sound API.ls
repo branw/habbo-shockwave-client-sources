@@ -34,11 +34,11 @@ on queueSound tMemName, tChannelNum, tProps
   return getSoundManager().queue(tMemName, tChannelNum, tProps)
 end
 
-on stopAllSounds tid
+on stopAllSounds tID
   if not managerExists(#sound_manager) then
     return 0
   end if
-  return getSoundManager().stopAllSounds(tid)
+  return getSoundManager().stopAllSounds(tID)
 end
 
 on startSoundChannel tNum

@@ -1,7 +1,7 @@
-property pConnectionId, pSongList, pSelectedSong, pSongListRenderList, pSongListImage, pPlaylist, pPlaylistLimit, pSelectedPlaylistSong, pEditorSongID, pPlaylistChanged, pPlayTime, pInitialPlaylistTime, pWriterID, pItemWidth, pItemHeight, pItemName, pItemNameSelected, pArrowListWidth, pArrowUpName, pArrowUpNameDimmed, pArrowDownName, pArrowDownNameDimmed
+property pConnectionId, pDiskList, pSelectedDisk, pDiskListRenderList, pDiskListImage, pSongList, pSelectedSong, pSongListRenderList, pSongListImage, pPlaylist, pPlaylistLimit, pSelectedPlaylistSong, pEditorSongID, pPlaylistChanged, pPlayTime, pInitialPlaylistTime, pWriterID, pItemWidth, pItemHeight, pItemName, pItemNameSelected, pItemNameBurnTag, pArrowListWidth, pArrowUpName, pArrowUpNameDimmed, pArrowDownName, pArrowDownNameDimmed
 
 on construct me
-  pConnectionId = getVariableValue("connection.info.id", #info)
+  pConnectionId = getVariableValue("connection.info.id", #Info)
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#000000")]
@@ -17,6 +17,7 @@ on construct me
   pArrowListWidth = 40
   pItemName = "soundmachine_playlist_item"
   pItemNameSelected = "soundmachine_playlist_item2"
+  pItemNameBurnTag = "soundmachine_playlist_burned_tag"
   pArrowUpName = "soundmachine_playlist_up"
   pArrowUpNameDimmed = "soundmachine_playlist_up2"
   pArrowDownName = "soundmachine_playlist_down"
@@ -25,7 +26,12 @@ on construct me
   pSelectedPlaylistSong = 0
   pPlaylistChanged = 0
   pSongListImage = VOID
+  pSongListRenderList = []
   pEditorSongID = 0
+  pDiskList = []
+  pSelectedDisk = 1
+  pDiskListRenderList = []
+  pDiskListImage = VOID
 end
 
 on deconstruct me
@@ -47,11 +53,14 @@ on addPlaylistSong me
   return 1
 end
 
-on insertPlaylistSong me, tid, tLength, tName, tAuthor
-  if voidp(tid) or voidp(tLength) or voidp(tName) or voidp(tAuthor) then
+on insertPlaylistSong me, tID, tLength, tName, tAuthor
+  if voidp(tID) or voidp(tLength) or voidp(tName) or voidp(tAuthor) then
     return 0
   end if
-  pPlaylist[pPlaylist.count + 1] = [#id: tid, #length: tLength, #name: tName, #author: tAuthor]
+  pPlaylist[pPlaylist.count + 1] = [#id: tID, #length: tLength, #name: tName, #author: tAuthor]
+  if pPlaylist.count = 1 then
+    me.resetPlayTime()
+  end if
   return 1
 end
 
@@ -84,6 +93,19 @@ on getPlaylistSongName me, tIndex
       end if
     end if
     return tSongName
+  end if
+  return EMPTY
+end
+
+on getPlaylistSongAuthor me, tIndex
+  if tIndex >= 1 and tIndex <= pPlaylist.count then
+    tAuthor = EMPTY
+    if ilk(pPlaylist[tIndex]) = #propList then
+      if not voidp(pPlaylist[tIndex][#author]) then
+        tAuthor = pPlaylist[tIndex][#author]
+      end if
+    end if
+    return tAuthor
   end if
   return EMPTY
 end
@@ -155,6 +177,26 @@ on getPlaylistChanged me
   return pPlaylistChanged
 end
 
+on getSelectedDiskIndex me
+  return pSelectedDisk
+end
+
+on renderDiskList me
+  if voidp(pDiskListImage) then
+    pDiskListRenderList = VOID
+  else
+    if pDiskListRenderList.findPos(pSelectedDisk) = 0 then
+      pDiskListRenderList.add(pSelectedDisk)
+    end if
+  end if
+  tRetVal = me.renderList(pDiskList, pSelectedDisk, pDiskListRenderList, pDiskListImage)
+  if tRetVal <> 0 then
+    pDiskListImage = tRetVal
+  end if
+  pDiskListRenderList = []
+  return tRetVal
+end
+
 on renderSongList me
   if voidp(pSongListImage) then
     pSongListRenderList = VOID
@@ -165,6 +207,7 @@ on renderSongList me
   end if
   tRetVal = me.renderList(pSongList, pSelectedSong, pSongListRenderList, pSongListImage)
   if tRetVal <> 0 then
+    me.renderBurnedTag(tRetVal, pSongList, pSongListRenderList)
     pSongListImage = tRetVal
   end if
   pSongListRenderList = []
@@ -214,6 +257,18 @@ on renderPlaylistArrows me
   return tImg
 end
 
+on diskListMouseClick me, tX, tY
+  tItem = 1 + tY / pItemHeight
+  if tItem >= 1 and tItem <= pDiskList.count then
+    if pDiskListRenderList.findPos(pSelectedDisk) = 0 then
+      pDiskListRenderList.add(pSelectedDisk)
+    end if
+    pSelectedDisk = tItem
+    return 1
+  end if
+  return 0
+end
+
 on songListMouseClick me, tX, tY
   tItem = 1 + tY / pItemHeight
   if tItem >= 1 and tItem <= pSongList.count then
@@ -260,6 +315,7 @@ on playlistArrowMouseClick me, tX, tY
     tSong = pPlaylist[tItem]
     pPlaylist[tItem] = pPlaylist[tItem2]
     pPlaylist[tItem2] = tSong
+    pPlaylistChanged = 1
     return 1
   end if
   return 0
@@ -342,15 +398,15 @@ on deleteSong me
       pSelectedSong = pSongList.count
     end if
     pSongListImage = VOID
-    tid = tSong[#id]
-    return getConnection(pConnectionId).send("DELETE_SONG", [#integer: tid])
+    tID = tSong[#id]
+    return getConnection(pConnectionId).send("DELETE_SONG", [#integer: tID])
   end if
   return 0
 end
 
-on downloadSong me, tid
+on downloadSong me, tID
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("GET_SONG_INFO", [#integer: tid])
+    return getConnection(pConnectionId).send("GET_SONG_INFO", [#integer: tID])
   end if
   return 0
 end
@@ -361,10 +417,17 @@ on burnSong me
   end if
   if getConnection(pConnectionId) <> 0 then
     tSong = pSongList[pSelectedSong]
-    tid = tSong[#id]
-    return getConnection(pConnectionId).send("BURN_SONG", [#integer: tid])
+    tID = tSong[#id]
+    return getConnection(pConnectionId).send("BURN_SONG", [#integer: tID])
   end if
   return 0
+end
+
+on setDiskList me, tDiskList
+  pDiskList = tDiskList
+  pSelectedDisk = 1
+  pDiskListImage = VOID
+  return 1
 end
 
 on parseSongList me, tMsg
@@ -375,18 +438,19 @@ on parseSongList me, tMsg
   pSelectedSong = 1
   tCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tLength = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
     tIslocked = tMsg.connection.GetIntFrom()
-    pSongList[pSongList.count + 1] = [#id: tid, #length: tLength, #name: tName, #locked: tIslocked, #author: EMPTY]
+    tName = convertSpecialChars(tName, 0)
+    pSongList[pSongList.count + 1] = [#id: tID, #length: tLength, #name: tName, #locked: tIslocked, #author: EMPTY]
   end repeat
   if pPlaylistChanged then
     repeat with i = pPlaylist.count down to 1
       tFound = 0
-      tid = pPlaylist[i][#id]
+      tID = pPlaylist[i][#id]
       repeat with j = 1 to pSongList.count
-        if pSongList[j][#id] = tid then
+        if pSongList[j][#id] = tID then
           tFound = 1
           exit repeat
         end if
@@ -410,11 +474,13 @@ on parsePlaylist me, tMsg
   pInitialPlaylistTime = the milliSeconds
   tCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tLength = tMsg.connection.GetIntFrom()
     tName = tMsg.connection.GetStrFrom()
     tAuthor = tMsg.connection.GetStrFrom()
-    pPlaylist[pPlaylist.count + 1] = [#id: tid, #length: tLength, #name: tName, #author: tAuthor]
+    tName = convertSpecialChars(tName, 0)
+    tAuthor = convertSpecialChars(tAuthor, 0)
+    pPlaylist[pPlaylist.count + 1] = [#id: tID, #length: tLength, #name: tName, #author: tAuthor]
   end repeat
   pPlaylistChanged = 0
   return 1
@@ -482,6 +548,43 @@ on renderList me, tList, tSelected, tRenderList, tImg, tSelectedText
         tTargetRect[4] = tTargetRect[4] + (i - 1) * pItemHeight + (pItemHeight - tImgHt) / 2
         tImg.copyPixels(tTextImg, tTargetRect, tSourceRect, [#ink: 36, #maskImage: tTextImg.createMatte()])
       end if
+    end if
+  end repeat
+  return tImg
+end
+
+on renderBurnedTag me, tImg, tList, tRenderList
+  if ilk(tList) <> #list then
+    return 0
+  end if
+  tWidth = pItemWidth
+  tHeight = pItemHeight * tList.count
+  if voidp(tImg) then
+    tImg = image(tWidth, tHeight, 32)
+  end if
+  tmember = getMember(pItemNameBurnTag)
+  repeat with i = 1 to tList.count
+    tRender = 0
+    if not voidp(tList[i][#locked]) then
+      if tList[i][#locked] then
+        tRender = 1
+      end if
+    end if
+    if not voidp(tRenderList) then
+      if tRenderList.findPos(i) = 0 then
+        tRender = 0
+      end if
+    end if
+    if tmember <> 0 and tRender = 1 then
+      tSourceImg = tmember.image
+      tRect = tSourceImg.rect
+      tImgWd = tRect[3] - tRect[1]
+      tImgHt = tRect[4] - tRect[2]
+      tRect[1] = tRect[1] + (pItemWidth - (tImgWd + 3))
+      tRect[2] = tRect[2] + (i - 1) * pItemHeight + (pItemHeight - tImgHt) / 2
+      tRect[3] = tRect[3] + (pItemWidth - (tImgWd + 3))
+      tRect[4] = tRect[4] + (i - 1) * pItemHeight + (pItemHeight - tImgHt) / 2
+      tImg.copyPixels(tSourceImg, tRect, tSourceImg.rect, [#ink: 8, #maskImage: tSourceImg.createMatte()])
     end if
   end repeat
   return tImg

@@ -29,7 +29,7 @@ on deconstruct me
   return 1
 end
 
-on defineClient me, tid
+on defineClient me, tID
   me.initVariables()
 end
 

@@ -43,8 +43,8 @@ on setSpectatorMode me, tstate, tSpaceType
     pSpectatorMode = 0
     case tSpaceType of
       #public:
-        if getConnection(#info) <> 0 then
-          getConnection(#info).send("QUIT")
+        if getConnection(#Info) <> 0 then
+          getConnection(#Info).send("QUIT")
         end if
         executeMessage(#leaveRoom)
         executeMessage(#spectatorMode_off)

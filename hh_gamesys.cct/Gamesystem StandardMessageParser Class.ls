@@ -43,8 +43,8 @@ end
 
 on handle_msgstruct_instancenotavailable me, tMsg
   tConn = tMsg.connection
-  tid = tConn.GetIntFrom()
-  return me.getGameSystem().sendGameSystemEvent(#instancenotavailable, tid)
+  tID = tConn.GetIntFrom()
+  return me.getGameSystem().sendGameSystemEvent(#instancenotavailable, tID)
 end
 
 on handle_msgstruct_gameparameters me, tMsg
@@ -94,8 +94,8 @@ end
 
 on handle_msgstruct_gamedeleted me, tMsg
   tConn = tMsg.connection
-  tid = tConn.GetIntFrom()
-  return me.getGameSystem().sendGameSystemEvent(#gamedeleted, tid)
+  tID = tConn.GetIntFrom()
+  return me.getGameSystem().sendGameSystemEvent(#gamedeleted, tID)
 end
 
 on handle_msgstruct_joinparameters me, tMsg
@@ -165,8 +165,8 @@ end
 
 on handle_msgstruct_playerrejoined me, tMsg
   tConn = tMsg.connection
-  tid = tConn.GetIntFrom()
-  return me.getGameSystem().sendGameSystemEvent(#playerrejoined, [#id: tid])
+  tID = tConn.GetIntFrom()
+  return me.getGameSystem().sendGameSystemEvent(#playerrejoined, [#id: tID])
 end
 
 on handle_msgstruct_idlewarning me, tMsg

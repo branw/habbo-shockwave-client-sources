@@ -5,13 +5,13 @@ on construct me
   if pTrackingURL = 0 or pTrackingURL = EMPTY then
     error(me, "Stats tracking URL not found!", #construct, #minor)
   end if
-  registerListener(getVariable("connection.info.id", #info), me.getID(), [166: #updateStats])
+  registerListener(getVariable("connection.info.id", #Info), me.getID(), [166: #updateStats])
   registerMessage(#sendTrackingData, me.getID(), #updateStats)
   return 1
 end
 
 on deconstruct me
-  unregisterListener(getVariable("connection.info.id", #info), me.getID(), [166: #updateStats])
+  unregisterListener(getVariable("connection.info.id", #Info), me.getID(), [166: #updateStats])
   return 1
 end
 

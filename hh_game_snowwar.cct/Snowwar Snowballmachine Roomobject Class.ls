@@ -47,9 +47,9 @@ on select me
     return 0
   end if
   if me.pDirection[1] = 0 then
-    return tFramework.executeGameObjectEvent(getObject(#session).get("user_game_index"), #send_set_target_tile, [#tile_x: me.pLocX, #tile_y: me.pLocY + 1])
+    return tFramework.executeGameObjectEvent(getObject(#session).GET("user_game_index"), #send_set_target_tile, [#tile_x: me.pLocX, #tile_y: me.pLocY + 1])
   else
-    return tFramework.executeGameObjectEvent(getObject(#session).get("user_game_index"), #send_set_target_tile, [#tile_x: me.pLocX + 1, #tile_y: me.pLocY])
+    return tFramework.executeGameObjectEvent(getObject(#session).GET("user_game_index"), #send_set_target_tile, [#tile_x: me.pLocX + 1, #tile_y: me.pLocY])
   end if
   return 0
 end

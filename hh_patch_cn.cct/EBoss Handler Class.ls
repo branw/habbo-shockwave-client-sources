@@ -16,11 +16,11 @@ on regMsgList me, tBool
   tMsgs.setaProp(281, #handle_partnerregistration)
   tCmds = [:]
   if tBool then
-    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   end if
   return 1
 end
