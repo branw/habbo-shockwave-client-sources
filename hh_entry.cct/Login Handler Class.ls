@@ -26,9 +26,9 @@ on handleSessionParameters me, tMsg
   if integerp(tPairsCount) then
     if tPairsCount > 0 then
       repeat with i = 1 to tPairsCount
-        tid = tMsg.connection.GetIntFrom()
+        tID = tMsg.connection.GetIntFrom()
         tSession = getObject(#session)
-        case tid of
+        case tID of
           0:
             tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_coppa", tValue > 0)

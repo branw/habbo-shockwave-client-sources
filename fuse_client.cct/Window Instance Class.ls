@@ -199,16 +199,16 @@ on getClientRect me
   return rect(pLocX, pLocY, pLocX + pwidth, pLocY + pheight)
 end
 
-on getElement me, tid
-  tElement = pElemList[tid]
+on getElement me, tID
+  tElement = pElemList[tID]
   if voidp(tElement) then
     return 0
   end if
   return tElement
 end
 
-on elementExists me, tid
-  return not voidp(pElemList[tid])
+on elementExists me, tID
+  return not voidp(pElemList[tID])
 end
 
 on registerClient me, tClientID
@@ -414,11 +414,11 @@ on buildVisual me, tLayout
   tSprManager = getSpriteManager()
   tResManager = getResourceManager()
   repeat with tElement in tLayout[#elements]
-    tid = tElement[1][#id]
-    if not voidp(pElemList[tid]) then
-      tid = tid & tGroupNum
+    tID = tElement[1][#id]
+    if not voidp(pElemList[tID]) then
+      tID = tID & tGroupNum
     end if
-    tmember = member(tResManager.createMember(me.getID() & "_" & tid, #bitmap))
+    tmember = member(tResManager.createMember(me.getID() & "_" & tID, #bitmap))
     tsprite = sprite(tSprManager.reserveSprite(me.getID()))
     if tsprite.spriteNum < 1 then
       repeat with t_rSpr in tSpriteList
@@ -431,14 +431,14 @@ on buildVisual me, tLayout
       tmemberlist = [:]
       return error(me, "Failed to build window. System out of sprites!", #buildVisual, #major)
     end if
-    tmemberlist[tid] = tmember
-    tSpriteList[tid] = tsprite
+    tmemberlist[tID] = tmember
+    tSpriteList[tID] = tsprite
     tsprite.castNum = tmember.number
     tsprite.ink = 8
     tElemRect = rect(2000, 2000, -2000, -2000)
     tGroupData[#members].add(tmember)
     tGroupData[#sprites].add(tsprite)
-    tSprManager.setEventBroker(tsprite.spriteNum, tid)
+    tSprManager.setEventBroker(tsprite.spriteNum, tID)
     tsprite.registerProcedure(VOID, me.getID(), VOID)
     tBlend = tElement[1][#blend]
     tInk = tElement[1][#ink]
@@ -451,7 +451,7 @@ on buildVisual me, tLayout
     tIsInkShared = 1
     tIsPaletteShared = 1
     repeat with tItem in tElement
-      tItem[#id] = tid
+      tItem[#id] = tID
       tItem[#mother] = me.getID()
       tItem[#buffer] = tmember
       tItem[#sprite] = tsprite
@@ -514,7 +514,7 @@ on buildVisual me, tLayout
       end if
       tWrapper = me.CreateElement(tItem)
     else
-      tProps = [#id: tid, #type: #wrapper, #style: #wrapper, #buffer: tmember, #sprite: tsprite, #locX: tElemRect[1], #locY: tElemRect[2]]
+      tProps = [#id: tID, #type: #wrapper, #style: #wrapper, #buffer: tmember, #sprite: tsprite, #locX: tElemRect[1], #locY: tElemRect[2]]
       tWrapper = me.CreateElement(tProps)
       repeat with tItem in tElement
         tItem[#locH] = tItem[#locH] - tElemRect[1]
@@ -527,7 +527,7 @@ on buildVisual me, tLayout
       end repeat
     end if
     if objectp(tWrapper) then
-      tElemList.addProp(tid, tWrapper)
+      tElemList.addProp(tID, tWrapper)
       tGroupData[#items].add(tWrapper)
     end if
     if tIsBlendShared then
@@ -565,9 +565,9 @@ on buildVisual me, tLayout
   repeat with i = 1 to tSpriteList.count
     tloc = tSpriteList[i].loc - [tGroupData[#rect][1], tGroupData[#rect][2]]
     tSpriteList[i].loc = point(pLocX, pLocY) + tloc
-    tid = tmemberlist.getPropAt(i)
-    pMemberList.addProp(tid, tmemberlist[tid])
-    pSpriteList.addProp(tid, tSpriteList[tid])
+    tID = tmemberlist.getPropAt(i)
+    pMemberList.addProp(tID, tmemberlist[tID])
+    pSpriteList.addProp(tID, tSpriteList[tID])
   end repeat
   repeat with i = 1 to tElemList.count
     pElemList.addProp(tElemList.getPropAt(i), tElemList[i])

@@ -28,8 +28,8 @@ on receive_pickedCry me, tMsg
   return 1
 end
 
-on deleteCry me, tid
-  pCryDataBase.deleteProp(tid)
+on deleteCry me, tID
+  pCryDataBase.deleteProp(tID)
   me.getInterface().updateCryWnd()
   return 1
 end

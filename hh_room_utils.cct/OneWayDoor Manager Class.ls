@@ -11,7 +11,7 @@ on changeStatus me, tMsg
   if voidp(tConnection) then
     return 0
   end if
-  tid = tConnection.GetIntFrom()
+  tID = tConnection.GetIntFrom()
   tStatus = tConnection.GetIntFrom()
   if not threadExists(#room) then
     error(me, "Room thread not found.", #changeStatus, #critical)
@@ -22,9 +22,9 @@ on changeStatus me, tMsg
     error(me, "Room component not found.", #changeStatus, #critical)
     return 0
   end if
-  tActiveObject = tComponent.getActiveObject(tid)
+  tActiveObject = tComponent.getActiveObject(tID)
   if voidp(tActiveObject) then
-    error(me, "One way door object" && tid && "not found.", #changeStatus, #major)
+    error(me, "One way door object" && tID && "not found.", #changeStatus, #major)
     return 0
   end if
   if tActiveObject.handler(#setDoor) then

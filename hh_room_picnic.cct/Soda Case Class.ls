@@ -14,7 +14,7 @@ on select me
   end if
   tUserObj = getThread(#room).getComponent().getOwnUser()
   if not tUserObj then
-    return error(me, "User object not found:" && getObject(#session).get("user_name"), #select)
+    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select)
   end if
   if abs(me.pLocX - tUserObj.pLocX) < 2 and abs(me.pLocY - tUserObj.pLocY) < 2 then
     me.giveDrink()

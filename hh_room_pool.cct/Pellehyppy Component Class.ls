@@ -81,7 +81,7 @@ on jumpingPlaceOk me
   repeat with i = 1 to 9
     tWndObj.getElement("ph_ui_text_" & i).setText(tPelleKeys[i])
   end repeat
-  tUserName = getObject(#session).get("user_name")
+  tUserName = getObject(#session).GET("user_name")
   tFigure = getThread(#room).getComponent().getOwnUser().getPelleFigure()
   createObject(#jumpingpelle_obj, "Jumping Pelle Class", "Pelle KeyDown Class")
   getObject(#jumpingpelle_obj).Init(tUserName, tFigure, 0)
@@ -100,7 +100,7 @@ on jumpPlayPack me, tMsg
   if not listp(tFigure) then
     return 0
   end if
-  if tMsg[#index] = getObject(#session).get("user_index") then
+  if tMsg[#index] = getObject(#session).GET("user_index") then
     me.poolUpView("playback")
   end if
   getObject(#playpackpelle_obj).Init(tUserObj.getName(), tFigure, 1)

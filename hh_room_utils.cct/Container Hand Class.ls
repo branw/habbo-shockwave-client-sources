@@ -207,25 +207,25 @@ on stripItemDownloadCallback me, tDownloadedClass
   me.showContainerItems()
 end
 
-on removeStripItem me, tid
-  return pItemList.deleteProp(tid)
+on removeStripItem me, tID
+  return pItemList.deleteProp(tID)
 end
 
-on getStripItem me, tid
-  if voidp(tid) then
-    tid = EMPTY
+on getStripItem me, tID
+  if voidp(tID) then
+    tID = EMPTY
   end if
-  if tid = #list then
+  if tID = #list then
     return pItemList
   end if
-  if voidp(pItemList[tid]) then
+  if voidp(pItemList[tID]) then
     return 0
   end if
-  return pItemList[tid]
+  return pItemList[tID]
 end
 
-on stripItemExists me, tid
-  return not voidp(pItemList[tid])
+on stripItemExists me, tID
+  return not voidp(pItemList[tID])
 end
 
 on setStripItemCount me, tCount
@@ -240,14 +240,14 @@ on setStripItemCount me, tCount
   return 1
 end
 
-on placeItemToRoom me, tid
+on placeItemToRoom me, tID
   if getThread(#room).getComponent().getRoomID() <> "private" then
     return 0
   end if
-  if not me.stripItemExists(tid) then
-    return error(me, "Attempted to access unexisting stripitem:" && tid, #placeItemToRoom, #major)
+  if not me.stripItemExists(tID) then
+    return error(me, "Attempted to access unexisting stripitem:" && tID, #placeItemToRoom, #major)
   end if
-  tdata = me.getStripItem(tid).duplicate()
+  tdata = me.getStripItem(tID).duplicate()
   tdata[#x] = 0
   tdata[#y] = 0
   tdata[#h] = 0.0
@@ -263,7 +263,7 @@ on placeItemToRoom me, tid
       return 0
     end if
     getThread(#room).getComponent().getActiveObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
-    removeStripItem(me, tid)
+    removeStripItem(me, tID)
     return 1
   else
     if tdata[#striptype] = "item" then
@@ -278,18 +278,18 @@ on placeItemToRoom me, tid
           end if
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
           if not (tdata[#class] contains "post.it") then
-            me.removeStripItem(tid)
+            me.removeStripItem(tID)
           end if
           return 1
         "floor", "wallpaper":
           getThread(#room).getComponent().getRoomConnection().send("FLATPROPBYITEM", tdata[#class] & "/" & tdata[#stripId])
-          removeStripItem(me, tid)
+          removeStripItem(me, tID)
           return 0
         "Chess":
           tdata[#direction] = [0, 0, 0]
           getThread(#room).getComponent().createItemObject(tdata)
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
-          removeStripItem(me, tid)
+          removeStripItem(me, tID)
           return 1
         otherwise:
           tdata[#direction] = "leftwall"
@@ -297,7 +297,7 @@ on placeItemToRoom me, tid
             return 0
           end if
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
-          me.removeStripItem(tid)
+          me.removeStripItem(tID)
           return 1
       end case
     end if

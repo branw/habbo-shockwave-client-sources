@@ -337,17 +337,17 @@ end
 
 on updateSetList me, tList
   pSoundSetInventoryList = []
-  repeat with tid in tList
-    tItem = [#id: tid]
+  repeat with tID in tList
+    tItem = [#id: tID]
     pSoundSetInventoryList.add(tItem)
   end repeat
   me.changeSetListPage(0)
   me.getInterface().updateSoundSetList()
 end
 
-on updateSoundSet me, tIndex, tid, tSampleList
+on updateSoundSet me, tIndex, tID, tSampleList
   if tIndex >= 1 and tIndex <= pSoundSetLimit then
-    tSoundSet = [#id: tid]
+    tSoundSet = [#id: tID]
     tMachineSampleList = []
     repeat with tSampleID in tSampleList
       tMachineSampleList.add([#id: tSampleID, #length: 0])
@@ -587,12 +587,12 @@ on timeLineEvent me, tX, tY, tEvent
   else
     if tEvent = #mouseWithin then
       if tX <> pTimeLineCursorX or tY <> pTimeLineCursorY then
-        tid = 0
+        tID = 0
         tSample = me.getSample(pSelectedSoundSetSample, pSelectedSoundSet)
         if tSample <> 0 then
-          tid = tSample[#id]
+          tID = tSample[#id]
         end if
-        tInsert = me.getCanInsertSample(tX, tY, tid)
+        tInsert = me.getCanInsertSample(tX, tY, tID)
         if tInsert and (pTimeLineCursorX <> tX or pTimeLineCursorY <> tY) then
           pTimeLineCursorX = tX
           pTimeLineCursorY = tY
@@ -892,17 +892,17 @@ on getSampleName me, tSampleID
 end
 
 on insertSample me, tSlot, tChannel
-  tid = 0
+  tID = 0
   tSample = me.getSample(pSelectedSoundSetSample, pSelectedSoundSet)
   if tSample <> 0 then
-    tid = tSample[#id]
+    tID = tSample[#id]
   else
     return 0
   end if
-  tInsert = me.getCanInsertSample(tSlot, tChannel, tid)
+  tInsert = me.getCanInsertSample(tSlot, tChannel, tID)
   if tInsert then
     pSongChanged = 1
-    pTimeLineData[tChannel][tSlot] = tid
+    pTimeLineData[tChannel][tSlot] = tID
     me.stopSong()
     return 1
   end if
@@ -959,8 +959,8 @@ on getSampleIndex me, tSampleID
   return 0
 end
 
-on getCanInsertSample me, tX, tY, tid
-  tLength = me.getSampleLength(tid)
+on getCanInsertSample me, tX, tY, tID
+  tLength = me.getSampleLength(tID)
   if tLength <> 0 then
     if tX >= 1 and tX + (tLength - 1) <= pTimeLineSlotCount and tY >= 1 and tY <= pTimeLineData.count then
       tChannel = pTimeLineData[tY]
@@ -1105,7 +1105,7 @@ on parseSongData me, tdata, tPlayTime
       tSongChannel = pSongData[i]
       tSlot = 1
       repeat with tSample in tChannel
-        tid = tSample[#id]
+        tID = tSample[#id]
         tLength = tSample[#length]
         if tSlot <= tSongChannel.count then
           pSongData[i][tSlot] = tSample.duplicate()
@@ -1133,21 +1133,21 @@ on processSongData me, tPlayTime
     repeat with j = 1 to tSongChannel.count
       tSample = tSongChannel[j]
       if not voidp(tSample) then
-        tid = tSample[#id]
+        tID = tSample[#id]
         tLength = tSample[#length]
-        tSampleLength = me.getSampleLength(tid)
+        tSampleLength = me.getSampleLength(tID)
         tWasReady = 1
         if tSampleLength = 0 then
           tSampleLength = 1
-          tid = -tid
+          tID = -tID
           tReady = 0
           tWasReady = 0
         end if
-        if tid <> 0 then
+        if tID <> 0 then
           tRepeats = tLength / tSampleLength
           repeat with k = 1 to tRepeats
-            if me.getCanInsertSample(j + (k - 1) * tSampleLength, i, tid) then
-              tTimeLineChannel[j + (k - 1) * tSampleLength] = tid
+            if me.getCanInsertSample(j + (k - 1) * tSampleLength, i, tID) then
+              tTimeLineChannel[j + (k - 1) * tSampleLength] = tID
             end if
           end repeat
         end if

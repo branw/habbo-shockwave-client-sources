@@ -10,7 +10,7 @@ end
 on Init me, tName, tMemberModels, tplayerMode, tKeyList
   pJumpReady = 0
   pBigSplashActive = 0
-  pMyName = getObject(#session).get("user_name")
+  pMyName = getObject(#session).GET("user_name")
   pGeometry = getThread(#room).getInterface().getGeometry()
   pXFactor = pGeometry.pXFactor
   pYFactor = pGeometry.pYFactor
@@ -179,21 +179,21 @@ on UpdatePelle me
     tColor = pColors.getProp(f)
     if f = "bd" or f = "lh" or f = "ch" or f = "rh" then
       if jumpAction contains "jd" then
-        dir = 0
+        Dir = 0
       else
-        dir = 2
+        Dir = 2
       end if
-      tMemNum = getmemnum("sh_" & jumpAction & "_" & f & "_" & pModels.getProp(f) & "_" & dir & "_" & jumpAnimFrame)
+      tMemNum = getmemnum("sh_" & jumpAction & "_" & f & "_" & pModels.getProp(f) & "_" & Dir & "_" & jumpAnimFrame)
       if tMemNum < 0 then
         tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & 2 & "_" & 0)
       end if
     else
       if pJumpDirection = "d" or jumpAction contains "jus" and jumpAnimFrame = 2 then
-        dir = 0
+        Dir = 0
       else
-        dir = 2
+        Dir = 2
       end if
-      tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & dir & "_0")
+      tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & Dir & "_0")
     end if
     if tMemNum <> 0 then
       tImage = member(tMemNum).image

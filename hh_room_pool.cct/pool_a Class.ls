@@ -39,8 +39,8 @@ on prepare me
     createObject(#waterripples, "Water Ripple Effects Class")
   end if
   getObject(#waterripples).Init("vesi1")
-  repeat with tid in ["pool_clickarea", "floor", "hiliter", "vesi1", "portaat0"]
-    tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById(tid)
+  repeat with tID in ["pool_clickarea", "floor", "hiliter", "vesi1", "portaat0"]
+    tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById(tID)
     registerProcedure(tSpr, #poolTeleport, me.getID(), #mouseDown)
   end repeat
   pArrowCursor = 0
@@ -67,7 +67,7 @@ on showprogram me, tMsg
   end if
 end
 
-on curtains me, tid, tCommand
+on curtains me, tID, tCommand
   case tCommand of
     "open":
       tmember = getMember("verhot auki")
@@ -78,7 +78,7 @@ on curtains me, tid, tCommand
   if tVisObj = 0 then
     return 0
   end if
-  tVisObj.getSprById(tid).setMember(tmember)
+  tVisObj.getSprById(tID).setMember(tmember)
   return 1
 end
 
@@ -119,7 +119,7 @@ on removeArrowCursor me
 end
 
 on poolTeleport me, tEvent, tSprID, tParm
-  tMyIndex = getObject(#session).get("user_index")
+  tMyIndex = getObject(#session).GET("user_index")
   tObject = getThread(#room).getComponent().getUserObject(tMyIndex)
   if tObject = 0 then
     return error(me, "Userobject not found:" && tMyIndex, #poolTeleport)

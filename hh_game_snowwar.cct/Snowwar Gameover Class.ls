@@ -153,7 +153,7 @@ on saveSortedScores me, tdata
   end repeat
   pScoreData = tSortedTeams
   if getObject(#session).exists("user_game_index") then
-    tOwnId = getObject(#session).get("user_game_index")
+    tOwnId = getObject(#session).GET("user_game_index")
   end if
   tOwnPlayerWins = 0
   pPlayerData = [:]

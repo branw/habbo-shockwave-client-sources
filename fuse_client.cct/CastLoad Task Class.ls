@@ -89,7 +89,7 @@ on DoCallBack me
   end if
 end
 
-on addCallBack me, tid, tMethod, tClientID, tArgument
+on addCallBack me, tID, tMethod, tClientID, tArgument
   if not symbolp(tMethod) then
     return error(me, "Symbol referring to handler expected:" && tMethod, #addCallBack, #major)
   end if

@@ -291,17 +291,17 @@ on handle_parentchain me, tMsg
   tNodeName = tConn.GetStrFrom()
   tCategoryIndex = [:]
   repeat while tConn <> VOID
-    tid = tConn.GetIntFrom()
-    if tid <= 0 then
+    tID = tConn.GetIntFrom()
+    if tID <= 0 then
       exit repeat
     end if
-    tid = string(tid)
+    tID = string(tID)
     tName = tConn.GetStrFrom()
     if tCategoryIndex[tChildId] <> VOID then
-      tCategoryIndex[tChildId].setaProp(#parentid, tid)
+      tCategoryIndex[tChildId].setaProp(#parentid, tID)
     end if
-    tCategoryIndex.addProp(tid, [#name: tName, #parentid: tid, #children: [tChildId]])
-    tChildId = tid
+    tCategoryIndex.addProp(tID, [#name: tName, #parentid: tID, #children: [tChildId]])
+    tChildId = tID
   end repeat
   return me.getComponent().updateCategoryIndex(tCategoryIndex)
 end

@@ -48,13 +48,13 @@ on clearBuffer me
   return me.pimage.fill(me.pimage.rect, me.pProps[#bgColor])
 end
 
-on registerScroll me, tid
+on registerScroll me, tID
   if voidp(pScrolls) then
     me.prepare()
   end if
-  if not voidp(tid) then
-    if pScrolls.getPos(tid) = 0 then
-      pScrolls.add(tid)
+  if not voidp(tID) then
+    if pScrolls.getPos(tID) = 0 then
+      pScrolls.add(tID)
     end if
   else
     if pScrolls.count = 0 then

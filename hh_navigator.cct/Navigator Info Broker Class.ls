@@ -25,14 +25,14 @@ on requestRoomData me, tRoomID, ttype, tCallback
     return error(me, "Callback list in format [obj, handler] expected.", #requestRoomData, #major)
   end if
   if ttype = #private and not (tRoomID contains "f_") then
-    tid = "f_" & tRoomID
+    tID = "f_" & tRoomID
   else
-    tid = tRoomID
+    tID = tRoomID
   end if
-  if pClientList.findPos(tid) = 0 then
-    pClientList.addProp(tid, [])
+  if pClientList.findPos(tID) = 0 then
+    pClientList.addProp(tID, [])
   end if
-  tList = pClientList[tid]
+  tList = pClientList[tID]
   tList.append(tCallback)
   if ttype = #private then
     return tNavComponent.sendGetFlatInfo(tRoomID)

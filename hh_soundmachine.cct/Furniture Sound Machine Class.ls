@@ -11,14 +11,14 @@ on deconstruct me
 end
 
 on select me
-  tOwner = 0
+  towner = 0
   tSession = getObject(#session)
   if tSession <> 0 then
     if tSession.GET("room_owner") then
-      tOwner = 1
+      towner = 1
     end if
   end if
-  if the doubleClick and tOwner then
+  if the doubleClick and towner then
     tStateOn = 0
     if me.pState = 2 then
       tStateOn = 1

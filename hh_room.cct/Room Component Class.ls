@@ -267,16 +267,16 @@ on createUserObject me, tdata
   end if
 end
 
-on removeUserObject me, tid
-  if me.removeRoomObject(tid, pUserObjList) then
-    return executeMessage(#remove_user, tid)
+on removeUserObject me, tID
+  if me.removeRoomObject(tID, pUserObjList) then
+    return executeMessage(#remove_user, tID)
   else
     return 0
   end if
 end
 
-on getUserObject me, tid
-  return me.getRoomObject(tid, pUserObjList)
+on getUserObject me, tID
+  return me.getRoomObject(tID, pUserObjList)
 end
 
 on getUsersRoomId me, tUserName
@@ -293,8 +293,8 @@ on getUsersRoomId me, tUserName
   return tIndex
 end
 
-on userObjectExists me, tid
-  return me.roomObjectExists(tid, pUserObjList)
+on userObjectExists me, tID
+  return me.roomObjectExists(tID, pUserObjList)
 end
 
 on createActiveObject me, tdata
@@ -304,16 +304,16 @@ on createActiveObject me, tdata
   return me.createRoomObject(tdata, pActiveObjList, "active")
 end
 
-on removeActiveObject me, tid
-  return me.removeRoomObject(tid, pActiveObjList)
+on removeActiveObject me, tID
+  return me.removeRoomObject(tID, pActiveObjList)
 end
 
-on getActiveObject me, tid
-  return me.getRoomObject(tid, pActiveObjList)
+on getActiveObject me, tID
+  return me.getRoomObject(tID, pActiveObjList)
 end
 
-on activeObjectExists me, tid
-  return me.roomObjectExists(tid, pActiveObjList)
+on activeObjectExists me, tID
+  return me.roomObjectExists(tID, pActiveObjList)
 end
 
 on releaseSpritesFromActiveObjects me
@@ -337,16 +337,16 @@ on createPassiveObject me, tdata
   return me.createRoomObject(tdata, pPassiveObjList, "passive")
 end
 
-on removePassiveObject me, tid
-  return me.removeRoomObject(tid, pPassiveObjList)
+on removePassiveObject me, tID
+  return me.removeRoomObject(tID, pPassiveObjList)
 end
 
-on getPassiveObject me, tid
-  return me.getRoomObject(tid, pPassiveObjList)
+on getPassiveObject me, tID
+  return me.getRoomObject(tID, pPassiveObjList)
 end
 
-on passiveObjectExists me, tid
-  return me.roomObjectExists(tid, pPassiveObjList)
+on passiveObjectExists me, tID
+  return me.roomObjectExists(tID, pPassiveObjList)
 end
 
 on createItemObject me, tdata
@@ -356,16 +356,16 @@ on createItemObject me, tdata
   return me.createRoomObject(tdata, pItemObjList, "item")
 end
 
-on removeItemObject me, tid
-  return me.removeRoomObject(tid, pItemObjList)
+on removeItemObject me, tID
+  return me.removeRoomObject(tID, pItemObjList)
 end
 
-on getItemObject me, tid
-  return me.getRoomObject(tid, pItemObjList)
+on getItemObject me, tID
+  return me.getRoomObject(tID, pItemObjList)
 end
 
-on itemObjectExists me, tid
-  return me.roomObjectExists(tid, pItemObjList)
+on itemObjectExists me, tID
+  return me.roomObjectExists(tID, pItemObjList)
 end
 
 on getRoomPrg me
@@ -533,8 +533,8 @@ on sendChat me, tChat
       if tSelected = EMPTY then
         tMode = "WHISPER"
         tMsg = "User not found."
-        tid = getObject(#session).GET("user_index")
-        me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tid, #message: tMsg])
+        tID = getObject(#session).GET("user_index")
+        me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tID, #message: tMsg])
         return 1
       end if
       tOffsetX = offset("x", tChat)
@@ -578,28 +578,28 @@ on print me
   end repeat
 end
 
-on addSlideObject me, tid, tFromLoc, tToLoc, tTimeNow, tHasCharacter
+on addSlideObject me, tID, tFromLoc, tToLoc, tTimeNow, tHasCharacter
   if the paramCount < 4 then
     return error(me, "Wrong parameter count", #addSlideObject, #major)
   end if
-  tid = tid.string
+  tID = tID.string
   if voidp(tTimeNow) then
     tTimeNow = the milliSeconds
   end if
   if voidp(tHasCharacter) then
     tHasCharacter = 0
   end if
-  if not voidp(pActiveObjList[tid]) then
-    tObj = pActiveObjList[tid]
+  if not voidp(pActiveObjList[tID]) then
+    tObj = pActiveObjList[tID]
     tObj.setSlideTo(tFromLoc, tToLoc, tTimeNow, tHasCharacter)
-    pCurrentSlidingObjects[tid] = tObj
+    pCurrentSlidingObjects[tID] = tObj
   end if
 end
 
-on removeSlideObject me, tid
-  tid = tid.string
-  if not voidp(pCurrentSlidingObjects[tid]) then
-    pCurrentSlidingObjects.deleteProp(tid)
+on removeSlideObject me, tID
+  tID = tID.string
+  if not voidp(pCurrentSlidingObjects[tID]) then
+    pCurrentSlidingObjects.deleteProp(tID)
   end if
 end
 
@@ -661,9 +661,9 @@ on getPickedCryName me
   return pPickedCryName
 end
 
-on showCfhSenderDelayed me, tid
+on showCfhSenderDelayed me, tID
   pPickedCryName = EMPTY
-  return me.getInterface().showCfhSenderDelayed(tid)
+  return me.getInterface().showCfhSenderDelayed(tID)
 end
 
 on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
@@ -1082,40 +1082,40 @@ on createRoomObject me, tdata, tList, tClass
   return 1
 end
 
-on removeRoomObject me, tid, tList
-  if voidp(tList[tid]) then
-    return error(me, "Object not found:" && tid, #removeRoomObject, #minor)
+on removeRoomObject me, tID, tList
+  if voidp(tList[tID]) then
+    return error(me, "Object not found:" && tID, #removeRoomObject, #minor)
   end if
-  tList[tid].deconstruct()
-  tList.deleteProp(tid)
+  tList[tID].deconstruct()
+  tList.deleteProp(tID)
   return 1
 end
 
-on getRoomObject me, tid, tList
-  if tid = #list then
+on getRoomObject me, tID, tList
+  if tID = #list then
     return tList
   end if
-  if voidp(tList.getaProp(tid)) then
+  if voidp(tList.getaProp(tID)) then
     return 0
   else
-    return tList.getaProp(tid)
+    return tList.getaProp(tID)
   end if
 end
 
-on roomObjectExists me, tid, tList
-  if not (listp(tList) or voidp(tid)) then
+on roomObjectExists me, tID, tList
+  if not (listp(tList) or voidp(tID)) then
     return 0
   end if
-  if ilk(tid) = #string then
-    if tid = EMPTY then
+  if ilk(tID) = #string then
+    if tID = EMPTY then
       return 0
     end if
   else
-    if tid < 1 then
+    if tID < 1 then
       return 0
     end if
   end if
-  return not voidp(tList[tid])
+  return not voidp(tList[tID])
 end
 
 on startTeleport me, tTeleId, tFlatID

@@ -81,13 +81,13 @@ on getFont me
   return tStruct
 end
 
-on registerScroll me, tid
+on registerScroll me, tID
   if voidp(me.pScrolls) then
     me.prepare()
   end if
-  if not voidp(tid) then
-    if me.pScrolls.getPos(tid) = 0 then
-      me.pScrolls.add(tid)
+  if not voidp(tID) then
+    if me.pScrolls.getPos(tID) = 0 then
+      me.pScrolls.add(tID)
     end if
   else
     if me.pScrolls.count = 0 then

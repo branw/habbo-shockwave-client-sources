@@ -255,10 +255,10 @@ on handle_msgstruct_gameplayerinfo me, tMsg
   tdata = [:]
   tNumPlayers = tConn.GetIntFrom()
   repeat with i = 1 to tNumPlayers
-    tid = tConn.GetIntFrom()
+    tID = tConn.GetIntFrom()
     tValue = tConn.GetStrFrom()
     tSkill = tConn.GetStrFrom()
-    tdata.addProp(string(tid), [#id: tid, #skillvalue: tValue, #skilllevel: tSkill])
+    tdata.addProp(string(tID), [#id: tID, #skillvalue: tValue, #skilllevel: tSkill])
   end repeat
   return me.getGameSystem().sendGameSystemEvent(#gameplayerinfo, tdata)
 end
@@ -303,9 +303,9 @@ end
 on parse_snowwar_gameobject me, tConn
   tdata = [:]
   tdata.addProp(#type, tConn.GetIntFrom())
-  tid = tConn.GetIntFrom()
-  tdata.addProp(#int_id, tid)
-  tdata.addProp(#id, string(tid))
+  tID = tConn.GetIntFrom()
+  tdata.addProp(#int_id, tID)
+  tdata.addProp(#id, string(tID))
   case tdata[#type] of
     0:
       tObjectData = me.parse_snowwar_player_gameobjectvariables(tdata.duplicate(), tConn)

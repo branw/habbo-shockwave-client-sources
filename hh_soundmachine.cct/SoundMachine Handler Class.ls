@@ -24,9 +24,9 @@ on handle_sound_data me, tMsg
           tSample = tChannelData.item[j]
           the itemDelimiter = ","
           if tSample.item.count >= 2 then
-            tid = value(tSample.item[1])
+            tID = value(tSample.item[1])
             tCount = value(tSample.item[2])
-            tdata[tChannelNumber][tdata[tChannelNumber].count + 1] = [#id: tid, #length: tCount]
+            tdata[tChannelNumber][tdata[tChannelNumber].count + 1] = [#id: tID, #length: tCount]
           end if
           the itemDelimiter = ";"
         end repeat
@@ -47,14 +47,14 @@ on handle_machine_sound_packages me, tMsg
   me.getComponent().clearSoundSets()
   repeat with i = 1 to tFilledSlots
     tSlotIndex = tMsg.connection.GetIntFrom()
-    tid = tMsg.connection.GetIntFrom()
+    tID = tMsg.connection.GetIntFrom()
     tSampleList = []
     tSampleCount = tMsg.connection.GetIntFrom()
     repeat with j = 1 to tSampleCount
       tSampleID = tMsg.connection.GetIntFrom()
       tSampleList.add(tSampleID)
     end repeat
-    me.getComponent().updateSoundSet(tSlotIndex, tid, tSampleList)
+    me.getComponent().updateSoundSet(tSlotIndex, tID, tSampleList)
   end repeat
   me.getComponent().removeSoundSetInsertLock()
   return 1
@@ -67,8 +67,8 @@ on handle_user_sound_packages me, tMsg
   tCount = tMsg.connection.GetIntFrom()
   tList = []
   repeat with i = 1 to tCount
-    tid = tMsg.connection.GetIntFrom()
-    tList.append(tid)
+    tID = tMsg.connection.GetIntFrom()
+    tList.append(tID)
   end repeat
   return me.getComponent().updateSetList(tList)
 end
