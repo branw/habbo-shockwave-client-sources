@@ -113,7 +113,6 @@ on new me, tName, tMemberPrefix, tMemberModels, tLocX, tLocY, tHeight, tdir, tlD
     addProp(myEy, #colors, getaProp(pColors, #ey))
     addProp(myEy, #Inks, getaProp(pInks, #ey))
     addProp(myEy, #LocZShifts, getaProp(pLocZShifts, #ey))
-    put "MyEy---------" && myEy
     deleteProp(pSprites, #ey)
     if getPos(lParts, "ey") > 0 then
       deleteAt(lParts, getPos(lParts, "ey"))
@@ -145,6 +144,10 @@ on getCustom me
       return me.Custom & RETURN & AddTextToField("Food") & food
     else
       return me.Custom & RETURN & AddTextToField("Drink") && drink
+    end if
+  else
+    if food <> VOID then
+      return me.Custom & RETURN & AddTextToField("Food") & food
     end if
   end if
   return me.Custom
@@ -180,7 +183,7 @@ on initiateForSync me
   isModerator = 0
   me.controller = 0
   carryItem = VOID
-  food = EMPTY
+  food = VOID
   drink = VOID
   pLocFix = point(0, 0)
   iLocZFix = 0
@@ -250,6 +253,16 @@ on fuseAction_drink me, props
     carryItem = "drink"
     drink = word 2 of props
   end if
+end
+
+on fuseAction_carryf me, props
+  carryItem = "food"
+  food = word 2 of props
+end
+
+on fuseAction_eat me, props
+  carryItem = "food"
+  food = word 2 of props
 end
 
 on fuseAction_lay me, props
@@ -463,7 +476,22 @@ on exitFrame me
             sprite(carryItemSpr).locZ = sprite(pSprites.rh).locZ + 1
           end if
           if drinking = 0 then
-            sprite(carryItemSpr).castNum = getmemnum("drink_" & pDirections.bd & food)
+            if food = VOID then
+              sprite(carryItemSpr).castNum = getmemnum("drink_" & pDirections.bd)
+            else
+              if gXFactor < 33 then
+                foodmem = getmemnum("s_food_" & pDirections.bd)
+              else
+                foodmem = getmemnum("food_" & pDirections.bd)
+                if foodmem < 1 then
+                  foodmem = getmemnum("drink_" & pDirections.bd & food)
+                end if
+              end if
+              if foodmem > 0 then
+                sprite(carryItemSpr).castNum = foodmem
+                return 
+              end if
+            end if
           else
             sprite(carryItemSpr).castNum = getmemnum("drinking_" & pDirections.bd & food)
           end if
@@ -752,7 +780,22 @@ on updateMembers me
         end if
       end if
       if drinking = 0 then
-        sprite(carryItemSpr).castNum = getmemnum("drink_" & pDirections.bd & food)
+        if food = VOID then
+          sprite(carryItemSpr).castNum = getmemnum("drink_" & pDirections.bd)
+        else
+          if gXFactor < 33 then
+            foodmem = getmemnum("s_food_" & pDirections.bd)
+          else
+            foodmem = getmemnum("food_" & pDirections.bd)
+            if foodmem < 1 then
+              foodmem = getmemnum("drink_" & pDirections.bd & food)
+            end if
+          end if
+          if foodmem > 0 then
+            sprite(carryItemSpr).castNum = foodmem
+            return 
+          end if
+        end if
       else
         sprite(carryItemSpr).castNum = getmemnum("drinking_" & pDirections.bd & food)
       end if

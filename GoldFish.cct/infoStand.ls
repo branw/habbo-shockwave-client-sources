@@ -5,7 +5,7 @@ on beginSprite me
   hiliteSprite = 0
   hiliteSprite = sprMan_getPuppetSprite()
   if hiliteSprite < 1 then
-    init()
+    Init()
     hiliteSprite = sprMan_getPuppetSprite()
   end if
   set the member of sprite hiliteSprite to "memberhilite_0"
@@ -84,7 +84,7 @@ on hiliteExitframe me
       myUserSpr = getaProp(gpObjects, gMyName)
       if myUserSpr > 0 then
         myUserObj = sprite(myUserSpr).scriptInstanceList[1]
-        if myUserObj.controller = 0 then
+        if getaProp(myUserObj, #controller) = 0 then
           return 
         end if
       else

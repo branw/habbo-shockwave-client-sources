@@ -327,6 +327,7 @@ on handleMessageContent content
                     gConnectionsSecured = 1
                   else
                     if firstline contains "ERROR" then
+                      put content
                       if content contains "not move there" then
                       else
                         if content contains "inproper" and content contains "WARNING" = 0 then
@@ -441,20 +442,20 @@ on handleMessageContent content
                                   tItemDelim = the itemDelimiter
                                   the itemDelimiter = "/"
                                   tDoorID = content.line[2].item[1]
-                                  tUserName = content.line[2].item[2]
+                                  tUsername = content.line[2].item[2]
                                   tDoorType = content.line[2].item[3]
                                   the itemDelimiter = tItemDelim
                                   tDoorObj = sprite(gpObjects[tDoorType & tDoorID]).scriptInstanceList[1]
                                   tDoorObj.animate(VOID, #in)
-                                  if gMyName = tUserName then
-                                    tDoorObj.prepareToKick(tUserName)
+                                  if gMyName = tUsername then
+                                    tDoorObj.prepareToKick(tUsername)
                                   end if
                                 else
                                   if firstline contains "DOOR_OUT" then
                                     tItemDelim = the itemDelimiter
                                     the itemDelimiter = "/"
                                     tDoorID = content.line[2].item[1]
-                                    tUserName = content.line[2].item[2]
+                                    tUsername = content.line[2].item[2]
                                     tDoorType = content.line[2].item[3]
                                     the itemDelimiter = tItemDelim
                                     tDoorObj = sprite(gpObjects[tDoorType & tDoorID]).scriptInstanceList[1]
@@ -469,7 +470,7 @@ on handleMessageContent content
                                         AddStatistic(the movieName, type)
                                         if not (the movieName contains "private") and type contains "model_" then
                                           goMovie("gf_private", type)
-                                          init()
+                                          Init()
                                         end if
                                         sprMan_clearAll()
                                         gUserSprites = [:]

@@ -44,7 +44,7 @@ on setInfoTexts me
   member("item.info_text").text = EMPTY
   if listp(gpUiButtons) and the movieName contains "private" then
     myUserObj = sprite(getaProp(gpObjects, gMyName)).scriptInstanceList[1]
-    if myUserObj.controller = 1 then
+    if getaProp(myUserObj, #controller) = 1 then
       sendSprite(getaProp(gpUiButtons, "movestuff"), #disable)
       sendSprite(getaProp(gpUiButtons, "rotatestuff"), #disable)
       sendSprite(getaProp(gpUiButtons, "pickstuff"), #enable)

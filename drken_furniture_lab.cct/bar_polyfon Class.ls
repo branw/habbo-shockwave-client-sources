@@ -55,6 +55,7 @@ on mouseDown me
     return 
   end if
   if listp(gpUiButtons) and the movieName contains "private" then
+    mouseDown(hiliter, 1)
     gChosenStuffId = me.id
     if not voidp(gChosenStuffSprite) then
       sendSprite(gChosenStuffSprite, #unhilite)

@@ -1,4 +1,4 @@
-on init
+on Init
   global gballoonZ, gUserBalloons, gpObjects, gBalloons, gUserColors, gUserSprites, gChosenUser, maxSprites, maxSprites2, pupsprNum, gpShowSprites, gMyName, gPopUpContext, gPopUpContext2, availablePuppetSpr, NextAvailableExtraSpr, gPostitCounter, hiliter, gRefreshNavi
   gPostitCounter = 0
   maxSprites = 600

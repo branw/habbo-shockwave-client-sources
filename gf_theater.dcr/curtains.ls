@@ -45,7 +45,7 @@ on beginSprite me
   curtainsState = 2
 end
 
-on fuseShow_open me
+on fuseShow_Open me
   if curtainsState = 1 then
     return 
   end if

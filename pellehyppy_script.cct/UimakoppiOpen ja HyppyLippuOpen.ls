@@ -1,6 +1,6 @@
 global gPopUpContext, gMessengerPlace, gMessengerLastLoc
 
-on openuimakoppi
+on openUimakoppi
   if objectp(gPopUpContext) then
     close(gPopUpContext)
   end if
@@ -46,7 +46,7 @@ on openHyppylippu
       tMem.lineHeight = 10
       tMem.text = RETURN
       tMem.text = tMem.text & "Each ticket entitles you to 1 dive. "
-      tMem.text = tMem.text & "You get 10 tickets for 5 Habbo Credits. "
+      tMem.text = tMem.text & "You get 5 tickets for 2 Habbo Credits. "
       tMem.text = tMem.text & "You do not have to use all of your "
       tMem.text = tMem.text & "tickets at once - they will remain "
       tMem.text = tMem.text & "valid for your next visit to the Habbo Lido. "
@@ -59,7 +59,7 @@ on openHyppylippu
       tMem.lineHeight = 10
       tMem.text = RETURN
       tMem.text = tMem.text & "Each ticket entitles you to 1 dive. "
-      tMem.text = tMem.text & "You get 10 tickets for 5 Habbo Credits. "
+      tMem.text = tMem.text & "You get 5 tickets for 2 Habbo Credits. "
       tMem.text = tMem.text & "You do not have to use all of your "
       tMem.text = tMem.text & "tickets at once - they will remain "
       tMem.text = tMem.text & "valid for your next visit to the Habbo Lido. "

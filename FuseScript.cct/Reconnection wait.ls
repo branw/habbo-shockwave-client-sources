@@ -4,12 +4,12 @@ on exitFrame
     go(#loop)
   else
     if gGoTo = "scene_transition" then
-      init()
+      Init()
       fuseLogin(field("loginname"), field("loginpw"))
       gotoFrame("scene")
     else
       if gGoTo = "maja" then
-        init()
+        Init()
         member("gameinfo_1").text = EMPTY
         member("gameinfo_2").text = EMPTY
         fuseLogin(field("loginname"), field("loginpw"))
@@ -22,7 +22,7 @@ on exitFrame
         else
           if gGoTo = "register" then
             fuseRegister()
-            init()
+            Init()
             fuseLogin(field("loginname"), field("loginpw"))
             gGoTo = "scene_transition"
             gotoFrame("connect_ok")

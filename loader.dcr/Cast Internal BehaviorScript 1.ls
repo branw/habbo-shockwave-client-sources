@@ -1,3 +1,3 @@
 on exitFrame me
-  checkload()
+  checkLoad()
 end

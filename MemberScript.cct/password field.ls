@@ -12,7 +12,6 @@ on keyDown me
     put EMPTY into field loginpw
     put EMPTY into field loginpwshow
   end if
-  put the key
   if the keyCode = 36 and isLoginField then
     doLogin()
     return 
@@ -29,7 +28,7 @@ on keyDown me
   if the keyCode = 48 then
     pass()
   end if
-  if the keyCode = 51 then
+  if the keyCode = 51 or the keyCode = 117 then
     put EMPTY into field loginpwshow
     put EMPTY into field loginpw
   else

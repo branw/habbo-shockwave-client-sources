@@ -23,10 +23,7 @@ end
 
 on updateItem me, tid, tlocation, ttype
   if pID = tid then
-    tDelim = the itemDelimiter
-    the itemDelimiter = "/"
-    pLocation = tlocation.item[1]
-    the itemDelimiter = tDelim
+    pLocation = tlocation
   end if
 end
 

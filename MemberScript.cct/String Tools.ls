@@ -57,17 +57,16 @@ on charReplace s, c0, c1
   return s
 end
 
-on stringReplace s, s0, s1
-  a = offset(s0, s)
-  c = 1
-  repeat while a > 0 and c < 100
-    if a > 1 then
-      s = char 1 to a - 1 of s & s1 & char a + length(s0) to length(s) of s
-    else
-      s = s1 & char length(s0) + 1 to length(s) of s
+on stringReplace input, oldStr, newStr
+  s = EMPTY
+  repeat while input contains oldStr
+    posn = offset(oldStr, input) - 1
+    if posn > 0 then
+      put char 1 to posn of input after s
     end if
-    a = offset(s0, s)
-    c = c + 1
+    put newStr after s
+    delete char 1 to posn + length(oldStr) of input
   end repeat
+  put input after s
   return s
 end

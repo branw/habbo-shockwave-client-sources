@@ -9,7 +9,7 @@ on beginSprite me
   sprite(me.spriteNum).blend = 100
   sprite(me.spriteNum).visible = 0
   sprite(shadowSpr).visible = 0
-  if myUserObj.controller = 1 then
+  if getaProp(myUserObj, #controller) = 1 then
     helpText = AddTextToField("SelectByClikingAndPlace")
   else
     helpText = AddTextToField("YouCantPlaceObjects")
@@ -133,9 +133,9 @@ on mouseUp me
   hideItem = 1
   put "Handitem:" && l
   if objectp(gTraderWindow) then
-    if itemType <> #stuff then
+    if itemType <> #stuff or type contains "present" then
       helpText_setText(AddTextToField("NotATradeableItem"))
-      pass()
+      return 
     end if
     if hiliter.placingStuffStripId <> stripId then
       if sprite(me.spriteNum).blend < 100 then

@@ -1,7 +1,7 @@
 global gPopUpContext, gMessengerPlace, gMessengerLastLoc, gPopUpContext2
 
 on openMessenger
-  global gBuddyList
+  global gOldpersistentmessage, gBuddyList
   if voidp(gMessengerPlace) then
     gMessengerPlace = point(300, 100)
   end if
@@ -25,6 +25,7 @@ on openMessenger
   else
     spr1 = 661
   end if
+  gOldpersistentmessage = member("messenger.my_persistent_message").text
   displayFrame(gPopUpContext, "main")
   update(gBuddyList)
   gMessengerLastLoc = sprite(spr1).loc

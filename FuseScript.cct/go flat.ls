@@ -17,6 +17,6 @@ on exitFrame me
       end if
     end if
   end if
-  init()
+  Init()
   sendFuseMsg("GOTOFLAT /" & gChosenFlatId)
 end

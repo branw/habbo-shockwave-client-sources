@@ -1,8 +1,11 @@
 property code
-global gMyName
+global gMyName, gProps
 
 on mouseDown me
   sendEPFuseMsg("GETORDERINFO /" & code && gMyName)
+  if listp(gProps) then
+    setaProp(gProps, #asgift, 0)
+  end if
 end
 
 on getPropertyDescriptionList me

@@ -142,7 +142,7 @@ on fillField me, num, p
   else
     location = "Last visit" && getaProp(p, #last_access_time).char[1..length(getaProp(p, #last_access_time)) - 1]
   end if
-  if location = "(Floor1)" or location = "(Floor1b)" then
+  if location contains "(Floor1" then
     location = AddTextToField("InPrivateRoom")
   end if
   if location = "(Messenger)" then

@@ -235,7 +235,7 @@ on mouseDown me
     gChosenStuffType = #stuff
     setInfoTexts(me)
     myUserObj = sprite(getaProp(gpObjects, gMyName)).scriptInstanceList[1]
-    if myUserObj.controller = 1 then
+    if getaProp(myUserObj, #controller) = 1 then
       hilite(me)
       if the optionDown and not voidp(value(id)) then
         moveStuff(hiliter, gChosenStuffSprite)
@@ -311,7 +311,7 @@ on setInfoTexts me
       return 
     end if
     myUserObj = sprite(myUserSprite).scriptInstanceList[1]
-    if myUserObj.controller = 1 then
+    if getaProp(myUserObj, #controller) = 1 then
       sendSprite(getaProp(gpUiButtons, "movestuff"), #enable)
       sendSprite(getaProp(gpUiButtons, "rotatestuff"), #enable)
       if gIAmOwner = 1 then

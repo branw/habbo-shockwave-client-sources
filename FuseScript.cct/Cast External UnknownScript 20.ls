@@ -1,1 +1,0 @@
-global UNKNOWN_NAME_13032, UNKNOWN_NAME_-1, UNKNOWN_NAME_2108, UNKNOWN_NAME_2734, shout, gmemnamedb, fuseRegister, UNKNOWN_NAME_-1, UNKNOWN_NAME_-1, stopMovie, stopMovie, stopMovie, checkStatusOk, stopMovie, idle, UNKNOWN_NAME_-1, stopMovie, stopMovie, stopMovie, stopMovie

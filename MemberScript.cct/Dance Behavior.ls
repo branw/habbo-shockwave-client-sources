@@ -8,6 +8,7 @@ end
 on mouseUp me
   if not MeDancing then
     sendFuseMsg("STOP CarryDrink")
+    sendFuseMsg("STOP CarryFood")
     sendFuseMsg("Dance")
     set the member of sprite the spriteNum of me to "stopdance_btn active"
     MeDancing = 1

@@ -34,7 +34,7 @@ on loadComplete
   go("ok")
 end
 
-on checkload
+on checkLoad
   repeat with i = count(gCurrentNetIds) down to 1
     netId = gCurrentNetIds[i][1]
     l = getStreamStatus(netId)

@@ -9,9 +9,11 @@ on beginSprite me
   sprite(pImageSprite).ink = 36
   updatePosterList(me)
   chooseItem(me, pPosterIndexList.line[pCurrentFirstLine])
+  sendAllSprites(#setPosterCode, pCurrentPosterCode)
 end
 
 on updatePosterList me
+  global gCountryPrefix
   pPosterListTxt = EMPTY
   tSaveDelim = the itemDelimiter
   the itemDelimiter = ":"
@@ -23,6 +25,10 @@ on updatePosterList me
     end if
     if tLine.item.count <= 1 then
       exit repeat
+    end if
+    if gCountryPrefix = "ch" and tLine.item[3] = ".com" then
+      nothing()
+      next repeat
     end if
     pPosterListTxt = pPosterListTxt & i & "." && tLine.item[2].word[1..tLine.item[2].word.count] & RETURN
   end repeat

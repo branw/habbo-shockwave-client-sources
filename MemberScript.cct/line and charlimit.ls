@@ -1,0 +1,38 @@
+property maxH, maxv
+
+on beginSprite me
+end
+
+on keyDown me
+  m = the member of sprite me.spriteNum
+  x = the key
+  if x = BACKSPACE or charToNum(x) = 29 or charToNum(x) = 28 or the keyCode = 48 then
+    pass()
+  end if
+  put charPosToLoc(m, m.text.length)
+  if getAt(charPosToLoc(m, m.text.length), 1) > maxH or getAt(charPosToLoc(m, m.text.length), 2) > maxv then
+    return 0
+  end if
+  if x = TAB then
+    the keyboardFocusSprite = -1
+  end if
+  if checkKey(the key) = 1 then
+    pass()
+  else
+  end if
+end
+
+on checkKey x
+  if x = RETURN then
+    return 0
+  end if
+  if charToNum(x) < 32 or charToNum(x) > 251 then
+    return 0
+  end if
+  return 1
+end
+
+on getPropertyDescriptionList
+  p_list = [#maxH: [#comment: "Max. horisongal:", #format: #integer, #range: [#min: 1, #max: 500], #default: 115], #maxv: [#comment: "Max. vertical:", #format: #integer, #range: [#min: 1, #max: 500], #default: 25]]
+  return p_list
+end

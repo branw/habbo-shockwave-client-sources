@@ -1,5 +1,5 @@
 property pCode
-global gMyName
+global gMyName, gProps
 
 on setPosterCode me, tCode
   put tCode
@@ -7,6 +7,9 @@ on setPosterCode me, tCode
 end
 
 on mouseDown me
+  if listp(gProps) then
+    setaProp(gProps, #asgift, 0)
+  end if
   if voidp(pCode) or pCode = EMPTY then
     return 
   end if
