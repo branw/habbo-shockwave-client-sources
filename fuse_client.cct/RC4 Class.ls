@@ -64,32 +64,6 @@ end
 
 on encipher me, tdata
   tCipher = EMPTY
-  tBytes = []
-  repeat with e = 1 to length(tdata)
-    a = charToNum(char e of tdata)
-    if a > 255 then
-      add(tBytes, (a - a mod 256) / 256)
-      add(tBytes, a mod 256)
-      next repeat
-    end if
-    add(tBytes, a)
-  end repeat
-  tStrServ = getStringServices()
-  repeat with a = 1 to tBytes.count
-    i = (i + 1) mod 256
-    j = (j + pSbox[i + 1]) mod 256
-    temp = pSbox[i + 1]
-    pSbox[i + 1] = pSbox[j + 1]
-    pSbox[j + 1] = temp
-    d = pSbox[(pSbox[i + 1] + pSbox[j + 1]) mod 256 + 1]
-    tCipher = tCipher & tStrServ.convertIntToHex(bitXor(tBytes[a], d))
-  end repeat
-  return tCipher
-end
-
-on decipher me, tdata
-  tCipher = EMPTY
-  tStrServ = getStringServices()
   repeat with a = 1 to length(tdata)
     i = (i + 1) mod 256
     j = (j + pSbox[i + 1]) mod 256
@@ -97,7 +71,21 @@ on decipher me, tdata
     pSbox[i + 1] = pSbox[j + 1]
     pSbox[j + 1] = temp
     d = pSbox[(pSbox[i + 1] + pSbox[j + 1]) mod 256 + 1]
-    t = tStrServ.convertHexToInt(tdata.char[a..a + 1])
+    tCipher = tCipher & convertIntToHex(bitXor(charToNum(tdata.char[a]), d))
+  end repeat
+  return tCipher
+end
+
+on decipher me, tdata
+  tCipher = EMPTY
+  repeat with a = 1 to length(tdata)
+    i = (i + 1) mod 256
+    j = (j + pSbox[i + 1]) mod 256
+    temp = pSbox[i + 1]
+    pSbox[i + 1] = pSbox[j + 1]
+    pSbox[j + 1] = temp
+    d = pSbox[(pSbox[i + 1] + pSbox[j + 1]) mod 256 + 1]
+    t = convertHexToInt(tdata.char[a..a + 1])
     tCipher = tCipher & numToChar(bitXor(t, d))
     a = a + 1
   end repeat

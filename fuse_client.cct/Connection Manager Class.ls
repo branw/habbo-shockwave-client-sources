@@ -110,10 +110,10 @@ on unregisterListener me, tid, tObjID, tMsgList
     if voidp(tList.getaProp(tMsg)) then
       return error(me, "No listeners for message:" && tMsg && "/" && tid, #unregisterListener)
     end if
-    repeat with j = 1 to tList.getaProp(tMsg).count
-      tCallback = tList.getaProp(tMsg)[j]
+    repeat with j = 1 to tList[tMsg].count
+      tCallback = tList[tMsg][j]
       if tCallback[1] = tObjID and tCallback[2] = tMethod then
-        tList.getaProp(tMsg).deleteAt(j)
+        tList[tMsg].deleteAt(j)
         exit repeat
       end if
     end repeat
@@ -134,14 +134,8 @@ on registerCommands me, tid, tObjID, tCmdList
   end if
   repeat with i = 1 to tCmdList.count
     tCmd = tCmdList.getPropAt(i)
-    tFnc = tCmdList[i]
-    tOld = tPtr.getaProp(#value).getaProp(tCmd)
-    if tOld <> VOID then
-      if tOld <> tFnc then
-        error(me, "Registered command override:" && tCmd && "/" && tOld && "->" && tFnc)
-      end if
-    end if
-    tPtr.getaProp(#value).setaProp(tCmd, tFnc)
+    tCode = tCmdList[i]
+    tPtr.getaProp(#value).setaProp(tCmd, tCode)
   end repeat
   return 1
 end

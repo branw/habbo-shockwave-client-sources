@@ -1,4 +1,4 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pLastContent, pContentChunk, pCommandsPntr, pListenersPntr, pBinDataCallback, pLogMode, pLogfield
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pLastContent, pContentChunk, pCommandsPntr, pListenersPntr, pBinDataCallback
 
 on construct me
   pDecoder = 0
@@ -6,7 +6,6 @@ on construct me
   pConnectionShouldBeKilled = 0
   pCommandsPntr = getStructVariable("struct.pointer")
   pListenersPntr = getStructVariable("struct.pointer")
-  me.setLogMode(getIntVariable("connection.log.level", 0))
   return 1
 end
 
@@ -51,9 +50,8 @@ end
 
 on send me, tMsg
   if pConnectionOk and objectp(pXtra) then
-    if pLogMode > 0 then
-      me.log("<--" && tMsg)
-    end if
+    tMsg = replaceChunks(tMsg, "Š", "&auml;")
+    tMsg = replaceChunks(tMsg, "š", "&ouml;")
     tLength = string(tMsg.length)
     repeat while tLength.length < 4
       tLength = tLength & SPACE
@@ -125,22 +123,6 @@ on setProperty me, tProp, tValue
   return 0
 end
 
-on setLogMode me, tMode
-  if tMode.ilk <> #integer then
-    return error(me, "Invalid argument:" && tMode, #setLogMode)
-  end if
-  pLogMode = tMode
-  if pLogMode = 2 then
-    if memberExists("connectionLog.text") then
-      pLogfield = member(getmemnum("connectionLog.text"))
-    else
-      pLogfield = VOID
-      pLogMode = 1
-    end if
-  end if
-  return 1
-end
-
 on xtraMsgHandler me
   if pConnectionShouldBeKilled <> 0 then
     return 0
@@ -152,9 +134,6 @@ on xtraMsgHandler me
   if tErrCode <> 0 then
     me.disconnect()
     return 0
-  end if
-  if pLogMode > 0 then
-    me.log("-->" && tNewMsg.subject & RETURN && tContent)
   end if
   case tContent.ilk of
     #string:
@@ -203,15 +182,4 @@ on forwardMsg me, tMessage
   else
     error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
   end if
-end
-
-on log me, tMsg
-  case pLogMode of
-    1:
-      put "[Connection" && me.getID() & "] :" && tMsg
-    2:
-      if ilk(pLogfield, #member) then
-        put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
-      end if
-  end case
 end

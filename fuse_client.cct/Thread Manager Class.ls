@@ -39,7 +39,7 @@ end
 
 on initThread me, tCastNumOrMemName, tid
   if stringp(tCastNumOrMemName) then
-    tMemNum = getResourceManager().getmemnum(tCastNumOrMemName)
+    tMemNum = getmemnum(tCastNumOrMemName)
     if tMemNum = 0 then
       return error(me, "Thread index field not found:" && tCastNumOrMemName, #initThread)
     else
@@ -136,18 +136,17 @@ on closeThread me, tCastNumOrID
   if voidp(tThread) then
     return error(me, "Thread not found:" && tid, #closeThread)
   end if
-  tObjMgr = getObjectManager()
   if objectp(tThread.interface) then
-    tObjMgr.remove(tThread.interface.getID())
+    removeObject(tThread.interface.getID())
   end if
   if objectp(tThread.component) then
-    tObjMgr.remove(tThread.component.getID())
+    removeObject(tThread.component.getID())
   end if
   if objectp(tThread.handler) then
-    tObjMgr.remove(tThread.handler.getID())
+    removeObject(tThread.handler.getID())
   end if
   if objectp(tThread.parser) then
-    tObjMgr.remove(tThread.parser.getID())
+    removeObject(tThread.parser.getID())
   end if
   pThreadList.deleteProp(tid)
   return 1
@@ -173,18 +172,16 @@ on buildThreadObj me, tid, tClassList, tThreadObj
   tBase.construct()
   tBase[#ancestor] = tThreadObj
   tBase.setID(tid)
-  tResMgr = getResourceManager()
-  tObjMgr = getObjectManager()
-  tObjMgr.registerObject(tid, tBase)
+  registerObject(tid, tBase)
   tClassList.addAt(1, tBase)
   repeat with tClass in tClassList
     if objectp(tClass) then
       tObject = tClass
       tInitFlag = 0
     else
-      tMemNum = tResMgr.getmemnum(tClass)
+      tMemNum = getmemnum(tClass)
       if tMemNum < 1 then
-        tObjMgr.unregisterObject(tid)
+        unregisterObject(tid)
         return error(me, "Script not found:" && tMemNum, #buildThreadObj)
       end if
       tObject = script(tMemNum).new()
@@ -192,8 +189,8 @@ on buildThreadObj me, tid, tClassList, tThreadObj
     end if
     tObject[#ancestor] = tTemp
     tTemp = tObject
-    tObjMgr.unregisterObject(tid)
-    tObjMgr.registerObject(tid, tObject)
+    unregisterObject(tid)
+    registerObject(tid, tObject)
     if tInitFlag then
       tObject.construct()
     end if

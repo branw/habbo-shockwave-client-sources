@@ -7,11 +7,11 @@ on deconstructWriterManager
 end
 
 on getWriterManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#writer_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#writer_manager) then
     return constructWriterManager()
   end if
-  return tMgr.getManager(#writer_manager)
+  return tObjMngr.getManager(#writer_manager)
 end
 
 on createWriter tid, tMetrics

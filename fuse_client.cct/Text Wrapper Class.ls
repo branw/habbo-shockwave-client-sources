@@ -78,29 +78,6 @@ on getFont me
   return tStruct
 end
 
-on registerScroll me, tid
-  if voidp(me.pScrolls) then
-    me.prepare()
-  end if
-  if not voidp(tid) then
-    if me.pScrolls.getPos(tid) = 0 then
-      me.pScrolls.add(tid)
-    end if
-  else
-    if me.pScrolls.count = 0 then
-      return 0
-    end if
-  end if
-  tSourceRect = rect(me.pOffX, me.pOffY, me.pOffX + me.pOwnW, me.pOffY + me.pOwnH)
-  tScrollList = []
-  tWndObj = getWindowManager().get(me.pMotherId)
-  repeat with tScrollId in me.pScrolls
-    tScrollList.add(tWndObj.getElement(tScrollId))
-  end repeat
-  me.createImgFromTxt()
-  call(#updateData, tScrollList, tSourceRect, me.pimage.rect)
-end
-
 on initResources me, tFontProps
   tMemNum = getResourceManager().getmemnum("visual window text")
   if tMemNum = 0 then
@@ -114,8 +91,31 @@ on initResources me, tFontProps
 end
 
 on createImgFromTxt me
+  if pTextMem.wordWrap <> pFontData[#wordWrap] then
+    pTextMem.wordWrap = pFontData[#wordWrap]
+  end if
+  if pTextMem.alignment <> pFontData[#alignment] then
+    pTextMem.alignment = pFontData[#alignment]
+  end if
+  if pTextMem.bgColor <> pFontData[#bgColor] then
+    pTextMem.bgColor = pFontData[#bgColor]
+  end if
+  if pTextMem.font <> pFontData[#font] then
+    pTextMem.font = pFontData[#font]
+  end if
+  if pTextMem.fontSize <> pFontData[#fontSize] then
+    pTextMem.fontSize = pFontData[#fontSize]
+  end if
+  if pTextMem.color <> pFontData[#color] then
+    pTextMem.color = pFontData[#color]
+  end if
+  if pTextMem.fixedLineSpace <> pFontData[#fixedLineSpace] then
+    pTextMem.fixedLineSpace = pFontData[#fixedLineSpace]
+  end if
   pTextMem.rect = rect(0, 0, me.pOwnW, me.pOwnH)
-  if not listp(pFontData[#fontStyle]) then
+  if listp(pFontData[#fontStyle]) then
+    pTextMem.fontStyle = pFontData[#fontStyle]
+  else
     tList = []
     tDelim = the itemDelimiter
     the itemDelimiter = ","
@@ -124,6 +124,7 @@ on createImgFromTxt me
     end repeat
     the itemDelimiter = tDelim
     pFontData[#fontStyle] = tList
+    pTextMem.fontStyle = pFontData[#fontStyle]
   end if
   if not voidp(pFontData[#text]) then
     pTextMem.text = pFontData[#text]
@@ -146,30 +147,6 @@ on createImgFromTxt me
     end if
   end if
   pFontData[#text] = pTextMem.text
-  if pTextMem.fontStyle <> pFontData[#fontStyle] then
-    pTextMem.fontStyle = pFontData[#fontStyle]
-  end if
-  if pTextMem.wordWrap <> pFontData[#wordWrap] then
-    pTextMem.wordWrap = pFontData[#wordWrap]
-  end if
-  if pTextMem.alignment <> pFontData[#alignment] then
-    pTextMem.alignment = pFontData[#alignment]
-  end if
-  if pTextMem.bgColor <> pFontData[#bgColor] then
-    pTextMem.bgColor = pFontData[#bgColor]
-  end if
-  if pTextMem.font <> pFontData[#font] then
-    pTextMem.font = pFontData[#font]
-  end if
-  if pTextMem.fontSize <> pFontData[#fontSize] then
-    pTextMem.fontSize = pFontData[#fontSize]
-  end if
-  if pTextMem.color <> pFontData[#color] then
-    pTextMem.color = pFontData[#color]
-  end if
-  if pTextMem.fixedLineSpace <> pFontData[#fixedLineSpace] then
-    pTextMem.fixedLineSpace = pFontData[#fixedLineSpace]
-  end if
   if me.pScaleH = #center then
     tWidth = pTextMem.charPosToLoc(pTextMem.char.count).locH + 16
     if me.pProps[#style] = #unique then

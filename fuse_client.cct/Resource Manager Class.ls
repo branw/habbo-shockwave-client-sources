@@ -71,6 +71,7 @@ on removeMember me, tMemName
   tmember = member(tMemNum)
   if tmember.type = #bitmap then
     tmember.name = EMPTY
+    tmember.image = image(1, 1, 8)
     pBmpMemNumList.add(tMemNum)
   else
     tmember.erase()
@@ -156,7 +157,7 @@ on preIndexMembers me, tCastNum
     end repeat
     tPropsIndex = getVariable("props.index.field")
     if member(tPropsIndex, tCastLib).number > 0 then
-      getVariableManager().dump(member(tPropsIndex, tCastLib).number)
+      dumpVariableField(member(tPropsIndex, tCastLib).number)
     end if
     tAliasIndex = getVariable("alias.index.field")
     if member(tAliasIndex, tCastLib).number > 0 then

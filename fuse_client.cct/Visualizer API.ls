@@ -7,11 +7,11 @@ on deconstructVisualizerManager
 end
 
 on getVisualizerManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#visualizer_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#visualizer_manager) then
     return constructVisualizerManager()
   end if
-  return tMgr.getManager(#visualizer_manager)
+  return tObjMngr.getManager(#visualizer_manager)
 end
 
 on createVisualizer tid, tLayout

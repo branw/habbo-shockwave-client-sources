@@ -50,27 +50,22 @@ on updateState me, tstate
         repeat with i = 1 to 9
           tParam = externalParamValue("sw" & i)
           if not voidp(tParam) then
-            if tParam.item.count > 1 then
+            if tParam.item.count = 2 then
               if tParam.item[1] = "external.variables.txt" then
-                getVariableManager().set("external.variables.txt", tParam.item[2..tParam.item.count])
+                getVariableManager().set("external.variables.txt", tParam.item[2])
               end if
             end if
           end if
         end repeat
         the itemDelimiter = tDelim
       end if
-      tURL = getVariableManager().get("external.variables.txt")
+      tURL = getVariable("external.variables.txt")
       tMemName = tURL
-      if tURL contains "?" then
-        tParamDelim = "&"
-      else
-        tParamDelim = "?"
-      end if
       if the moviePath contains "http://" then
-        tURL = tURL & tParamDelim & the milliSeconds
+        tURL = tURL & "?" & the milliSeconds
       else
         if tURL contains "http://" then
-          tURL = tURL & tParamDelim & the milliSeconds
+          tURL = tURL & "?" & the milliSeconds
         end if
       end if
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
@@ -85,8 +80,8 @@ on updateState me, tstate
         repeat with i = 1 to 9
           tParam = externalParamValue("sw" & i)
           if not voidp(tParam) then
-            if tParam.item.count > 1 then
-              getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
+            if tParam.item.count = 2 then
+              getVariableManager().set(tParam.item[1], tParam.item[2])
             end if
           end if
         end repeat
@@ -106,16 +101,11 @@ on updateState me, tstate
       if tMemName = EMPTY then
         return me.updateState("load_casts")
       end if
-      if tURL contains "?" then
-        tParamDelim = "&"
-      else
-        tParamDelim = "?"
-      end if
       if the moviePath contains "http://" then
-        tURL = tURL & tParamDelim & the milliSeconds
+        tURL = tURL & "?" & the milliSeconds
       else
         if tURL contains "http://" then
-          tURL = tURL & tParamDelim & the milliSeconds
+          tURL = tURL & "?" & the milliSeconds
         end if
       end if
       tMemNum = queueDownload(tURL, tMemName, #field)

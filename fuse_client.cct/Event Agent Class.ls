@@ -7,13 +7,13 @@ on construct me
   pSprite.rect = rect(-90, -90, -80, -80)
   pSprite.locZ = 20000000
   pSprite.blend = 0
-  getSpriteManager().setEventBroker(pSprite.spriteNum, me.getID())
+  setEventBroker(pSprite.spriteNum, me.getID())
   return 1
 end
 
 on deconstruct me
   removePrepare(me.getID())
-  getSpriteManager().releaseSprite(pSprite.spriteNum)
+  releaseSprite(pSprite.spriteNum)
   return 1
 end
 

@@ -7,11 +7,11 @@ on deconstructSpriteManager
 end
 
 on getSpriteManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#sprite_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#sprite_manager) then
     return constructSpriteManager()
   end if
-  return tMgr.getManager(#sprite_manager)
+  return tObjMngr.getManager(#sprite_manager)
 end
 
 on reserveSprite tClientID

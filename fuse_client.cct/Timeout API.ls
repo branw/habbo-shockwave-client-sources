@@ -7,11 +7,11 @@ on deconstructTimeoutManager
 end
 
 on getTimeoutManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#timeout_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#timeout_manager) then
     return constructTimeoutManager()
   end if
-  return tMgr.getManager(#timeout_manager)
+  return tObjMngr.getManager(#timeout_manager)
 end
 
 on createTimeout tid, tTime, tHandler, tClientID, tArguments, tIterations

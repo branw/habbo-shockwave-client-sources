@@ -32,7 +32,6 @@ on dump me, tField, tDelimiter
       tProp = tPair.item[1].word[1..tPair.item[1].word.count]
       tValue = tPair.item[2..tPair.item.count]
       tValue = tValue.word[1..tValue.word.count]
-      tValue = tStrServices.convertSpecialChars(tValue)
       repeat with k = 1 to tSpecialChunks.count
         tMark = tSpecialChunks.getPropAt(k)
         if tValue contains tMark then

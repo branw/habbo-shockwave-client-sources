@@ -37,7 +37,6 @@ on reserveSprite me, tClientID
   puppetSprite(tSprNum, 1)
   tSprite.locV = -1000
   tSprite.visible = 1
-  tSprite.stretch = 0
   pClientList[tSprNum] = tClientID
   return tSprNum
 end

@@ -7,11 +7,11 @@ on deconstructThreadManager
 end
 
 on getThreadManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#thread_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#thread_manager) then
     return constructThreadManager()
   end if
-  return tMgr.getManager(#thread_manager)
+  return tObjMngr.getManager(#thread_manager)
 end
 
 on createThread tid, tInitField

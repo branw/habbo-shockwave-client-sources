@@ -423,7 +423,7 @@ on buildVisual me, tLayout
     tElemRect = rect(2000, 2000, -2000, -2000)
     tGroupData[#members].add(tmember)
     tGroupData[#sprites].add(tSprite)
-    tSprManager.setEventBroker(tSprite.spriteNum, tid)
+    getSpriteManager().setEventBroker(tSprite.spriteNum, tid)
     tSprite.registerProcedure(VOID, me.getID(), VOID)
     tBlend = tElement[1][#blend]
     tInk = tElement[1][#ink]
@@ -668,6 +668,22 @@ end
 
 on null me
   return 0
+end
+
+on getSpriteByID me, tid
+  tSprite = pSpriteList[tid]
+  if voidp(tSprite) then
+    return 0
+  end if
+  return tSprite
+end
+
+on getSprById me, tid
+  tSprite = pSpriteList[tid]
+  if voidp(tSprite) then
+    return 0
+  end if
+  return tSprite
 end
 
 on movePartBy me, ttype, tX, tY, tInverse

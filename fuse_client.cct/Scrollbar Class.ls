@@ -203,7 +203,7 @@ on mouseWithin me
         tNewLiftRect = pButtonImg[#lift_up].rect + rect(pRects[#bottom].left - pRects[#lift].width, 0, pRects[#bottom].left - pRects[#lift].width, 0)
       end if
       if tNewLiftRect.left < pRects[#top].right then
-        tNewLiftRect = pButtonImg[#lift_up].rect + rect(pRects[#top].width, 0, pRects[#top].width, 0)
+        newLIftRect = pButtonImg[#lift_up].rect + rect(pRects[#top].width, 0, pRects[#top].width, 0)
       end if
     end if
     pRects[#lift] = tNewLiftRect

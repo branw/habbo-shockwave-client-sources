@@ -7,11 +7,11 @@ on deconstructBrokerManager
 end
 
 on getBrokerManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#broker_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#broker_manager) then
     return constructBrokerManager()
   end if
-  return tMgr.getManager(#broker_manager)
+  return tObjMngr.getManager(#broker_manager)
 end
 
 on createBroker tMessage

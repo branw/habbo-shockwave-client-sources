@@ -1,8 +1,7 @@
-property pConnectionId, pTimeOutID, pQueue
+property pConnectionId, pQueue
 
 on construct me
   pConnectionId = getVariable("connection.mus.id", #mus)
-  pTimeOutID = "mus_close_delay"
   pCallBacks = [:]
   pQueue = []
   return me.registerCmds(1)
@@ -53,9 +52,6 @@ on next me
     me.delay(1000, #checkConnection)
   else
     if getMultiuser(pConnectionId).connectionReady() then
-      if timeoutExists(pTimeOutID) then
-        removeTimeout(pTimeOutID)
-      end if
       if count(pQueue) > 0 then
         tTask = pQueue[1]
         case tTask.type of
@@ -69,8 +65,6 @@ on next me
             me.next()
             return 1
         end case
-      else
-        createTimeout(pTimeOutID, 30000, #delayedClosing, me.getID(), VOID, 1)
       end if
     end if
   end if
@@ -103,12 +97,6 @@ on binaryDataReceived me, tdata
     end if
   end if
   me.next()
-end
-
-on delayedClosing me
-  if multiuserExists(pConnectionId) and count(pQueue) = 0 then
-    removeMultiuser(pConnectionId)
-  end if
 end
 
 on registerCmds me, tBool

@@ -7,11 +7,11 @@ on deconstructVariableManager
 end
 
 on getVariableManager
-  tMgr = getObjectManager()
-  if not tMgr.managerExists(#variable_manager) then
+  tObjMngr = getObjectManager()
+  if not tObjMngr.managerExists(#variable_manager) then
     return constructVariableManager()
   end if
-  return tMgr.getManager(#variable_manager)
+  return tObjMngr.getManager(#variable_manager)
 end
 
 on createVariable tid, tValue

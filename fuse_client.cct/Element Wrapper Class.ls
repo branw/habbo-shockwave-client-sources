@@ -110,7 +110,6 @@ on resizeBy me, tOffW, tOffH
       pBuffer.regPoint = point(0, 0)
       pSprite.width = pwidth
       pSprite.height = pheight
-      pSprite.stretch = 0
       call(#resizeBy, pElemList, tOffW, tOffH)
     end if
   end if

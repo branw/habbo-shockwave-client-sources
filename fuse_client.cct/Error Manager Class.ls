@@ -119,7 +119,7 @@ on SendMailAlert me, tErr, tMsgA, tMsgB
     tMailMsg = tMailMsg & "CastLibs:" & RETURN & RETURN & tCastlibs & RETURN & RETURN
     tMailMsg = tMailMsg & "Environment:" & RETURN & RETURN & tEnvironment & RETURN & RETURN
     tMailMsg = tMailMsg & "Error cache:" & RETURN & RETURN & getErrorManager().pErrorCache & RETURN
-    getConnection(getVariableValue("server.mail.connection")).send("SENDEMAIL", tMailMsg)
+    getConnection(getVariableValue("server.mail.connection")).send("SENDEMAIL" & RETURN & tMailMsg)
   end if
   return 0
 end
