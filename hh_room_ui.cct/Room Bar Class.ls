@@ -1,4 +1,4 @@
-property pBottomBarId, pBottomBarExtensionsID, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID, pPopupControllerID, pTypingTimeoutName, pSignImg, pSignState, pOldPosH, pOldPosV
+property pBottomBarId, pBottomBarExtensionsID, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID, pPopupControllerID, pTypingTimeoutName, pDisableRoomevents, pSignImg, pSignState, pOldPosH, pOldPosV
 
 on construct me
   pBottomBarId = "RoomBarID"
@@ -13,6 +13,10 @@ on construct me
   pBouncerID = #roombar_messenger_icon_bouncer
   pPopupControllerID = #roombar_popup_controller
   pTypingTimeoutName = "typing_state_timeout"
+  pDisableRoomevents = 0
+  if variableExists("disable.roomevents") then
+    pDisableRoomevents = getIntVariable("disable.roomevents")
+  end if
   registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
@@ -58,6 +62,10 @@ on showRoomBar me
   end if
   if not tWndObj.merge(tLayout) then
     return 0
+  end if
+  if pDisableRoomevents then
+    tEventsIcon = tWndObj.getElement("int_event_image")
+    tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
   end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
@@ -394,6 +402,9 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           end if
         end if
       "int_event_image":
+        if pDisableRoomevents then
+          return 1
+        end if
         if tEvent = #mouseUp then
           executeMessage(#show_hide_roomevents)
         end if

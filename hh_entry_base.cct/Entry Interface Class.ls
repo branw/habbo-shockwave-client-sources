@@ -1,4 +1,4 @@
-property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pNewMsgCount, pNewBuddyRequests, pClubDaysCount, pSwapAnimations, pBouncerID
+property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pNewMsgCount, pNewBuddyRequests, pClubDaysCount, pSwapAnimations, pBouncerID, pDisableRoomevents
 
 on construct me
   pEntryVisual = "entry_view"
@@ -19,6 +19,10 @@ on construct me
   pFirstInit = 1
   pSwapAnimations = []
   pBouncerID = #entry_messenger_icon_bouncer
+  pDisableRoomevents = 0
+  if variableExists("disable.roomevents") then
+    pDisableRoomevents = getIntVariable("disable.roomevents")
+  end if
   registerMessage(#userlogin, me.getID(), #showEntryBar)
   registerMessage(#messenger_ready, me.getID(), #activateIcon)
   registerMessage(#showHotelView, me.getID(), #showHotel)
@@ -116,6 +120,11 @@ on showEntryBar me
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcEntryBar, me.getID(), #mouseUp)
     me.addAnimTask(#animEntryBar)
+  end if
+  if pDisableRoomevents then
+    tWndObj = getWindow(pBottomBar)
+    tEventsIcon = tWndObj.getElement("event_icon_image")
+    tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
   end if
   registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
@@ -487,7 +496,10 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
     "get_credit_text", "purse_icon_image":
       return executeMessage(#openGeneralDialog, "purse")
     "event_icon_image":
-      return executeMessage(#show_hide_roomevents)
+      if not pDisableRoomevents then
+        return executeMessage(#show_hide_roomevents)
+      end if
+      return 1
     "nav_icon_image":
       return executeMessage(#show_hide_navigator)
     "messenger_icon_image":

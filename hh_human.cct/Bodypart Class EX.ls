@@ -59,6 +59,11 @@ on update me, tForcedUpdate, tRectMod
     tRectMod = tRectMod.duplicate()
   end if
   tRectModOrig = tRectMod.duplicate()
+  if pBody.pAnimating then
+    me.animateUpdate()
+  end if
+  tLocFixChanged = pLastLocFix <> point(pXFix + tRectMod[1], pYFix + tRectMod[2])
+  pLastLocFix = point(pXFix + tRectMod[1], pYFix + tRectMod[2])
   repeat with i = 1 to pLayerPropList.count
     tRectMod = tRectModOrig.duplicate()
     tdata = pLayerPropList[i]
@@ -97,8 +102,6 @@ on update me, tForcedUpdate, tRectMod
     if tFlipHOld <> tdata["flipH"] then
       tForcedUpdate = 1
     end if
-    tLocFixChanged = pLastLocFix <> point(pXFix + tRectMod[1], pYFix + tRectMod[2])
-    pLastLocFix = point(pXFix + tRectMod[1], pYFix + tRectMod[2])
     if tdata["memString"] <> tMemString or tLocFixChanged or tForcedUpdate then
       tdata["memString"] = tMemString
       tMemNum = me.getMemNumFast(tMemString)
@@ -134,6 +137,12 @@ on update me, tForcedUpdate, tRectMod
       pBody.pBuffer.copyPixels(tdata["cacheImage"], tDrawArea, tdata["cacheImage"].rect, tDrawProps)
     end if
   end repeat
+  if pBody.pAnimating then
+    pAnimFrame = pAnimFrame + 1
+    if pAnimFrame > pTotalFrame then
+      pAnimFrame = 1
+    end if
+  end if
 end
 
 on render me
@@ -358,6 +367,43 @@ on remAnimation me
   pTotalFrame = 1
 end
 
+on animateUpdate me
+  if ilk(pAnimation) <> #propList then
+    return 
+  end if
+  pXFix = pAnimation[#OffX][pAnimFrame]
+  pYFix = pAnimation[#OffY][pAnimFrame]
+  case pBody.pDirection of
+    0:
+      pYFix = pYFix + pXFix / 2
+      pXFix = pXFix / 2
+    1:
+      pYFix = pYFix + pXFix
+      pXFix = 0
+    2:
+      pYFix = pYFix - pXFix / 2
+      pXFix = pXFix / 2
+    4:
+      pYFix = pYFix + pXFix / 2
+      pXFix = -pXFix / 2
+    5:
+      pYFix = pYFix - pXFix
+      pXFix = 0
+    6:
+      pYFix = pYFix - pXFix / 2
+      pXFix = -pXFix / 2
+    7:
+      pXFix = -pXFix
+  end case
+  if pBody.pPeopleSize = "sh" then
+    tSizeMultiplier = 0.69999999999999996
+  else
+    tSizeMultiplier = 1
+  end if
+  pXFix = pXFix * tSizeMultiplier
+  pYFix = pYFix * tSizeMultiplier
+end
+
 on animate me, tLayerIndex
   if not pAnimation then
     return EMPTY
@@ -396,42 +442,7 @@ on animate me, tLayerIndex
   else
     tdata["flipH"] = 0
   end if
-  pXFix = pAnimation[#OffX][pAnimFrame]
-  pYFix = pAnimation[#OffY][pAnimFrame]
-  case pBody.pDirection of
-    0:
-      pYFix = pYFix + pXFix / 2
-      pXFix = pXFix / 2
-    1:
-      pYFix = pYFix + pXFix
-      pXFix = 0
-    2:
-      pYFix = pYFix - pXFix / 2
-      pXFix = pXFix / 2
-    4:
-      pYFix = pYFix + pXFix / 2
-      pXFix = -pXFix / 2
-    5:
-      pYFix = pYFix - pXFix
-      pXFix = 0
-    6:
-      pYFix = pYFix - pXFix / 2
-      pXFix = -pXFix / 2
-    7:
-      pXFix = -pXFix
-  end case
-  if pBody.pPeopleSize = "sh" then
-    tSizeMultiplier = 0.69999999999999996
-  else
-    tSizeMultiplier = 1
-  end if
-  pXFix = pXFix * tSizeMultiplier
-  pYFix = pYFix * tSizeMultiplier
   tMemName = pBody.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & tPart & "_" & tmodel & "_" & tdir & "_" & pAnimation[#frm][pAnimFrame]
-  pAnimFrame = pAnimFrame + 1
-  if pAnimFrame > pTotalFrame then
-    pAnimFrame = 1
-  end if
   return tMemName
 end
 

@@ -579,6 +579,11 @@ on sendChat me, tChat
           return 1
         end if
       ":events":
+        if variableExists("disable.roomevents") then
+          if getIntVariable("disable.roomevents") then
+            return 1
+          end if
+        end if
         if objectExists(pRoomEventBrowserID) then
           removeObject(pRoomEventBrowserID)
         else
