@@ -96,9 +96,9 @@ on updateInfostandAvatar me, tUserObj
   tRoomInterface = getThread(#room).getInterface()
   tSelectedObj = tRoomInterface.getSelectedObject()
   tSaveSelectedObj = tSelectedObj
-  tRoomInterface.setSelectedObj(tUserObj.getID())
+  tRoomInterface.setSelectedObject(tUserObj.getID())
   me.showObjectInfo("user")
-  tRoomInterface.setSelectedObj(tSaveSelectedObj)
+  tRoomInterface.setSelectedObject(tSaveSelectedObj)
   return 1
 end
 
@@ -138,7 +138,7 @@ on updateInfoStandGroup me, tGroupId
   else
     return 0
   end if
-  if voidp(tGroupId) then
+  if voidp(tGroupId) or tGroupId < 0 then
     tElem.clearImage()
     tElem.setProperty(#cursor, "cursor.arrow")
     return 0

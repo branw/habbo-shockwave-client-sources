@@ -156,7 +156,7 @@ on setup me, tdata
   pLocH = tdata[#h]
   pBadge = tdata[#badge]
   pGroupId = tdata[#groupid]
-  pStatusInGroup = tdata[#groupstatus] = tdata[#groupstatus]
+  pStatusInGroup = tdata[#groupstatus]
   if not voidp(tdata.getaProp(#webID)) then
     pWebID = tdata[#webID]
   end if

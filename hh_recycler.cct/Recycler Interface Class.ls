@@ -320,11 +320,12 @@ on updateAcceptButtonOpenState me
   tBarWidth = tCurrentBarElement.getProperty(#width)
   tActive = 0
   if tCurrentSelectableFurni <> VOID then
-    if tCurrentSelectableFurni[#furniValue] = tCurrentAmount then
+    if tCurrentSelectableFurni[#furniValue] <= tCurrentAmount then
       tActive = 1
       tCurrentFurniElement.setProperty(#blend, 100)
       tCurrentBarElement.setProperty(#image, me.getCustomButtonImage(tBarWidth, "green"))
       tCurrentBarElement.setProperty(#cursor, "cursor.finger")
+      tCurrentBarElement.setProperty(#blend, 100)
       tCurrentBarTextElement.setProperty(#blend, 100)
       tCurrentFurniElement.setText(tCurrentSelectableFurni[#name])
       tCurrentBarTextElement.setProperty(#cursor, "cursor.finger")
@@ -332,10 +333,11 @@ on updateAcceptButtonOpenState me
     end if
   end if
   if not tActive then
-    tCurrentFurniElement.setProperty(#blend, 30)
+    tCurrentFurniElement.setProperty(#blend, 0)
     tCurrentBarElement.setProperty(#image, me.getCustomButtonImage(tBarWidth, "gray"))
     tCurrentBarElement.setProperty(#cursor, "cursor.arrow")
-    tCurrentBarTextElement.setProperty(#blend, 20)
+    tCurrentBarElement.setProperty(#blend, 0)
+    tCurrentBarTextElement.setProperty(#blend, 0)
     tCurrentBarTextElement.setProperty(#cursor, "cursor.arrow")
     pAcceptBtnActive = 0
   end if

@@ -1,4 +1,4 @@
-property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker
+property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker, pRoomCatagoriesReady
 
 on construct me
   pRootUnitCatId = string(getIntVariable("navigator.visible.public.root"))
@@ -30,6 +30,7 @@ on construct me
   registerMessage(#roomForward, me.getID(), #prepareRoomEntry)
   registerMessage(#executeRoomEntry, me.getID(), #executeRoomEntry)
   registerMessage(#updateAvailableFlatCategories, me.getID(), #sendGetUserFlatCats)
+  pRoomCatagoriesReady = 0
   return 1
 end
 
@@ -48,6 +49,9 @@ on deconstruct me
 end
 
 on showNavigator me
+  if not pRoomCatagoriesReady then
+    executeMessage(#updateAvailableFlatCategories)
+  end if
   return me.getInterface().showNavigator()
 end
 
@@ -56,6 +60,9 @@ on hideNavigator me
 end
 
 on showhidenavigator me
+  if not pRoomCatagoriesReady then
+    executeMessage(#updateAvailableFlatCategories)
+  end if
   return me.getInterface().showhidenavigator(#hide)
 end
 
@@ -69,7 +76,7 @@ end
 
 on leaveRoom me
   getObject(#session).set("lastroom", "Entry")
-  return me.getInterface().showNavigator()
+  return me.showNavigator()
 end
 
 on getNodeInfo me, tNodeId, tCategoryId
@@ -431,6 +438,7 @@ end
 
 on sendGetUserFlatCats me
   if connectionExists(pConnectionId) then
+    pRoomCatagoriesReady = 1
     return getConnection(pConnectionId).send("GETUSERFLATCATS")
   else
     return error(me, "Connection not found:" && pConnectionId, #sendGetUserFlatCats)
@@ -665,8 +673,7 @@ on updateState me, tstate, tProps
       return 1
     "openNavigator":
       pState = tstate
-      me.getInterface().showNavigator()
-      executeMessage(#updateAvailableFlatCategories)
+      me.showNavigator()
     "enterEntry":
       pState = tstate
       executeMessage(#changeRoom)

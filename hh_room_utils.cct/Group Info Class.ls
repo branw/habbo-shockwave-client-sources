@@ -59,7 +59,7 @@ on getGroupInformation me, tGroupId
 end
 
 on getGroupLogoMemberNum me, tGroupId
-  tGroupData = pGroupData[tGroupId]
+  tGroupData = pGroupData.getaProp(tGroupId)
   if voidp(tGroupData) then
     return getmemnum(pGroupLogoTemplateMember)
   end if
@@ -101,7 +101,8 @@ on getLogoURL me, tGroupId
 end
 
 on requestLogoDownload me, tGroupId
-  tGroupData = pGroupData[tGroupId]
+  tGroupId = string(tGroupId)
+  tGroupData = pGroupData.getaProp(tGroupId)
   if ilk(tGroupData) <> #propList then
     return error(me, "No group found: " & tGroupId, me.getID(), #requestLogoDownload)
   end if

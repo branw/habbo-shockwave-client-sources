@@ -100,7 +100,7 @@ on importFileToCast me
   tmember = member(pMemNum)
   case pType of
     #text, #field:
-      tmember.text = netTextresult(pNetId)
+      tmember.text = netTextResult(pNetId)
     #bitmap:
       importFileInto(tmember, pURL, [#dither: 0, #trimWhiteSpace: 0])
     otherwise:
