@@ -1039,7 +1039,7 @@ on handle_ignore_list me, tMsg
   tCount = tConn.GetIntFrom()
   tList = []
   repeat with i = 1 to tCount
-    tList.append(tConn.GetIntFrom())
+    tList.append(tConn.GetStrFrom())
   end repeat
   return executeMessage(#save_ignore_list, tList)
 end

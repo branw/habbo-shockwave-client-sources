@@ -36,10 +36,13 @@ end
 
 on isBuddyListFull me
   tListLimits = getThread(#messenger).getInterface().getBuddyListLimits()
-  tLimit = tListLimits[#own]
+  tOwnLimit = tListLimits[#own]
   tBuddyData = getThread(#messenger).getComponent().getBuddyData()
-  tFriendsAmount = tBuddyData[#buddies].count
-  return not (tFriendsAmount < tLimit)
+  tBuddyCount = tBuddyData[#buddies].count
+  if tOwnLimit = -1 or tBuddyCount < tOwnLimit then
+    return 0
+  end if
+  return 1
 end
 
 on updateView me
