@@ -1,7 +1,7 @@
 property pBody, pPart, pmodel, pDirection, pDrawProps, pAction, pMemString, pXFix, pYFix, pLastLocFix, pCacheImage, pCacheRectA, pCacheRectB, pFlipH, pAnimation, pAnimFrame, pTotalFrame, pAnimList, pFlipPart
 
-on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
-  pBody = tAncestor
+on define me, tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart
+  pBody = tBody
   pPart = tPart
   pmodel = tmodel
   pDrawProps = [#maskImage: 0, #ink: 0, #bgColor: 0]
@@ -21,37 +21,17 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
   pAnimFrame = 1
   pTotalFrame = 1
   pAnimList = [:]
-  if (["bd", "lg", "sh", "lh", "ls", "rh", "rs"]).findPos(pPart) > 0 then
-    pAnimList["wlk"] = [0, 1, 2, 3]
-  end if
-  if (["lh", "ls"]).findPos(pPart) > 0 then
-    pAnimList["wav"] = [0, 1]
-  end if
-  if (["hd", "fc"]).findPos(pPart) > 0 then
-    pAnimList["spk"] = [0, 1]
-    pAnimList["lsp"] = [0, 1]
-  end if
   pFlipPart = EMPTY
-  if pPart = "rs" then
-    pFlipPart = "ls"
-  else
-    if pPart = "rh" then
-      pFlipPart = "lh"
-    else
-      if pPart = "ls" then
-        pFlipPart = "rs"
-      else
-        if pPart = "lh" then
-          pFlipPart = "rh"
-        else
-          if pPart = "li" then
-            pFlipPart = "li"
-          end if
-        end if
-      end if
-    end if
+  if not voidp(tFlipPart) then
+    pFlipPart = tFlipPart
   end if
   return 1
+end
+
+on setAnimations me, tAnimData
+  if ilk(tAnimData) = #propList then
+    pAnimList = tAnimData
+  end if
 end
 
 on update me, tForcedUpdate, tRectMod
@@ -67,7 +47,7 @@ on update me, tForcedUpdate, tRectMod
     tRectMod = tRectMod.duplicate()
   end if
   tFlipHOld = pFlipH
-  if pBody.pAnimating and me.checkPartNotCarrying() then
+  if pBody.pAnimating then
     tMemString = me.animate()
     case pBody.pDirection of
       0:
@@ -136,8 +116,6 @@ on update me, tForcedUpdate, tRectMod
             pCacheRectA = rect(0, 0, 0, 0)
           end if
           return 
-        else
-          tdir = pDirection
         end if
     end case
     tMemString = pBody.pPeopleSize & "_" & tAction & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & tAnimCntr
@@ -270,15 +248,7 @@ on setColor me, tColor
 end
 
 on checkPartNotCarrying me
-  if not pBody.getProperty(#carrying) then
-    return 1
-  end if
-  tHandParts = ["rh", "rs", "ri"]
-  if tHandParts.getPos(pPart) then
-    return 0
-  else
-    return 1
-  end if
+  return not pBody.getPartCarrying(pPart)
 end
 
 on doHandWorkLeft me, tAct
@@ -391,13 +361,6 @@ on remAnimation me
 end
 
 on animate me
-  if pPart = "ri" then
-    if pCacheRectA.width > 0 then
-      pBody.pUpdateRect = union(pBody.pUpdateRect, pCacheRectA)
-      pCacheRectA = rect(0, 0, 0, 0)
-    end if
-    return EMPTY
-  end if
   if not pAnimation then
     return EMPTY
   end if

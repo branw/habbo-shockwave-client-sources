@@ -18,6 +18,10 @@ on deconstruct me
   repeat with tSpriteData in pSpriteData
     releaseSprite(tSpriteData[#sprite].spriteNum)
   end repeat
+  if pHostSpriteData[#sprite] <> VOID then
+    pHostSpriteData[#sprite].color = pHostSpriteData[#previousfcolor]
+    pHostSpriteData[#sprite].ink = pHostSpriteData[#previousink]
+  end if
   pSpriteData = []
   pHostSpriteData = [:]
 end

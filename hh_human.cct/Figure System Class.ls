@@ -11,6 +11,7 @@ on construct me
   me.regMsgList(1)
   me.loadPartSetXML()
   me.loadActionSetXML()
+  me.loadAnimationSetXML()
   return 1
 end
 
@@ -772,6 +773,7 @@ on loadPartSetXML me
               setVariable("human.parts." & tPeopleSize50, tSmallList)
               setVariable("swimmer.parts." & tPeopleSize, tSwimList)
               setVariable("swimmer.parts." & tPeopleSize50, tSwimSmallList)
+              setVariable("human.parts.flipList", tFlipList)
               next repeat
             end if
             if tElementPartSet.name = "activePartSet" then
@@ -787,17 +789,15 @@ on loadPartSetXML me
               if not voidp(tID) then
                 repeat with k = 1 to tElementPartSet.child.count
                   tElementPart = tElementPartSet.child[k]
-                  if tElementPart.name = "part" then
-                    tSetType = VOID
+                  if tElementPart.name = "activePart" then
+                    tAttributes = ["set-type": VOID]
                     repeat with l = 1 to tElementPart.attributeName.count
                       tName = tElementPart.attributeName[l]
                       tValue = tElementPart.attributeValue[l]
-                      if tName = "set-type" then
-                        tSetType = tValue
-                      end if
+                      tAttributes[tName] = tValue
                     end repeat
-                    if not voidp(tSetType) then
-                      tPartList.add(tSetType)
+                    if not voidp(tAttributes["set-type"]) then
+                      tPartList.add(tAttributes["set-type"])
                     end if
                   end if
                 end repeat
@@ -815,7 +815,7 @@ on loadPartSetXML me
 end
 
 on loadActionSetXML me
-  tdata = member("actionSets.XML").text
+  tdata = member("actionSet.XML").text
   if not voidp(tdata) then
     tPeopleSize = getVariable("human.size.64")
     tPeopleSize50 = getVariable("human.size.32")
@@ -881,25 +881,105 @@ end
 
 on parsePartListXML me, tElement
   tPartList = []
+  tIndex = 1
   repeat with i = 1 to tElement.child.count
     tElementPart = tElement.child[i]
     if tElementPart.name = "part" then
-      tAttributes = ["index": VOID, "set-type": VOID]
+      tAttributes = ["set-type": VOID]
       repeat with l = 1 to tElementPart.attributeName.count
         tName = tElementPart.attributeName[l]
         tValue = tElementPart.attributeValue[l]
         tAttributes[tName] = tValue
       end repeat
-      if not voidp(tAttributes["index"]) and not voidp(tAttributes["set-type"]) then
-        tIndex = value(tAttributes["index"])
-        if tIndex > 0 then
-          tPartList[tIndex] = tAttributes["set-type"]
-        end if
+      if not voidp(tAttributes["set-type"]) then
+        tPartList[tIndex] = tAttributes["set-type"]
+        tIndex = tIndex + 1
         next repeat
       end if
+      error(me, "missing set-type attribute for part!", #parsePartListXML, #major)
     end if
   end repeat
   return tPartList
+end
+
+on loadAnimationSetXML me
+  tAnimationData = [:]
+  tdata = member("animationSet.XML").text
+  if not voidp(tdata) then
+    tPeopleSize = getVariable("human.size.64")
+    tPeopleSize50 = getVariable("human.size.32")
+    tParserObject = new(xtra("xmlparser"))
+    errCode = tParserObject.parseString(tdata)
+    errorString = tParserObject.getError()
+    if voidp(errorString) then
+      repeat with i = 1 to tParserObject.child.count
+        tName = tParserObject.child[i].name
+        if tName = "animationSet" then
+          repeat with j = 1 to tParserObject.child[i].child.count
+            tElementAction = tParserObject.child[i].child[j]
+            if tElementAction.name = "action" then
+              tID = VOID
+              repeat with l = 1 to tElementAction.attributeName.count
+                tName = tElementAction.attributeName[l]
+                tValue = tElementAction.attributeValue[l]
+                if tName = "id" then
+                  tID = tValue
+                end if
+              end repeat
+              if not voidp(tID) then
+                repeat with k = 1 to tElementAction.child.count
+                  tElementPart = tElementAction.child[k]
+                  if tElementPart.name = "part" then
+                    tAttributes = ["set-type": VOID]
+                    repeat with l = 1 to tElementPart.attributeName.count
+                      tName = tElementPart.attributeName[l]
+                      tValue = tElementPart.attributeValue[l]
+                      tAttributes[tName] = tValue
+                    end repeat
+                    if not voidp(tAttributes["set-type"]) then
+                      tFrameList = me.parseFrameListXML(tElementPart)
+                      if voidp(tAnimationData[tAttributes["set-type"]]) then
+                        tAnimationData[tAttributes["set-type"]] = [:]
+                      end if
+                      tAnimationData[tAttributes["set-type"]][tID] = tFrameList
+                      next repeat
+                    end if
+                    error(me, "missing set-type attribute for part in action element!", #loadPartSetXML, #major)
+                  end if
+                end repeat
+              end if
+              next repeat
+            end if
+            error(me, "missing id attribute in action element!", #loadPartSetXML, #major)
+          end repeat
+        end if
+      end repeat
+    end if
+  end if
+  setVariable("human.parts.animationList", tAnimationData)
+end
+
+on parseFrameListXML me, tElement
+  tFrameList = []
+  tIndex = 1
+  repeat with i = 1 to tElement.child.count
+    tElementFrame = tElement.child[i]
+    if tElementFrame.name = "frame" then
+      tAttributes = ["number": VOID]
+      repeat with l = 1 to tElementFrame.attributeName.count
+        tName = tElementFrame.attributeName[l]
+        tValue = tElementFrame.attributeValue[l]
+        tAttributes[tName] = tValue
+      end repeat
+      if not voidp(tAttributes["number"]) then
+        tFrameList[tIndex] = tAttributes["number"]
+        tIndex = tIndex + 1
+        next repeat
+      end if
+      error(me, "missing number attribute for frame!", #parseFrameListXML, #major)
+    end if
+  end repeat
+  return tFrameList
 end
 
 on regMsgList me, tBool

@@ -26,6 +26,11 @@ on define me, tdata
   return 1
 end
 
+on changeFigureAndData me, tdata
+  tdata[#figure] = me.fixSwimmerFigure(tdata[#figure])
+  callAncestor(#changeFigureAndData, [me], tdata)
+end
+
 on getPelleFigure me
   return pPelleFigure
 end
@@ -79,37 +84,12 @@ on Refresh me, tX, tY, tH
   me.pChanges = 1
 end
 
-on deconstructPartList me
-  repeat with tPart in me.pPartList
-    tPart.deconstruct()
-  end repeat
-end
-
 on getClearedFigurePartList me, tmodels
   return me.getSpecificClearedFigurePartList(tmodels, "swimmer.parts")
 end
 
 on setPartLists me, tmodels
-  tAction = me.pMainAction
-  if me.pPartList.ilk = #list then
-    me.deconstructPartList()
-  end if
-  me.pPartList = []
-  if me.pSex = "F" then
-    tphModel = "s01"
-  else
-    tphModel = "s02"
-  end if
-  tColor = pPhFigure["color"]
-  tmodels["ch"] = ["model": tphModel, "color": tColor]
-  repeat with f in ["bd", "lh", "rh"]
-    if voidp(tmodels[f]) then
-      tmodels[f] = ["model": "001", "color": rgb("#EEEEEE")]
-    end if
-  end repeat
-  tmodels["bd"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
-  tmodels["lh"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
-  tmodels["rh"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
+  tmodels = me.fixSwimmerFigure(tmodels)
   callAncestor(#setPartLists, [me], tmodels)
   pPelleFigure = [:]
   repeat with i = 1 to me.pPartIndex.count
@@ -259,6 +239,25 @@ end
 
 on isInSwimsuit me
   return 1
+end
+
+on fixSwimmerFigure me, tFigure
+  if me.pSex = "F" then
+    tphModel = "s01"
+  else
+    tphModel = "s02"
+  end if
+  tColor = pPhFigure["color"]
+  tFigure["ch"] = ["model": tphModel, "color": tColor]
+  repeat with f in ["bd", "lh", "rh"]
+    if voidp(tFigure[f]) then
+      tFigure[f] = ["model": "001", "color": rgb("#EEEEEE")]
+    end if
+  end repeat
+  tFigure["bd"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
+  tFigure["lh"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
+  tFigure["rh"]["model"] = "s" & tFigure["bd"]["model"].char[2..3]
+  return tFigure
 end
 
 on action_swim me, props

@@ -1,18 +1,8 @@
 property pSwimProps, pUnderWater
 
-on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
+on define me, tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart
   pSwimProps = [#maskImage: 0, #ink: 0, #bgColor: rgb(0, 156, 156), #color: rgb(0, 156, 156), #blend: 60]
-  if tAction = "sws" or tAction = "swm" or tAction = "sit" then
-    tNoSwimFramesList = ["hr", "fc", "ey", "hd"]
-    if tNoSwimFramesList.getPos(tPart) > 0 then
-      tAction = "std"
-    end if
-  end if
-  callAncestor(#define, [me], tPart, tmodel, tColor, tDirection, tAction, tAncestor)
-  if (["bd", "lg", "sh", "lh", "ls", "rh", "rs"]).findPos(me.pPart) > 0 then
-    me.pAnimList["swm"] = [0, 1, 2, 3]
-    me.pAnimList["sws"] = [0, 1, 2, 3]
-  end if
+  callAncestor(#define, [me], tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart)
   pUnderWater = 1
   return 1
 end
@@ -35,7 +25,7 @@ end
 on render me
   callAncestor(#render, [me])
   if memberExists(me.pMemString) then
-    if me.pSwim then
+    if me.pBody.pSwim then
       pSwimProps[#maskImage] = me.pDrawProps[#maskImage]
       if me.pFlipH then
         tDrawRect = me.pCacheRectA
@@ -53,13 +43,6 @@ on defineInk me, tInk
   callAncestor(#defineInk, [me], tInk)
   pSwimProps[#ink] = me.pDrawProps[#ink]
   return 1
-end
-
-on changePartData me, tmodel, tColor
-  if me.pPart = "ch" then
-    return 1
-  end if
-  return callAncestor(#changePartData, [me], tmodel, tColor)
 end
 
 on setUnderWater me, tUnderWater

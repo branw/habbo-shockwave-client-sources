@@ -174,11 +174,7 @@ on changeFigureAndData me, tdata
   end repeat
   pChanges = 1
   me.render()
-  if me.isInSwimsuit() then
-    me.setPartLists(tdata[#figure], #preserveAnimation)
-  else
-    me.reDraw()
-  end if
+  me.reDraw()
   pInfoStruct[#image] = me.getPicture()
 end
 
@@ -471,6 +467,13 @@ on setProperty me, tPropID, tValue
   return 0
 end
 
+on getPartCarrying me, tPart
+  if pPartListSubSet["handRight"].findPos(tPart) and me.getProperty(#carrying) then
+    return 1
+  end if
+  return 0
+end
+
 on isInSwimsuit me
   return 0
 end
@@ -691,6 +694,14 @@ on setPartLists me, tmodels
   tAction = pMainAction
   pPartList = []
   tPartDefinition = me.getClearedFigurePartList(tmodels)
+  tFlipList = getVariable("human.parts.flipList")
+  if ilk(tFlipList) <> #propList then
+    tFlipList = [:]
+  end if
+  tAnimationList = getVariable("human.parts.animationList")
+  if ilk(tAnimationList) <> #propList then
+    tAnimationList = [:]
+  end if
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
     if voidp(tmodels[tPartSymbol]) then
@@ -717,7 +728,9 @@ on setPartLists me, tmodels
     if tColor.red + tColor.green + tColor.blue > 238 * 3 then
       tColor = rgb("EEEEEE")
     end if
-    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, pDirection, tAction, me)
+    tFlipPart = tFlipList[tPartSymbol]
+    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, pDirection, tAction, me, tFlipPart)
+    tPartObj.setAnimations(tAnimationList[tPartSymbol])
     pPartList.add(tPartObj)
     pColors.setaProp(tPartSymbol, tColor)
   end repeat
