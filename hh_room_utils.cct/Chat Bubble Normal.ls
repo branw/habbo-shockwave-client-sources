@@ -258,7 +258,7 @@ on renderText me, tUserName, tChatMessage, tChatMode
   tmember.char[1..tUserName.length + 1].fontStyle = tBoldStruct.getaProp(#fontStyle)
   tTextWidth = tmember.charPosToLoc(tmember.char.count).locH + tBoldStruct.getaProp(#fontSize)
   tmember.rect = rect(0, 0, tTextWidth, tmember.height)
-  tTextImg = tmember.image
+  tTextImg = tmember.image.duplicate()
   return tTextImg
 end
 

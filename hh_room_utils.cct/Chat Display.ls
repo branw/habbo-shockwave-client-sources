@@ -1,4 +1,4 @@
-property pFreeChatItemList, pReservedChatItemList, pMarginFromScreenTop, pBalloonsVisible, pAutoScrollOn, pAutoScrollAmountPx, pAutoScrolledNow, pScrollDelayTime, pScrollDelayStartTime, pMessageBuffer, pUserCache
+property pFreeChatItemList, pReservedChatItemList, pMarginFromScreenTop, pBalloonsVisible, pAutoScrollOn, pAutoScrollAmountPx, pAutoScrolledNow, pScrollDelayTime, pScrollDelayStartTime, pMessageBuffer, pUserCache, pChatItemCount
 
 on construct me
   pFreeChatItemList = []
@@ -9,6 +9,7 @@ on construct me
   pAutoScrollOn = 0
   pScrollDelayTime = getVariableValue("chat.scroll.delay", 5000)
   pAutoScrolledNow = 0
+  pChatItemCount = 0
   pMessageBuffer = []
   pUserCache = []
   registerMessage(#enterRoom, me.getID(), #startUpdate)
@@ -40,6 +41,7 @@ on clearAll me
   end repeat
   pFreeChatItemList = []
   me.clearUserCache()
+  pChatItemCount = 0
 end
 
 on showBalloons me, tVisible
@@ -70,10 +72,6 @@ on showNextChatMessage me
   end if
   tMessage = pMessageBuffer[1]
   pMessageBuffer.deleteAt(1)
-  tChatItem = me.getChatItem(tMessage[#mode], tMessage[#id], tMessage[#message])
-  if tChatItem = 0 then
-    return 0
-  end if
   if tMessage[#mode] = "OBJECT" then
     tObj = getThread(#room).getComponent().getActiveObject(tMessage[#id])
     if not tObj = 0 then
@@ -85,17 +83,22 @@ on showNextChatMessage me
       tloc = tObj.getPartLocation("hd")
     end if
   end if
-  if tloc = 0 then
+  if voidp(tloc) then
     return 0
   end if
   tloc = point(tloc[1], pMarginFromScreenTop)
+  tChatItem = me.getChatItem(tMessage[#mode], tMessage[#id], tMessage[#message])
+  if tChatItem = 0 then
+    return 0
+  end if
   tChatItem.setLocation(tloc)
 end
 
 on getChatItem me, tChatMode, tObjID, tChatMessage
   if pFreeChatItemList.count = 0 then
     tChatItem = createObject(#random, "Chat Bubble Normal")
-    tItemID = "id_" & pReservedChatItemList.count + pFreeChatItemList.count
+    pChatItemCount = pChatItemCount + 1
+    tItemID = pChatItemCount
   else
     tChatItem = pFreeChatItemList[1]
     pFreeChatItemList.deleteAt(1)

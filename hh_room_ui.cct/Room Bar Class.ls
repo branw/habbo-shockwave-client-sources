@@ -72,6 +72,7 @@ on hideRoomBar me
   if objectExists(pBouncerID) then
     removeObject(pBouncerID)
   end if
+  executeMessage(#hideInvitation)
 end
 
 on applyChatHelpText me

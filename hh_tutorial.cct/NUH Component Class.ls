@@ -8,6 +8,7 @@ on construct me
   registerMessage(#leaveRoom, me.getID(), #removeHelp)
   registerMessage(#changeRoom, me.getID(), #removeHelp)
   registerMessage(#enterRoom, me.getID(), #removeHelp)
+  registerMessage(#roomInterfaceHidden, me.getID(), #removeHelp)
   return 1
 end
 
@@ -16,6 +17,7 @@ on deconstruct me
   unregisterMessage(#leaveReady, me.getID())
   unregisterMessage(#changeReady, me.getID())
   unregisterMessage(#enterReady, me.getID())
+  unregisterMessage(#roomInterfaceHidden, me.getID())
   return 1
 end
 

@@ -676,6 +676,7 @@ on hideAll me
   me.hideLoaderBar()
   me.hideTrashCover()
   me.hideLoaderBar()
+  executeMessage(#roomInterfaceHidden)
   return 1
 end
 

@@ -41,7 +41,10 @@ on construct me
   if objectExists(#layout_parser) then
     removeObject(#layout_parser)
   end if
-  createObject(#layout_parser, getClassVariable("layout.parser.class"))
+  createObject(#layout_parser, getClassVariable("layout.parser.class.patch"))
+  if variableExists("window.textimage.class.patch") then
+    setVariable("window.textimage.class", getVariable("window.textimage.class.patch"))
+  end if
   createObject(#string_validator, "String Validator Cls")
   registerMessage(#Initialize, me.getID(), #delayedPatch)
   registerMessage(#BalloonManagerCreated, me.getID(), #patchBalloonText)
