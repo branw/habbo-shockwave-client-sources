@@ -21,7 +21,17 @@ on handle_messenger_init me, tMsg
   tNormalLimit = tConn.GetIntFrom()
   tExtendedLimit = tConn.GetIntFrom()
   me.getInterface().setBuddyListLimits(tUserLimit, tNormalLimit, tExtendedLimit)
-  me.handle_console_info(tMsg)
+  tConsoleInfo = me.get_console_info(tMsg)
+  me.getComponent().receive_BuddyList(#new, tConsoleInfo[#buddies])
+  repeat with tItem in tConsoleInfo[#console_messages]
+    me.getComponent().receive_Message(tItem)
+  end repeat
+  repeat with tItem in tConsoleInfo[#campaign_messages]
+    me.getComponent().receive_CampaignMsg(tItem)
+  end repeat
+  repeat with tItem in tConsoleInfo[#buddy_requests]
+    me.getComponent().receive_BuddyRequest(tItem)
+  end repeat
   return me.getComponent().receive_MessengerReady("MESSENGERREADY")
 end
 
@@ -41,6 +51,7 @@ on handle_buddylist me, tMsg
   tBuddyList = me.get_sorted_buddy_list(tBuddyData)
   tBuddyList[#buddies] = tBuddyData
   me.getComponent().receive_BuddyList(#new, tBuddyList)
+  return 1
 end
 
 on handle_console_update me, tMsg
@@ -61,40 +72,16 @@ on handle_console_update me, tMsg
 end
 
 on handle_console_info me, tMsg
-  tConn = tMsg.connection
-  if tConn = 0 then
-    return 0
-  end if
-  tBuddyData = [:]
-  tLoopCount = tConn.GetIntFrom()
-  repeat with i = 1 to tLoopCount
-    tdata = me.get_user_info(tMsg)
-    if tdata <> 0 then
-      tBuddyData.addProp(string(tdata[#id]), tdata)
-    end if
+  tConsoleInfo = me.get_console_info(tMsg)
+  me.getComponent().receive_BuddyList(#new, tConsoleInfo[#buddies])
+  repeat with tItem in tConsoleInfo[#console_messages]
+    me.getComponent().receive_Message(tItem)
   end repeat
-  tBuddyList = me.get_sorted_buddy_list(tBuddyData)
-  tBuddyList[#buddies] = tBuddyData
-  me.getComponent().receive_BuddyList(#new, tBuddyList)
-  tLoopCount = tConn.GetIntFrom()
-  repeat with i = 1 to tLoopCount
-    tdata = me.get_console_message(tMsg)
-    if tdata <> 0 then
-      me.getComponent().receive_Message(tdata)
-    end if
+  repeat with tItem in tConsoleInfo[#campaign_messages]
+    me.getComponent().receive_CampaignMsg(tItem)
   end repeat
-  tLoopCount = tConn.GetIntFrom()
-  repeat with i = 1 to tLoopCount
-    tdata = me.get_campaign_message(tMsg)
-    me.getComponent().receive_CampaignMsg(tdata)
-  end repeat
-  tRequestList = []
-  tLoopCount = tConn.GetIntFrom()
-  repeat with i = 1 to tLoopCount
-    tdata = me.get_buddy_request(tMsg)
-    if tdata <> 0 then
-      me.getComponent().receive_BuddyRequest(tdata)
-    end if
+  repeat with tItem in tConsoleInfo[#buddy_requests]
+    me.getComponent().receive_BuddyRequest(tItem)
   end repeat
   return 1
 end
@@ -185,6 +172,53 @@ on handle_messenger_error me, tMsg
   return 1
 end
 
+on get_console_info me, tMsg
+  tConn = tMsg.connection
+  if tConn = 0 then
+    return 0
+  end if
+  tResult = [:]
+  tBuddyData = [:]
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_user_info(tMsg)
+    if tdata <> 0 then
+      tBuddyData.addProp(string(tdata[#id]), tdata)
+    end if
+  end repeat
+  tBuddyList = me.get_sorted_buddy_list(tBuddyData)
+  tBuddyList[#buddies] = tBuddyData
+  tResult.addProp(#buddies, tBuddyList)
+  tList = []
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_console_message(tMsg)
+    if tdata <> 0 then
+      tList.add(tdata)
+    end if
+  end repeat
+  tResult.addProp(#console_messages, tList)
+  tList = []
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_campaign_message(tMsg)
+    if tdata <> 0 then
+      tList.add(tdata)
+    end if
+  end repeat
+  tResult.addProp(#campaign_messages, tList)
+  tList = []
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_buddy_request(tMsg)
+    if tdata <> 0 then
+      tList.add(tdata)
+    end if
+  end repeat
+  tResult.addProp(#buddy_requests, tList)
+  return tResult
+end
+
 on get_sorted_buddy_list me, tBuddyData
   tSortedList = [#online: [], #offline: [], #render: []]
   repeat with i = 1 to tBuddyData.count
@@ -246,26 +280,6 @@ on get_user_info me, tMsg
   return tdata
 end
 
-on get_user_info_update me, tMsg
-  tConn = tMsg.connection
-  if tConn = 0 then
-    return 0
-  end if
-  tdata = [:]
-  tdata[#id] = string(tConn.GetIntFrom())
-  if tdata[#id] = "0" then
-    return 0
-  end if
-  tdata[#customText] = tConn.GetStrFrom()
-  tdata[#online] = tConn.GetIntFrom()
-  if tdata[#online] then
-    tdata[#location] = tConn.GetStrFrom()
-  else
-    tdata[#lastAccess] = tConn.GetStrFrom()
-  end if
-  return tdata
-end
-
 on get_console_message me, tMsg
   tConn = tMsg.connection
   if tConn = 0 then
@@ -274,6 +288,11 @@ on get_console_message me, tMsg
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#senderID] = string(tConn.GetIntFrom())
+  if tConn.GetIntFrom() = 0 then
+    tdata[#sex] = "F"
+  else
+    tdata[#sex] = "M"
+  end if
   tdata[#FigureData] = tConn.GetStrFrom()
   tdata[#time] = tConn.GetStrFrom()
   tdata[#message] = tConn.GetStrFrom()

@@ -267,7 +267,7 @@ on handleErr me, tMsg
       the itemDelimiter = "/"
       tTextStr = tMsg.content.item[2..tMsg.content.item.count]
       the itemDelimiter = tDelim
-      executeMessage(#alert, [#title: "alert_warning", #msg: tTextStr])
+      executeMessage(#alert, [#title: "alert_warning", #msg: tTextStr, #modal: 1])
     else
       if tMsg.content contains "Version not correct" then
         executeMessage(#alert, [#msg: "Old client version!!!"])

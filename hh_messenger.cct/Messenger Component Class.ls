@@ -100,8 +100,7 @@ on receive_BuddyList me, ttype, tList
         tBuddy = tList.buddies[i]
         tCurrData = tTheBuddyList.buddies.getaProp(tBuddy.id)
         if voidp(tCurrData) then
-          error(me, "Buddy not found:" & tBuddy[#name] & "Creating new struct.", #receive_BLUpdate)
-          me.receive_AppendBuddy([#buddies: tBuddy])
+          error(me, "Buddy not found:" & tBuddy[#name] & " - Rejecting update.", #receive_BuddyList)
           next repeat
         end if
         repeat with j = 1 to tBuddy.count

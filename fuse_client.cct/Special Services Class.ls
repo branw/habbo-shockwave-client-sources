@@ -137,9 +137,15 @@ end
 
 on getMachineID me
   tMachineID = getPref(getVariable("pref.value.id"))
-  if voidp(tMachineID) then
+  if voidp(tMachineID) or tMachineID = EMPTY then
     tMachineID = pDecoder.encipher(string(the milliSeconds))
     setPref(getVariable("pref.value.id"), tMachineID)
+  end if
+  if string(tMachineID).length < 10 then
+    tMachineID = tMachineID & pDecoder.encipher(string(random(9999999999.0)))
+  end if
+  if string(tMachineID).length < 10 then
+    tMachineID = tMachineID & random(9999999999.0)
   end if
   if tMachineID.char[1..4] = "uid:" then
     tMachineID = pDecoder.encipher(string(the milliSeconds))
