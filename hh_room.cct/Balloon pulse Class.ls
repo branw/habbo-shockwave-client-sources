@@ -27,7 +27,7 @@ on removePulse me
     return 0
   end if
   pSprite.locV = -1000
-  pPulseState = #hide
+  pPulseState = #Hide
   return 1
 end
 

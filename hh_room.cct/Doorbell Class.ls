@@ -82,8 +82,8 @@ on updateDoorbellWindow me
     tWndObj.getElement("doorbell_prev").show()
     tCountText = pRingingUser & "/" & pDoorbellQueue.count
   else
-    tWndObj.getElement("doorbell_next").hide()
-    tWndObj.getElement("doorbell_prev").hide()
+    tWndObj.getElement("doorbell_next").Hide()
+    tWndObj.getElement("doorbell_prev").Hide()
     tCountText = EMPTY
   end if
   tWndObj.getElement("doorbell_req_num").setText(tCountText)

@@ -403,7 +403,7 @@ on show me
   pShadowSpr.visible = 1
 end
 
-on hide me
+on Hide me
   pSprite.visible = 0
   pMatteSpr.visible = 0
   pShadowSpr.visible = 0

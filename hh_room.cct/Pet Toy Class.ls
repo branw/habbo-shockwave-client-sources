@@ -49,7 +49,7 @@ on update me
         me.pSprList[i].height = tmember.height
       end repeat
       if the milliSeconds - pTimer > 20000 then
-        getConnection(#info).send("SETSTUFFDATA", [#string: me.getID(), #string: "0"])
+        getConnection(#Info).send("SETSTUFFDATA", [#string: me.getID(), #string: "0"])
       end if
     end if
   end if
