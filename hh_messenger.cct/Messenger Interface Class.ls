@@ -774,10 +774,7 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           end if
         "console_report_report":
           tMsgStruct = me.getComponent().getNextMessage()
-          if listp(tMsgStruct) then
-            me.getComponent().send_RemoveBuddy(integer(tMsgStruct[#senderID]))
-            me.ChangeWindowView("console_friends.window")
-          end if
+          me.ChangeWindowView("console_friends.window")
           me.getComponent().send_reportMessage(integer(tMsgStruct[#id]))
         "console_report_cancel":
           if me.getComponent().getNumOfMessages() > 0 then

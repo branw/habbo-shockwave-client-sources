@@ -497,7 +497,7 @@ on sendChat me, tChat
     case tChat.word[1] of
       "!!" & tKeywords[1], "!!" & tKeywords[2]:
         tInfoID = getVariable("connection.info.id")
-        getConnection(#Info).pD = 1
+        getConnection(#info).pD = 1
         the debugPlaybackEnabled = 1
         case tChat.word[1] of
           tKeywords[1]:

@@ -12,6 +12,7 @@ on construct me
   pLeftMarg = 29
   pLineHeight = 10
   pMsgLinkRect = rect(0, 0, 0, 0)
+  pWebLinkRect = rect(0, 0, 0, 0)
   pSelected = 0
   pDotLineImg = member(getmemnum("meswhitedottedline")).image
   pCacheOnlineImg = member(getmemnum("mes_smallbuddy_head")).image
@@ -108,7 +109,7 @@ on clickAt me, locX, locY
   tY2 = tY1 + pCacheWebLinkImg.height
   tDstRect = rect(tX1, tY1, tX2, tY2)
   if point(locX, locY).inside(pWebLinkRect) then
-    if not voidp(pID) then
+    if not voidp(pID) and variableExists("link.format.userpage") then
       tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(pID))
       openNetPage(tDestURL)
     end if
@@ -200,6 +201,8 @@ on render me, tBuffer, tPosition
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pWebLinkRect = tDstRect
       pCacheImage.copyPixels(pCacheWebLinkImg, tDstRect, pCacheWebLinkImg.rect)
+    else
+      error(me, "Variable link.format.userpage missing!", #render, #major)
     end if
     if pMissNeedUpdate then
       tMissionImg = pWriterText.render(QUOTE & pCustomText & QUOTE)

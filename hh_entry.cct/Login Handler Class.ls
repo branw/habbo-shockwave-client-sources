@@ -125,7 +125,7 @@ on handleUserObj me, tMsg
     tSession.set("user_" & tuser.getPropAt(i), tuser[i])
   end repeat
   tSession.set(#userName, tSession.GET("user_name"))
-  tSession.set("user_password", tSession.GET(#Password))
+  tSession.set("user_password", tSession.GET(#password))
   executeMessage(#updateFigureData)
   if getObject(#session).exists("user_logged") then
     return 
@@ -133,7 +133,7 @@ on handleUserObj me, tMsg
     getObject(#session).set("user_logged", 1)
   end if
   if getIntVariable("quickLogin", 0) and the runMode contains "Author" then
-    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#Password)]))
+    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#password)]))
     me.getInterface().hideLogin()
   else
     me.getInterface().showUserFound()
@@ -412,7 +412,7 @@ on regMsgList me, tBool
   tCmds.setaProp("SECRETKEY", 207)
   tCmds.setaProp("GET_SOUND_SETTING", 228)
   tCmds.setaProp("SET_SOUND_SETTING", 229)
-  tConn = getVariable("connection.info.id", #Info)
+  tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)
     registerCommands(tConn, me.getID(), tCmds)
