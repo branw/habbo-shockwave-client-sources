@@ -9,7 +9,7 @@ on mouseUp me
     goContext("sp_error", context)
     return 
   else
-    RET = RETURN
+    RET = "&"
     s = RET & EMPTY
     gpSplashSubmitted = 1
     repeat with i = 1 to count(gpSplashForm)
@@ -22,15 +22,8 @@ on mouseUp me
       end if
     end repeat
     put s
-    s = s & "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.country=UK" & RET
-    s = s & "_D:/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.country=" & RET
-    s = s & "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.requestCard=submit" & RET
-    s = s & "_D:/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.requestCard=" & RET
-    s = s & "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.referrer=Habbo" & RET
-    s = s & "_D:/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.referrer=" & RET
-    s = s & "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.cancelURL=/external/simpleforms/cancel.jhtml" & RET
-    s = s & "_D:/SplashPlastic/formHandler/AnonymousCardOrderFormHandler.cancelURL=" & RET
-    s = s & "currentPage=/external/simpleforms/get_card.jhtml"
+    s = s & "country=UK" & RET
+    s = s & "referrer=Habbo" & RET
     sendEPFuseMsg("SPLASH_POST" & RETURN & s)
     put s
     goContext("sp_thanks", context)

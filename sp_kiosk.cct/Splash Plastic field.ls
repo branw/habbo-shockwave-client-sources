@@ -16,8 +16,7 @@ on checkValue me
       gpSplashOk = 0
     end if
   end if
-  addProp(gpSplashForm, "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler." & fieldName, field(sprite(me.spriteNum).member))
-  addProp(gpSplashForm, "_D:" & "/SplashPlastic/formHandler/AnonymousCardOrderFormHandler." & fieldName, EMPTY)
+  addProp(gpSplashForm, fieldName, field(sprite(me.spriteNum).member))
 end
 
 on getPropertyDescriptionList me
