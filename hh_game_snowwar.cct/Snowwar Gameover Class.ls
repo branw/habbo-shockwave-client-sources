@@ -60,6 +60,7 @@ on toggleWindowMode me
       return error(me, "Cannot open score window.", #toggleWindowMode)
     end if
     me.renderFinalScoresText()
+    me.showJoinedPlayers()
     tWndObj = getWindow(pWindowID)
     if me.getGameSystem().getSpectatorModeFlag() then
       tWndObj.moveTo(124, 74)
@@ -312,6 +313,17 @@ on showPlayerIcon me, tIcon, tdata
   end if
   tImage.copyPixels(tStarImg, tStarImg.rect + rect(109, 1 + 16 * (tMyPlayerNum - 1), 109, 1 + 16 * (tMyPlayerNum - 1)), tStarImg.rect)
   tElem.feedImage(tImage)
+  return 1
+end
+
+on showJoinedPlayers me
+  if not listp(pJoinedPlayers) then
+    return 1
+  end if
+  repeat with tPlayer in pJoinedPlayers
+    tHumanId = string(tPlayer["human_id"])
+    me.showPlayerIcon(#joined, [#id: tHumanId])
+  end repeat
   return 1
 end
 

@@ -215,7 +215,7 @@ on showInterface me, tObjType
   if tSession.get("room_owner") then
     tCtrlType = "owner"
   end if
-  if tObjType = "user" then
+  if tObjType = "user" or tObjType = "bot" then
     if pSelectedObj = tSession.get("user_index") then
       tCtrlType = "personal"
     else
@@ -270,7 +270,7 @@ on showInterface me, tObjType
     tObjType = "personal"
   end if
   if me.getComponent().getRoomData().type = #private then
-    if tObjType = "user" then
+    if tObjType = "user" or tObjType = "bot" then
       if pSelectedObj <> tSession.get("user_name") then
         tUserInfo = me.getComponent().getUserObject(pSelectedObj).getInfo()
         if tUserInfo.ctrl = 0 then
@@ -300,7 +300,7 @@ on showInterface me, tObjType
     tButtonList.deleteOne("give_rights")
     tButtonList.deleteOne("kick")
   end if
-  if tObjType = "user" then
+  if tObjType = "user" or tObjType = "bot" then
     tUserInfo = me.getComponent().getUserObject(pSelectedObj).getInfo()
     tBadge = tUserInfo.getaProp(#badge)
     if pModBadgeList.getOne(tBadge) > 0 then
@@ -324,6 +324,10 @@ on showInterface me, tObjType
   if tObjType = "user" then
     tWebID = me.getComponent().getUserObject(pSelectedObj).getWebID()
     if not variableExists("link.format.userpage") or voidp(tWebID) then
+      tButtonList.deleteOne("userpage")
+    end if
+  else
+    if tObjType = "bot" then
       tButtonList.deleteOne("userpage")
     end if
   end if
@@ -350,7 +354,7 @@ on showInterface me, tObjType
       tSpr.locH = (the stage).rect.width - tRightMargin
     end if
   end repeat
-  if tObjType = "user" and tCtrlType <> "personal" then
+  if tObjType = "user" and tCtrlType <> "personal" or tObjType = "bot" then
     if me.getComponent().userObjectExists(pSelectedObj) then
       if threadExists(#messenger) then
         tUserName = me.getComponent().getUserObject(pSelectedObj).getName()
@@ -397,7 +401,7 @@ on showObjectInfo me, tObjType
     return 0
   end if
   case tObjType of
-    "user":
+    "user", "bot":
       tObj = me.getComponent().getUserObject(pSelectedObj)
     "active":
       tObj = me.getComponent().getActiveObject(pSelectedObj)
@@ -906,7 +910,7 @@ on startObjectMover me, tObjID, tStripID
       pClickAction = "moveActive"
     "item":
       pClickAction = "moveItem"
-    "user":
+    "user", "bot":
       return error(me, "Can't move user objects!", #startObjectMover)
   end case
   return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType)
@@ -1799,7 +1803,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
     return 0
   end if
   case tObjType of
-    "user":
+    "user", "bot":
       tObj = me.getComponent().getUserObject(tSprID)
     "active":
       tObj = me.getComponent().getActiveObject(tSprID)

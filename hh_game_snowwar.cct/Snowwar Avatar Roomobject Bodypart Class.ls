@@ -1,3 +1,10 @@
+on changePartData me, tmodel, tColor
+  if me.pPart = "bd" then
+    return 1
+  end if
+  return me.ancestor.changePartData(tmodel, tColor)
+end
+
 on update me
   tAnimCntr = 0
   tAction = me.pAction

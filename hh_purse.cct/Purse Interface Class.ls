@@ -73,10 +73,10 @@ end
 
 on hidePurse me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #remove
+    tHideOrRemove = #Remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #remove then
+    if tHideOrRemove = #Remove then
       removeWindow(pWindowTitle)
     else
       getWindow(pWindowTitle).hide()
