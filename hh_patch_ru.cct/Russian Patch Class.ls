@@ -45,7 +45,6 @@ on construct me
   createObject(#string_validator, "String Validator Cls")
   registerMessage(#Initialize, me.getID(), #delayedPatch)
   registerMessage(#BalloonManagerCreated, me.getID(), #patchBalloonText)
-  createObject("Localized UTF8 converter", "Russian UTF8 Class")
   return 1
 end
 

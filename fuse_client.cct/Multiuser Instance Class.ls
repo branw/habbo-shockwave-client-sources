@@ -1,6 +1,11 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pLastContent, pContentChunk, pCommandsPntr, pListenersPntr, pBinDataCallback, pLogMode, pLogfield
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pLastContent, pContentChunk, pCommandsPntr, pListenersPntr, pBinDataCallback, pLogMode, pLogfield, pUnicodeDirector
 
 on construct me
+  if value(_player.productVersion) >= 11 then
+    pUnicodeDirector = 1
+  else
+    pUnicodeDirector = 0
+  end if
   pDecoder = 0
   pBinDataCallback = [#client: EMPTY, #method: VOID]
   pConnectionShouldBeKilled = 0
@@ -61,8 +66,10 @@ on send me, tMsg
     end repeat
     tPartOne = tMsg.word[1]
     tPartTwo = tMsg.word[2..tMsg.word.count]
-    tPartOne = encodeUTF8(tPartOne)
-    tPartTwo = encodeUTF8(tPartTwo)
+    if not pUnicodeDirector then
+      tPartOne = encodeUTF8(tPartOne)
+      tPartTwo = encodeUTF8(tPartTwo)
+    end if
     pXtra.sendNetMessage("*", tPartOne, tPartTwo)
   else
     return error(me, "Connection not ready:" && me.getID(), #send, #major)

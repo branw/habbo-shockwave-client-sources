@@ -1,6 +1,11 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector
 
 on construct me
+  if value(_player.productVersion) >= 11 then
+    pUnicodeDirector = 1
+  else
+    pUnicodeDirector = 0
+  end if
   pDecipherOn = 0
   pEncryptionOn = 0
   pMsgStruct = getStructVariable("struct.message")
@@ -122,6 +127,13 @@ on send me, tCmd, tMsg
   end if
   if tMsg.ilk <> #string then
     tMsg = string(tMsg)
+  end if
+  if not (pEncryptionOn and objectp(pEncoder)) and pUnicodeDirector then
+    repeat with i = 1 to tMsg.length
+      if charToNum(tMsg.char[i]) > 127 then
+        return error(me, "Encryption required for non-ascii content with SW11", #send, #critical)
+      end if
+    end repeat
   end if
   tMsg = encodeUTF8(tMsg)
   if tCmd.ilk <> #integer then
@@ -401,6 +413,16 @@ on msghandler me, tContent
     tByte2 = bitAnd(charToNum(char 1 of tContent), 63)
     tMsgType = bitOr(tByte2 * 64, tByte1)
     tLength = offset(numToChar(1), tContent)
+    if tLength = 0 and not pUnicodeDirector then
+      repeat with i = 3 to tContent.length
+        tCharVal = charToNum(tContent.char[i])
+        if tCharVal mod 256 = 1 then
+          tContent = tContent.char[1..i - 1] & numToChar(tCharVal - 1) & numToChar(1) & tContent.char[i + 1..tContent.length]
+          tLength = i + 1
+          exit repeat
+        end if
+      end repeat
+    end if
     if tLength = 0 then
       pLastContent = tContent
       return 

@@ -288,12 +288,6 @@ on readValueFromField me, tField, tDelimiter, tSearchedKey
         end if
         if stringp(tValue) then
           repeat with j = 1 to length(tValue)
-            case charToNum(tValue.char[j]) of
-              228:
-                put "Š" into char j of tValue
-              246:
-                put "š" into char j of tValue
-            end case
           end repeat
         end if
         the itemDelimiter = tDelim

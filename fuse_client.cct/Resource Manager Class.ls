@@ -160,6 +160,10 @@ on preIndexMembers me, tCastNum
     if member(tVarIndex, tCastLib).number > 0 then
       getVariableManager().dump(member(tVarIndex, tCastLib).number, RETURN, 0)
     end if
+    tVarIndex = getVariable("override.props.index.field")
+    if member(tVarIndex, tCastLib).number > 0 then
+      getVariableManager().dump(member(tVarIndex, tCastLib).number, RETURN, 1)
+    end if
     tAliasIndex = getVariable("alias.index.field")
     if member(tAliasIndex, tCastLib).number > 0 then
       me.readAliasIndexesFromField(tAliasIndex, tCastLib)

@@ -1,25 +1,35 @@
-property pConvList, pDigits, pUsesUTF8, pUTF8ObjectName, pUTF8Object, pUnicodeDirector
+property pConvList, pDigits, pUsesUTF8, pUnicodeDirector
 
 on construct me
   pConvList = [:]
   pDigits = "0123456789ABCDEF"
+  me.initConvList()
+  pUsesUTF8 = VOID
   if value(_player.productVersion) >= 11 then
     pUnicodeDirector = 1
-    setVariable("char.conversion.mac", [:])
-    setVariable("char.conversion.win", [:])
   else
     pUnicodeDirector = 0
   end if
   return 1
-  me.initConvList()
-  pUsesUTF8 = VOID
-  pUTF8ObjectName = "Localized UTF8 converter"
-  if objectExists(pUTF8ObjectName) then
-    pUTF8Object = getObject(pUTF8ObjectName)
-    unregisterObject(pUTF8ObjectName)
+end
+
+on getUTF8ObjInstance me
+  tUTF8ObjectName = "Localized UTF8 converter"
+  tutf8convclassname = "UTF8 To Locale Class"
+  if objectExists(tUTF8ObjectName) then
+    tUTF8Object = getObject(tUTF8ObjectName)
   else
-    pUTF8Object = VOID
+    if variableExists("local.utf8.conversion") then
+      tConversionFormat = getVariable("local.utf8.conversion")
+      tUTF8Object = createObject(tUTF8ObjectName, tutf8convclassname)
+      if not tUTF8Object = VOID then
+        tUTF8Object.defineLocale(tConversionFormat)
+      end if
+    else
+      return VOID
+    end if
   end if
+  return tUTF8Object
 end
 
 on convertToPropList me, tStr, tDelim
@@ -294,11 +304,13 @@ on encodeUTF8 me, tStr
 end
 
 on decodeUTF8 me, tStr, tForceDecode
-  tVar = "client.textdata.utf8"
-  if variableExists(tVar) then
-    pUsesUTF8 = getVariableValue(tVar)
-  else
-    pUsesUTF8 = VOID
+  if voidp(pUsesUTF8) then
+    tVar = "client.textdata.utf8"
+    if variableExists(tVar) then
+      pUsesUTF8 = getVariableValue(tVar)
+    else
+      pUsesUTF8 = VOID
+    end if
   end if
   if not pUsesUTF8 then
     return tStr
@@ -306,6 +318,7 @@ on decodeUTF8 me, tStr, tForceDecode
   if pUnicodeDirector and not tForceDecode then
     return tStr
   end if
+  tUTF8Obj = me.getUTF8ObjInstance()
   tBinData = []
   tCutPos = 1000
   repeat while tStr.length > 0
@@ -325,14 +338,11 @@ on decodeUTF8 me, tStr, tForceDecode
         next repeat
       end if
       tBinData.add(tValue / 256)
-      tBinData.add(tValue mod 256)
+      if tValue mod 256 <> 0 then
+        tBinData.add(tValue mod 256)
+      end if
     end repeat
   end repeat
-  if tBinData.count > 0 then
-    if tBinData[tBinData.count] = 0 then
-      tBinData.deleteAt(tBinData.count)
-    end if
-  end if
   tUnicodeData = []
   i = 1
   repeat while i <= tBinData.count
@@ -367,8 +377,9 @@ end
 
 on convertToUnicode me, tStr
   if not pUnicodeDirector then
-    if not voidp(pUTF8Object) then
-      tdata = call(#convertToUnicode, [pUTF8Object], tStr)
+    tUTF8Object = me.getUTF8ObjInstance()
+    if not voidp(tUTF8Object) then
+      tdata = call(#convertToUnicode, [tUTF8Object], tStr)
       if ilk(tdata) = #list then
         return tdata
       end if
@@ -385,8 +396,9 @@ end
 
 on generateStringFromUTF8 me, tUTF8Data
   if not pUnicodeDirector then
-    if not voidp(pUTF8Object) then
-      tString = call(#generateStringFromUTF8, [pUTF8Object], tUTF8Data)
+    tUTF8Object = me.getUTF8ObjInstance()
+    if not voidp(tUTF8Object) then
+      tString = call(#generateStringFromUTF8, [tUTF8Object], tUTF8Data)
       if ilk(tString) = #string then
         return tString
       end if
@@ -401,8 +413,9 @@ end
 
 on convertFromUnicode me, tUnicodeData
   if not pUnicodeDirector then
-    if not voidp(pUTF8Object) then
-      tdata = call(#convertFromUnicode, [pUTF8Object], tUnicodeData)
+    tUTF8Object = me.getUTF8ObjInstance()
+    if not voidp(tUTF8Object) then
+      tdata = call(#convertFromUnicode, [tUTF8Object], tUnicodeData)
       if ilk(tdata) = #string then
         return tdata
       end if
