@@ -132,8 +132,8 @@ on cacheTeamScores me
   pTeamScoreCache = []
   pTeamScoreCache[pTeamCount] = 0
   tGameSystem = me.getGameSystem()
-  tIdList = tGameSystem.getGameObjectIdsOfType("avatar")
-  repeat with tID in tIdList
+  tIDList = tGameSystem.getGameObjectIdsOfType("avatar")
+  repeat with tID in tIDList
     tObject = tGameSystem.getGameObject(tID)
     if tObject <> 0 then
       tTeamId = tObject.getGameObjectProperty("team_id") + 1
