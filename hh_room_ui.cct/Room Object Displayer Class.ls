@@ -26,6 +26,7 @@ on construct me
   registerMessage(#changeRoom, me.getID(), #clearWindowDisplayList)
   registerMessage(#itemObjectsUpdated, me.getID(), #refreshView)
   registerMessage(#activeObjectsUpdated, me.getID(), #refreshView)
+  registerMessage(#updateClubStatus, me.getID(), #refreshView)
   pWindowCreator = getObject(pCreatorID)
   pTagListObj = getObject(pTagListObjID)
   pTagLists = [:]

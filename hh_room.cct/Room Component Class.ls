@@ -121,6 +121,23 @@ on prepare me
 end
 
 on enterRoom me, tRoomDataStruct
+  tStamp = EMPTY
+  repeat with tNo = 1 to 100
+    tChar = numToChar(random(48) + 74)
+    tStamp = tStamp & tChar
+  end repeat
+  tFuseReceipt = getSpecialServices().getReceipt(tStamp)
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  if tReceipt <> tFuseReceipt then
+    error(me, "Invalid build structure", #enterRoom, #critical)
+    createTimeout(#builddisconnect, 3000, #disconnect, getThread(#login).getComponent().getID(), VOID, 1)
+  end if
   if not listp(tRoomDataStruct) then
     error(me, "Invalid room data struct!", #enterRoom, #major)
     return executeMessage(#leaveRoom)

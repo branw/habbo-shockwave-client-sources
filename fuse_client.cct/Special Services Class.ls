@@ -336,3 +336,14 @@ on alertHook me
   the alertHook = pSavedHook
   return 1
 end
+
+on getReceipt me, tStamp
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  return tReceipt
+end

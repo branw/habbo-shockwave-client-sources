@@ -664,6 +664,9 @@ on hideAll me
   if objectExists(pInfoStandId) then
     getObject(pInfoStandId).hideInfoStand()
   end if
+  if objectExists(pRoomGuiID) then
+    getObject(pRoomGuiID).hideInfoStand()
+  end if
   me.hideRoom()
   me.hideRoomBar()
   me.hideInterface(#Remove)
