@@ -164,6 +164,9 @@ on enterDoor me, tdata
   getObject(#session).set("lastroom", pSaveData.duplicate())
   if me.getRoomScale(pSaveData[#marker]) = #small and tCurrentScale = #large and not pPrvRoomsReady then
     pSaveData[#casts] = tCurrentRoomCasts
+    if voidp(tCurrentRoomCasts) then
+      pSaveData[#casts] = ["hh_room_private"]
+    end if
     me.loadRoomCasts()
     pPrvRoomsReady = 1
     return 0
@@ -492,7 +495,7 @@ on sendChat me, tChat
     case tChat.word[1] of
       "!!" & tKeywords[1], "!!" & tKeywords[2]:
         tInfoID = getVariable("connection.info.id")
-        getConnection(#Info).pD = 1
+        getConnection(#info).pD = 1
         the debugPlaybackEnabled = 1
         case tChat.word[1] of
           tKeywords[1]:
