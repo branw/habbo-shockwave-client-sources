@@ -614,33 +614,35 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
   tSession = getObject(#session)
   tFigureParser = getObject("Figure_System")
   tParsedFigure = tFigureParser.parseFigure(tUserFigure, tsex, "user")
-  if tSession.get("user_index") = tUserID then
+  if tSession.get("user_index") = tUserID or tUserID = "-1" then
     tSession.set("user_figure", tParsedFigure)
     tSession.set("user_sex", tsex)
     tSession.set("user_customData", tUserCustomInfo)
   end if
-  if tSession.get("lastroom") = "Entry" then
+  if tSession.get("lastroom") = "Entry" and tUserID = "-1" then
     executeMessage(#updateFigureData)
   else
-    if voidp(pUserObjList[tUserID]) then
-      return 0
+    if not (tSession.get("lastroom") = "Entry") and integer(tUserID) > -1 then
+      if voidp(pUserObjList[tUserID]) then
+        return 0
+      end if
+      tUserObj = pUserObjList[tUserID]
+      tloc = tUserObj.getLocation()
+      tdir = tUserObj.getDirection()
+      tuser = [:]
+      tuser[#figure] = tParsedFigure
+      tuser[#Custom] = tUserCustomInfo
+      tuser[#sex] = tsex
+      tUserObj.changeFigureAndData(tuser)
+      tScale = #large
+      if me.getInterface().getGeometry().getTileWidth() < 64 then
+        tScale = #small
+      end if
+      tChangeEffect = createObject(#random, "Change Clothes Effect Class")
+      tUserSprites = tUserObj.getSprites()
+      tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+      me.getInterface().updateInfostandAvatar(tUserObj)
     end if
-    tUserObj = pUserObjList[tUserID]
-    tloc = tUserObj.getLocation()
-    tdir = tUserObj.getDirection()
-    tuser = [:]
-    tuser[#figure] = tParsedFigure
-    tuser[#Custom] = tUserCustomInfo
-    tuser[#sex] = tsex
-    tUserObj.changeFigureAndData(tuser)
-    tScale = #large
-    if me.getInterface().getGeometry().getTileWidth() < 64 then
-      tScale = #small
-    end if
-    tChangeEffect = createObject(#random, "Change Clothes Effect Class")
-    tUserSprites = tUserObj.getSprites()
-    tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
-    me.getInterface().updateInfostandAvatar(tUserObj)
   end if
 end
 
