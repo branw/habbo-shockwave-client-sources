@@ -820,6 +820,9 @@ on loadActionSetXML me
                       if tID = "std" then
                         setVariable("human.parts." & tPeopleSize & "." & tDirection, tPartList)
                         setVariable("human.parts." & tPeopleSize50 & "." & tDirection, tPartList)
+                      else
+                        setVariable("human.parts." & tPeopleSize & "." & tID & "." & tDirection, tPartList)
+                        setVariable("human.parts." & tPeopleSize50 & "." & tID & "." & tDirection, tPartList)
                       end if
                       next repeat
                     end if

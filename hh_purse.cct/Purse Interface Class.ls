@@ -792,11 +792,7 @@ on eventProcPurse me, tEvent, tElemID, tParm
         me.drawPage(pPageView - 1)
       "purse_buy":
         tSession = getObject(#session)
-        if tSession.GET("user_rights").getOne("can_buy_credits") then
-          tURL = getText("url_purselink")
-        else
-          tURL = getText("url_purse_subscribe")
-        end if
+        tURL = getText("url_purselink")
         tURL = tURL & urlEncode(tSession.GET("user_name"))
         if tSession.exists("user_checksum") then
           tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))

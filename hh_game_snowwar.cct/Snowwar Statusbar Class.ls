@@ -243,7 +243,7 @@ on replaceRoomBar me
     return 0
   end if
   if not tSpectator and objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "snowwar_avatar_face", ["hd", "fc", "ey", "hr"])
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "snowwar_avatar_face", #head)
   end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)

@@ -4,7 +4,7 @@ on construct me
   pBallState = 1
   pBounceState = 0
   pBounceAnimCount = 1
-  pBallClass = ["Bodypart Class EX", "Bouncing Bodypart Class"]
+  pBallClass = ["OLD Bodypart Class EX", "Bouncing Bodypart Class"]
   me.pDirChange = 1
   me.pLocChange = 1
   pActiveEffects = []

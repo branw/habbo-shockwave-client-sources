@@ -110,6 +110,7 @@ on handleUserObj me, tMsg
   tuser["ph_figure"] = tConn.GetStrFrom()
   tuser["photo_film"] = tConn.GetIntFrom()
   tuser["directMail"] = tConn.GetIntFrom()
+  tuser["figure_string"] = tuser["figure"]
   tDelim = the itemDelimiter
   the itemDelimiter = "="
   if not voidp(tuser["sex"]) then

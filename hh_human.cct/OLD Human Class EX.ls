@@ -46,7 +46,7 @@ on construct me
   pYFactor = pGeometry.pYFactor
   pHFactor = pGeometry.pHFactor
   pCorrectLocZ = 0
-  pPartClass = value(getThread(#room).getComponent().getClassContainer().GET("bodypart"))
+  pPartClass = "OLD Bodypart Class EX"
   pGroupId = VOID
   pStatusInGroup = VOID
   pBaseLocZ = 0

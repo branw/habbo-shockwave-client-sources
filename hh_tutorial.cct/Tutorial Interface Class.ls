@@ -103,7 +103,7 @@ on updateBubbles me
     end if
     tAttachedWindows[tTargetWindowID].add(tBubbleWindowID)
   end repeat
-  tPosRoombar = tWindowList.getPos("Room_bar")
+  tPosRoombar = tWindowList.getPos("RoomBarID")
   tPosRoomInterface = tWindowList.getPos("Room_interface")
   if tPosRoombar > 0 and tPosRoomInterface > 0 and tPosRoomInterface > tPosRoombar then
     tWindowList.deleteAt(tPosRoomInterface)

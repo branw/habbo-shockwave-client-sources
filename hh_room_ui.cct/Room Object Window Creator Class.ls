@@ -58,7 +58,7 @@ on createBotWindow me, tID, tProps
 end
 
 on createPetWindow me, tID, tProps
-  tWndObj = me.initWindow(tID, "obj_disp_human.window")
+  tWndObj = me.initWindow(tID, "obj_disp_pet.window")
   tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tProps[#image])

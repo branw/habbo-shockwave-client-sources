@@ -250,20 +250,6 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pLocY = tY
   pLocH = tH
   pRestingHeight = 0.0
-  if tDirBody <> pFlipList[tDirBody + 1] then
-    if tDirBody <> tDirHead then
-      case tDirHead of
-        4:
-          tDirHead = 2
-        5:
-          tDirHead = 1
-        6:
-          tDirHead = 4
-        7:
-          tDirHead = 5
-      end case
-    end if
-  end if
   pDirection = tDirBody
   pHeadDir = tDirHead
   if pExtraObjs.count > 0 then

@@ -220,7 +220,7 @@ on replaceRoomBar me
     return 0
   end if
   if objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "bb2_avatar_face", ["hd", "fc", "ey", "hr"])
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "bb2_avatar_face", #head)
   end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)

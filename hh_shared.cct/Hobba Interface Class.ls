@@ -638,6 +638,19 @@ on eventProcModToolWnd me, tEvent, tElemID, tParam
         end if
       end if
     else
+      tKeyCode = the keyCode
+      if tElemID = "modtool_reason" then
+        if not (tKeyCode = 51 or tKeyCode = 117) then
+          tWndObj = getWindow(pModtoolWindowID)
+          tElem = tWndObj.getElement("modtool_reason")
+          tText = tElem.getText()
+          tMaxTextLength = 512
+          tMaxLineCounts = 4
+          if tText.length >= 512 or tText.line.count > tMaxLineCounts then
+            return 1
+          end if
+        end if
+      end if
       pass()
     end if
   end if

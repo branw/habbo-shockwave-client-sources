@@ -24,6 +24,8 @@ on construct me
   registerMessage(#leaveRoom, me.getID(), #clearWindowDisplayList)
   registerMessage(#updateUserTags, me.getID(), #updateTagList)
   registerMessage(#changeRoom, me.getID(), #clearWindowDisplayList)
+  registerMessage(#itemObjectsUpdated, me.getID(), #refreshView)
+  registerMessage(#activeObjectsUpdated, me.getID(), #refreshView)
   pWindowCreator = getObject(pCreatorID)
   pTagListObj = getObject(pTagListObjID)
   pTagLists = [:]
@@ -39,7 +41,7 @@ on deconstruct me
 end
 
 on updateBadge me, tBadgeName
-  nothing()
+  me.refreshView()
 end
 
 on createBaseWindows me
