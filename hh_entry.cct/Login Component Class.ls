@@ -2,6 +2,9 @@ property pOkToLogin
 
 on construct me
   pOkToLogin = 0
+  if variableExists("stats.tracking.javascript") then
+    createObject(#statsBroker, "Statistics Broker Javascript Class")
+  end if
   if variableExists("stats.tracking.url") then
     createObject(#statsBroker, "Statistics Broker Class")
   end if

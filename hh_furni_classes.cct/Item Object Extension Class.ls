@@ -479,8 +479,13 @@ on solveLocZ me, tPart, tdir
     if tPropList[tPart][#zshift] = VOID then
       return 0
     end if
-    if tPropList[tPart][#zshift].count <= tdir then
-      tdir = 0
+    if ilk(tPropList[tPart][#zshift]) = #list then
+      if tPropList[tPart][#zshift].count <= tdir then
+        tdir = 0
+      end if
+    else
+      tPropList[tPart][#zshift] = [0, 0, 0, 0, 0, 0, 0, 0]
+      error(me, tName && "zshift is not valid list", #solveLocZ)
     end if
   end if
   return tPropList[tPart][#zshift][tdir + 1]

@@ -300,11 +300,11 @@ on updateInfoStandBadge me, tInfoStandID, tSelectedObj, tBadgeID, tUserID
   end if
   if memberExists("badge" && tBadgeID && "localized") then
     tBadgeMember = member(getmemnum("badge" && tBadgeID && "localized"))
-    return tElem.feedImage(tBadgeMember.image)
+    tElem.feedImage(tBadgeMember.image)
   else
     if memberExists("badge" && tBadgeID) then
       tBadgeMember = member(getmemnum("badge" && tBadgeID))
-      return tElem.feedImage(tBadgeMember.image)
+      tElem.feedImage(tBadgeMember.image)
     else
       me.startBadgeDownload(tBadgeID)
       return 0
