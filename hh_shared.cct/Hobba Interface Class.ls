@@ -47,7 +47,7 @@ on ShowAlert me
     end if
     pAlertSpr.memberNum = getmemnum("hobba_alert_0")
     pAlertSpr.ink = 8
-    pAlertSpr.loc = point(me.buttonLocH(), 5)
+    pAlertSpr.loc = point(me.buttonLocH(2), 5)
     pAlertSpr.locZ = 200000000
     setEventBroker(pAlertSpr.spriteNum, me.getID() & "_alert_spr")
     pAlertSpr.registerProcedure(#eventProcAlert, me.getID(), #mouseUp)
@@ -71,7 +71,7 @@ on showModtoolButton me
     end if
     pModtoolButtonSpr.memberNum = getmemnum("mod_tool_icon")
     pModtoolButtonSpr.ink = 8
-    pModtoolButtonSpr.loc = point(me.buttonLocH(), 5)
+    pModtoolButtonSpr.loc = point(me.buttonLocH(1), 5)
     pModtoolButtonSpr.locZ = 200000000
     setEventBroker(pModtoolButtonSpr.spriteNum, me.getID() & "_modtool_spr")
     pModtoolButtonSpr.registerProcedure(#eventProcModToolButton, me.getID(), #mouseUp)
@@ -180,13 +180,15 @@ on showModToolWnd me
   return 1
 end
 
-on buttonLocH me
-  if pButtonLocH = 5 then
-    pButtonLocH = 35
+on buttonLocH me, tPos
+  if tPos = 1 then
     return 5
   else
-    return 35
+    if tPos = 2 then
+      return 35
+    end if
   end if
+  return 5
 end
 
 on userClicked me, tName

@@ -58,7 +58,7 @@ end
 
 on showRoom me, tRoomID
   if not memberExists(tRoomID & ".room") then
-    return error(me, "Room description not found:" && tRoomID, #showRoom)
+    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomID & ".room", #showRoom)
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then

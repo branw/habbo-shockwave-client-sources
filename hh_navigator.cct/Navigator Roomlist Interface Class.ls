@@ -399,6 +399,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
         "nav_removefavourites_button":
           me.getComponent().sendRemoveFavoriteFlat(me.getProperty(#viewedNodeId))
           me.setProperty(#viewedNodeId, VOID)
+          me.setRoomInfoArea(#hide)
           me.getComponent().sendGetFavoriteFlats()
         "nav_ringbell_cancel_button", "nav_flatpassword_cancel_button", "nav_trypw_cancel_button", "nav_noanswer_ok_button":
           me.ChangeWindowView("nav_gr0")

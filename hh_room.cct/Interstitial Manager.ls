@@ -1,4 +1,4 @@
-property pClickURL, pToolTipSpr, pSprite, pShowTimeOutID, pDownloadTimeOutID, pAdFinished, pAdError, pMemberID, pMemberIDBase, pAdLoaded, pShowAdTime, pDLCounter
+property pClickURL, pToolTipSpr, pSprite, pShowTimeOutID, pDownloadTimeOutID, pAdFinished, pAdError, pMemberID, pMemberIDBase, pAdLoaded, pShowAdTime, pDLCounter, pShowCounter
 
 on construct me
   pAdFinished = 0
@@ -10,6 +10,7 @@ on construct me
   pMemberID = pMemberIDBase
   pAdLoaded = 0
   pDLCounter = 1
+  pShowCounter = 0
   if variableExists("interstitial_ad_show_delay") then
     pShowAdTime = getVariable("interstitial_ad_show_delay")
   else
@@ -34,6 +35,12 @@ on deconstruct me
 end
 
 on Init me, tSourceURL, tClickURL
+  tShowlimit = getVariable("interstitial.max.displays", 5)
+  if pShowCounter >= tShowlimit then
+    pAdError = 1
+    me.adFinished()
+    return 0
+  end if
   if tSourceURL = 0 or not (tSourceURL starts "http") then
     pAdError = 1
     me.adFinished()
@@ -117,6 +124,7 @@ on adLoaded me
   end if
   tRoomInt.resizeInterstitialWindow()
   createTimeout(pShowTimeOutID, pShowAdTime, #adFinished, me.getID(), VOID, 1)
+  pShowCounter = pShowCounter + 1
 end
 
 on adDownloadError me
