@@ -1,14 +1,11 @@
-property fireplaceOn, polyfonfprand, formulaFrame, formulaMode, tvFrame, carLoop, carLoopCount, stillPicture, stillWait
+property fireplaceOn, formulaFrame, tvFrame, carLoop, carLoopCount, stillWait
 
 on prepare me, tdata
   tvFrame = 0
-  polyfonfprand = 0
   formulaFrame = 0
-  formulaMode = 0
   carLoop = 1
-  stillPicture = 0
   stillWait = 0
-  if tdata["FIREON"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     me.setOn()
   else
     me.setOff()
@@ -16,7 +13,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "ON" then
     me.setOn()
   else
@@ -28,45 +25,39 @@ on update me
   if me.pSprList.count < 4 then
     return 
   end if
-  tvFrame = not tvFrame
-  if fireplaceOn and tvFrame = 1 then
+  tvFrame = tvFrame + 1
+  if fireplaceOn and tvFrame >= 3 then
+    tvFrame = 0
     tName = me.pSprList[4].member.name
     tDelim = the itemDelimiter
     the itemDelimiter = "_"
     tTmpName = tName.item[1..tName.item.count - 1] & "_"
     the itemDelimiter = tDelim
     if carLoop = 1 then
-      carLoopCount = random(7)
+      carLoopCount = 4 + random(7)
     end if
     if carLoop >= 1 then
       tNewName = tTmpName & formulaFrame
       formulaFrame = formulaFrame + 1
       if formulaFrame > 13 then
-        formulaFrame = 1
-        carLoop = carLoop + 1
-        if carLoop >= carLoopCount then
+        if carLoop < carLoopCount then
+          formulaFrame = 1
+          carLoop = carLoop + 1
+        else
           carLoop = 0
-          stillPicture = random(2)
-          stillWait = 50 + random(100)
-          tvFrame = 0
+          tNewName = tTmpName & "14"
+          stillWait = 200 + random(200)
         end if
       end if
     else
       if carLoop = 0 then
-        if tvFrame <= stillWait then
-          if stillPicture = 1 then
-            if me.pSprList[1].skew = 180 then
-              tNewName = tTmpName & 16
-            else
-              tNewName = tTmpName & 15
-            end if
-          else
-            if stillPicture = 2 then
-              tNewName = tTmpName & 14
-            end if
-          end if
+        if formulaFrame <= stillWait then
+          formulaFrame = formulaFrame + 1
+          return 1
         else
+          formulaFrame = 0
           carLoop = 1
+          return 1
         end if
       end if
     end if
@@ -90,6 +81,9 @@ on update me
 end
 
 on setOn me
+  stillWait = 0
+  carLoop = 1
+  formulaFrame = 0
   fireplaceOn = 1
 end
 
@@ -104,6 +98,6 @@ on select me
     else
       tOnString = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & tOnString)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tOnString])
   end if
 end

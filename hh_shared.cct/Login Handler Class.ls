@@ -12,6 +12,10 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
+  tMsg.connection.send("GET_SESSION_PARAMETERS")
+end
+
+on handleSessionParameters me, tMsg
   tPairsCount = tMsg.connection.GetIntFrom()
   if integerp(tPairsCount) then
     if tPairsCount > 0 then
@@ -22,6 +26,7 @@ on handleHello me, tMsg
         case tid of
           0:
             tSession.set("conf_coppa", tValue > 0)
+            tSession.set("conf_strong_coppa_required", tValue > 1)
           1:
             tSession.set("conf_voucher", tValue > 0)
           2:
@@ -59,6 +64,10 @@ on handleSecretKey me, tMsg
   end if
 end
 
+on handlePing me, tMsg
+  tMsg.connection.send("PONG")
+end
+
 on handleRegistrationOK me, tMsg
   tUserName = getObject(#session).get(#userName)
   tPassword = getObject(#session).get(#password)
@@ -76,6 +85,19 @@ on handleLoginOK me, tMsg
   tMsg.connection.send("GET_INFO")
   tMsg.connection.send("GET_CREDITS")
   tMsg.connection.send("GETAVAILABLEBADGES")
+  if objectExists(#session) then
+    getObject(#session).set("userLoggedIn", 1)
+  end if
+  if not objectExists("loggertool") then
+    if memberExists("Debug System Class") then
+      createObject("loggertool", "Debug System Class")
+      if getIntVariable("client.debug.window", 0) = 3 then
+        getObject("loggertool").initDebug()
+      else
+        getObject("loggertool").tryAutoStart()
+      end if
+    end if
+  end if
 end
 
 on handleUserObj me, tMsg
@@ -229,35 +251,26 @@ end
 
 on handleModAlert me, tMsg
   if not voidp(tMsg.content) then
-    executeMessage(#alert, [#title: "alert_moderator_warning", #msg: tMsg.content])
+    executeMessage(#alert, [#title: "alert_warning", #msg: tMsg.content])
   else
     error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
 end
 
-on handleAdv me, tMsg
-  tStr = tMsg.content
-  tTxt = replaceChunks(tStr.line[4], "<br>", RETURN)
-  tTxt = replaceChunks(tTxt, "\r", RETURN)
-  tid = tStr.line[1]
-  tURL = tStr.line[2]
-  tTyp = tStr.line[3]
-  tLnk = tStr.line[5]
-  if tURL = EMPTY then
-    return 0
-  end if
-  tMemNum = queueDownload(tURL, "advertisement", #bitmap, 1)
-  tSession = getObject(#session)
-  tSession.set("ad_id", tid)
-  tSession.set("ad_url", tURL)
-  tSession.set("ad_text", tTxt)
-  tSession.set("ad_type", tTyp)
-  tSession.set("ad_memnum", tMemNum)
-  if tLnk = EMPTY then
-    tSession.set("ad_link", 0)
-  else
-    tSession.set("ad_link", tLnk)
-  end if
+on handleTickets me, tMsg
+  getObject(#session).set("user_ph_tickets", integer(tMsg.content.word[1]))
+  return 1
+end
+
+on handleTicketsBuy me, tMsg
+  tTicketsNow = tMsg.content.word[1]
+  getObject(#session).set("user_ph_tickets", integer(tTicketsNow))
+  return 1
+end
+
+on handleNoTickets me, tMsg
+  executeMessage(#show_ticketWindow)
+  return 1
 end
 
 on regMsgList me, tBool
@@ -268,24 +281,31 @@ on regMsgList me, tBool
   tMsgs.setaProp(2, #handleRights)
   tMsgs.setaProp(3, #handleLoginOK)
   tMsgs.setaProp(5, #handleUserObj)
-  tMsgs.setaProp(11, #handleAdv)
   tMsgs.setaProp(33, #handleErr)
   tMsgs.setaProp(35, #handleUserBanned)
+  tMsgs.setaProp(50, #handlePing)
   tMsgs.setaProp(51, #handleRegistrationOK)
   tMsgs.setaProp(52, #handleEPSnotify)
+  tMsgs.setaProp(72, #handleTickets)
+  tMsgs.setaProp(73, #handleNoTickets)
+  tMsgs.setaProp(124, #handleTicketsBuy)
   tMsgs.setaProp(139, #handleSystemBroadcast)
   tMsgs.setaProp(141, #handleCheckSum)
   tMsgs.setaProp(161, #handleModAlert)
   tMsgs.setaProp(229, #handleAvailableBadges)
+  tMsgs.setaProp(257, #handleSessionParameters)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
   tCmds.setaProp("CHK_VERSION", 5)
   tCmds.setaProp("SET_UID", 6)
   tCmds.setaProp("GET_INFO", 7)
   tCmds.setaProp("GET_CREDITS", 8)
-  tCmds.setaProp("GETAVAILABLEBADGES", 157)
   tCmds.setaProp("GET_PASSWORD", 47)
   tCmds.setaProp("LANGCHECK", 58)
+  tCmds.setaProp("BTCKS", 105)
+  tCmds.setaProp("GETAVAILABLEBADGES", 157)
+  tCmds.setaProp("GET_SESSION_PARAMETERS", 181)
+  tCmds.setaProp("PONG", 196)
   tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

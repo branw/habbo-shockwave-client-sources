@@ -1,25 +1,24 @@
 property pChanges, pRolling, pRollDir, pRollingDirection, pRollingStartTime, pRollAnimDir
 
 on prepare me, tdata
-  if tdata.findPos("DIR") then
-    me.pDirection[1] = integer(tdata["DIR"])
-    me.pDirection[2] = integer(tdata["DIR"])
+  if tdata.findPos(#stuffdata) then
+    me.pDirection[1] = integer(tdata[#stuffdata])
+    me.pDirection[2] = integer(tdata[#stuffdata])
     if me.pDirection[1] < 0 or me.pDirection > 7 then
       me.pDirection[1] = 0
     end if
   end if
   pChanges = 0
   pRolling = 0
-  pRollDir = me.pDirection[1]
   pRollAnimDir = me.pDirection[1]
   pRollingDirection = me.pDirection[1]
-  me.setDir(tdata["DIR"])
+  me.setDir(me.pDirection[1])
   me.solveMembers()
   me.moveBy(0, 0, 0)
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on diceThrown me, tValue
   pRolling = 1
   pChanges = 1
   me.setDir(value(tValue))
@@ -76,8 +75,7 @@ end
 
 on select me
   if the doubleClick then
-    tNewDir = random(8) - 1
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "DIR" & "/" & tNewDir)
+    getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
   end if
   return 1
 end

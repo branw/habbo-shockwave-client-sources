@@ -163,6 +163,9 @@ on showVoucherWindow me
       tWndObj.getElement("voucher_help").hide()
     end if
     me.setVoucherInput(pVoucherInputState)
+    if tWndObj.elementExists("voucher_code") then
+      tWndObj.getElement("voucher_code").setFocus(1)
+    end if
     tWndObj.registerProcedure(#eventProcPurse, me.getID(), #mouseUp)
   end if
 end
@@ -412,6 +415,14 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("coins") then
         tWndObj.getElement("coins").setText(tTxt1)
       end if
+      if tWndObj.elementExists("purse_info_tickets") then
+        tFieldTxt = getObject(#session).get("user_ph_tickets") && getText("purse_info_tickets")
+        tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
+      end if
+      if tWndObj.elementExists("purse_info_film") then
+        tFieldTxt = getObject(#session).get("user_photo_film") && getText("purse_info_film")
+        tWndObj.getElement("purse_info_film").setText(tFieldTxt)
+      end if
       tMyName = getObject(#session).get(#userName)
       if tWndObj.elementExists("purse_name") then
         tWndObj.getElement("purse_name").setText(tMyName)
@@ -430,9 +441,11 @@ on changePurseWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcPurse, me.getID(), #mouseWithin)
       tWndObj.registerProcedure(#eventProcPurse, me.getID(), #mouseLeave)
       me.showPurseAd()
-      tTxt1 = getText("purse_head", "ACCOUNT TRANSACTIONS")
-      if tWndObj.elementExists("header2") then
-        tWndObj.getElement("header2").setText(tTxt1)
+      if objectExists("Figure_Preview") then
+        getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, "habbo_head", ["hd", "fc", "ey", "hr"])
+      end if
+      if tWndObj.elementExists("header_name") then
+        tWndObj.getElement("header_name").setText(getObject(#session).get("user_name"))
       end if
       tTxt1 = getText("purse_date", "DATE")
       if tWndObj.elementExists("taction_date") then
@@ -747,6 +760,8 @@ on eventProcPurse me, tEvent, tElemID, tParm
         if timeoutExists("flyTimer") then
           removeTimeout("flyTimer")
         end if
+      "show_credits":
+        me.changePurseWindowView("purse.window")
       "taction_next":
         me.drawPage(pPageView + 1)
       "taction_prev":

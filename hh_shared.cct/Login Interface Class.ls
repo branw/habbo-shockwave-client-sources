@@ -33,6 +33,30 @@ on showLogin me
     tWndObj.registerProcedure(#eventProcLogin, me.getID(), #mouseUp)
     tWndObj.registerProcedure(#eventProcLogin, me.getID(), #keyDown)
     tWndObj.getElement("login_username").setFocus(1)
+    if variableExists("username_input.font.size") then
+      tElem = tWndObj.getElement("login_username")
+      if tElem = 0 then
+        return 0
+      end if
+      if tElem.pMember = VOID then
+        return 0
+      end if
+      if tElem.pMember.type <> #field then
+        return 0
+      end if
+      tElem.pMember.fontSize = getIntVariable("username_input.font.size")
+      tElem = tWndObj.getElement("login_password")
+      if tElem = 0 then
+        return 0
+      end if
+      if tElem.pMember = VOID then
+        return 0
+      end if
+      if tElem.pMember.type <> #field then
+        return 0
+      end if
+      tElem.pMember.fontSize = getIntVariable("username_input.font.size")
+    end if
   end if
   return 1
 end

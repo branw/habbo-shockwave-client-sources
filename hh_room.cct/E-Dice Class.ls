@@ -3,9 +3,12 @@ property pActive, pValue, pAnimStart
 on prepare me, tdata
   pActive = 1
   pAnimStart = 0
-  if not voidp(tdata["VALUE"]) then
-    pValue = tdata["VALUE"]
+  if not voidp(tdata[#stuffdata]) then
+    pValue = tdata[#stuffdata]
   else
+    pValue = 0
+  end if
+  if pValue > 6 then
     pValue = 0
   end if
   return 1
@@ -26,7 +29,7 @@ on select me
           repeat with tY = me.pLocY - 1 to me.pLocY + 1
             if tY = me.pLocY or tX = me.pLocX then
               if getThread(#room).getInterface().getGeometry().emptyTile(tX, tY) then
-                getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: tX, #move: tY])
+                getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: tX, #short: tY])
                 return 1
               end if
             end if
@@ -58,9 +61,9 @@ on update me
     if me.pSprList.count < 2 then
       return 
     end if
-    tSprite = me.pSprList[2]
+    tsprite = me.pSprList[2]
     if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
-      if tSprite.castNum = getmemnum("edice_b_0_1_1_0_7") then
+      if tsprite.castNum = getmemnum("edice_b_0_1_1_0_7") then
         tmember = member(getmemnum("edice_b_0_1_1_0_0"))
       else
         tmember = member(getmemnum("edice_b_0_1_1_0_7"))
@@ -69,8 +72,8 @@ on update me
       tmember = member(getmemnum("edice_b_0_1_1_0_" & pValue))
       pActive = 0
     end if
-    tSprite.castNum = tmember.number
-    tSprite.width = tmember.width
-    tSprite.height = tmember.height
+    tsprite.castNum = tmember.number
+    tsprite.width = tmember.width
+    tsprite.height = tmember.height
   end if
 end

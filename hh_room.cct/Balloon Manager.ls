@@ -1,20 +1,32 @@
-property pState, pTextMembers, pScrollCounter, pAvailableBalloons, pVisibleBalloons, pMaxBalloons, pBalloonPulse, pBalloonBuffer, pBalloonImg, pMarginH, pMarginV, pMaxWidth, pMaxCharNum, pAutoScrollTime, pScrollStep, pFastScrollStep, pStartV, pFirstLocz, pMoveOffsetV, pLastBalloonId, pScrollBy, pBalloonColor, pHumanLoc, pLastMsg, pBalloonLeftMarg, pBalloonRightMarg, pReservedSprites
+property pState, pTextMembers, pScrollCounter, pAvailableBalloons, pVisibleBalloons, pMaxBalloons, pBalloonPulse, pBalloonBuffer, pBalloonImg, pMarginH, pMarginV, pMaxWidth, pMaxCharNum, pAutoScrollTime, pScrollStep, pFastScrollStep, pStartV, pFirstLocz, pMoveOffsetV, pLastBalloonId, pScrollBy, pBalloonColor, pHumanLoc, pLastMsg, pBalloonLeftMarg, pBalloonRightMarg, pReservedSprites, pDefaultTextColor
 
 on construct me
+  if variableExists("chat.balloon.scrolltime") then
+    pAutoScrollTime = getIntVariable("chat.balloon.scrolltime")
+  else
+    pAutoScrollTime = 4000
+  end if
+  if variableExists("chat.balloon.scrollstep") then
+    pScrollStep = getIntVariable("chat.balloon.scrollstep")
+  else
+    pScrollStep = 3
+  end if
   pState = #normal
   pScrollCounter = 0
   pVisibleBalloons = [:]
   pAvailableBalloons = [:]
   pBalloonBuffer = []
-  pAutoScrollTime = 4000
   pMaxBalloons = 6 + 1
   pFirstLocz = getIntVariable("window.default.locz") - 2000 - pMaxBalloons
   pMoveOffsetV = 21
-  pScrollStep = 3
   pMarginH = 8
   pMarginV = 5
   pScrollBy = pScrollStep
   pTextMembers = [:]
+  pDefaultTextColor = rgb(0, 0, 0)
+  if variableExists("balloon.margin.offset.v") then
+    pMarginV = pMarginV + getVariable("balloon.margin.offset.v")
+  end if
   tVariations = ["CHAT": "plain", "SHOUT": "bold", "WHISPER": "italic"]
   repeat with i = 1 to tVariations.count
     tFontStruct = getStructVariable("struct.font." & tVariations[i])
@@ -41,6 +53,7 @@ on construct me
   pBalloonImg.addProp(#right, me.flipH(member(getmemnum("balloon.left")).image))
   registerMessage(#leaveRoom, me.getID(), #removeBalloons)
   registerMessage(#changeRoom, me.getID(), #removeBalloons)
+  executeMessage(#BalloonManagerCreated, [#objectPointer: me])
   me.resetBalloons()
   return 1
 end
@@ -95,6 +108,8 @@ on createballoonImg me, tName, tText, tBalloonColor, tChatMode
   tmember.text = tName & ":" && tText
   tmember.char[1..tName.length + 1].font = tBoldStruct.getaProp(#font)
   tmember.char[1..tName.length + 1].fontStyle = tBoldStruct.getaProp(#fontStyle)
+  tSavedColor = tmember.color
+  tmember.char[1..tName.length + 1].color = pDefaultTextColor
   tTextWidth = tmember.charPosToLoc(tmember.char.count).locH + pBalloonImg[#left].width * 4
   if tTextWidth + pMarginH * 2 > pMaxWidth then
     tTextWidth = pMaxWidth - pMarginH * 2 - pBalloonImg[#left].width
@@ -126,6 +141,7 @@ on createballoonImg me, tName, tText, tBalloonColor, tChatMode
   tNewImg.copyPixels(tTextImg, tdestrect, tTextImg.rect)
   tmember.font = tSavedFont
   tmember.fontStyle = tSavedStyle
+  tmember.color = tSavedColor
   return tNewImg
 end
 
@@ -309,6 +325,30 @@ on timeToScrollLines me
     pState = #scroll
     receivePrepare(me.getID())
   end if
+end
+
+on setProperty me, tMode, tProp, tValue
+  if pTextMembers[tMode] < 1 then
+    return 0
+  end if
+  tmember = pTextMembers[tMode]
+  case tProp of
+    #wordWrap:
+      tmember.wordWrap = tValue
+    #boxType:
+      tmember.boxType = tValue
+    #antialias:
+      tmember.antialias = tValue
+    #font:
+      tmember.font = tValue
+    #fontSize:
+      tmember.fontSize = tValue
+    #fontStyle:
+      tmember.fontStyle = tValue
+    #color:
+      tmember.color = tValue
+  end case
+  return 0
 end
 
 on flipH me, tImg

@@ -1,7 +1,6 @@
-property pNumOfPhTickets, pJumpButtonsWnd, pTicketCountWnd
+property pJumpButtonsWnd, pTicketCountWnd
 
 on construct me
-  pNumOfPhTickets = 0
   pJumpButtonsWnd = "pool_helpbuttons"
   pTicketCountWnd = "pool_ticketcount"
   return 1
@@ -36,15 +35,6 @@ end
 
 on closeUimaKoppi me
   me.getInterface().closeUimaKoppi()
-end
-
-on setNumOfPhTickets me, tMsg
-  pNumOfPhTickets = tMsg
-  return 1
-end
-
-on getNumOfPhTickets me
-  return pNumOfPhTickets
 end
 
 on poolUpView me, tMode
@@ -119,19 +109,6 @@ end
 
 on sendSign me, tSign
   getConnection(getVariable("connection.room.id")).send("SIGN", tSign)
-end
-
-on buyPoolTickets me, tName
-  if not connectionExists(getVariable("connection.info.id")) then
-    return error(me, "Connection not found:" && getVariable("connection.info.id"), #buyPoolTickets)
-  end if
-  if tName = EMPTY then
-    tName = getObject(#session).get("user_name")
-  end if
-  if voidp(tName) then
-    tName = getObject(#session).get("user_name")
-  end if
-  getConnection(getVariable("connection.info.id")).send("BTCKS", tName)
 end
 
 on sendJumpPerf me, tJumpData

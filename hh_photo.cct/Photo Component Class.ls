@@ -24,7 +24,7 @@ end
 
 on storePicture me, tmember, tText
   if not voidp(tText) then
-    tText = getStringServices().convertSpecialChars(tText, 1)
+    tText = convertSpecialChars(tText, 1)
     tText = replaceChunks(tText, "\", EMPTY)
   end if
   tCS = me.countCS(tmember.image)
@@ -106,6 +106,7 @@ on setFilm me, tFilm
   pFilm = tFilm
   me.getInterface().setButtonHilites()
   me.getInterface().updateFilm()
+  getObject(#session).set("user_photo_film", tFilm)
 end
 
 on getFilm me
@@ -118,7 +119,7 @@ on setItemData me, tMsg
   tAuthId = tMsg[#text].line[1].word[2]
   pPhotoTime = tMsg[#text].line[1].word[3..4]
   pPhotoText = tMsg[#text].line[2..tMsg[#text].line.count]
-  pPhotoText = me.convertScandinavianUTF8(pPhotoText)
+  pPhotoText = me.convertScandinavian(pPhotoText)
   unregisterMessage(symbol("itemdata_received" & pItemId), me.getID())
   if pLocX > 500 then
     pLocX = 500
@@ -148,11 +149,11 @@ on setItemData me, tMsg
   end if
 end
 
-on convertScandinavianUTF8 me, tString
+on convertScandinavian me, tString
   if tString.length < 6 then
     return tString
   end if
-  tUTF8Array = ["&AUML;": "€", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
+  tEncArray = ["&AUML;": "Ä", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
   tOutputStr = EMPTY
   repeat with i = 1 to tString.length
     tChar = tString.char[i]
@@ -161,7 +162,7 @@ on convertScandinavianUTF8 me, tString
       next repeat
     end if
     tChunkArr = chars(tString, i, i + 5)
-    tChunkScan = getaProp(tUTF8Array, tChunkArr)
+    tChunkScan = getaProp(tEncArray, tChunkArr)
     if tChunkScan <> VOID then
       put tChunkScan after tOutputStr
       i = i + 5

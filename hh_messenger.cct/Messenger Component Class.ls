@@ -67,6 +67,13 @@ on showhidemessenger me
   return me.getInterface().showhidemessenger()
 end
 
+on deleteAllMessages me
+  pItemList.messages = [:]
+  pItemList.msgCount = [:]
+  me.tellMessageCount()
+  return 1
+end
+
 on receive_MessengerReady me, tMsg
   pReadyFlag = 1
   createTimeout(pTimeOutID, getIntVariable("messenger.updatetime.buddylist", 120000), #send_BuddylistUpdate, me.getID(), VOID, 0)
@@ -78,6 +85,7 @@ on receive_BuddyList me, ttype, tList
     #new:
       pBuddyList.setaProp(#value, tList)
       me.getInterface().createBuddyList(pBuddyList)
+      me.getInterface().setMessengerActive()
     #update:
       if tList.buddies.count = 0 then
         return 0
@@ -150,17 +158,29 @@ on receive_AppendBuddy me, tdata
   me.getInterface().appendBuddy(tdata)
 end
 
-on receive_RemoveBuddy me, tid
+on receive_RemoveBuddy me, tMsg
+  if tMsg.content = EMPTY then
+    if objectExists("buddy_massremove") then
+      getObject("buddy_massremove").confirmationReceived()
+    end if
+    return 1
+  end if
+  tid = string(tMsg.connection.GetIntFrom())
+  if tid < 0 then
+    return 1
+  end if
   me.getInterface().removeBuddy(tid)
   tTheBuddyList = pBuddyList.getaProp(#value)
+  tTheBuddyList.sort()
   tBuddy = tTheBuddyList.buddies.getaProp(tid)
   if voidp(tBuddy) then
     return error(me, "Buddy not found:" && tid, #receive_RemoveBuddy)
   end if
+  tBuddyName = tBuddy.name
   tTheBuddyList.buddies.deleteProp(tid)
-  tTheBuddyList.online.deleteOne(tBuddy.name)
-  tTheBuddyList.offline.deleteOne(tBuddy.name)
-  tTheBuddyList.render.deleteOne(tBuddy.name)
+  tTheBuddyList.online.deleteOne(tBuddyName)
+  tTheBuddyList.offline.deleteOne(tBuddyName)
+  tTheBuddyList.render.deleteOne(tBuddyName)
   me.eraseMessagesBySenderID(tid)
 end
 
@@ -198,6 +218,11 @@ on receive_BuddyRequest me, tMsg
   pItemList[#newBuddyRequest].add(tMsg[#name])
   me.tellRequestCount()
   me.getInterface().updateFrontPage()
+end
+
+on receive_purgeAllBuddyRequests me
+  pItemList[#newBuddyRequest] = []
+  return me.getInterface().updateFrontPage()
 end
 
 on receive_UserFound me, tMsg
@@ -270,12 +295,18 @@ on send_AcceptBuddy me, tBuddyName
     end if
     me.tellRequestCount()
     if connectionExists(getVariable("connection.info.id")) then
-      getConnection(getVariable("connection.info.id")).send("MESSENGER_ACCEPTBUDDY", tBuddyName)
+      getConnection(getVariable("connection.info.id")).send("MESSENGER_ACCEPTBUDDY", [#string: tBuddyName])
     end if
   end if
 end
 
-on send_DeclineBuddy me, tBuddyName
+on send_DeclineBuddy me, tBuddyName, ttype
+  if ttype = #all then
+    if connectionExists(getVariable("connection.info.id")) then
+      getConnection(getVariable("connection.info.id")).send("MESSENGER_PURGEBUDDYREQS", [:])
+      return 1
+    end if
+  end if
   if pItemList[#newBuddyRequest].count > 0 then
     if voidp(tBuddyName) then
       tBuddyName = pItemList[#newBuddyRequest][1]
@@ -283,20 +314,20 @@ on send_DeclineBuddy me, tBuddyName
     end if
     me.tellRequestCount()
     if connectionExists(getVariable("connection.info.id")) then
-      getConnection(getVariable("connection.info.id")).send("MESSENGER_DECLINEBUDDY", tBuddyName)
+      getConnection(getVariable("connection.info.id")).send("MESSENGER_DECLINEBUDDY", [#string: tBuddyName])
     end if
   end if
 end
 
 on send_RequestBuddy me, tBuddyName
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("MESSENGER_REQUESTBUDDY", tBuddyName)
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_REQUESTBUDDY", [#string: tBuddyName])
   end if
 end
 
-on send_RemoveBuddy me, tBuddyName
+on send_RemoveBuddy me, tBuddyID
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("MESSENGER_REMOVEBUDDY", tBuddyName)
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_REMOVEBUDDY", [#integer: 1, #integer: 1, #integer: tBuddyID])
   end if
 end
 
@@ -309,8 +340,14 @@ end
 on send_BuddylistUpdate me
   if not pPaused then
     if connectionExists(getVariable("connection.info.id")) then
-      getConnection(getVariable("connection.info.id")).send("MESSENGER_SENDUPDATE")
+      getConnection(getVariable("connection.info.id")).send("MESSENGER_SENDUPDATE", [#integer: 1])
     end if
+  end if
+end
+
+on send_AskForMessages me
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_GETMESSAGES", [#integer: 1])
   end if
 end
 
@@ -403,6 +440,7 @@ on tellRequestCount me
 end
 
 on externalBuddyRequest me, tTargetUser
+  me.send_RequestBuddy(tTargetUser)
   me.getInterface().showMessenger()
   me.getInterface().pLastSearch[#name] = tTargetUser
   me.getInterface().ChangeWindowView("console_sentrequest.window")

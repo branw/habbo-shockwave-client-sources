@@ -10,6 +10,9 @@ end
 
 on deconstruct me
   pGeometry = VOID
+  if ilk(pSprite) = #sprite then
+    pSprite.visible = 0
+  end if
   pSprite = VOID
   pLastLoc = VOID
   return 1

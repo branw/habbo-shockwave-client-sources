@@ -140,15 +140,19 @@ on hideOrderInfo me
   return 1
 end
 
-on showNoBalance me, tInfo
+on showNoBalance me, tInfo, tGeneralText
   if windowExists(pInfoWindowID) then
     return 0
   end if
-  tPrice = integer(value(tInfo[#price]))
-  tWallet = integer(value(getObject(#session).get("user_walletbalance")))
-  tMsgA = getText("catalog_costs", "\x1 costs \x2 credits")
-  tMsgA = replaceChunks(tMsgA, "\x1", tInfo[#name])
-  tMsgA = replaceChunks(tMsgA, "\x2", tPrice)
+  if tGeneralText then
+    tMsgA = getText("Alert_no_credits")
+  else
+    tPrice = integer(value(tInfo[#price]))
+    tWallet = integer(value(getObject(#session).get("user_walletbalance")))
+    tMsgA = getText("catalog_costs", "\x1 costs \x2 credits")
+    tMsgA = replaceChunks(tMsgA, "\x1", tInfo[#name])
+    tMsgA = replaceChunks(tMsgA, "\x2", tPrice)
+  end if
   if getObject(#session).get("user_rights").getOne("fuse_buy_credits") then
     tWndFile = "habbo_orderinfo_nocredits.window"
   else
@@ -184,7 +188,9 @@ on showPurchaseOk me
   tWndObj.setProperty(#locZ, 22000000)
   tWndObj.getElement("habbo_message_text_b").setText(getText("catalog_itsurs"))
   if threadExists(#room) then
-    getThread(#room).getInterface().getContainer().open()
+    if getThread(#room).getComponent().pRoomId = "private" then
+      getThread(#room).getInterface().getContainer().open()
+    end if
   end if
   return 1
 end
@@ -223,6 +229,7 @@ on showBuyAsGift me, tBoolean
   tWndObj.setProperty(#locZ, 22000000)
   tWndObj.getElement("habbo_orderinfo_text_a").setText(tMsgA)
   tWndObj.getElement("habbo_orderinfo_text_b").setText(tMsgB)
+  tWndObj.registerProcedure(#eventProcKeyDown, me.getID(), #keyDown)
 end
 
 on saveCatalogueIndex me, tdata
@@ -883,6 +890,11 @@ on showPreviewImage me, tProps, tElemID
 end
 
 on renderPageList me, tPages
+  if variableExists("cat_index_marginv") then
+    tIndexVertMargin = getVariable("cat_index_marginv")
+  else
+    tIndexVertMargin = 0
+  end if
   if not windowExists(pCatalogID) then
     return error(me, "Failed to render the list of Catalogue pages!!!", #renderPageList)
   end if
@@ -896,7 +908,7 @@ on renderPageList me, tPages
   tBgColor = rgb("#DDDDDD")
   tLeftMarg = 6
   tWriteObj = getWriter(pWriterPages)
-  tVerticMarg = (pPageLineHeight - tWriteObj.getFont()[#lineHeight]) / 2
+  tVerticMarg = (pPageLineHeight - tWriteObj.getFont()[#lineHeight]) / 2 + tIndexVertMargin
   if tPages.ilk = #propList then
     tPageCounter = tPages.count
   else
@@ -936,6 +948,11 @@ on renderSelectPage me, tClickLine, tLastSelectLine
   if tWndObj.elementExists("ctlg_pages_scroll") then
     tScrollOffset = tWndObj.getElement("ctlg_pages_scroll").getScrollOffset()
   end if
+  if variableExists("cat_index_marginv") then
+    tIndexVertMargin = getVariable("cat_index_marginv")
+  else
+    tIndexVertMargin = 0
+  end if
   tElem = tWndObj.getElement("ctlg_pages")
   tImg = tElem.getProperty(#image)
   tY1 = (tClickLine - 1) * pPageLineHeight + 1
@@ -950,7 +967,7 @@ on renderSelectPage me, tClickLine, tLastSelectLine
   tPageImg = tWriteObj.render(tText).duplicate()
   tX1 = tLeftMarg
   tX2 = tX1 + tPageImg.width
-  tY1 = tVerticMarg + pPageLineHeight * (tClickLine - 1) + 1
+  tY1 = tVerticMarg + pPageLineHeight * (tClickLine - 1) + 1 + tIndexVertMargin
   tY2 = tY1 + tPageImg.height
   tDstRect = rect(tX1, tY1, tX2, tY2)
   tImg.copyPixels(tPageImg, tDstRect, tPageImg.rect)
@@ -1232,4 +1249,26 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
       me.hideOrderInfo()
   end case
   return 1
+end
+
+on eventProcKeyDown me, tEvent, tSprID, tParam
+  if the key = TAB then
+    if not windowExists(pInfoWindowID) then
+      return 0
+    end if
+    tWndObj = getWindow(pInfoWindowID)
+    if tSprID = "shopping_greeting_field" then
+      tElem = tWndObj.getElement("shopping_gift_target")
+      if objectp(tElem) then
+        tElem.setFocus(1)
+      end if
+    else
+      tElem = tWndObj.getElement("shopping_greeting_field")
+      if objectp(tElem) then
+        tElem.setFocus(1)
+      end if
+    end if
+  else
+    pass()
+  end if
 end

@@ -93,12 +93,12 @@ on createButtonImg me, tText, tstate
   end if
   if me.pFixedSize = 1 then
     tCharPosH = tTextMem.locToCharPos(point(me.pOrigWidth - tMarginH * 2, 5))
-    tTextWidth = tTextMem.charPosToLoc(tCharPosH).locH
+    tTextWidth = me.getTextWidth(tTextMem)
     tTextMem.rect = rect(0, 0, tTextWidth, tTextMem.height)
     tTextImg = tTextMem.image
     tWidth = me.pOrigWidth
   else
-    tTextWidth = tTextMem.charPosToLoc(tTextMem.char.count).locH + tFontDesc[#fontSize] * 2
+    tTextWidth = me.getTextWidth(tTextMem)
     if tTextWidth + tMarginH * 2 > me.pMaxWidth then
       tTextWidth = me.pMaxWidth - tMarginH * 2 + tOptImgWidth
     end if

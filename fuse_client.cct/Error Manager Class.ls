@@ -48,6 +48,8 @@ on error me, tObject, tMsg, tMethod
       put "Error:" & tError
     2:
       put "Error:" & tError
+    3:
+      executeMessage(#debugdata, "Error: " & tError)
     otherwise:
       put "Error:" & tError
   end case

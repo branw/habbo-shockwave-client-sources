@@ -1,7 +1,7 @@
 property pSprite, pFrameCount
 
-on define me, tSprite, tNum
-  pSprite = tSprite
+on define me, tsprite, tNum
+  pSprite = tsprite
   pFrameCount = random(8)
   return 1
 end

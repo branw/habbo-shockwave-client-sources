@@ -1,7 +1,7 @@
 property pChanges, pActive
 
 on prepare me, tdata
-  if tdata["STATUS"] = "O" then
+  if tdata[#stuffdata] = "O" then
     me.setOn()
     pChanges = 1
   else
@@ -15,7 +15,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "O" then
     me.setOn()
   else
@@ -70,7 +70,7 @@ on select me
     else
       tStr = "O"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "STATUS" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
 end

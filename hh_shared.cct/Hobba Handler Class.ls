@@ -30,6 +30,14 @@ on handle_cryforhelp me, tMsg
       tProps[#marker] = tMarker
       tProps[#id] = string(tConn.GetIntFrom())
       tProps[#owner] = string(tConn.GetStrFrom())
+    else
+      if ttype = 2 then
+        tProps[#type] = #game
+        tProps[#casts] = tMarker
+        tProps[#id] = tConn.GetStrFrom()
+        tProps[#port] = tConn.GetIntFrom()
+        tProps[#door] = tConn.GetIntFrom()
+      end if
     end if
   end if
   if tProps[#sender] <> "[AUTOMATIC]" then

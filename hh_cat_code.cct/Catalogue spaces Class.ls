@@ -51,8 +51,8 @@ on define me, tPageProps
       end if
     end if
   end if
-  me.setWallPaper("pattern", 1)
-  me.setFloorPattern("pattern", 1)
+  me.setWallPaper("pattern", 6)
+  me.setFloorPattern("pattern", 3)
 end
 
 on setWallPaper me, ttype, tChange

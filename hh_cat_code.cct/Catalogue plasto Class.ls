@@ -237,6 +237,26 @@ on selectColor me, tOrderNum
   pSelectedColorNum = tOrderNum
   pSelectedProduct = pPageData[pSelectedOrderNum][pSelectedColorNum]
   getThread(#catalogue).getInterface().showPreviewImage(pSelectedProduct)
+  if not voidp(pSelectedProduct["name"]) then
+    if tWndObj.elementExists("ctlg_product_name") then
+      tWndObj.getElement("ctlg_product_name").setText(pSelectedProduct["name"])
+    end if
+  end if
+  if not voidp(pSelectedProduct["description"]) then
+    if tWndObj.elementExists("ctlg_description") then
+      tWndObj.getElement("ctlg_description").setText(pSelectedProduct["description"])
+    end if
+  end if
+  if not voidp(pSelectedProduct["price"]) then
+    if tWndObj.elementExists("ctlg_price_1") then
+      if value(pSelectedProduct["price"]) > 1 then
+        tText = pSelectedProduct["price"] && getText("credits", "credits")
+      else
+        tText = pSelectedProduct["price"] && getText("credit", "credit")
+      end if
+      tWndObj.getElement("ctlg_price_1").setText(tText)
+    end if
+  end if
 end
 
 on eventProc me, tEvent, tSprID, tProp

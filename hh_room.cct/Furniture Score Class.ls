@@ -2,7 +2,7 @@ property pScore, pBoardImg
 
 on prepare me, tdata
   pScore = 0
-  tTemp = tdata.getaProp("SCORE")
+  tTemp = tdata.getaProp(#stuffdata)
   me.setScore(tTemp)
   return 1
 end
@@ -11,7 +11,7 @@ on relocate me
   me.setScore(pScore)
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   me.setScore(tValue)
 end
 
@@ -87,7 +87,7 @@ on select me
     end if
   end if
   if tUpdate then
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SCORE" & "/" & tScore)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: string(tScore)])
   end if
   return 1
 end

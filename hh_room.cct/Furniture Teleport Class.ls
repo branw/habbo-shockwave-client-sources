@@ -11,7 +11,7 @@ on prepare me, tdata
   end if
   me.pSprList[3].visible = 0
   if tdata.count > 0 then
-    me.updateStuffdata("DOOROPEN", tdata["DOOROPEN"])
+    me.updateStuffdata(tdata[#stuffdata])
   end if
   if getObject(#session).exists("target_door_ID") then
     if getObject(#session).get("target_door_ID") = me.getID() then
@@ -23,8 +23,8 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
-  if me.pSprList.count < 3 then
+on updateStuffdata me, tValue
+  if me.pSprList.count < 2 then
     return 0
   end if
   if tValue = "TRUE" then
@@ -83,7 +83,7 @@ on select me
         end if
     end case
     if tUserIsClose then
-      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
+      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
       getThread(#room).getComponent().getRoomConnection().send("INTODOOR", me.getID())
       me.tryDoor()
     end if
@@ -120,7 +120,7 @@ end
 
 on kickOut me
   tRoom = getThread(#room).getComponent()
-  tRoom.getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
   if me.pDirection[1] = 2 then
     tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + 1, #short: me.pLocY])
   else
@@ -137,8 +137,8 @@ on animate me, tTime
 end
 
 on update me
-  if me.pSprList.count < 3 then
-    return 0
+  if me.pSprList.count < 2 then
+    return 
   end if
   if pDoorOpentimer > 0 then
     tCurName = me.pSprList[1].member.name
@@ -155,7 +155,7 @@ on update me
     me.pSprList[2].height = tmember.height
     pDoorOpentimer = pDoorOpentimer - 1
     if pDoorOpentimer = 0 then
-      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "FALSE")
+      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "FALSE"])
     end if
   end if
   if pAnimActive > 0 then

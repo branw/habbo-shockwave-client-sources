@@ -1,8 +1,7 @@
-property pKoppiWndID, pTicketWndID, pSwimSuitModel, pSwimSuitIndex, pSwimSuitColor, pState, pSpeed, pUserSpr, pUserMem, pElevSpr_a, pElevSpr_b, pActLoc, pEndLoc, pCurLoc, pLocAnimList, pLocAnimIndx, pUserName
+property pKoppiWndID, pSwimSuitModel, pSwimSuitIndex, pSwimSuitColor, pState, pSpeed, pUserSpr, pUserMem, pElevSpr_a, pElevSpr_b, pActLoc, pEndLoc, pCurLoc, pLocAnimList, pLocAnimIndx, pUserName
 
 on construct me
   pKoppiWndID = "dew_pukukoppi"
-  pTicketWndID = getText("ph_tickets_title")
   pUserName = EMPTY
   tVisual = getThread(#room).getInterface().getRoomVisualizer()
   pState = #ready
@@ -16,19 +15,19 @@ on construct me
     createObject("Figure_System_Mountain", ["Figure System Class"])
     getObject("Figure_System_Mountain").define(["type": "member", "source": "swimfigure_ids_"])
   end if
-  tSprite = tVisual.getSprById("pool_teleport")
-  if ilk(tSprite, #sprite) then
-    tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
+  tsprite = tVisual.getSprById("pool_teleport")
+  if ilk(tsprite, #sprite) then
+    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
   end if
-  tSprite = tVisual.getSprById("highscore_table")
-  if ilk(tSprite, #sprite) then
-    tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
-    tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
+  tsprite = tVisual.getSprById("highscore_table")
+  if ilk(tsprite, #sprite) then
+    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
+    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
   end if
-  tSprite = tVisual.getSprById("ticket_box")
-  if ilk(tSprite, #sprite) then
-    tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
-    tSprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
+  tsprite = tVisual.getSprById("ticket_box")
+  if ilk(tsprite, #sprite) then
+    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseDown)
+    tsprite.registerProcedure(#eventProcDew, me.getID(), #mouseUp)
   end if
   return 1
 end
@@ -39,9 +38,6 @@ on deconstruct me
   end if
   if windowExists(pKoppiWndID) then
     removeWindow(pKoppiWndID)
-  end if
-  if windowExists(pTicketWndID) then
-    removeWindow(pTicketWndID)
   end if
   return removePrepare(me.getID())
 end
@@ -82,28 +78,8 @@ on closePukukoppi me
   end if
 end
 
-on openTicketWnd me, tIsUpdate
-  if not windowExists(pTicketWndID) then
-    createWindow(pTicketWndID, "habbo_basic.window")
-    tWndObj = getWindow(pTicketWndID)
-    tWndObj.merge("habbo_ph_tickets.window")
-    tWndObj.center()
-    tWndObj.registerClient(me.getID())
-    tWndObj.registerProcedure(#eventProcTickets, me.getID(), #mouseUp)
-    tWndObj.registerProcedure(#eventProcTickets, me.getID(), #keyDown)
-  else
-    tWndObj = getWindow(pTicketWndID)
-  end if
-  if tIsUpdate = 1 then
-    tText = getText("ph_tickets_txt")
-  else
-    tText = getText("ph_tickets_txt")
-  end if
-  tTickets = getThread(#mountain).getComponent().getTicketCount()
-  tText = replaceChunks(tText, "\x1", tTickets)
-  tWndObj.getElement("ph_tickets_number").setText(string(tTickets))
-  tWndObj.getElement("ph_tickets_txt").setText(string(tText))
-  tWndObj.getElement("ph_tickets_namefield").setText(getObject(#session).get("user_name"))
+on openTicketWindow me
+  executeMessage(#show_ticketWindow)
   return 1
 end
 
@@ -289,7 +265,7 @@ on eventProcDew me, tEvent, tSprID, tParam
           end if
         end if
       "ticket_box":
-        return me.openTicketWnd()
+        return me.openTicketWindow()
       "highscore_table":
         return openNetPage("url_peeloscore")
       otherwise:
@@ -297,24 +273,4 @@ on eventProcDew me, tEvent, tSprID, tParam
     end case
   end if
   return 0
-end
-
-on eventProcTickets me, tEvent, tSprID, tParam, tWndID
-  if tEvent = #mouseUp then
-    if tSprID = "close" then
-      if windowExists(pTicketWndID) then
-        return removeWindow(pTicketWndID)
-      end if
-    else
-      if tSprID = "ph_tickets_buy_button" then
-        tUserName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
-        if connectionExists(getVariable("connection.info.id")) then
-          getConnection(getVariable("connection.info.id")).send("BTCKS", tUserName)
-        end if
-        if windowExists(pTicketWndID) then
-          return removeWindow(pTicketWndID)
-        end if
-      end if
-    end if
-  end if
 end

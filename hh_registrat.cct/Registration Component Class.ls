@@ -132,7 +132,7 @@ on sendNewFigureDataToServer me, tPropList
   repeat with f = 1 to tPropList.count
     tProp = tPropList.getPropAt(f)
     if voidp(tPropList[tProp]) then
-      return error(me, "Data missing!!" && tProp, #sendFigureUpdateToServer)
+      return error(me, "Data missing!!" && tProp, #sendNewFigureDataToServer)
     end if
     tValue = tPropList[tProp]
     if not voidp(pRegMsgStruct[tProp]) then
@@ -171,13 +171,12 @@ on sendFigureUpdateToServer me, tPropList
     end case
   end if
   tMsg = [:]
-  repeat with f = 1 to tPropList.count
-    tProp = tPropList.getPropAt(f)
-    if voidp(tPropList[tProp]) then
-      return error(me, "Data missing!!" && tProp, #sendFigureUpdateToServer)
-    end if
+  repeat with tProp in ["figure", "sex", "customData", "directMail", "has_read_agreement", "parentagree"]
     tValue = tPropList[tProp]
-    if not ([tValue]).getPos(getObject(#session).get("user_" & tProp)) then
+    if getObject(#session).exists("user_" & tProp) then
+      tStoredValue = getObject(#session).get("user_" & tProp)
+    end if
+    if not ([tValue]).getPos(tStoredValue) and not voidp(tValue) then
       if not voidp(pRegMsgStruct[tProp]) then
         tMsg.addProp(#short, pRegMsgStruct[tProp].id)
         if pRegMsgStruct[tProp].type = #boolean then
@@ -412,6 +411,11 @@ on updateState me, tstate, tProps
         if getObject(#session).exists("conf_parent_email_request") then
           if getObject(#session).get("conf_parent_email_request") then
             tRegistrationProcessMode = "parent_email"
+          end if
+        end if
+        if getObject(#session).exists("conf_strong_coppa_required") then
+          if getObject(#session).get("conf_strong_coppa_required") then
+            tRegistrationProcessMode = "parent_email_strong_coppa"
           end if
         end if
         if getObject(#session).get("conf_coppa") and getPref("Blocktime") > 0 then

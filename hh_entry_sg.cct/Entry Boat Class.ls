@@ -1,7 +1,7 @@
 property pSprite, pOffset, pProps, pDirection, pmodel, pDelayCounter
 
-on define me, tSprite, ttype
-  pSprite = tSprite
+on define me, tsprite, ttype
+  pSprite = tsprite
   pOffset = [0, 0]
   pmodel = "boat_" & ttype
   pDelayCounter = 1

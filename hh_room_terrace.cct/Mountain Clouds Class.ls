@@ -4,9 +4,9 @@ on construct me
   pCloudList = []
   repeat with f = 1 to 4
     tCloud = createObject(#temp, "Single Cloud Class")
-    tSprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("pilvi" & f)
+    tsprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("pilvi" & f)
     tStartPointX = [200, 330, 490, 630][f]
-    tCloud.prepare(tSprite, tStartPointX)
+    tCloud.prepare(tsprite, tStartPointX)
     pCloudList.add(tCloud)
   end repeat
   return receivePrepare(me.getID())
