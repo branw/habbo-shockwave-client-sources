@@ -13,11 +13,26 @@ on exitFrame me
   gKusetus = gKusetus & "rs=" & random(10) & "/"
   gKusetus = gKusetus & "bd=" & random(10) & "/"
   gKusetus = gKusetus & "hr=" & random(10) & "/"
-  gCountryPrefix = "gf"
+  if the movieName contains "habbo_entry" then
+    gCountryPrefix = "gf"
+  else
+    if the movieName contains "habbo_ch_entry" then
+      gCountryPrefix = "ch"
+    end if
+  end if
   gStartLoadingTime = t1
   gEndLoadingTime = t2
-  gEPIp = "fuse-sun2.kultakalaglobal.com"
-  gEPPort = 37140
+  if the movieName contains "habbo_entry" then
+    gEPIp = "fuse-sun2.kultakalaglobal.com"
+    gEPPort = 37120
+  else
+    if the movieName contains "habbo_ch_entry" then
+      gEPIp = "213.55.128.132"
+      gEPPort = 37005
+    end if
+  end if
+  gEPIp = "fuse.taivas.com"
+  gEPPort = 37000
   if the runMode <> "Author" then
     gHabboRep = getNetText("http://habborep.magenta.net/serverid.txt")
     hostInfo = externalParamValue("swText")

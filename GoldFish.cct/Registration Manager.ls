@@ -1,4 +1,4 @@
-property pState, pMode, pCountryMan
+property pState, pMode, pCountryMan, pWarningShown
 global figurePartList, figureColorList, MyfigurePartList, MyfigureColorList
 
 on new me, tMode, tState
@@ -29,6 +29,27 @@ on init me
     go("regist1")
   else
     if pMode = #update then
+      pWarningShown = 0
+      tBirthday = field(getmemnum("birthday_field"))
+      the itemDelimiter = "."
+      tDay = value(tBirthday.item[1])
+      tMonth = value(tBirthday.item[2])
+      tYear = value(tBirthday.item[3])
+      BirthdayOK = 1
+      if tDay < 1 or tDay > 31 then
+        BirthdayOK = 0
+      end if
+      if tMonth < 1 or tMonth > 12 then
+        BirthdayOK = 0
+      end if
+      if tYear < 1910 or tYear > 1999 then
+        BirthdayOK = 0
+      end if
+      if BirthdayOK then
+        put tDay into field getmemnum("birthday_field.day")
+        put tMonth into field getmemnum("birthday_field.month")
+        put tYear into field getmemnum("birthday_field.year")
+      end if
       if pState = 1 then
         go("change1")
         sendAllSprites(#initMeForChange)
@@ -41,7 +62,7 @@ on init me
 end
 
 on setState me, tState
-  global gChosenCountry, gChosenRegion
+  tOldState = pState
   case pState of
     1:
       if tState <> 0 then
@@ -64,15 +85,8 @@ on setState me, tState
       end if
     3:
       if tState > pState then
-        if gChosenCountry = VOID then
-          ShowAlert("CountryRequired")
+        if me.countryCheck() = 0 then
           return 
-        end if
-        if gChosenCountry = 342 or gChosenCountry = 424 or gChosenCountry = 405 then
-          if gChosenRegion = VOID then
-            ShowAlert("RegionRequired")
-            return 
-          end if
         end if
       end if
   end case
@@ -88,6 +102,13 @@ on setState me, tState
         sendAllSprites(#initMeForChange)
       end if
     end if
+    if pState = 2 then
+      if pMode = #update and not pWarningShown then
+        tDialog = new(script("PopUp Context Class"), 2130000000, 851, 865, point(0, 0))
+        tDialog.displayFrame("password_alert")
+        pWarningShown = 1
+      end if
+    end if
   else
     if pState = 0 then
       case pMode of
@@ -98,6 +119,14 @@ on setState me, tState
       end case
     else
       if pState = 4 then
+        if me.countryCheck() = 0 then
+          pState = tOldState
+          return 
+        end if
+        if me.BirthdayANDemailcheck() = 0 then
+          pState = tOldState
+          return 
+        end if
         case pMode of
           #register:
             go("doregist")
@@ -107,6 +136,21 @@ on setState me, tState
       end if
     end if
   end if
+end
+
+on countryCheck me
+  global gChosenCountry, gChosenRegion
+  if gChosenCountry = VOID then
+    ShowAlert("CountryRequired")
+    return 0
+  end if
+  if gChosenCountry = 342 or gChosenCountry = 424 or gChosenCountry = 405 then
+    if gChosenRegion = VOID then
+      ShowAlert("RegionRequired")
+      return 0
+    end if
+  end if
+  return 1
 end
 
 on getFigureResults me
@@ -164,17 +208,25 @@ on agreementCheck me
 end
 
 on BirthdayANDemailcheck me
-  Birthday = "Birthday_field"
-  emailfield = "email_field"
+  emailfield = getmemnum("email_field")
   BirthdayOK = 1
-  if (field(Birthday)).length > 8 then
-    if (field(Birthday)).char[(field(Birthday)).length - 3..(field(Birthday)).length - 2] = "19" or (field(Birthday)).char[(field(Birthday)).length - 3..(field(Birthday)).length - 2] = "20" then
-      BirthdayOK = 1
-    else
-      BirthdayOK = 0
-    end if
-  else
+  sDay = field(getmemnum("birthday_field.day"))
+  sMonth = field(getmemnum("birthday_field.month"))
+  sYear = field(getmemnum("birthday_field.year"))
+  tDay = value(sDay.char[1..2])
+  tMonth = value(sMonth.char[1..2])
+  tYear = value(sYear.char[1..4])
+  if tDay < 1 or tDay > 31 then
     BirthdayOK = 0
+  end if
+  if tMonth < 1 or tMonth > 12 then
+    BirthdayOK = 0
+  end if
+  if tYear < 1910 or tYear > 1999 then
+    BirthdayOK = 0
+  end if
+  if BirthdayOK = 1 then
+    put tDay & "." & tMonth & "." & tYear into field getmemnum("birthday_field")
   end if
   if (field(emailfield)).length > 6 and field(emailfield) contains "@" then
     emailOk = 0

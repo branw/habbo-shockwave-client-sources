@@ -1,6 +1,4 @@
 on secretDecode key
-  put key.length
-  put key
   l = key.length
   if l mod 2 = 1 then
     l = l - 1
@@ -23,6 +21,5 @@ on secretDecode key
     end if
     checkSum = checkSum + a
   end repeat
-  put checkSum
   return checkSum
 end

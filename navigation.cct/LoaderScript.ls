@@ -13,8 +13,8 @@ end
 
 on nextLoad
   gLoadNo = gLoadNo + 1
-  if gLoadNo <= the number of lines in field "loadlistPrivateRoom" then
-    file = line gLoadNo of field "loadlistPrivateRoom"
+  if gLoadNo <= the number of lines in field getmemnum("loadlistPrivateRoom") then
+    file = line gLoadNo of field getmemnum("loadlistPrivateRoom")
     if the runMode = "Author" then
       file = the moviePath & file
     end if

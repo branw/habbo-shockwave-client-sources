@@ -1,4 +1,3 @@
 on exitFrame me
-  init()
-  Logon()
+  go(the frame)
 end

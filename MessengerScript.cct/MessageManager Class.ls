@@ -21,14 +21,24 @@ on handleFusePMessage me, data
 end
 
 on handleFusePCampaignMessage me, data
+  global gDialogMessage
   msg = new(script("Campaign Message Class"), data)
-  l = getaProp(pBuddyMsgs, msg.senderID)
-  if l = VOID then
-    l = []
-    addProp(pBuddyMsgs, msg.senderID, l)
+  if msg.type = #dialog then
+    if the frame > label("hotel") then
+      tDialog = new(script("PopUp Context Class"), 2130000000, 851, 865, point(0, 0))
+      tFrame = msg.link
+      tDialog.displayFrame(tFrame)
+    end if
+    gDialogMessage = msg
+  else
+    l = getaProp(pBuddyMsgs, msg.senderID)
+    if l = VOID then
+      l = []
+      addProp(pBuddyMsgs, msg.senderID, l)
+    end if
+    puppetSound(3, getmemnum("newmessage.sound"))
+    add(l, msg)
   end if
-  puppetSound(3, getmemnum("newmessage.sound"))
-  add(l, msg)
 end
 
 on getMessageCount me

@@ -1,4 +1,4 @@
-property name, Custom, locX, locY, height, direction, memberPrefix, memberModels, moving, destLScreen, startLScreen, moveStart, moveTime, talking, pModels, pDirections, pSprites, pInks, lParts, pActions, pColors, pLocZShifts, animFrame, danceLegAnim, danceHandAnim, dancing, pSleeping, counter, pAnimFixH, pAnimFixV, pFlipped, mainAction, restingHeight, changes, controller, userController, drink, food, drinkAnimFrame, drinkingAnimFrameDir, carryItem, carryItemSpr, drinking, pTrading, myEy, specialXtras, isModerator, pLocFix, iLocZFix, pHeadLooseH, pHeadLooseV, pModLevel
+property name, Custom, locX, locY, height, direction, memberPrefix, memberModels, moving, destLScreen, startLScreen, moveStart, moveTime, talking, pModels, pDirections, pSprites, pInks, lParts, pActions, pColors, pLocZShifts, pOrigModels, pOrigColors, pCostumeModels, pCostumeColors, pCostumeOn, pCostumeNum, animFrame, danceLegAnim, danceHandAnim, dancing, pSleeping, counter, pAnimFixH, pAnimFixV, pFlipped, mainAction, restingHeight, changes, controller, userController, drink, food, drinkAnimFrame, drinkingAnimFrameDir, carryItem, carryItemSpr, drinking, pTrading, myEy, specialXtras, isModerator, pLocFix, iLocZFix, pHeadLooseH, pHeadLooseV, pModLevel
 global gMyModLevel, OOO, gpObjects, gUserSprites, gMyName, gXFactor, gYFactor, peopleSize, MeDancing, gBadgeOn, gMeModerator, gModLevel
 
 on new me, tName, tMemberPrefix, tMemberModels, tLocX, tLocY, tHeight, tdir, tlDimensions, tSpr, tCustom
@@ -66,6 +66,8 @@ on new me, tName, tMemberPrefix, tMemberModels, tLocX, tLocY, tHeight, tdir, tlD
     setAt(pModels, i, model)
     the itemDelimiter = oldDelim
   end repeat
+  pOrigModels = pModels
+  pOrigColors = pColors
   pDirections = [:]
   pSprites = [:]
   pActions = [:]
@@ -182,6 +184,7 @@ on initiateForSync me
   pSleeping = 0
   isModerator = 0
   me.controller = 0
+  pCostumeOn = 0
   carryItem = VOID
   food = VOID
   drink = VOID
@@ -205,6 +208,45 @@ on fuseAction_mod me, prop
   end if
   if gMyName = name then
     gMyModLevel = pModLevel
+  end if
+end
+
+on fuseAction_cost me, prop
+  if me.locY > 3 then
+    pCostumeOn = 0
+    return 
+  end if
+  prop = value(prop.word[2])
+  if prop >= 1 and prop <= 10 then
+    if pCostumeNum <> prop then
+      pCostumeNum = prop
+      oldDelim = the itemDelimiter
+      the itemDelimiter = ":"
+      tCostumeModelString = (field(getmemnum("costume_list"))).line[prop].item[3]
+      the itemDelimiter = ","
+      pCostumeModels = keyValueToPropList(tCostumeModelString, "&")
+      pCostumeColors = [:]
+      repeat with i = 1 to count(pCostumeModels)
+        model = getAt(pCostumeModels, i)
+        the itemDelimiter = "/"
+        if (item 2 of model).length > 3 then
+          clothColor = value("color(#rgb," & item 2 of model & ")")
+        else
+          clothColor = paletteIndex(integer(item 2 of model))
+        end if
+        if clothColor = VOID then
+          clothColor = color(#rgb, 0, 0, 0)
+        end if
+        addProp(pCostumeColors, getPropAt(pCostumeModels, i), clothColor)
+        model = item 1 of model
+        if (getPropAt(pCostumeModels, i) = "fc" or getPropAt(pCostumeModels, i) = "hd") and model = "002" and gXFactor < 33 then
+          model = "001"
+        end if
+        setAt(pCostumeModels, i, model)
+        the itemDelimiter = oldDelim
+      end repeat
+    end if
+    pCostumeOn = 1
   end if
 end
 
@@ -537,6 +579,13 @@ on setFix me, locf, loczf
 end
 
 on updateMembers me
+  if pCostumeOn = 1 then
+    pModels = pCostumeModels
+    pColors = pCostumeColors
+  else
+    pModels = pOrigModels
+    pColors = pOrigColors
+  end if
   tHeight = height
   if mainAction = "sit" or mainAction = "lay" then
     tHeight = restingHeight - 1.0

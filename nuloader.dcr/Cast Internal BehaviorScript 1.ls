@@ -1,4 +1,3 @@
 on exitFrame me
-  init()
-  Logon()
+  checkLoad()
 end

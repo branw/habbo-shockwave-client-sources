@@ -186,7 +186,7 @@ on handleEPMessageContent content
   if firstline contains "HELLO" then
     put "HELLO"
     gEPKryptausOn = 0
-    sendEPFuseMsg("VERSIONCHECK" && field("versionid"))
+    sendEPFuseMsg("VERSIONCHECK" && field("versionid_new"))
   else
     if firstline contains "ENCRYPTION_ON" then
       put "EP Encryption enabled...!"

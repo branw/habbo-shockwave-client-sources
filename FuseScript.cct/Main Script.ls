@@ -63,6 +63,7 @@ end
 
 on sendFuseMsg s
   global gcatName, RC4, gKryptausOn
+  put s
   if gConnectionOk = 1 and objectp(gConnectionInstance) then
     s = stringReplace(s, "Š", "&auml;")
     s = stringReplace(s, "š", "&ouml;")
@@ -113,7 +114,7 @@ on fuseRegister update
   s = s & "name=" & field("charactername_field") & RETURN
   s = s & "password=" & passwd & RETURN
   s = s & "email=" & fieldOrEmpty("email_field") & RETURN
-  s = s & "figure=" & toOneLine(fieldOrEmpty("figure_field")) & RETURN
+  s = s & "figure=" & x_from(toOneLine(fieldOrEmpty("figure_field"))) & RETURN
   s = s & "directMail=" & fieldOrEmpty("can_spam_field") & RETURN
   s = s & "birthday=" & fieldOrEmpty("birthday_field") & RETURN
   s = s & "phonenumber=" & fieldOrEmpty("phonenumber") & RETURN
@@ -315,8 +316,7 @@ on handleMessageContent content
             if firstline contains "HELLO" then
               put firstline
               gKryptausOn = 0
-              sendFuseMsg("VERSIONCHECK" && field("versionid"))
-              sendFuseMsg("CLIENTIP" && GetNetAddressCookie(gConnectionInstance, 1))
+              sendFuseMsg("VERSIONCHECK" && field("versionid_new"))
             else
               if firstline contains "ENCRYPTION_ON" then
                 gKryptausOn = #waiting
@@ -336,6 +336,7 @@ on handleMessageContent content
                       put "Encryption disabled...!"
                     end if
                     sendFuseMsg("KEYENCRYPTED" && decodedKey)
+                    sendFuseMsg("CLIENTIP" && GetNetAddressCookie(gConnectionInstance, 1))
                     gConnectionsSecured = 1
                   else
                     if firstline contains "ERROR" then

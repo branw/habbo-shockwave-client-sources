@@ -1,4 +1,4 @@
-property id, message, link, linkText, senderID
+property id, message, link, linkText, senderID, type
 global gBuddyList, gActiveMsg, gBuddyFigures
 
 on new me, fusepMsg
@@ -10,6 +10,9 @@ on new me, fusepMsg
     linkText = link
   end if
   message = fusepMsg.line[4..fusepMsg.line.count]
+  if message contains "[dialog_msg]" then
+    type = #dialog
+  end if
   return me
 end
 

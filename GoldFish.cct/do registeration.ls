@@ -1,9 +1,14 @@
 property isupdate
-global gLoginName, gLoginPw, gGoTo, gUserLoginRetrieve
+global gLoginName, gLoginPw, gGoTo, gUserLoginRetrieve, gBirthdayUpdate, gDialogMessage
 
 on exitFrame me
   if isupdate then
     fuseRegister(isupdate)
+  end if
+  if gBirthdayUpdate = 1 and objectp(gDialogMessage) then
+    gDialogMessage.markAsRead()
+    gBirthdayUpdate = 0
+    gDialogMessage = VOID
   end if
   gLoginName = field("loginname")
   gLoginPw = field("loginpw")

@@ -6,7 +6,7 @@ on beginSprite me
     sendAllSprites(#mobileSexChange, mysex)
     put "MY SEX IS" && mysex
   else
-    if sex = "Female" then
+    if sex = "f" then
       put sex into field "charactersex_field"
       sendAllSprites(#mobileSexChange, sex)
     end if
