@@ -98,8 +98,8 @@ on checkUserName me, tNameStr
     end if
   end if
   pCheckingName = tNameStr
-  if connectionExists(getVariable("connection.info.id", #info)) then
-    getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tNameStr, #integer: 0])
+  if connectionExists(getVariable("connection.info.id", #Info)) then
+    getConnection(getVariable("connection.info.id", #Info)).send("APPROVENAME", [#string: tNameStr, #integer: 0])
   end if
   return 1
 end

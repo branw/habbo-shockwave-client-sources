@@ -59,9 +59,9 @@ on flatcreated me, tFlatName, tFlatID
   pRoomProps[#id] = tFlatID
   pRoomProps[#name] = tFlatName
   if pRoomProps[#door] = "password" then
-    pRoomProps[#password] = me.getPassword()
+    pRoomProps[#Password] = me.getPassword()
   else
-    pRoomProps[#password] = EMPTY
+    pRoomProps[#Password] = EMPTY
   end if
   tText = getText("roomatic_roomnumber", "Room number:") && pRoomProps[#id]
   if tWndObj.elementExists("roomatic_newnumber") then
@@ -77,7 +77,7 @@ end
 on sendFlatInfo me
   tFlatMsg = "/" & replaceChars(string(pRoomProps[#id]), "/", SPACE) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & replaceChars(pRoomProps[#description], "/", SPACE) & RETURN
-  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#password] & RETURN
+  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#Password] & RETURN
   tFlatMsg = tFlatMsg & "allsuperuser=" & pRoomProps[#ableothersmovefurniture]
   me.getComponent().sendSetFlatInfo(tFlatMsg)
 end

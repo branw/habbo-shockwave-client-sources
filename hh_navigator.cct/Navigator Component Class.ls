@@ -19,7 +19,7 @@ on construct me
   pNaviHistory = []
   pHideFullRoomsFlag = 0
   pUpdateInterval = getIntVariable("navigator.updatetime")
-  pConnectionId = getVariableValue("connection.info.id", #info)
+  pConnectionId = getVariableValue("connection.info.id", #Info)
   pInfoBroker = createObject(#navigator_infobroker, "Navigator Info Broker Class")
   getObject(#session).set("lastroom", "Entry")
   registerMessage(#userlogin, me.getID(), #updateState)
@@ -313,10 +313,10 @@ on getFlatPassword me, tFlatID
   if tFlatInfo[#door] <> "password" then
     return 0
   end if
-  if voidp(tFlatInfo[#password]) then
+  if voidp(tFlatInfo[#Password]) then
     return 0
   else
-    return tFlatInfo[#password]
+    return tFlatInfo[#Password]
   end if
 end
 
@@ -592,8 +592,8 @@ on sendupdateFlatInfo me, tPropList
   getConnection(pConnectionId).send("UPDATEFLAT", tFlatMsg)
   tFlatMsg = string(tPropList[#flatId]) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & tPropList[#description] & RETURN
-  if tPropList[#password] <> EMPTY and tPropList[#password] <> VOID then
-    tFlatMsg = tFlatMsg & "password=" & tPropList[#password] & RETURN
+  if tPropList[#Password] <> EMPTY and tPropList[#Password] <> VOID then
+    tFlatMsg = tFlatMsg & "password=" & tPropList[#Password] & RETURN
   end if
   tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture] & RETURN
   tFlatMsg = tFlatMsg & "maxvisitors=" & tPropList[#maxVisitors]

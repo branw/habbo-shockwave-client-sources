@@ -347,6 +347,9 @@ on getNextState me
   else
     tStateNew = tstate
   end if
+  if tStateNew = pState then
+    return 0
+  end if
   return getThread(#room).getComponent().getRoomConnection().send("SETITEMSTATE", [#string: string(me.id), #integer: tStateNew])
 end
 

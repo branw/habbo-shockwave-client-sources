@@ -189,8 +189,8 @@ end
 
 on select me
   if the doubleClick then
-    if connectionExists(getVariable("connection.info.id", #info)) then
-      getConnection(getVariable("connection.info.id", #info)).send("GETPETSTAT", [#string: pIDPrefix & pName])
+    if connectionExists(getVariable("connection.info.id", #Info)) then
+      getConnection(getVariable("connection.info.id", #Info)).send("GETPETSTAT", [#string: pIDPrefix & pName])
     end if
   end if
   return 1

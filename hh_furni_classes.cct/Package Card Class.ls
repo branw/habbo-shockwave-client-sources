@@ -58,8 +58,6 @@ on showCard me, tloc
 end
 
 on hideCard me
-  unregisterMessage(#leaveRoom, me.getID())
-  unregisterMessage(#changeRoom, me.getID())
   if windowExists(pCardWndID) then
     removeWindow(pCardWndID)
   end if

@@ -15,11 +15,15 @@ on define me, tChannelNum
 end
 
 on setSoundState me, tstate
+  tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #setSoundState)
+  end if
   if tstate then
-    sound(pChannelNum).volume = pVolume
+    tChannel.volume = pVolume
     pMuted = 0
   else
-    sound(pChannelNum).volume = 0
+    tChannel.volume = 0
     pMuted = 1
   end if
 end
@@ -27,6 +31,9 @@ end
 on reset me
   pEndTime = 0
   tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #reset)
+  end if
   tChannel.setPlayList([])
   tChannel.stop()
   pReserved = 0
@@ -39,6 +46,9 @@ on play me, tSoundObj
     return 0
   end if
   tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #play)
+  end if
   if tSoundObj.getProperty(#infiniteloop) then
     tLoopCount = 0
   else
@@ -69,17 +79,28 @@ on queue me, tSoundObj
   tProps = tSoundObj.pProps.duplicate()
   tProps[#member] = tmember
   pVolume = tProps[#volume]
-  sound(pChannelNum).queue(tProps)
+  tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #queue)
+  end if
+  tChannel.queue(tProps)
   return 1
 end
 
 on startPlaying me
-  sound(pChannelNum).play()
+  tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #startPlaying)
+  end if
+  tChannel.play()
   return 1
 end
 
 on getTimeRemaining me
   tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #getTimeRemaining)
+  end if
   if not tChannel.isBusy() and not pReserved then
     return 0
   end if
@@ -106,6 +127,9 @@ end
 
 on dump me
   tChannel = sound(pChannelNum)
+  if ilk(tChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pChannelNum, #dump)
+  end if
   tName = "<none>"
   if tChannel.isBusy() then
     tName = tChannel.member.name

@@ -193,7 +193,11 @@ on checkLoopData me
   if tChannel < 1 or tChannel > pSongChannels.count then
     return 1
   end if
-  tPlayList = sound(pSongChannels[tChannel]).getPlaylist()
+  tSoundChannel = sound(pSongChannels[tChannel])
+  if ilk(tSoundChannel) <> #instance then
+    return error(me, "Sound channel bug:" && pSongChannels[tChannel], #checkLoopData)
+  end if
+  tPlayList = tSoundChannel.getPlaylist()
   tLength = 0
   repeat with i = 1 to tPlayList.count
     tLength = tLength + tPlayList[i].member.duration

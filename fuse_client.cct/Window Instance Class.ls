@@ -390,7 +390,7 @@ on redirectEvent me, tEvent, tSprID
   tMethod = pProcedures[tEvent][1]
   tTarget = pProcedures[tEvent][2]
   tParam = call(tEvent, [pElemList[tSprID]], tSprID)
-  if tParam = 0 then
+  if tParam = 0 and ilk(tParam) <> #string then
     return 0
   end if
   tClient = getObject(tTarget)
