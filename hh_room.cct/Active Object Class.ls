@@ -114,6 +114,23 @@ on rotate me, tChange
     tTryName = tName.char[1..length(tName) - 3] & tDirection[1] & "_0"
     if memberExists(tTryName) then
       exit repeat
+      next repeat
+    end if
+    if not (tTryName contains pClass) then
+      tDelim = the itemDelimiter
+      the itemDelimiter = "_"
+      tTryName2 = pClass
+      if pXFactor = 32 then
+        tTryName2 = "s_" & tTryName2
+      end if
+      repeat with i = tTryName.item.count - 5 to tTryName.item.count
+        tTryName2 = tTryName2 & "_" & tTryName.item[i]
+      end repeat
+      the itemDelimiter = tDelim
+      if memberExists(tTryName2) then
+        tTryName = tTryName2
+        exit repeat
+      end if
     end if
   end repeat
   if not memberExists(tTryName) then

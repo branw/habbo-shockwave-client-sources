@@ -305,6 +305,11 @@ on copyMemberToBin me, tSourceMember, tTargetAssetClass
       end if
       tTargetMember = member(tTargetMemberNum)
       tTargetMember.media = tSourceMember.media
+      if tSourceMember.type = #bitmap then
+        if tSourceMember.image.width = 0 then
+          tTargetMember.image = tSourceMember.image
+        end if
+      end if
     end if
   end if
 end
