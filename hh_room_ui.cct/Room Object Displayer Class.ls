@@ -146,6 +146,13 @@ on showObjectInfo me, tObjType, tRefresh
         pWindowCreator.createActionsHumanWindow(tID, tProps[#name], pShowActions)
         me.pushWindowToDisplayList(tID)
       "actions_furni":
+        if tRoomComponent.itemObjectExists(tSelectedObj) then
+          tselectedobject = tRoomComponent.getItemObject(tSelectedObj)
+          tClass = tselectedobject.getClass()
+          if tClass contains "post.it" then
+            next repeat
+          end if
+        end if
         tID = pBaseWindowIds[#links]
         pWindowCreator.createActionsFurniWindow(tID, tObjType, pShowActions)
         me.pushWindowToDisplayList(tID)
@@ -167,9 +174,7 @@ end
 
 on clearWindowDisplayList me
   repeat with tWindowID in pWindowList
-    tWndObj = getWindow(tWindowID)
-    tWndObj.hide()
-    tWndObj.unmerge()
+    pWindowCreator.clearWindow(tWindowID)
   end repeat
   pWindowList = []
   if objectExists(pBadgeObjID) then
@@ -314,6 +319,7 @@ on eventProc me, tEvent, tSprID, tParam
             ttype = "item"
         end case
         return me.clearWindowDisplayList()
+        me.clearWindowDisplayList()
         return tComponent.getRoomConnection().send("ADDSTRIPITEM", "new" && ttype && tSelectedObj)
       "delete.button":
         pDeleteObjID = tSelectedObj
@@ -447,7 +453,7 @@ on eventProc me, tEvent, tSprID, tParam
           openNetPage(tDestURL)
         end if
       "room_obj_disp_bg":
-        nothing()
+        return 0
     end case
     return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
   else

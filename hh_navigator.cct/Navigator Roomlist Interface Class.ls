@@ -69,7 +69,7 @@ on checkFlatAccess me, tFlatData
 end
 
 on handleRecommendedRoomListClicked me, tParm
-  tNodeInfo = me.getComponent().getNodeInfo(#recom)
+  tNodeInfo = me.getComponent().getRecomNodeInfo()
   tRoomList = tNodeInfo.getaProp(#children)
   if voidp(tRoomList) then
     return 0
@@ -247,6 +247,23 @@ on leaveModifyPage me
     "nav_gr_mod_b":
       pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
   end case
+end
+
+on showHideRefreshRecomLink me, tShow
+  tWndObj = getWindow(me.pWindowTitle)
+  if not tWndObj then
+    return 0
+  end if
+  if not tWndObj.elementExists("nav_refresh_recoms") then
+    return 0
+  end if
+  tElem = tWndObj.getElement("nav_refresh_recoms")
+  if tShow then
+    tElem.show()
+  else
+    tElem.hide()
+  end if
+  return 1
 end
 
 on hidePasswordFields me, tHidden
@@ -444,7 +461,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
         "nav_hidefull":
           return me.getComponent().showHideFullRooms(me.getProperty(#categoryId))
         "nav_refresh_recoms":
-          return me.getComponent().sendGetRecommendedRooms()
+          return me.getComponent().updateRecomRooms()
       end case
     else
       if tEvent = #keyDown then

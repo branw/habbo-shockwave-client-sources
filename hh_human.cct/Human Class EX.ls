@@ -228,7 +228,9 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pQueuesWithObj = 0
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
-  pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
+  if pGeometry <> VOID then
+    pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
+  end if
   pLocX = tX
   pLocY = tY
   pLocH = tH
@@ -582,16 +584,18 @@ on render me, tForceUpdate
     return 1
   end if
   pChanges = 0
+  if pCanvasSize.findPos(pMainAction) then
+    tSize = pCanvasSize.getaProp(pMainAction)
+  else
+    tSize = pCanvasSize.getaProp(#std)
+  end if
   if pMainAction = "sit" then
-    tSize = pCanvasSize[#std]
     pShadowSpr.castNum = getmemnum(pPeopleSize & "_sit_sd_001_" & pFlipList[pDirection + 1] & "_0")
   else
     if pMainAction = "lay" then
-      tSize = pCanvasSize[#lay]
       pShadowSpr.castNum = 0
       pShadowFix = 0
     else
-      tSize = pCanvasSize[#std]
       if pShadowSpr.member <> pDefShadowMem then
         pShadowSpr.member = pDefShadowMem
       end if

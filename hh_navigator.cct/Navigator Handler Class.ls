@@ -343,7 +343,7 @@ on handle_recommended_room_list me, tMsg
     tRoomData.setaProp(#nodeType, 2)
     tNodeInfo[#children].setaProp(tRoomData[#id], tRoomData)
   end repeat
-  me.getComponent().saveNodeInfo(tNodeInfo)
+  me.getComponent().saveRecomNodeInfo(tNodeInfo)
   return 1
 end
 

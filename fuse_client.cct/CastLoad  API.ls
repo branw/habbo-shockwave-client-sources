@@ -14,8 +14,8 @@ on getCastLoadManager
   return tMgr.getManager(#castload_manager)
 end
 
-on startCastLoad tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing
-  return getCastLoadManager().startCastLoad(tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing)
+on startCastLoad tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing, tDoTracking
+  return getCastLoadManager().startCastLoad(tCastlibs, tPermanentOrNot, tAddFlag, tDoIndexing, tDoTracking)
 end
 
 on registerCastloadCallback tID, tMethod, tClientObj, tArgument

@@ -55,8 +55,14 @@ on updateState me, tstate
               tParam = tParamBundle.item[j]
               the itemDelimiter = "="
               if tParam.item.count > 1 then
-                if tParam.item[1] = "external.variables.txt" then
-                  getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
+                tKey = tParam.item[1]
+                tValue = tParam.item[2..tParam.item.count]
+                if tKey = "external.variables.txt" then
+                  getSpecialServices().setExtVarPath(tValue)
+                else
+                  if tKey = "processlog.enabled" then
+                    getVariableManager().set("processlog.enabled", tValue)
+                  end if
                 end if
               end if
               the itemDelimiter = ";"
@@ -79,6 +85,7 @@ on updateState me, tstate
           tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
+      sendProcessTracking(9)
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
       return registerDownloadCallback(tMemNum, #updateState, me.getID(), "load_params")
     "load_params":
@@ -129,6 +136,7 @@ on updateState me, tstate
           tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
+      sendProcessTracking(12)
       tMemNum = queueDownload(tURL, tMemName, #field)
       return registerDownloadCallback(tMemNum, #updateState, me.getID(), "load_casts")
     "load_casts":
@@ -151,7 +159,7 @@ on updateState me, tstate
         i = i + 1
       end repeat
       if count(tCastList) > 0 then
-        tLoadID = startCastLoad(tCastList, 1)
+        tLoadID = startCastLoad(tCastList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
           showLoadingBar(tLoadID, [#buffer: #window])
         end if
@@ -181,7 +189,7 @@ on updateState me, tstate
         end repeat
       end if
       if count(tNewList) > 0 then
-        tLoadID = startCastLoad(tNewList, 1)
+        tLoadID = startCastLoad(tNewList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
           showLoadingBar(tLoadID, [#buffer: #window])
         end if

@@ -114,6 +114,7 @@ end
 
 on hideNavigator me, tHideOrRemove
   me.getInterface().setUpdates(0)
+  me.getInterface().setRecomUpdates(0)
   if voidp(tHideOrRemove) then
     tHideOrRemove = #Remove
   end if
@@ -211,7 +212,6 @@ on ChangeWindowView me, tWindowName
       if tNaviView = #flat then
         me.getComponent().createNaviHistory(tCategoryId)
         me.updateRoomList(tCategoryId, VOID)
-        me.getComponent().updateInterface(#recom)
       else
         me.getComponent().updateInterface(tCategoryId)
       end if
@@ -234,12 +234,20 @@ on ChangeWindowView me, tWindowName
 end
 
 on updateRecomRoomList me, tRoomList
-  tImage = me.renderRoomList(tRoomList)
+  if tRoomList[#children].count = 0 then
+    tImage = 0
+  else
+    tImage = me.renderRoomList(tRoomList[#children])
+  end if
   if windowExists(pWindowTitle) then
     tWndObj = getWindow(pWindowTitle)
     if tWndObj.elementExists("nav_recom_roomlist") then
       tElem = tWndObj.getElement("nav_recom_roomlist")
-      tElem.feedImage(tImage)
+      if not tImage then
+        tElem.clearImage()
+      else
+        tElem.feedImage(tImage)
+      end if
     end if
   end if
   return 1
@@ -289,6 +297,22 @@ on updateRoomList me, tNodeId, tRoomList
     tBarElement.setScrollOffset(tImage.height - tLstElement.getProperty(#height))
   end if
   return 1
+end
+
+on setRecomUpdates me, tBool
+  tTimeOutId = #recom_update
+  if tBool then
+    me.getComponent().updateRecomRooms()
+    if timeoutExists(tTimeOutId) then
+      return 1
+    end if
+    tInterval = me.getComponent().getRecomUpdateInterval()
+    return createTimeout(tTimeOutId, tInterval, #setRecomUpdates, me.getID(), 1, 0)
+  else
+    if timeoutExists(tTimeOutId) then
+      return removeTimeout(tTimeOutId)
+    end if
+  end if
 end
 
 on setUpdates me, tBoolean
@@ -389,7 +413,7 @@ on renderHistory me, tNodeId, tHistoryTxt, tShowRecoms
     tRoomlistOffset = tRoomlistOffset + 80
     tHeaderImage = pWriterPlainBoldLeft.render(getText("nav_recommended_rooms")).duplicate()
     tRecomHeaderElem.feedImage(tHeaderImage)
-    tWndObj.getElement("nav_refresh_recoms").show()
+    me.getComponent().showHideRefreshRecoms(1, 1)
   end if
   if tShowRecoms then
     tRecomsCurrentV = tWndObj.getElement("nav_recom_roomlist_hd").getProperty(#locV)
@@ -405,7 +429,7 @@ on renderHistory me, tNodeId, tHistoryTxt, tShowRecoms
     tWndObj.getElement("nav_recom_roomlist_hd").clearImage()
     tWndObj.getElement("nav_recom_roomlist").clearImage()
     tWndObj.getElement("nav_recom_roomlist").hide()
-    tWndObj.getElement("nav_refresh_recoms").hide()
+    me.getComponent().showHideRefreshRecoms(0, 1)
   end if
   tRoomlistAreaCurrentV = tWndObj.getElement("nav_roomlistArea").getProperty(#locV)
   tAreaOffset = tRoomlistAreaOrigV - tRoomlistAreaCurrentV
@@ -433,6 +457,11 @@ on renderHistory me, tNodeId, tHistoryTxt, tShowRecoms
     tTextImg = tTempImg
   end if
   tWndObj.getElement("nav_roomlistBackLinks").feedImage(tTextImg)
+  if tShowRecoms then
+    me.setRecomUpdates(1)
+  else
+    me.setRecomUpdates(0)
+  end if
 end
 
 on showNodeInfo me, tNodeId

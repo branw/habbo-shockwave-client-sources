@@ -1,13 +1,22 @@
-property pModBadgeList, pExtensionClosedID, pExtensionOpenedID
+property pModBadgeList, pExtensionClosedID, pExtensionOpenedID, pWriterBold, pScroller
 
 on construct me
   pModBadgeList = getVariableValue("moderator.badgelist")
   pExtensionClosedID = "roomnfo_ext_right"
   pExtensionOpenedID = "roomnfo_ext_close"
+  tScrollerID = #name_scroller
+  createObject(tScrollerID, "Infostand Text Scroller Class")
+  pScroller = getObject(tScrollerID)
+  tWriterID = #infostand_name_writer
+  tBold = getStructVariable("struct.font.bold")
+  tBold.setaProp(#color, rgb(250, 250, 250))
+  createWriter(tWriterID, tBold)
+  pWriterBold = getWriter(tWriterID)
   return 1
 end
 
 on deconstruct me
+  removeObject(pScroller.getID())
   return 1
 end
 
@@ -26,8 +35,11 @@ end
 
 on createFurnitureWindow me, tID, tProps
   tWndObj = me.initWindow(tID, "obj_disp_furni.window")
-  tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
+  tNameImage = pWriterBold.render(tProps[#name]).duplicate()
+  tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
+  pScroller.registerElement(tID, "room_obj_disp_name")
+  pScroller.setScroll(1)
   tImage = tProps.getaProp(#image)
   if voidp(tImage) then
     tImage = member(getmemnum(tProps[#smallmember])).image
@@ -39,8 +51,11 @@ end
 
 on createHumanWindow me, tID, tProps, tSelectedObj, tBadgeObjID, tShowTags
   tWndObj = me.initWindow(tID, "obj_disp_human.window")
-  tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
+  tNameImage = pWriterBold.render(tProps[#name]).duplicate()
+  tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
+  pScroller.registerElement(tID, "room_obj_disp_name")
+  pScroller.setScroll(1)
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tProps[#image])
   tBadgeObj = getObject(tBadgeObjID)
   tBadgeObj.updateInfoStandBadge(tID, tSelectedObj, tProps[#badge])
@@ -51,16 +66,22 @@ end
 
 on createBotWindow me, tID, tProps
   tWndObj = me.initWindow(tID, "obj_disp_bot.window")
-  tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
+  tNameImage = pWriterBold.render(tProps[#name]).duplicate()
+  tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
+  pScroller.registerElement(tID, "room_obj_disp_name")
+  pScroller.setScroll(1)
   tWndObj.lock()
   return 1
 end
 
 on createPetWindow me, tID, tProps
   tWndObj = me.initWindow(tID, "obj_disp_pet.window")
-  tWndObj.getElement("room_obj_disp_name").setText(tProps[#name])
+  tNameImage = pWriterBold.render(tProps[#name]).duplicate()
+  tWndObj.getElement("room_obj_disp_name").feedImage(tNameImage)
   tWndObj.getElement("room_obj_disp_desc").setText(tProps[#custom])
+  pScroller.registerElement(tID, "room_obj_disp_name")
+  pScroller.setScroll(1)
   tWndObj.getElement("room_obj_disp_avatar").feedImage(tProps[#image])
   tWndObj.lock()
   return 1
@@ -188,7 +209,25 @@ on createActionsFurniWindow me, tID, tClass, tShowButtons
     tButtonList["move"] = #hidden
     tButtonList["rotate"] = #hidden
   end if
+  tRoomInterface = getThread(#room).getInterface()
+  tSelectedObjID = tRoomInterface.getSelectedObject()
+  tRoomComponent = tRoomInterface.getComponent()
+  if tRoomComponent.itemObjectExists(tSelectedObjID) then
+    tSelectedObj = tRoomComponent.getItemObject(tSelectedObjID)
+    tClass = tSelectedObj.getClass()
+    if tClass contains "post.it" then
+      tButtonList["pick"] = #hidden
+    end if
+  end if
   tWndObj = me.initWindow(tID, "obj_disp_actions_furni.window")
+  if not tRoomController and not tRoomOwner and not tAnyRoomController then
+    if tWndObj.elementExists("object_displayer_toggle_actions_icon") then
+      tWndObj.getElement("object_displayer_toggle_actions_icon").hide()
+    end if
+    if tWndObj.elementExists("object_displayer_toggle_actions") then
+      tWndObj.getElement("object_displayer_toggle_actions").hide()
+    end if
+  end if
   me.scaleButtonWindow(tID, tButtonList, tShowButtons)
   tWndObj.lock()
   return tID
@@ -300,4 +339,15 @@ end
 on resizeWindowTo me, tID, tX, tY
   tWndObj = getWindow(tID)
   tWndObj.resizeTo(tX, tY)
+end
+
+on clearWindow me, tWindowID
+  if not windowExists(tWindowID) then
+    return 0
+  end if
+  tWndObj = getWindow(tWindowID)
+  tWndObj.hide()
+  tWndObj.unmerge()
+  pScroller.setScroll(0)
+  return 1
 end

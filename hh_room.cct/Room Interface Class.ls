@@ -1324,7 +1324,9 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = tObject.getClass()
-      executeMessage(#showObjectInfo, pSelectedType)
+      if tParam <> #userEnters then
+        executeMessage(#showObjectInfo, pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.showArrowHiliter(tSprID)
     end if
