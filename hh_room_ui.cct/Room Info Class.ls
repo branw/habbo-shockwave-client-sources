@@ -42,7 +42,7 @@ on createInfoWindow me
     if pUseRatings then
       tSuccess = createWindow(pWindowID, "room_info.window", 10, 420)
     else
-      tSuccess = createWindow(pWindowID, "room_info_no_rating.window", 10, 450)
+      tSuccess = createWindow(pWindowID, "room_info_no_rating.window", 10, 437)
     end if
     if tSuccess = 0 then
       return 0
