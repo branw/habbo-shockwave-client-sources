@@ -787,7 +787,7 @@ on handle_userbadge me, tMsg
   end if
   tUserObj.pBadge = tBadge
   me.getInterface().unignoreAdmin(tUserID, tBadge)
-  me.getInterface().getInfoStandObject().updateInfoStandBadge(tBadge, tUserID)
+  executeMessage(#updateInfoStandBadge, tBadge, tUserID)
 end
 
 on handle_slideobjectbundle me, tMsg

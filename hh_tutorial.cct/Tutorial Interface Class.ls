@@ -1,12 +1,12 @@
-property pWriterPlain, pTutorialConfig, pTopicList, pView, pMenuID, pBubbles, pTutor, pExitMenuWindow, pFrameCount
+property pWriterPlain, pTutorialConfig, pTopicList, pView, pMenuID, pBubbles, pTutor, pExitMenuWindow
 
 on construct me
   me.pMenuID = #tutorial_menu
   me.pWriterPlain = "tutorial_writer_plain"
-  me.pFrameCount = 0
   me.pTutor = createObject(getUniqueID(), "Tutor Character Class")
   me.pBubbles = []
   me.createExitMenu()
+  receivePrepare(me.getID())
   return 1
 end
 
@@ -63,17 +63,16 @@ on show me
 end
 
 on prepare me
-  tWindowIdList = me.pTutor.update()
-  tWindowIdList.add(me.pExitMenuWindow.getProperty(#id))
-  tWindowList = me.updateBubbles()
-  repeat with tID in tWindowIdList
-    tPos = tWindowList.getPos(tID)
-    if tPos > 0 then
-      tWindowList.deleteAt(tPos)
-    end if
-    tWindowList.add(tID)
-  end repeat
+  tWindowList = getWindowIDList()
+  tExitMenuID = me.pExitMenuWindow.getProperty(#id)
+  tPosExitMenu = tWindowList.getPos(tExitMenuID)
+  if tPosExitMenu > 0 then
+    tWindowList.deleteAt(tPosExitMenu)
+  end if
+  tWindowList.add(tExitMenuID)
   getWindowManager().reorder(tWindowList)
+  me.updateBubbles()
+  me.pTutor.update()
   return 1
 end
 
@@ -118,7 +117,8 @@ on updateBubbles me
       end repeat
     end if
   end repeat
-  return tOrderList
+  getWindowManager().reorder(tOrderList)
+  return 1
 end
 
 on showMenu me, tstate

@@ -165,7 +165,7 @@ on eventProcBadgeChooser me, tEvent, tSprID, tParam
       getThread(#room).getComponent().getRoomConnection().send("SETBADGE", tMsg)
       getObject("session").set("chosen_badge_index", pChosenBadge)
       getObject("session").set("badge_visible", pChosenVisibility)
-      getThread(#room).getInterface().getInfoStandObject().updateInfoStandBadge()
+      executeMessage(#udateInfoStandeBadge)
       me.closeBadgeWindow()
     "badge.cancel":
       me.closeBadgeWindow()
@@ -211,7 +211,7 @@ on badgeLoaded me, tBadgeName
     end if
   end if
   me.updateBadgeImage()
-  getThread(#room).getInterface().getInfoStandObject().updateInfoStandBadge(tBadgeName)
+  executeMessage(#updateInfoStandBadge, tBadgeName)
   pActiveDownloads.deleteOne("badge" && tBadgeName)
 end
 
@@ -246,7 +246,7 @@ on toggleOwnBadgeVisibility me
   end if
   tMsg = [#string: tMyBadgeInfo[1], #integer: tUpdatedVisibility]
   getObject("session").set("badge_visible", tUpdatedVisibility)
-  getThread(#room).getInterface().getInfoStandObject().updateInfoStandBadge()
+  executeMessage(#updateInfoStandBadge)
   getThread(#room).getComponent().getRoomConnection().send("SETBADGE", tMsg)
   return 1
 end

@@ -705,7 +705,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       tChangeEffect = createObject(#random, "Change Clothes Effect Class")
       tUserSprites = tUserObj.getSprites()
       tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
-      me.getInterface().getInfoStandObject().updateInfostandAvatar(tUserObj)
+      executeMessage(#updateInfostandAvatar, tUserObj)
     end if
   end if
 end
@@ -1026,7 +1026,6 @@ on updateProcess me, tKey, tValue
     tCache[#users] = []
     tCache[#Active] = []
     tCache[#items] = []
-    me.getInterface().getInfoStandObject().showInfostand()
     me.getInterface().showRoomBar()
     me.getInterface().hideLoaderBar()
     me.getInterface().hideTrashCover()

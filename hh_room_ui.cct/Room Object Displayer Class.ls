@@ -1,4 +1,4 @@
-property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID
+property pCreatorID, pWindowCreator, pWindowList, pBadgeObjID, pShowActions, pLastSelectedObjType, pBaseWindowIds, pBaseLocZ
 
 on construct me
   pWindowList = []
@@ -6,8 +6,19 @@ on construct me
   createObject(pCreatorID, "Room Object Window Creator Class")
   pBadgeObjID = "room.obj.disp.badge.mngr"
   createObject(pBadgeObjID, "Badge Manager Class")
+  pShowActions = 1
+  pLastSelectedObjType = VOID
+  pBaseLocZ = 0
+  pBaseWindowIds = getVariableValue("object.displayer.window.ids")
+  me.createBaseWindows()
   registerMessage(#groupLogoDownloaded, me.getID(), #groupLogoDownloaded)
   registerMessage(#hideInfoStand, me.getID(), #clearWindowDisplayList)
+  registerMessage(#updateInfostandAvatar, me.getID(), #updateAvatar)
+  registerMessage(#showObjectInfo, me.getID(), #showObjectInfo)
+  registerMessage(#hideObjectInfo, me.getID(), #clearWindowDisplayList)
+  registerMessage(#removeObjectInfo, me.getID(), #clearWindowDisplayList)
+  registerMessage(#updateInfoStandBadge, me.getID(), #updateBadge)
+  registerMessage(#leaveRoom, me.getID(), #clearWindowDisplayList)
   pWindowCreator = getObject(pCreatorID)
   return 1
 end
@@ -20,11 +31,30 @@ on deconstruct me
   return 1
 end
 
+on updateBadge me, tBadgeName
+  nothing()
+end
+
+on createBaseWindows me
+  repeat with tIndex = 1 to pBaseWindowIds.count
+    tID = pBaseWindowIds[tIndex]
+    if not windowExists(tID) then
+      createWindow(tID, "obj_disp_base.window", 999, 999)
+      tWndObj = getWindow(tID)
+      if tIndex = 1 then
+        pBaseLocZ = tWndObj.getProperty(#locZ)
+      end if
+    end if
+    tWndObj.hide()
+  end repeat
+end
+
 on showObjectInfo me, tObjType
   if pWindowCreator = 0 then
     return 0
   end if
   me.clearWindowDisplayList()
+  pLastSelectedObjType = tObjType
   tRoomComponent = getThread(#room).getComponent()
   tRoomInterface = getThread(#room).getInterface()
   tSelectedObj = tRoomInterface.getSelectedObject()
@@ -58,33 +88,37 @@ on showObjectInfo me, tObjType
     tWindowType = tWindowTypes[tPos]
     case tWindowType of
       "human":
-        tID = pWindowCreator.createHumanWindow(tProps[#class], tProps[#name], tProps[#custom], tProps[#image], tProps[#badge], tSelectedObj, pBadgeObjID)
+        tID = pBaseWindowIds[#avatar]
+        pWindowCreator.createHumanWindow(tID, tProps, tSelectedObj, pBadgeObjID)
         me.updateInfoStandGroup(tProps[#groupid])
         me.pushWindowToDisplayList(tID)
       "furni":
-        tID = pWindowCreator.createFurnitureWindow(tProps[#class], tProps[#name], tProps[#custom], tProps[#smallmember])
+        tID = pBaseWindowIds[#avatar]
+        pWindowCreator.createFurnitureWindow(tID, tProps)
         me.pushWindowToDisplayList(tID)
       "pet":
-        tID = pWindowCreator.createPetWindow(tProps[#class], tProps[#name], tProps[#custom], tProps[#image])
+        tID = pBaseWindowIds[#avatar]
+        pWindowCreator.createPetWindow(tID, tProps)
         me.pushWindowToDisplayList(tID)
       "links_human":
+        tID = pBaseWindowIds[#links]
         if tProps[#name] = getObject(#session).GET("user_name") then
-          tID = pWindowCreator.createLinksWindow(#own)
+          pWindowCreator.createLinksWindow(tID, #own)
         else
-          tID = pWindowCreator.createLinksWindow(#peer)
+          pWindowCreator.createLinksWindow(tID, #peer)
         end if
         me.pushWindowToDisplayList(tID)
-      "links_furni":
-        tID = pWindowCreator.createLinksWindow(#furni)
-        me.pushWindowToDisplayList(tID)
       "actions_human":
-        tID = pWindowCreator.createActionsHumanWindow(tProps[#name])
+        tID = pBaseWindowIds[#actions]
+        pWindowCreator.createActionsHumanWindow(tID, tProps[#name], pShowActions)
         me.pushWindowToDisplayList(tID)
       "actions_furni":
-        tID = pWindowCreator.createActionsFurniWindow(tObjType)
+        tID = pBaseWindowIds[#links]
+        pWindowCreator.createActionsFurniWindow(tID, tObjType, pShowActions)
         me.pushWindowToDisplayList(tID)
       "bottom":
-        tID = pWindowCreator.createBottomWindow()
+        tID = pBaseWindowIds[#bottom]
+        pWindowCreator.createBottomWindow(tID)
         me.pushWindowToDisplayList(tID)
     end case
     if windowExists(tID) then
@@ -92,12 +126,14 @@ on showObjectInfo me, tObjType
       tWndObj.registerProcedure(#eventProc, me.getID(), #mouseUp)
     end if
   end repeat
-  createTimeout("object.displayer.align", 40, #alignWindows, me.getID(), VOID, 1)
+  createTimeout("object.displayer.align", 10, #alignWindows, me.getID(), VOID, 1)
 end
 
 on clearWindowDisplayList me
   repeat with tWindowID in pWindowList
-    removeWindow(tWindowID)
+    tWndObj = getWindow(tWindowID)
+    tWndObj.hide()
+    tWndObj.unmerge()
   end repeat
   pWindowList = []
 end
@@ -106,17 +142,28 @@ on pushWindowToDisplayList me, tWindowID
   pWindowList.add(tWindowID)
 end
 
+on refreshView me
+  me.clearWindowDisplayList()
+  me.showObjectInfo(pLastSelectedObjType)
+end
+
+on showHideActions me
+  pShowActions = not pShowActions
+  me.refreshView()
+end
+
 on alignWindows me
   if pWindowList.count = 0 then
     return 0
   end if
+  tDefLeftPos = getVariable("object.display.pos.left")
+  tDefBottomPos = getVariable("object.display.pos.bottom")
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     tWindowObj = getWindow(tWindowID)
+    tWindowObj.moveZ(pBaseLocZ)
     if tIndex = pWindowList.count then
-      tDefLeftPos = getVariable("object.display.pos.left")
-      tDefTopPos = getVariable("object.display.pos.bottom")
-      tWindowObj.moveTo(tDefLeftPos, tDefTopPos)
+      tWindowObj.moveTo(tDefLeftPos, tDefBottomPos - tWindowObj.getProperty(#height))
       next repeat
     end if
     tPrevWindowID = pWindowList[tIndex + 1]
@@ -127,7 +174,7 @@ on alignWindows me
 end
 
 on updateInfoStandGroup me, tGroupId
-  tHumanWindowID = pWindowCreator.getHumanWindowID()
+  tHumanWindowID = pBaseWindowIds[#avatar]
   if windowExists(tHumanWindowID) then
     tWindowObj = getWindow(tHumanWindowID)
     if tWindowObj.elementExists("info_group_badge") then
@@ -291,11 +338,11 @@ on eventProc me, tEvent, tSprID, tParam
       end if
       me.clearWindowDisplayList()
       tSelectedObj = EMPTY
-    "badge.button":
+    "room_obj_disp_badge_sel":
       if objectExists(pBadgeObjID) then
         getObject(pBadgeObjID).openBadgeWindow()
       end if
-    "userpage.button":
+    "room_obj_disp_home":
       if variableExists("link.format.userpage") then
         tWebID = tComponent.getUserObject(tSelectedObj).getWebID()
         if not voidp(tWebID) then
@@ -320,8 +367,24 @@ on eventProc me, tEvent, tSprID, tParam
           tInfoObj.showUsersInfoByName(tUserInfo[#name])
         end if
       end if
+    "object_displayer_toggle_actions":
+      me.showHideActions()
+    "object_displayer_toggle_actions_icon":
+      me.showHideActions()
     "room_obj_disp_close":
       me.clearWindowDisplayList()
+    "room_obj_disp_looks":
+      tAllowModify = 1
+      if getObject(#session).exists("allow_profile_editing") then
+        tAllowModify = getObject(#session).GET("allow_profile_editing")
+      end if
+      if tAllowModify then
+        if threadExists(#registration) then
+          getThread(#registration).getComponent().openFigureUpdate()
+        end if
+      else
+        openNetPage(getText("url_figure_editor"))
+      end if
   end case
   return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
 end

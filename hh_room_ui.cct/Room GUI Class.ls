@@ -42,3 +42,17 @@ on setRollOverInfo me, tInfoText
     tRoomBarObj.setRollOverInfo(tInfoText)
   end if
 end
+
+on showInfostand me
+  nothing()
+end
+
+on hideInfoStand me
+  tObjDisp = getObject(pObjectDispID)
+  tObjDisp.clearWindowDisplayList()
+end
+
+on showObjectInfo me, tObjType
+  tObjDisp = getObject(pObjectDispID)
+  tObjDisp.showObjectInfo(tObjType)
+end
