@@ -204,22 +204,22 @@ on updateSlider me
 end
 
 on updateCheckbox me
-  tEffectId = pSelectedEffectID
+  tEffectID = pSelectedEffectID
   tWndObj = getWindow(pWindowID)
   tElem = tWndObj.getElement("dimmer.bgonly.checkbox")
-  if tEffectId = 1 then
+  if tEffectID = 1 then
     tElem.setProperty(#member, member("dimmer.checkbox.unchecked"))
   else
     tElem.setProperty(#member, member("dimmer.checkbox.checked"))
   end if
-  pCheckboxValue = tEffectId
+  pCheckboxValue = tEffectID
 end
 
 on updatePreview me
   tColor = pSelectedColor
   tLightness = pSelectedLightness
-  tEffectId = pSelectedEffectID
-  if voidp(tColor) or voidp(tLightness) or voidp(tEffectId) then
+  tEffectID = pSelectedEffectID
+  if voidp(tColor) or voidp(tLightness) or voidp(tEffectID) then
     return 0
   end if
   tHSL = RGBtoHSL(tColor)
@@ -232,7 +232,7 @@ on updatePreview me
   tElem = tWnd.getElement("dimmer.preview.bg")
   tElem.feedImage(tNewImage)
   tForeground = tWnd.getElement("dimmer.preview.foreground")
-  if tEffectId = 1 then
+  if tEffectID = 1 then
     tForeground.hide()
   else
     tForeground.show()

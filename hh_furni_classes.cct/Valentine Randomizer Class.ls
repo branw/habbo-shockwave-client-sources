@@ -68,6 +68,7 @@ on setState me, tNewState
   tNewState = value(tNewState)
   if tNewState > 1000 then
     tNewState = 0
+    pRunning = 1
   end if
   if pRunning then
     tNewState = -tNewState

@@ -254,11 +254,17 @@ end
 on ScrollByLift me
   if me.pType = "scrollbarv" then
     tMoveAreaV = pRects[#bar].height - pRects[#lift].height
+    if tMoveAreaV = 0 then
+      return 0
+    end if
     tScrollPercent = (pRects[#lift].top - pRects[#lift].height + 1) * 100 / tMoveAreaV
     tNowPercent = float(tScrollPercent) / 100
     tNowOffset = integer((pClientSourceRect.bottom - pViewClientRect.height) * float(tScrollPercent) / 100)
   else
     tMoveAreaH = pRects[#bar].width - pRects[#lift].width
+    if tMoveAreaH = 0 then
+      return 0
+    end if
     tScrollPercent = (pRects[#lift].left - pRects[#lift].width + 1) * 100 / tMoveAreaH
     tNowPercent = float(tScrollPercent) / 100
     tNowOffset = integer((pClientSourceRect.right - pViewClientRect.width) * float(tScrollPercent) / 100)

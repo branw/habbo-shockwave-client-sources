@@ -72,7 +72,7 @@ on makeCreases me, tRect, tSourceImage, tCreases, tPalette
   return tImageCreased
 end
 
-on cleanup me
+on cleanUp me
   if not voidp(pBinMember) then
     removeMember(pBinMember.name)
   end if

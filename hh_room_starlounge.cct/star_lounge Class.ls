@@ -14,7 +14,7 @@ end
 
 on deconstruct me
   if not voidp(me.pGradientObj) then
-    me.pGradientObj.cleanup()
+    me.pGradientObj.cleanUp()
     call(#deconstruct, pGradientObj)
   end if
   pGradientObj = VOID

@@ -372,7 +372,7 @@ on redrawCryWindow me
       return 0
     end if
   end repeat
-  if tCategory = 1 then
+  if tCategory = 1 or tCategory = 2 then
     tWndObj.getElement("hobba_header").setText(getText("hobba_emergency_help") && tName)
     tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_normal"))
   else

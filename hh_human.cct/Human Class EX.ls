@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
 
 on construct me
   pFrozenAnimFrame = 0
@@ -56,6 +56,7 @@ on construct me
   pPartOrderOld = EMPTY
   pUserIsTyping = 0
   pUserTypingStartTime = 0
+  pCanvasName = "Canvas:" & getUniqueID()
   tSubSetList = ["figure", "head", "speak", "gesture", "eye", "handRight", "handLeft", "walk", "sit", "itemRight"]
   pPartListSubSet = [:]
   repeat with tSubSet in tSubSetList
@@ -878,7 +879,7 @@ on flipImage me, tImg_a
 end
 
 on getCanvasName me
-  return pClass && pName & me.getID() && "Canvas"
+  return pCanvasName
 end
 
 on getDefinedPartList me, tPartNameList

@@ -1,4 +1,4 @@
-property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList
+property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList, pFatalReported
 
 on construct me
   if not (the runMode contains "Author") then
@@ -7,6 +7,7 @@ on construct me
   pDebugLevel = 1
   pErrorCache = EMPTY
   pCacheSize = 30
+  pFatalReported = 0
   pErrorLevelList = [#minor, #major, #critical]
   pErrorDialogLevel = getVariable("client.debug.level")
   if ilk(pErrorDialogLevel) <> #symbol then
@@ -168,8 +169,9 @@ on handleFatalError me, tErrorData
   setPref("ClientFatalParams", tPrefTxt)
   me.showErrorDialog()
   pauseUpdate()
-  if tErrorUrl <> EMPTY then
+  if tErrorUrl <> EMPTY and not pFatalReported then
     openNetPage(tErrorUrl & tParams, "self")
+    pFatalReported = 1
   end if
   return 1
 end

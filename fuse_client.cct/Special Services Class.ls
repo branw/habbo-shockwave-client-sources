@@ -131,6 +131,24 @@ on openNetPage me, tURL_key, tTarget
       end if
     end if
   end if
+  tURLStart = tURL
+  tURLEnd = EMPTY
+  if tURL contains "#" then
+    tURLStart = chars(tURL, 1, offset("#", tURL) - 1)
+    tURLEnd = chars(tURL, offset("#", tURL), tURL.length)
+  end if
+  if variableExists("client.http.request.sourceid") and tTargetIsPArent then
+    tSourceParamTxt = getVariable("client.http.request.sourceid") & "=1"
+    if not (tURLStart contains tSourceParamTxt) then
+      if tURLStart contains "?" then
+        tURLStart = tURLStart & "&" & tSourceParamTxt
+      else
+        tURLStart = tURLStart & "?" & tSourceParamTxt
+      end if
+    end if
+  end if
+  tURL = tURLStart & tURLEnd
+  tURL = replaceChunks(tURL, "%random%", random(9999999999.0))
   gotoNetPage(tURL, tResolvedTarget)
   put "Open page:" && tURL && "target:" && tResolvedTarget
   return 1

@@ -383,7 +383,7 @@ on makeServerToClientKey me
 end
 
 on startSession me
-  tClientURL = getMoviePath() & "habbo.dcr"
+  tClientURL = getMoviePath()
   tExtVarsURL = getExtVarPath()
   tConnection = getConnection(getVariable("connection.info.id"))
   tHost = tConnection.getProperty(#host)
@@ -403,9 +403,6 @@ on startSession me
     tClientURL = EMPTY
     tExtVarsURL = EMPTY
   else
-    if tClientURL <> externalParamValue("src") then
-      tClientURL = "2"
-    end if
     if getMoviePath() <> the moviePath then
       tClientURL = "3"
     end if

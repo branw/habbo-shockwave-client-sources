@@ -186,6 +186,9 @@ on showObjectInfo me, tObjType, tRefresh
 end
 
 on clearWindowDisplayList me
+  if pWindowCreator = 0 then
+    return 0
+  end if
   repeat with tWindowID in pWindowList
     pWindowCreator.clearWindow(tWindowID)
   end repeat
@@ -400,10 +403,8 @@ on eventProc me, tEvent, tSprID, tParam
       "friend.button":
         if tComponent.userObjectExists(tSelectedObj) then
           tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+          executeMessage(#externalFriendRequest, tUserName)
         end if
-        executeMessage(#externalFriendRequest, tUserName)
         return 1
       "trade.button":
         tList = [:]

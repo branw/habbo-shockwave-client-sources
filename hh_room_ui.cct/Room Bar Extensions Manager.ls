@@ -154,6 +154,9 @@ on confirmFriendRequest me, tAccept
 end
 
 on acceptInvitation me
+  if ilk(pInvitationData) <> #propList then
+    return 0
+  end if
   tSenderId = pInvitationData.getaProp(#userID)
   if voidp(tSenderId) then
     return 0

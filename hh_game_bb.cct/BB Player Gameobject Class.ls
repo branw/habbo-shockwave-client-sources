@@ -310,7 +310,7 @@ on startPowerupActivateAnimation me, tdata
   return 1
 end
 
-on createEffect me, tMode, tEffectId, tProps, tDirection
+on createEffect me, tMode, tEffectID, tProps, tDirection
   tX = pLocation[#x]
   tY = pLocation[#y]
   tZ = pLocation[#z]
@@ -327,7 +327,7 @@ on createEffect me, tMode, tEffectId, tProps, tDirection
   if tEffect = 0 then
     return error(me, "Unable to create effect object!", #createEffect)
   end if
-  tEffect.define(tMode, tScreenLoc, tlocz, tEffectId, tProps, tDirection)
+  tEffect.define(tMode, tScreenLoc, tlocz, tEffectID, tProps, tDirection)
   pActiveEffects.append(tEffect)
   return 1
 end

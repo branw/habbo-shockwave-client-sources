@@ -137,21 +137,21 @@ on setPresets me, tPresets
   pPresets = tPresets
 end
 
-on removeEffect me, tEffectId
+on removeEffect me, tEffectID
   tEffect = pEffects.getaProp(pAppliedEffectID)
   executeMessage(tEffect, rgb(255, 255, 255))
   pAppliedEffectID = 0
 end
 
-on applyEffect me, tEffectId, tColor, tLightness
-  if pAppliedEffectID <> tEffectId and pAppliedEffectID <> 0 then
+on applyEffect me, tEffectID, tColor, tLightness
+  if pAppliedEffectID <> tEffectID and pAppliedEffectID <> 0 then
     me.removeEffect(pAppliedEffectID)
   end if
-  tEffect = pEffects.getaProp(tEffectId)
+  tEffect = pEffects.getaProp(tEffectID)
   tHSL = RGBtoHSL(tColor)
   tHSL[3] = tLightness
   executeMessage(tEffect, HSLtoRGB(tHSL))
-  pAppliedEffectID = tEffectId
+  pAppliedEffectID = tEffectID
   pAppliedColor = tColor
   pAppliedLightness = tLightness
   pApplyTime = the milliSeconds

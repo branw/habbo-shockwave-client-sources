@@ -42,7 +42,7 @@ on setState me, tNewState
   end if
   tstate = tNewState.item[1]
   tPresetID = tNewState.item[2]
-  tEffectId = tNewState.item[3]
+  tEffectID = tNewState.item[3]
   tColor = tNewState.item[4]
   tLightness = tNewState.item[5]
   the itemDelimiter = tDelim
@@ -51,7 +51,7 @@ on setState me, tNewState
   tStateData.setaProp(#dimmerID, me.getID())
   tStateData.setaProp(#isOn, tstate = 2)
   tStateData.setaProp(#presetID, value(tPresetID))
-  tStateData.setaProp(#effectID, value(tEffectId))
+  tStateData.setaProp(#effectID, value(tEffectID))
   tStateData.setaProp(#color, rgb(tColor))
   tStateData.setaProp(#lightness, value(tLightness))
   executeMessage(#roomdimmer_set_state, tStateData)

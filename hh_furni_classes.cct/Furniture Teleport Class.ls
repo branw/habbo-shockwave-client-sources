@@ -2,7 +2,7 @@ property pDoorOpentimer, pProcessActive, pAnimActive, pAnimTime, pKickTime, pTar
 
 on prepare me, tdata
   if pProcessActive then
-    me.delay(500, #doorLogin)
+    me.delay(50, #doorLogin)
   else
     pTargetData = [:]
   end if

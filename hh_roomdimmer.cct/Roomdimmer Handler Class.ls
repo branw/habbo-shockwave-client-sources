@@ -14,10 +14,10 @@ on handleDimmerPresets me, tMsg
   repeat with tPresetNum = 1 to tNumOfPresets
     tPresetData = [:]
     tPresetID = tConn.GetIntFrom()
-    tEffectId = tConn.GetIntFrom()
+    tEffectID = tConn.GetIntFrom()
     tColor = tConn.GetStrFrom()
     tLightness = tConn.GetIntFrom()
-    tPresetData.setaProp(#effectID, tEffectId)
+    tPresetData.setaProp(#effectID, tEffectID)
     tPresetData.setaProp(#color, rgb(tColor))
     tPresetData.setaProp(#lightness, tLightness)
     tPresets.setaProp(tPresetID, tPresetData)

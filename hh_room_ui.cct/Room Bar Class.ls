@@ -334,6 +334,12 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           tFloodCountLimit = 2
           tFloodTimerLimit = 3000
           tFloodTimeout = 30000
+          tExternalFloodTimeout = "client.flood.timeout"
+          if variableExists(tExternalFloodTimeout) then
+            if getVariable(tExternalFloodTimeout) > tFloodTimeout then
+              tFloodTimeout = getVariable(tExternalFloodTimeout)
+            end if
+          end if
           if pFloodEnterCount > tFloodCountLimit then
             if the milliSeconds < pFloodTimer + tFloodTimerLimit then
               tChatField.setText(EMPTY)
