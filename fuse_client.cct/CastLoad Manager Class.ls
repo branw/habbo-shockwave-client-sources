@@ -36,6 +36,7 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing, tDoTracking
     tCastsStr = replaceChunks(tCastsStr, "[", EMPTY)
     tCastsStr = replaceChunks(tCastsStr, "]", EMPTY)
     tCastsStr = replaceChunks(tCastsStr, RETURN, EMPTY)
+    sendProcessTracking(6, "Client%20added%20casts%to%20download%20queue:%20" & tCastsStr)
   end if
   pTempWaitList = []
   tCastList = []

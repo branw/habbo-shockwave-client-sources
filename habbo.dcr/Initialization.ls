@@ -1,4 +1,7 @@
 on prepareMovie
+  if externalParamValue("sw9") = "processlog.enabled=1" then
+    getNetText("javascript:log(8)")
+  end if
   the debugPlaybackEnabled = 0
   castLib(2).preloadMode = 1
   preloadNetThing(castLib(2).fileName)

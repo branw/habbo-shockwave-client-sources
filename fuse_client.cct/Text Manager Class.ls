@@ -10,6 +10,7 @@ on GET me, tKey, tDefault
     end if
     error(me, tError, #GET, #minor)
   end if
+  tText = getStringServices().convertSpecialChars(tText)
   return tText
 end
 
@@ -32,12 +33,12 @@ on dump me, tField, tDelimiter
   tDelim = the itemDelimiter
   the itemDelimiter = "="
   repeat with tStr in tLineChunks
-    repeat with tLineNo = 1 to tStr.line.count
+    tLineCount = tStr.line.count
+    repeat with tLineNo = 1 to tLineCount
       tPair = tStr.line[tLineNo]
       if chars(tPair, 1, 1) <> "#" and tPair <> EMPTY then
         tProp = tPair.item[1]
         tValue = tPair.item[2..tPair.item.count]
-        tValue = tStrServices.convertSpecialChars(tValue)
         repeat with k = 1 to tSpecialChunks.count
           tMark = tSpecialChunks.getPropAt(k)
           if tValue contains tMark then
