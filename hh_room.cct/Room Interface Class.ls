@@ -585,10 +585,8 @@ on resizeInterstitialWindow me
   if tAdHeight > tAdMaxH then
     tAdHeight = tAdMaxH
   end if
-  if tAdMember.type = #bitmap then
-    tAdImage = image(tAdWidth, tAdHeight, 32)
-    tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
-  end if
+  tAdImage = image(tAdWidth, tAdHeight, 32)
+  tAdImage.copyPixels(tAdMember.image, rect(0, 0, tAdWidth, tAdHeight), rect(0, 0, tAdWidth, tAdHeight))
   tWndWidth = 240
   tBorderWidth = 25
   tAdLocX = 0

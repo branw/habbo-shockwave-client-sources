@@ -16,7 +16,7 @@ on select me
       tLocWanted = tLocDoor + [-1, 0]
   end case
   return 0
-  tConnection = getConnection(getVariable("connection.info.id", #Info))
+  tConnection = getConnection(getVariable("connection.info.id", #info))
   if voidp(tConnection) then
     error(me, "No connection available.", me.getID(), #select, #major)
     return 0

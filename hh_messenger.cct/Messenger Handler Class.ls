@@ -396,7 +396,6 @@ on get_buddy_request me, tMsg
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#name] = tConn.GetStrFrom()
-  tdata[#webID] = tConn.GetStrFrom()
   return tdata
 end
 

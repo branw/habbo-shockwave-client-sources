@@ -1,4 +1,4 @@
-property pSoundMachineWindowID, pPlaylistWindowID, pSoundMachineConfirmWindowID, pSaveSongWindowID, pJukeboxWindowID, pJukeboxDiskWindowID, pSoundSetSlotWd, pSoundSetSlotHt, pSoundSetSlotMarginWd, pSoundSetSlotMarginHt, pSoundSetSampleMemberList, pSoundSetSampleMemberName, pTimeLineSlotWd, pTimeLineSlotHt, pTimeLineSlotMarginWd, pTimeLineSlotMarginHt, pTimeLineScrollStep, pSoundSetIconUpdateTimer, pPlayHeadUpdateTimer, pJukeboxListUpdateTimer, pPlayHeadEventAgentID, pPlayHeadDrag
+property pSoundMachineWindowID, pPlaylistWindowID, pSoundMachineConfirmWindowID, pSaveSongWindowID, pJukeboxWindowID, pSoundSetSlotWd, pSoundSetSlotHt, pSoundSetSlotMarginWd, pSoundSetSlotMarginHt, pSoundSetSampleMemberList, pSoundSetSampleMemberName, pTimeLineSlotWd, pTimeLineSlotHt, pTimeLineSlotMarginWd, pTimeLineSlotMarginHt, pTimeLineScrollStep, pSoundSetIconUpdateTimer, pPlayHeadUpdateTimer, pJukeboxListUpdateTimer, pPlayHeadEventAgentID, pPlayHeadDrag
 
 on construct me
   pSoundSetIconUpdateTimer = "sound_machine_icon_timer"
@@ -9,7 +9,6 @@ on construct me
   pSoundMachineConfirmWindowID = getText("sound_machine_confirm_window")
   pSaveSongWindowID = getText("sound_machine_save_window")
   pJukeboxWindowID = getText("sound_machine_jukebox_window")
-  pJukeboxDiskWindowID = getText("sound_machine_jukebox_disk_window")
   registerMessage(#show_select_disk, me.getID(), #showSelectDisk)
   registerMessage(#s_machine, me.getID(), #showJukebox)
   pSoundSetSlotWd = 25
@@ -162,7 +161,7 @@ on showSaveSong me
       return 1
     end if
     if not createWindow(pSaveSongWindowID, "sound_machine_window.window", VOID, VOID, #modal) then
-      return error(me, "Failed to open song save window!!!", #showPlaylist, #major)
+      return error(me, "Failed to open Song save window!!!", #showPlaylist, #major)
     else
       tWndObj = getWindow(pSaveSongWindowID)
       tWndObj.registerClient(me.getID())
@@ -200,7 +199,7 @@ end
 on showJukebox me
   if not windowExists(pJukeboxWindowID) then
     if not createWindow(pJukeboxWindowID, "sound_machine_jukebox.window", VOID, VOID, #modal) then
-      return error(me, "Failed to open jukebox window!!!", #showJukebox, #major)
+      return error(me, "Failed to open Song save window!!!", #showJukebox, #major)
     else
       me.renderJukebox()
       tWndObj = getWindow(pJukeboxWindowID)
@@ -210,40 +209,15 @@ on showJukebox me
       tWndObj.registerProcedure(#eventProcJukebox, me.getID(), #mouseWithin)
       tWndObj.registerProcedure(#eventProcJukebox, me.getID(), #mouseLeave)
       if not timeoutExists(pJukeboxListUpdateTimer) then
-        createTimeout(pJukeboxListUpdateTimer, 500, #renderJukeboxPlaylist, me.getID(), VOID, 0)
+        createTimeout(pJukeboxListUpdateTimer, 1000, #renderJukeboxPlaylist, me.getID(), VOID, 0)
       end if
-      me.getComponent().getUserDisks()
     end if
   end if
   return 1
 end
 
 on showSelectDisk me
-  if not windowExists(pJukeboxDiskWindowID) then
-    if not me.getComponent().getCanInsertDisk() then
-      me.ShowAlert("no_disks")
-      return 1
-    end if
-    if not createWindow(pJukeboxDiskWindowID, "sound_machine_jukebox_disklist.window", VOID, VOID, #modal) then
-      return error(me, "Failed to open select disk window!!!", #showSelectDisk, #major)
-    else
-      me.renderUserDiskList(1)
-      tWndObj = getWindow(pJukeboxDiskWindowID)
-      tWndObj.registerClient(me.getID())
-      tWndObj.registerProcedure(#eventProcJukeboxDisk, me.getID(), #mouseUp)
-      tElemList = ["jukebox_disk_add_text", "jukebox_disk_cancel_text"]
-      repeat with tElemName in tElemList
-        tElem = tWndObj.getElement(tElemName)
-        if tElem <> 0 then
-          tsprite = tElem.getProperty(#sprite)
-          if ilk(tsprite) = #sprite then
-            removeEventBroker(tsprite.spriteNum)
-          end if
-        end if
-      end repeat
-    end if
-  end if
-  return 1
+  me.getComponent().insertJukeboxDisk(1)
 end
 
 on hideSelectAction me
@@ -285,14 +259,6 @@ on hideJukebox me
   end if
   if windowExists(pJukeboxWindowID) then
     return removeWindow(pJukeboxWindowID)
-  else
-    return 0
-  end if
-end
-
-on hideJukeboxDisk me
-  if windowExists(pJukeboxDiskWindowID) then
-    return removeWindow(pJukeboxDiskWindowID)
   else
     return 0
   end if
@@ -481,21 +447,6 @@ on renderJukeboxDiskList me
       if tImg <> 0 then
         tElem.feedImage(tImg)
       end if
-    end if
-  end if
-  return 1
-end
-
-on renderUserDiskList me, tInitialRender
-  tWndObj = getWindow(pJukeboxDiskWindowID)
-  if tWndObj = 0 then
-    return 0
-  end if
-  tElem = tWndObj.getElement("disk_list")
-  if tElem <> 0 then
-    tImg = me.getComponent().renderUserDiskList(tInitialRender)
-    if tImg <> 0 then
-      tElem.feedImage(tImg)
     end if
   end if
   return 1
@@ -731,7 +682,7 @@ on updatePlayHead me, tManualUpdate
   if voidp(tManualUpdate) then
     tManualUpdate = 0
   end if
-  tPlayTime = me.getComponent().getEditorPlayTime()
+  tPlayTime = me.getComponent().getPlayTime()
   tSlotLength = me.getComponent().getTimeLineSlotLength()
   tBehind = tPlayTime mod tSlotLength
   if tPlayTime then
@@ -830,7 +781,7 @@ on updatePlayButton me
   if tWndObj = 0 then
     return 0
   end if
-  if me.getComponent().getEditorPlayTime() = 0 then
+  if me.getComponent().getPlayTime() = 0 then
     tElem = tWndObj.getElement("sound_play_button")
     if tElem <> 0 then
       tElem.setProperty(#visible, 1)
@@ -1106,28 +1057,6 @@ on eventProcJukebox me, tEvent, tSprID, tParam, tWndID
         end if
       end if
     end if
-  end if
-  return 1
-end
-
-on eventProcJukeboxDisk me, tEvent, tSprID, tParam, tWndID
-  if tEvent = #mouseUp then
-    case tSprID of
-      "close", "jukebox_disk_cancel_button":
-        me.hideJukeboxDisk()
-      "disk_list":
-        tX = tParam.locH
-        tY = tParam.locV
-        tPlaylistManager = me.getComponent().getPlaylistManager()
-        if tPlaylistManager <> 0 then
-          if tPlaylistManager.diskListMouseClick(tX, tY) then
-            me.renderUserDiskList(0)
-          end if
-        end if
-      "jukebox_disk_add_button":
-        me.getComponent().insertJukeboxDisk()
-        me.hideJukeboxDisk()
-    end case
   end if
   return 1
 end

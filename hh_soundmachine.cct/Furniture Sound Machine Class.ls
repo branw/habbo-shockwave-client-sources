@@ -48,9 +48,6 @@ end
 
 on setState me, tNewState
   callAncestor(#setState, [me], tNewState)
-  if voidp(tNewState) then
-    return 0
-  end if
   tStateOn = 0
   if me.pState = 2 then
     tStateOn = 1

@@ -61,19 +61,19 @@ on stopSamplePreview me
 end
 
 on playSong me, tSongData
-  return getObject(pSongPlayer).startSong(1, tSongData, 1)
+  return getObject(pSongPlayer).startSong(tSongData)
 end
 
-on stopSong me, tStackIndex
-  return getObject(pSongPlayer).stopSong(tStackIndex, 1)
+on stopSong me
+  return getObject(pSongPlayer).stopSong()
 end
 
 on initPlaylist me, tSongList, tPlayTime, tLoop
-  return getObject(pSongPlayer).initPlaylist(1, tSongList, tPlayTime, tLoop)
+  return getObject(pSongPlayer).initPlaylist(tSongList, tPlayTime, tLoop)
 end
 
 on addPlaylistSong me, tid, tLength
-  return getObject(pSongPlayer).addPlaylistSong(1, tid, tLength)
+  return getObject(pSongPlayer).addPlaylistSong(tid, tLength)
 end
 
 on updatePlaylistSong me, tid, tSongData

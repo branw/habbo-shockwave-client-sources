@@ -252,9 +252,9 @@ on eventProc me, tEvent, tSprID, tProp
       end if
       tPet = numToChar(2) & pSelectedProduct["petRace"] & numToChar(2) & pSelectedProduct["petColor"]
       pSelectedProduct["extra_parm"] = tText & tPet
-      if connectionExists(getVariable("connection.info.id", #Info)) then
+      if connectionExists(getVariable("connection.info.id", #info)) then
         pNameCheckPending = 1
-        getConnection(getVariable("connection.info.id", #Info)).send("APPROVENAME", [#string: tText, #integer: 1])
+        getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tText, #integer: 1])
       end if
     else
       if tSprID = "ctlg_nextmodel_button" then

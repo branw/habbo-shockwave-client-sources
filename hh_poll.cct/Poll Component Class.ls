@@ -3,7 +3,7 @@ property pQuestionList, pQuestionIndex, pConfirmedAction, pConnectionId, pPollOf
 on construct me
   pQuestionList = []
   pQuestionIndex = 1
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariableValue("connection.info.id", #info)
   registerMessage(#show_poll_question, me.getID(), #parseQuestion)
   return 1
 end

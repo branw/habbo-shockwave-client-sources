@@ -128,14 +128,6 @@ on handle_jukebox_song_added me, tMsg
   return me.getComponent().insertPlaylistSong(tid, tLength, tSongName, tAuthor)
 end
 
-on handle_song_locked me, tMsg
-  return me.getComponent().handleSongLocked()
-end
-
-on handle_jukebox_playlist_full me, tMsg
-  return me.getComponent().handleJukeBoxPlaylistFull()
-end
-
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(300, #handle_song_info)
@@ -151,8 +143,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(333, #handle_user_song_disks)
   tMsgs.setaProp(334, #handle_jukebox_disks)
   tMsgs.setaProp(335, #handle_jukebox_song_added)
-  tMsgs.setaProp(336, #handle_song_locked)
-  tMsgs.setaProp(337, #handle_jukebox_playlist_full)
   tCmds = [:]
   tCmds.setaProp("INSERT_SOUND_PACKAGE", 219)
   tCmds.setaProp("EJECT_SOUND_PACKAGE", 220)
@@ -167,11 +157,11 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_SONG_LIST", 244)
   tCmds.setaProp("GET_PLAY_LIST", 245)
   tCmds.setaProp("DELETE_SONG", 248)
-  tCmds.setaProp("ADD_JUKEBOX_DISC", 255)
-  tCmds.setaProp("REMOVE_JUKEBOX_DISC", 256)
+  tCmds.setaProp("ADD_JUKEBOX_DISK", 255)
+  tCmds.setaProp("REMOVE_JUKEBOX_DISK", 256)
   tCmds.setaProp("JUKEBOX_PLAYLIST_ADD", 257)
-  tCmds.setaProp("GET_JUKEBOX_DISCS", 258)
-  tCmds.setaProp("GET_USER_SONG_DISCS", 259)
+  tCmds.setaProp("GET_JUKEBOX_INFO", 258)
+  tCmds.setaProp("GET_USER_SONG_DISKS ", 259)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

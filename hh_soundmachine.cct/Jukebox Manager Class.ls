@@ -1,7 +1,7 @@
-property pOwner, pConnectionId, pDiskList, pSelectedDisk, pSelectedEject, pSelectedLoad, pDiskListRenderList, pDiskListImage, pWriterID, pPlaylistWriterID, pItemWidth, pItemHeight, pItemMarginX, pItemMarginY, pDiskArrayWidth, pDiskArrayHeight, pPlaylistWidth, pPlaylistHeight, pPlaylistLimit, pItemName, pItemNameSelected, pItemNameEmpty, pItemNameEmptySelected, pEjectName, pEjectNameSelected, pTextEmpty, pTextLoadTrax
+property pOwner, pConnectionId, pDiskList, pSelectedDisk, pSelectedEject, pDiskListRenderList, pDiskListImage, pWriterID, pPlaylistWriterID, pItemWidth, pItemHeight, pItemMarginX, pItemMarginY, pDiskArrayWidth, pDiskArrayHeight, pPlaylistWidth, pPlaylistHeight, pPlaylistLimit, pItemName, pItemNameSelected, pItemNameEmpty, pItemNameEmptySelected, pEjectName, pEjectNameSelected, pTextEmpty, pTextLoadTrax
 
 on construct me
-  pConnectionId = getVariableValue("connection.info.id", #Info)
+  pConnectionId = getVariableValue("connection.info.id", #info)
   pWriterID = getUniqueID()
   tBold = getStructVariable("struct.font.plain")
   tMetrics = [#font: tBold.getaProp(#font), #fontStyle: tBold.getaProp(#fontStyle), #color: rgb("#000000")]
@@ -12,7 +12,6 @@ on construct me
   pDiskList = [[#name: "Kiss my nose, baby", #author: "Painimies"], [#name: "Kiss my nose, baby"], [#name: "Kiss my nose, baby"], VOID, VOID, [#name: "Kiss my nose, baby"], [#name: "Kiss my nose, baby"]]
   pSelectedDisk = 0
   pSelectedEject = 0
-  pSelectedLoad = 0
   pItemWidth = 156
   pItemHeight = 39
   pItemMarginX = 6
@@ -176,16 +175,6 @@ on diskListMouseOver me, tX, tY
     return 1
   end if
   return tRetVal
-end
-
-on getJukeboxDisks me
-  pDiskList = []
-  pSelectedDisk = 0
-  pSelectedEject = 0
-  if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("GET_JUKEBOX_DISCS")
-  end if
-  return 0
 end
 
 on renderList me, tImg
@@ -359,26 +348,22 @@ on parseDiskList me, tMsg
       pDiskList[tSlot] = tDisk
     end if
   end repeat
-  pDiskListImage = VOID
   return 1
 end
 
 on showLoadDisk me
-  if pOwner then
-    pSelectedLoad = pSelectedDisk
-    executeMessage(#show_select_disk)
-  end if
+  executeMessage(#show_select_disk)
 end
 
 on insertDisk me, tid
-  if pSelectedLoad < 1 or pSelectedLoad > pDiskList.count then
+  if pSelectedDisk < 1 or pSelectedDisk > pDiskList.count then
     return 0
   end if
-  if not voidp(pDiskList[pSelectedLoad]) then
+  if not voidp(pDiskList[pSelectedDisk]) then
     return 0
   end if
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("ADD_JUKEBOX_DISC", [#integer: tid, #integer: pSelectedLoad])
+    return getConnection(pConnectionId).send("ADD_JUKEBOX_DISK", [#integer: tid, #integer: pSelectedDisk])
   end if
   return 0
 end
@@ -392,7 +377,7 @@ on removeDisk me
   end if
   pDiskList[pSelectedDisk] = VOID
   if getConnection(pConnectionId) <> 0 then
-    return getConnection(pConnectionId).send("REMOVE_JUKEBOX_DISC", [#integer: pSelectedDisk])
+    return getConnection(pConnectionId).send("REMOVE_JUKEBOX_DISK", [#integer: pSelectedDisk])
   end if
   return 0
 end
