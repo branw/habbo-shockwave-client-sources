@@ -14,55 +14,55 @@ on getWindowManager
   return tMgr.getManager(#window_manager)
 end
 
-on createWindow tID, tLayout, tLocX, tLocY, tSpecial
-  return getWindowManager().create(tID, tLayout, tLocX, tLocY, tSpecial)
+on createWindow tid, tLayout, tLocX, tLocY, tSpecial
+  return getWindowManager().create(tid, tLayout, tLocX, tLocY, tSpecial)
 end
 
-on removeWindow tID
-  return getWindowManager().Remove(tID)
+on removeWindow tid
+  return getWindowManager().Remove(tid)
 end
 
-on getWindow tID
-  return getWindowManager().GET(tID)
+on getWindow tid
+  return getWindowManager().GET(tid)
 end
 
-on windowExists tID
-  return getWindowManager().exists(tID)
+on windowExists tid
+  return getWindowManager().exists(tid)
 end
 
-on mergeWindow tID, tLayout
-  if windowExists(tID) then
-    return getWindow(tID).merge(tLayout)
+on mergeWindow tid, tLayout
+  if windowExists(tid) then
+    return getWindow(tid).merge(tLayout)
   else
     return 0
   end if
 end
 
-on activateWindow tID
-  if voidp(tID) then
+on activateWindow tid
+  if voidp(tid) then
     return 0
   end if
-  return getWindowManager().Activate(tID)
+  return getWindowManager().Activate(tid)
 end
 
-on deactivateWindow tID
-  if voidp(tID) then
+on deactivateWindow tid
+  if voidp(tid) then
     return 0
   end if
-  return getWindowManager().deactivate(tID)
+  return getWindowManager().deactivate(tid)
 end
 
-on registerClient tID, tClientID
-  if windowExists(tID) then
-    return getWindow(tID).registerClient(tClientID)
+on registerClient tid, tClientID
+  if windowExists(tid) then
+    return getWindow(tid).registerClient(tClientID)
   else
     return 0
   end if
 end
 
-on registerProcedure tID, tHandler, tClientID, tEvent
-  if windowExists(tID) then
-    return getWindow(tID).registerProcedure(tHandler, tClientID, tEvent)
+on registerProcedure tid, tHandler, tClientID, tEvent
+  if windowExists(tid) then
+    return getWindow(tid).registerProcedure(tHandler, tClientID, tEvent)
   else
     return 0
   end if

@@ -257,17 +257,17 @@ end
 
 on hilite me, tElements
   tWndObj = getWindow(pWindowID)
-  repeat with tID in tElements
-    tName = tID & "_hi"
-    tWndObj.getElement(tID).setProperty(#buffer, member(getmemnum(tName)))
+  repeat with tid in tElements
+    tName = tid & "_hi"
+    tWndObj.getElement(tid).setProperty(#buffer, member(getmemnum(tName)))
   end repeat
 end
 
 on unhilite me, tElements
   tWndObj = getWindow(pWindowID)
-  repeat with tID in tElements
-    tName = tID
-    tWndObj.getElement(tID).getProperty(#buffer, member(getmemnum(tName)))
+  repeat with tid in tElements
+    tName = tid
+    tWndObj.getElement(tid).getProperty(#buffer, member(getmemnum(tName)))
   end repeat
 end
 

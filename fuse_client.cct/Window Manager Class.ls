@@ -25,40 +25,40 @@ on construct me
   return 1
 end
 
-on create me, tID, tLayout, tLocX, tLocY, tSpecial
+on create me, tid, tLayout, tLocX, tLocY, tSpecial
   case tSpecial of
     #modal:
-      return me.modal(tID, tLayout)
+      return me.modal(tid, tLayout)
     #modalcorner:
-      return me.modal(tID, tLayout, #corner)
+      return me.modal(tid, tLayout, #corner)
   end case
   if voidp(tLayout) then
     tLayout = "empty.window"
   end if
-  if me.exists(tID) then
+  if me.exists(tid) then
     if voidp(tLocX) then
-      tLocX = me.GET(tID).getProperty(#locX)
+      tLocX = me.GET(tid).getProperty(#locX)
     end if
     if voidp(tLocY) then
-      tLocY = me.GET(tID).getProperty(#locY)
+      tLocY = me.GET(tid).getProperty(#locY)
     end if
-    me.Remove(tID)
+    me.Remove(tid)
   end if
   if integerp(tLocX) and integerp(tLocY) then
     tX = tLocX
     tY = tLocY
   else
-    if not voidp(me.pPosCache[tID]) then
-      tX = me.pPosCache[tID][1]
-      tY = me.pPosCache[tID][2]
+    if not voidp(me.pPosCache[tid]) then
+      tX = me.pPosCache[tid][1]
+      tY = me.pPosCache[tid][2]
     else
       tX = pDefLocX
       tY = pDefLocY
     end if
   end if
-  tItem = getObjectManager().create(tID, me.pInstanceClass)
+  tItem = getObjectManager().create(tid, me.pInstanceClass)
   if not tItem then
-    return error(me, "Failed to create window object:" && tID, #create, #major)
+    return error(me, "Failed to create window object:" && tid, #create, #major)
   end if
   tProps = [:]
   tProps[#locX] = tX
@@ -68,28 +68,28 @@ on create me, tID, tLayout, tLocX, tLocY, tSpecial
   tProps[#elements] = pClsList
   tProps[#manager] = me
   if not tItem.define(tProps) then
-    getObjectManager().Remove(tID)
+    getObjectManager().Remove(tid)
     return 0
   end if
   if not tItem.merge(tLayout) then
-    getObjectManager().Remove(tID)
+    getObjectManager().Remove(tid)
     return 0
   end if
-  me.pItemList.add(tID)
+  me.pItemList.add(tid)
   pAvailableLocZ = pAvailableLocZ + tItem.getProperty(#sprCount)
   me.Activate()
   return 1
 end
 
-on Remove me, tID
-  tWndObj = me.GET(tID)
+on Remove me, tid
+  tWndObj = me.GET(tid)
   if tWndObj = 0 then
     return 0
   end if
-  me.pPosCache[tID] = [tWndObj.getProperty(#locX), tWndObj.getProperty(#locY)]
-  getObjectManager().Remove(tID)
-  me.pItemList.deleteOne(tID)
-  if me.pActiveItem = tID then
+  me.pPosCache[tid] = [tWndObj.getProperty(#locX), tWndObj.getProperty(#locY)]
+  getObjectManager().Remove(tid)
+  me.pItemList.deleteOne(tid)
+  if me.pActiveItem = tid then
     tNextActive = me.pItemList.getLast()
   else
     tNextActive = me.pActiveItem
@@ -97,10 +97,10 @@ on Remove me, tID
   if me.exists(pModalID) then
     tModals = 0
     repeat with i = me.pItemList.count down to 1
-      tID = me.pItemList[i]
-      if me.GET(tID).getProperty(#modal) then
+      tid = me.pItemList[i]
+      if me.GET(tid).getProperty(#modal) then
         tModals = 1
-        tNextActive = tID
+        tNextActive = tid
         exit repeat
       end if
     end repeat
@@ -112,7 +112,7 @@ on Remove me, tID
   return 1
 end
 
-on Activate me, tID
+on Activate me, tid
   if pLockLocZ then
     return 0
   end if
@@ -121,22 +121,22 @@ on Activate me, tID
   end if
   if me.exists(me.pActiveItem) then
     if me.GET(me.pActiveItem).getProperty(#modal) then
-      tID = me.pActiveItem
+      tid = me.pActiveItem
       if me.exists(pModalID) then
         me.pItemList.deleteOne(pModalID)
         me.pItemList.append(pModalID)
       end if
     end if
   end if
-  if voidp(tID) then
-    tID = me.pItemList.getLast()
+  if voidp(tid) then
+    tid = me.pItemList.getLast()
   else
-    if not me.exists(tID) then
+    if not me.exists(tid) then
       return 0
     end if
   end if
-  me.pItemList.deleteOne(tID)
-  me.pItemList.append(tID)
+  me.pItemList.deleteOne(tid)
+  me.pItemList.append(tid)
   me.pAvailableLocZ = me.pDefaultLocZ
   repeat with tCurrID in me.pItemList
     tWndObj = me.GET(tCurrID)
@@ -146,15 +146,15 @@ on Activate me, tID
       me.pAvailableLocZ = me.pAvailableLocZ + 1
     end repeat
   end repeat
-  me.pActiveItem = tID
-  return me.GET(tID).setActive()
+  me.pActiveItem = tid
+  return me.GET(tid).setActive()
 end
 
-on deactivate me, tID
-  if me.exists(tID) then
-    if not me.GET(tID).getProperty(#modal) then
-      me.pItemList.deleteOne(tID)
-      me.pItemList.addAt(1, tID)
+on deactivate me, tid
+  if me.exists(tid) then
+    if not me.GET(tid).getProperty(#modal) then
+      me.pItemList.deleteOne(tid)
+      me.pItemList.addAt(1, tid)
       me.Activate()
       return 1
     end if
@@ -172,14 +172,14 @@ on unlock me
   return 1
 end
 
-on modal me, tID, tLayout, tPosition
+on modal me, tid, tLayout, tPosition
   if voidp(tPosition) then
     tPosition = #center
   end if
-  if not me.create(tID, tLayout) then
+  if not me.create(tid, tLayout) then
     return 0
   end if
-  tWndObj = me.GET(tID)
+  tWndObj = me.GET(tid)
   case tPosition of
     #center:
       tWndObj.center()
@@ -200,7 +200,7 @@ on modal me, tID, tLayout, tPosition
     end if
   end if
   the keyboardFocusSprite = 0
-  me.pActiveItem = tID
-  me.Activate(tID)
+  me.pActiveItem = tid
+  me.Activate(tid)
   return 1
 end

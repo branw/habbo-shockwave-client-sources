@@ -12,6 +12,14 @@ on deconstruct me
   return 1
 end
 
+on getPendingCFHs me
+  tConnection = getConnection(getVariable("connection.info.id"))
+  if not tConnection then
+    error(me, "Connection not found.", #showDialog, #major)
+  end if
+  tConnection.send("GET_PENDING_CALLS_FOR_HELP")
+end
+
 on receive_cryforhelp me, tMsg
   pCryDataBase[tMsg[#cry_id]] = tMsg
   me.getInterface().ShowAlert()
@@ -28,8 +36,11 @@ on receive_pickedCry me, tMsg
   return 1
 end
 
-on deleteCry me, tID
-  pCryDataBase.deleteProp(tID)
+on deleteCry me, tid
+  pCryDataBase.deleteProp(tid)
+  if pCryDataBase.count = 0 then
+    me.getInterface().hideAlert()
+  end if
   me.getInterface().updateCryWnd()
   return 1
 end
@@ -119,7 +130,7 @@ on send_cryForHelp me, tMsg, ttype
   end if
   tPropList = [#string: tMsg, #integer: tSendType]
   if connectionExists(getVariable("connection.room.id")) then
-    return getConnection(getVariable("connection.room.id")).send("CRYFORHELP", tPropList)
+    return getConnection(getVariable("connection.room.id")).send("CALL_FOR_HELP", tPropList)
   else
     return error(me, "Failed to access room connection!", #send_cryForHelp, #major)
   end if

@@ -1,4 +1,4 @@
-property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag, pChosenHelpRadio, pHelpChoiceCount, pCfhType, pUrlList
+property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag, pChosenHelpRadio, pHelpChoiceCount, pCfhType, pUrlList, pHelpWindowID
 
 on construct me
   pWindowList = []
@@ -11,19 +11,20 @@ on construct me
   pHelpChoiceCount = me.countHelpChoices()
   pChosenHelpRadio = 0
   pCfhType = #none
+  pHelpWindowID = getText("win_help", "Help")
   return 1
 end
 
 on deconstruct me
   if pReadyFlag then
-    repeat with tID in pWindowList
-      if windowExists(tID) then
-        removeWindow(tID)
+    repeat with tid in pWindowList
+      if windowExists(tid) then
+        removeWindow(tid)
       end if
     end repeat
-    repeat with tID in pAlertList
-      if windowExists(tID) then
-        removeWindow(tID)
+    repeat with tid in pAlertList
+      if windowExists(tid) then
+        removeWindow(tid)
       end if
     end repeat
     if writerExists(pWriterPlain) then
@@ -182,40 +183,13 @@ on showDialog me, tWndID, tProps
     #purse, "purse":
       return executeMessage(#show_hide_purse)
     #help, "help":
-      tWndTitle = getText("win_help", "Help")
-      if windowExists(tWndTitle) then
-        return me.removeDialog(tWndTitle, pWindowList)
-      end if
-      me.createDialog(tWndTitle, pDefWndType, "habbo_help.window", #eventProcHelp)
-      tWndObj = getWindow(tWndTitle)
-      tStr = EMPTY
-      i = 0
-      repeat while 1
-        i = i + 1
-        if textExists("help_txt_" & i) then
-          tStr = tStr & getText("help_txt_" & i) & RETURN
-          next repeat
-        end if
-        exit repeat
-      end repeat
-      tStr = tStr.line[1..tStr.line.count - 1]
-      tLinkImg = getWriter(pWriterLink).render(tStr).duplicate()
-      tWndObj.getElement("link_list").feedImage(tLinkImg)
-      if threadExists(#room) then
-        if getThread(#room).getComponent().getRoomID() = EMPTY then
-          tWndObj.getElement("help_callforhelp_textlink").hide()
-        end if
-      end if
-      if tWndObj.elementExists("help_tutorial_link") then
-        tLinkURL = getText("reg_tutorial_url", EMPTY)
-        if not stringp(tLinkURL) or tLinkURL.length < 10 then
-          tWndObj.getElement("help_tutorial_link").setProperty(#visible, 0)
-        else
-          tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
-        end if
-      end if
+      me.showHelpWindow()
     #call_for_help, "call_for_help":
-      me.openCfhWindow()
+      tConnection = getConnection(getVariable("connection.info.id"))
+      if not tConnection then
+        error(me, "Connection not found.", #showDialog, #major)
+      end if
+      tConnection.send("GET_PENDING_CALLS_FOR_HELP")
     #help_choice, "help_choice":
       me.openHelpChoiceWindow()
     #ban, "ban":
@@ -285,6 +259,7 @@ on removeDialog me, tWndTitle, tWndList
 end
 
 on showAlertSentWindow me, tWndObj
+  tWndObj = getWindow(pHelpWindowID)
   tWndObj.unmerge()
   tWndObj.merge("habbo_hobba_alertsent.window")
   if pCfhType = #habbo_helpers then
@@ -301,6 +276,7 @@ end
 
 on openCfhWindow me
   tWndTitle = getText("win_callforhelp")
+  me.pHelpWindowID = tWndTitle
   if windowExists(tWndTitle) then
     me.removeDialog(tWndTitle, pWindowList)
   end if
@@ -321,12 +297,37 @@ on openCfhWindow me
   return 1
 end
 
+on openPendingCFHWindow me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if voidp(tConn) then
+    return error(me, "Invalid message.", #openPendingCFHWindow, #major)
+  end if
+  tid = tConn.GetStrFrom()
+  tTimestamp = tConn.GetStrFrom()
+  tCFH = tConn.GetStrFrom()
+  tWindowTitle = getText("win_callforhelp")
+  if windowExists(tWindowTitle) then
+    me.removeDialog(tWindowTitle, pWindowList)
+  end if
+  me.createDialog(tWindowTitle, pDefWndType, "habbo_pending_cfh.window", #eventProcCallHelp)
+  tWindowObj = getWindow(tWindowTitle)
+  tTopText = getText("you_have_pending_cfh")
+  tMiddleText = getText("pending_cfh_title")
+  tWindowObj.getElement("pending_cfh_top").setText(tTopText)
+  tWindowObj.getElement("pending_cfh_mid").setText(tMiddleText)
+  tWindowObj.getElement("pending_cfh_text").setText(tCFH)
+end
+
 on openHelpChoiceWindow me
+  if windowExists(pHelpWindowID) then
+    me.removeDialog(pHelpWindowID, pWindowList)
+  end if
   if pHelpChoiceCount = 0 then
     pCfhType = #emergency
     return me.showDialog("call_for_help")
   end if
   tWndTitle = getText("win_callforhelp")
+  me.pHelpWindowID = tWndTitle
   if windowExists(tWndTitle) then
     return me.removeDialog(tWndTitle, pWindowList)
   end if
@@ -358,12 +359,18 @@ on helpChoiceMade me
   end if
   if tAction = "hotel_help" then
     pCfhType = #habbo_helpers
-    return me.showDialog("call_for_help")
   else
     if tAction = "emergency_help" then
       pCfhType = #emergency
-      return me.showDialog("call_for_help")
     end if
+  end if
+  if tAction = "hotel_help" or tAction = "emergency_help" then
+    tConnection = getConnection(getVariable("connection.info.id"))
+    if not tConnection then
+      error(me, "Connection not found.", #helpChoiceMade, #major)
+    end if
+    tConnection.send("GET_PENDING_CALLS_FOR_HELP")
+    return 1
   end if
   return error(me, "Help pointer " & pChosenHelpRadio & " not working, check syntax.", #helpChoiceMade, #major)
 end
@@ -389,6 +396,40 @@ on helpRadioClicked me, tChoiceNum, tWndID
   tWnd.getElement("help_choise_ok").Activate()
   pChosenHelpRadio = tChoiceNum
   return 1
+end
+
+on showHelpWindow me
+  if windowExists(pHelpWindowID) then
+    me.removeDialog(pHelpWindowID, pWindowList)
+  end if
+  me.createDialog(pHelpWindowID, pDefWndType, "habbo_help.window", #eventProcHelp)
+  tWndObj = getWindow(pHelpWindowID)
+  tStr = EMPTY
+  i = 0
+  repeat while 1
+    i = i + 1
+    if textExists("help_txt_" & i) then
+      tStr = tStr & getText("help_txt_" & i) & RETURN
+      next repeat
+    end if
+    exit repeat
+  end repeat
+  tStr = tStr.line[1..tStr.line.count - 1]
+  tLinkImg = getWriter(pWriterLink).render(tStr).duplicate()
+  tWndObj.getElement("link_list").feedImage(tLinkImg)
+  if threadExists(#room) then
+    if getThread(#room).getComponent().getRoomID() = EMPTY then
+      tWndObj.getElement("help_callforhelp_textlink").hide()
+    end if
+  end if
+  if tWndObj.elementExists("help_tutorial_link") then
+    tLinkURL = getText("reg_tutorial_url", EMPTY)
+    if not stringp(tLinkURL) or tLinkURL.length < 10 then
+      tWndObj.getElement("help_tutorial_link").setProperty(#visible, 0)
+    else
+      tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
+    end if
+  end if
 end
 
 on eventProcAlert me, tEvent, tElemID, tParam, tWndID
@@ -450,9 +491,7 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
       "help_tutorial_link":
         openNetPage(getText("reg_tutorial_url"))
       "help_callforhelp_textlink":
-        me.removeDialog(tWndID, pWindowList)
-        me.showDialog(#help_choice)
-        return 1
+        me.openHelpChoiceWindow()
       "help_choise_ok":
         me.helpChoiceMade()
       otherwise:
@@ -468,13 +507,18 @@ end
 on eventProcCallHelp me, tEvent, tElemID, tParam, tWndID
   if tEvent = #mouseUp then
     case tElemID of
-      "close", "callhelp_cancel", "alertsent_ok":
+      "close", "callhelp_cancel", "alertsent_ok", "pending_cfh_cancel":
         return me.removeDialog(tWndID, pWindowList)
       "callhelp_send":
         tWndObj = getWindow(tWndID)
         executeMessage(#sendCallForHelp, tWndObj.getElement("callhelp_text").getText(), pCfhType)
-        me.showAlertSentWindow(tWndObj)
         return 1
+      "pending_cfh_delete":
+        tConnection = getConnection(getVariable("connection.info.id"))
+        if not tConnection then
+          error(me, "Connection not found.", #showDialog, #major)
+        end if
+        tConnection.send("DELETE_PENDING_CALLS_FOR_HELP")
     end case
   end if
 end

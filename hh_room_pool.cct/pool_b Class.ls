@@ -52,8 +52,8 @@ on prepare me
   end if
   tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById("jumpticketautomatic")
   registerProcedure(tSpr, #eventProcJumpTicketAutomatic, me.getID(), #mouseDown)
-  repeat with tID in ["pool_clickarea", "floor", "hiliter", "vesi2", "portaat1", "portaat3"]
-    tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById(tID)
+  repeat with tid in ["pool_clickarea", "floor", "hiliter", "vesi2", "portaat1", "portaat3"]
+    tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById(tid)
     registerProcedure(tSpr, #poolTeleport, me.getID(), #mouseDown)
   end repeat
   pArrowCursor = 0
@@ -153,7 +153,7 @@ on eventProcJumpTicketAutomatic me
 end
 
 on poolTeleport me, tEvent, tSprID, tParam
-  tMyIndex = getObject(#session).GET("user_index")
+  tMyIndex = getObject(#session).get("user_index")
   if not getThread(#room).getComponent().userObjectExists(tMyIndex) then
     return 0
   end if

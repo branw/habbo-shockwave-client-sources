@@ -191,16 +191,16 @@ on update me
     if not tWinObj then
       return 0
     end if
-    tID = "loading_anim"
-    if tWinObj.elementExists(tID) then
+    tid = "loading_anim"
+    if tWinObj.elementExists(tid) then
       t1 = pQuad[1]
       t2 = pQuad[2]
       t3 = pQuad[3]
       t4 = pQuad[4]
       pQuad = [t2, t3, t4, t1]
-      tImage = tWinObj.getElement(tID).getProperty(#image)
+      tImage = tWinObj.getElement(tid).getProperty(#image)
       tImage.copyPixels(pAnimImage, pQuad, pAnimImage.rect)
-      tWinObj.getElement(tID).feedImage(tImage)
+      tWinObj.getElement(tid).feedImage(tImage)
     else
       removeUpdate(me.getID())
     end if

@@ -22,6 +22,6 @@ on updatePlayerObjectGoal me, tdata
   if not listp(tdata) then
     return 0
   end if
-  tID = tdata[#id]
-  return tGameSystem.executeGameObjectEvent(tID, #set_target_custom, tdata)
+  tid = tdata[#id]
+  return tGameSystem.executeGameObjectEvent(tid, #set_target_custom, tdata)
 end

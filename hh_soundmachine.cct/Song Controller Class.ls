@@ -1,9 +1,10 @@
-property pSampleList, pSongPlayer
+property pSampleList, pSongPlayer, pLengthCache
 
 on construct me
   pSampleList = [:]
   pSongPlayer = "song player"
   createObject(pSongPlayer, "Song Player Class")
+  pLengthCache = [:]
   return 
 end
 
@@ -35,13 +36,19 @@ on getSampleLoadingStatus me, tMemName
 end
 
 on getSampleLength me, tMemName
-  if getMember(tMemName) = VOID then
+  tLength = pLengthCache[tMemName]
+  if not voidp(tLength) then
+    return tLength
+  end if
+  tmember = getMember(tMemName)
+  if tmember = 0 then
     return 0
   end if
-  if getMember(tMemName).type <> #sound then
+  if tmember.type <> #sound then
     return 0
   end if
-  tLength = getMember(tMemName).duration
+  tLength = tmember.duration
+  pLengthCache[tMemName] = tLength
   return tLength
 end
 
@@ -54,11 +61,23 @@ on stopSamplePreview me
 end
 
 on playSong me, tSongData
-  return getObject(pSongPlayer).startSong(tSongData)
+  return getObject(pSongPlayer).startSong(1, tSongData, 1)
 end
 
-on stopSong me
-  return getObject(pSongPlayer).stopSong()
+on stopSong me, tStackIndex
+  return getObject(pSongPlayer).stopSong(tStackIndex, 1)
+end
+
+on initPlaylist me, tSongList, tPlayTime, tLoop
+  return getObject(pSongPlayer).initPlaylist(1, tSongList, tPlayTime, tLoop)
+end
+
+on addPlaylistSong me, tid, tLength
+  return getObject(pSongPlayer).addPlaylistSong(1, tid, tLength)
+end
+
+on updatePlaylistSong me, tid, tSongData
+  return getObject(pSongPlayer).updatePlaylistSong(tid, tSongData)
 end
 
 on startSampleDownload me, tMemberName, tParentId

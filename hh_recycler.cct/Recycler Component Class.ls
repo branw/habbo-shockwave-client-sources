@@ -254,11 +254,11 @@ on getMinutesLeftToRecycle me
   return tMinutesLeft
 end
 
-on addFurnitureToGivePool me, tClass, tID, tProps
-  if me.isFurniInRecycler(tID) then
+on addFurnitureToGivePool me, tClass, tid, tProps
+  if me.isFurniInRecycler(tid) then
     return 0
   end if
-  pGiveFurniPool.add([#class: tClass, #id: tID, #props: tProps])
+  pGiveFurniPool.add([#class: tClass, #id: tid, #props: tProps])
 end
 
 on isFurniInRecycler me, tStripID

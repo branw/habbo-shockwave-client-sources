@@ -70,12 +70,12 @@ on Refresh me, tTopic, tdata
   return 1
 end
 
-on setAvatarEventListener me, tName, tID
+on setAvatarEventListener me, tName, tid
   tRoom = getObject(#room_component)
   if tRoom = 0 then
     return 0
   end if
-  tObject = tRoom.getUserObject(tID)
+  tObject = tRoom.getUserObject(tid)
   if tObject = 0 then
     return 0
   end if
@@ -83,12 +83,12 @@ on setAvatarEventListener me, tName, tID
   return 1
 end
 
-on eventProcSnowwarUserRollOver me, tEvent, tID, tProp
+on eventProcSnowwarUserRollOver me, tEvent, tid, tProp
   tRoom = getObject(#room_component)
   if tRoom = 0 then
     return 0
   end if
-  tObject = tRoom.getUserObject(tID)
+  tObject = tRoom.getUserObject(tid)
   if tObject = 0 then
     return 0
   end if
@@ -97,7 +97,7 @@ on eventProcSnowwarUserRollOver me, tEvent, tID, tProp
     tName = tObject.getName()
     tOwnPlayer = 0
     if not tGameSystem.getSpectatorModeFlag() then
-      if tName = getObject(#session).GET(#userName) then
+      if tName = getObject(#session).get(#userName) then
         tOwnPlayer = 1
       else
         if tGameSystem.getGamestatus() = #game_started then

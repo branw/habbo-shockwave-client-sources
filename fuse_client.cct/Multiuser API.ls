@@ -14,20 +14,20 @@ on getMultiuserManager
   return tMgr.getManager(#multiuser_manager)
 end
 
-on createMultiuser tID, tHost, tPort
-  return getMultiuserManager().create(tID, tHost, tPort)
+on createMultiuser tid, tHost, tPort
+  return getMultiuserManager().create(tid, tHost, tPort)
 end
 
-on removeMultiuser tID
-  return getMultiuserManager().Remove(tID)
+on removeMultiuser tid
+  return getMultiuserManager().Remove(tid)
 end
 
-on getMultiuser tID
-  return getMultiuserManager().GET(tID)
+on getMultiuser tid
+  return getMultiuserManager().GET(tid)
 end
 
-on multiuserExists tID
-  return getMultiuserManager().exists(tID)
+on multiuserExists tid
+  return getMultiuserManager().exists(tid)
 end
 
 on printMultiusers

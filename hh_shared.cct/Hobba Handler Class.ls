@@ -48,15 +48,15 @@ end
 
 on handle_delete_cry me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tID = tConn.GetStrFrom()
-  me.getComponent().deleteCry(tID)
+  tid = tConn.GetStrFrom()
+  me.getComponent().deleteCry(tid)
 end
 
 on handle_picked_cry me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tID = tConn.GetStrFrom()
+  tid = tConn.GetStrFrom()
   tPicker = tConn.GetStrFrom()
-  tProps = [#picker: tPicker, #cry_id: tID]
+  tProps = [#picker: tPicker, #cry_id: tid]
   me.getComponent().receive_pickedCry(tProps)
 end
 
@@ -76,7 +76,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(274, #handle_cry_reply)
   tCmds = [:]
   tCmds.setaProp("PICK_CRYFORHELP", 48)
-  tCmds.setaProp("CRYFORHELP", 86)
+  tCmds.setaProp("CALL_FOR_HELP", 86)
   tCmds.setaProp("CHANGECALLCATEGORY", 198)
   tCmds.setaProp("MESSAGETOCALLER", 199)
   tCmds.setaProp("MODERATIONACTION", 200)

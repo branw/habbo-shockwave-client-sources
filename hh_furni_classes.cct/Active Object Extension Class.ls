@@ -337,24 +337,41 @@ on setState me, tNewState
       end if
     end if
     if tNewIndex <> 0 then
-      pStateIndex = tNewIndex
-      pState = tNewState
-      me.resetFrameNumbers()
-      repeat with tLayer = 1 to pLayerDataList.count
-        tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
-        if not voidp(tFrameList) then
-          tLoop = 1
-          if not voidp(tFrameList[#loop]) then
-            tLoop = tFrameList[#loop] - 1
-          end if
-          pLoopCountList[tLayer] = tLoop
-        end if
-      end repeat
-      me.solveMembers()
-      me.updateLocation()
-      return 1
+      exit repeat
     end if
   end repeat
+  if tNewIndex = 0 then
+    if pStateSequenceList.count > 0 then
+      tstate = pStateSequenceList[1]
+      if ilk(tstate) = #list then
+        if tstate.count > 0 then
+          tNewState = tstate[1]
+          tNewIndex = 1
+        end if
+      else
+        tNewState = tstate
+        tNewIndex = 1
+      end if
+    end if
+  end if
+  if tNewIndex <> 0 then
+    pStateIndex = tNewIndex
+    pState = tNewState
+    me.resetFrameNumbers()
+    repeat with tLayer = 1 to pLayerDataList.count
+      tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
+      if not voidp(tFrameList) then
+        tLoop = 1
+        if not voidp(tFrameList[#loop]) then
+          tLoop = tFrameList[#loop] - 1
+        end if
+        pLoopCountList[tLayer] = tLoop
+      end if
+    end repeat
+    me.solveMembers()
+    me.updateLocation()
+    return 1
+  end if
   return 0
 end
 

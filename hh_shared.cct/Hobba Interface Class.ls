@@ -1,4 +1,4 @@
-property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH
+property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH, pAudioAlertCheckBox
 
 on construct me
   pCryWindowID = getText("hobba_alert")
@@ -13,6 +13,7 @@ on construct me
   pModToolMode = "closed"
   pCryWndMode = "closed"
   pButtonLocH = 5
+  pAudioAlertCheckBox = 1
   registerMessage(#enterRoom, me.getID(), #showModtoolButton)
   registerMessage(#leaveRoom, me.getID(), #hideModtoolButton)
   registerMessage(#userClicked, me.getID(), #userClicked)
@@ -39,6 +40,9 @@ on deconstruct me
 end
 
 on ShowAlert me
+  if me.pAudioAlertCheckBox then
+    playSound("sound_cfh_received", #cut)
+  end if
   if pAlertSpr.ilk <> #sprite then
     pAlertSpr = sprite(reserveSprite(me.getID()))
     if pAlertSpr = sprite(0) then
@@ -98,9 +102,17 @@ end
 
 on hideAlert me
   if ilk(pAlertSpr, #sprite) then
-    pAlertSpr.memberNum = getmemnum("hobba_alert_0")
+    releaseSprite(pAlertSpr.spriteNum)
+    pAlertSpr = VOID
   end if
   return removeUpdate(me.getID())
+end
+
+on stopAlert me
+  if ilk(pAlertSpr, #sprite) then
+    pAlertSpr.memberNum = getmemnum("hobba_alert_0")
+    removeUpdate(me.getID())
+  end if
 end
 
 on showCryWnd me
@@ -123,12 +135,11 @@ on showCryWnd me
   if getObject(#session).GET("user_rights").getOne("fuse_see_chat_log_link") = 0 then
     tWndObj.getElement("hobba_seelog").hide()
   end if
-  return me.fillCryData(pCurrCryNum)
+  return me.updateCryData(pCurrCryNum)
 end
 
 on hideCryWnd me
   pCurrCryData = [:]
-  me.hideAlert()
   if windowExists(pCryWindowID) then
     pCryWndMode = "closed"
     return removeWindow(pCryWindowID)
@@ -146,10 +157,8 @@ on hideModToolWnd me
 end
 
 on updateCryWnd me
-  if pCryWndMode <> "browse" then
-    return 1
-  end if
-  return me.fillCryData(pCurrCryID)
+  me.updateCryData(pCurrCryID)
+  return 1
 end
 
 on showModToolWnd me
@@ -166,6 +175,7 @@ on showModToolWnd me
   if not tWndObj.merge("habbo_modtool_main.window") then
     return removeWindow(pModtoolWindowID)
   end if
+  me.initAudioAlertCheckBox()
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #keyDown)
@@ -280,14 +290,26 @@ on update me
   return 1
 end
 
-on fillCryData me, tCryNumOrID
-  if not windowExists(pCryWindowID) then
-    return 0
-  end if
+on updateCryData me, tCryNumOrID
   tCryDB = me.getComponent().getCryDataBase()
   tCryCount = tCryDB.count
   if tCryCount = 0 then
-    return error(me, "Hobba alerts not found!", #fillCryData, #minor)
+    me.hideAlert()
+    me.hideCryWnd()
+    return 1
+  end if
+  tUnpickedFound = 0
+  repeat with tCry in tCryDB
+    if tCry[#picker] = EMPTY then
+      tUnpickedFound = 1
+      exit repeat
+    end if
+  end repeat
+  if not tUnpickedFound then
+    me.stopAlert()
+  end if
+  if not windowExists(pCryWindowID) then
+    return 0
   end if
   if stringp(tCryNumOrID) then
     tCryID = tCryNumOrID
@@ -307,7 +329,7 @@ on fillCryData me, tCryNumOrID
       pCurrCryData = tCryDB[tCryID]
       pCurrCryNum = tCryNumOrID
     else
-      return error(me, "String or integer expected:" && tCryNumOrID, #fillCryData, #major)
+      return error(me, "String or integer expected:" && tCryNumOrID, #updateCryData, #major)
     end if
   end if
   if voidp(pCurrCryData) then
@@ -316,10 +338,20 @@ on fillCryData me, tCryNumOrID
     else
       tNewID = tCryDB.getPropAt(count(tCryDB))
     end if
-    return me.fillCryData(tNewID)
+    return me.updateCryData(tNewID)
   else
     pCurrCryID = tCryID
   end if
+  if pCryWndMode <> "browse" then
+    return 1
+  end if
+  me.redrawCryWindow()
+  return 1
+end
+
+on redrawCryWindow me
+  tCryDB = me.getComponent().getCryDataBase()
+  tCryCount = tCryDB.count
   tName = pCurrCryData[#sender]
   tPlace = pCurrCryData[#roomname]
   tMsg = pCurrCryData[#Msg]
@@ -351,7 +383,29 @@ on fillCryData me, tCryNumOrID
   else
     tWndObj.getElement("hobba_pickedby").setText(getText("hobba_pickedby") && pCurrCryData.picker)
   end if
-  return 1
+end
+
+on initAudioAlertCheckBox me
+  if not windowExists(pModtoolWindowID) then
+    return 0
+  end if
+  tWndObj = getWindow(pModtoolWindowID)
+  if not tWndObj.elementExists("modtool_checkbox_audioalert") then
+    return 0
+  end if
+  if not memberExists("button.checkbox.off") then
+    return 0
+  end if
+  if not memberExists("button.checkbox.on") then
+    return 0
+  end if
+  tOffImg = getMember("button.checkbox.off").image
+  tOnImg = getMember("button.checkbox.on").image
+  if me.pAudioAlertCheckBox then
+    tWndObj.getElement("modtool_checkbox_audioalert").feedImage(tOnImg)
+  else
+    tWndObj.getElement("modtool_checkbox_audioalert").feedImage(tOffImg)
+  end if
 end
 
 on InitializeBanCheckBoxes me
@@ -409,21 +463,29 @@ on checkBoxClicked me, ttype
     return 0
   end if
   tWndObj = getWindow(pModtoolWindowID)
-  if ttype = "ip" then
-    pModToolCheckBoxes[1] = not pModToolCheckBoxes[1]
-    if pModToolCheckBoxes[1] then
-      tWndObj.getElement("modtool_checkbox_ip").feedImage(tMemOn.image)
-    else
-      tWndObj.getElement("modtool_checkbox_ip").feedImage(tMemOff.image)
-    end if
-  else
-    pModToolCheckBoxes[2] = not pModToolCheckBoxes[2]
-    if pModToolCheckBoxes[2] then
-      tWndObj.getElement("modtool_checkbox_computer").feedImage(tMemOn.image)
-    else
-      tWndObj.getElement("modtool_checkbox_computer").feedImage(tMemOff.image)
-    end if
-  end if
+  case ttype of
+    "ip":
+      pModToolCheckBoxes[1] = not pModToolCheckBoxes[1]
+      if pModToolCheckBoxes[1] then
+        tWndObj.getElement("modtool_checkbox_ip").feedImage(tMemOn.image)
+      else
+        tWndObj.getElement("modtool_checkbox_ip").feedImage(tMemOff.image)
+      end if
+    "computer":
+      pModToolCheckBoxes[2] = not pModToolCheckBoxes[2]
+      if pModToolCheckBoxes[2] then
+        tWndObj.getElement("modtool_checkbox_computer").feedImage(tMemOn.image)
+      else
+        tWndObj.getElement("modtool_checkbox_computer").feedImage(tMemOff.image)
+      end if
+    "audioalert":
+      pAudioAlertCheckBox = not pAudioAlertCheckBox
+      if pAudioAlertCheckBox then
+        tWndObj.getElement("modtool_checkbox_audioalert").feedImage(tMemOn.image)
+      else
+        tWndObj.getElement("modtool_checkbox_audioalert").feedImage(tMemOff.image)
+      end if
+  end case
   return 1
 end
 
@@ -482,9 +544,9 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
       "close":
         return me.hideCryWnd()
       "hobba_prev":
-        return me.fillCryData(pCurrCryNum - 1)
+        return me.updateCryData(pCurrCryNum - 1)
       "hobba_next":
-        return me.fillCryData(pCurrCryNum + 1)
+        return me.updateCryData(pCurrCryNum + 1)
       "hobba_seelog":
         tUrlPrefix = getText("chatlog.url")
         if tUrlPrefix contains "http" then
@@ -537,6 +599,10 @@ on eventProcModToolWnd me, tEvent, tElemID, tParam
         me.checkBoxClicked("computer")
       "modtool_ok":
         return me.sendModCommand()
+      "modtool_checkbox_audioalert":
+        me.checkBoxClicked("audioalert")
+      "aa_checkbox_text":
+        me.checkBoxClicked("audioalert")
     end case
     return 0
   end if

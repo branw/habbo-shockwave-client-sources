@@ -16,16 +16,16 @@ on deconstruct me
   return 1
 end
 
-on create me, tID, tInitField
-  return me.initThread(tInitField, tID)
+on create me, tid, tInitField
+  return me.initThread(tInitField, tid)
 end
 
-on Remove me, tID
-  return me.closeThread(tID)
+on Remove me, tid
+  return me.closeThread(tid)
 end
 
-on GET me, tID
-  tThreadObj = pThreadList[tID]
+on GET me, tid
+  tThreadObj = pThreadList[tid]
   if voidp(tThreadObj) then
     return 0
   else
@@ -33,11 +33,11 @@ on GET me, tID
   end if
 end
 
-on exists me, tID
-  return not voidp(pThreadList[tID])
+on exists me, tid
+  return not voidp(pThreadList[tid])
 end
 
-on initThread me, tCastNumOrMemName, tID
+on initThread me, tCastNumOrMemName, tid
   if stringp(tCastNumOrMemName) then
     tMemNum = getResourceManager().getmemnum(tCastNumOrMemName)
     if tMemNum = 0 then
@@ -55,7 +55,7 @@ on initThread me, tCastNumOrMemName, tID
             pVarMngrObj.clear()
             pVarMngrObj.dump(member(tThreadField, i).number)
             if symbol(pVarMngrObj.GET("thread.id")) = tCastNumOrMemName then
-              return me.initThread(i, tID)
+              return me.initThread(i, tid)
               exit repeat
             end if
           end if
@@ -78,8 +78,8 @@ on initThread me, tCastNumOrMemName, tID
   end if
   pVarMngrObj.clear()
   pVarMngrObj.dump(member(tThreadField, tCastNum).number)
-  if symbolp(tID) then
-    tThreadID = tID
+  if symbolp(tid) then
+    tThreadID = tid
   else
     tThreadID = symbol(pVarMngrObj.GET("thread.id"))
   end if
@@ -149,10 +149,10 @@ on closeThread me, tCastNumOrID
       return error(me, "Invalid argument:" && tCastNumOrID, #closeThread, #major)
     end if
   end if
-  repeat with tID in tThreadKeys
-    tThread = pThreadList[tID]
+  repeat with tid in tThreadKeys
+    tThread = pThreadList[tid]
     if voidp(tThread) then
-      return error(me, "Thread not found:" && tID, #closeThread, #minor)
+      return error(me, "Thread not found:" && tid, #closeThread, #minor)
     end if
     tObjMgr = getObjectManager()
     if objectp(tThread.interface) then
@@ -164,7 +164,7 @@ on closeThread me, tCastNumOrID
     if objectp(tThread.handler) then
       tObjMgr.Remove(tThread.handler.getID())
     end if
-    pThreadList.deleteProp(tID)
+    pThreadList.deleteProp(tid)
   end repeat
   return 1
 end
@@ -182,16 +182,16 @@ on print me
   end repeat
 end
 
-on buildThreadObj me, tID, tClassList, tThreadObj
+on buildThreadObj me, tid, tClassList, tThreadObj
   tObject = VOID
   tTemp = VOID
   tBase = pObjBaseCls.new()
   tBase.construct()
   tBase[#ancestor] = tThreadObj
-  tBase.setID(tID)
+  tBase.setID(tid)
   tResMgr = getResourceManager()
   tObjMgr = getObjectManager()
-  tObjMgr.registerObject(tID, tBase)
+  tObjMgr.registerObject(tid, tBase)
   tClassList.addAt(1, tBase)
   repeat with tClass in tClassList
     if objectp(tClass) then
@@ -200,7 +200,7 @@ on buildThreadObj me, tID, tClassList, tThreadObj
     else
       tMemNum = tResMgr.getmemnum(tClass)
       if tMemNum < 1 then
-        tObjMgr.unregisterObject(tID)
+        tObjMgr.unregisterObject(tid)
         return error(me, "Script not found:" && tMemNum, #buildThreadObj, #major)
       end if
       tObject = script(tMemNum).new()
@@ -208,8 +208,8 @@ on buildThreadObj me, tID, tClassList, tThreadObj
     end if
     tObject[#ancestor] = tTemp
     tTemp = tObject
-    tObjMgr.unregisterObject(tID)
-    tObjMgr.registerObject(tID, tObject)
+    tObjMgr.unregisterObject(tid)
+    tObjMgr.registerObject(tid, tObject)
     if tInitFlag then
       tObject.construct()
     end if

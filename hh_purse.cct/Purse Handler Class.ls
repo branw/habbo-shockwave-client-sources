@@ -15,7 +15,7 @@ on handle_purse me, tMsg
       me.getInterface().updatePurseSaldo()
       executeMessage(#updateCreditCount, tCredits)
       if tPlaySnd then
-        playSound("naw_snd_cash")
+        puppetSound(3, getmemnum("naw_snd_cash"))
       end if
       return 1
     209:

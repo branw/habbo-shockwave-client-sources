@@ -134,15 +134,15 @@ on setWallPaper me, ttype, tChange
   pWallProps = tWallData
   tDelim = the itemDelimiter
   the itemDelimiter = "_"
-  repeat with tID in pWallPreviewIdList
-    tPiece = tID.item[tID.item.count]
+  repeat with tid in pWallPreviewIdList
+    tPiece = tid.item[tid.item.count]
     tMem = "catalog_spaces_wall" & ttype & "_" & tPiece
     if memberExists(tMem) then
-      if tWndObj.elementExists(tID) then
+      if tWndObj.elementExists(tid) then
         tmember = member(getmemnum(tMem))
         tmember.paletteRef = member(getmemnum(tPalette))
         tImg = tmember.image
-        tElem = tWndObj.getElement(tID)
+        tElem = tWndObj.getElement(tid)
         tDestImg = tElem.getProperty(#image)
         tRect = tDestImg.rect
         tMatte = tImg.createMatte()
@@ -206,15 +206,15 @@ on setFloorPattern me, ttype, tChange
   if not tWndObj then
     return error(me, "Couldn't access catalogue window!", #setFloorPattern, #major)
   end if
-  repeat with tID in pFloorPreviewIdList
-    tPiece = tID.item[tID.item.count]
+  repeat with tid in pFloorPreviewIdList
+    tPiece = tid.item[tid.item.count]
     tMem = "catalog_spaces_floor" & ttype & "_" & tPiece
     if memberExists(tMem) then
-      if tWndObj.elementExists(tID) then
+      if tWndObj.elementExists(tid) then
         tmember = member(getmemnum(tMem))
         tmember.paletteRef = member(getmemnum(tPalette))
         tImg = tmember.image
-        tElem = tWndObj.getElement(tID)
+        tElem = tWndObj.getElement(tid)
         tDestImg = tElem.getProperty(#image)
         tRect = tDestImg.rect
         tMatte = tImg.createMatte()

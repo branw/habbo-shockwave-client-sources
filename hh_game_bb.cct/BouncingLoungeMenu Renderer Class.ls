@@ -41,8 +41,8 @@ on deconstruct me
   return 1
 end
 
-on defineWindow me, tID
-  pMainWindowId = tID
+on defineWindow me, tid
+  pMainWindowId = tid
   return 1
 end
 

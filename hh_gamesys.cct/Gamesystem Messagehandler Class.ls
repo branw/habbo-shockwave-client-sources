@@ -8,7 +8,7 @@ on deconstruct me
   return me.regMsgList(0)
 end
 
-on defineClient me, tID
+on defineClient me, tid
   return 1
 end
 
@@ -72,11 +72,11 @@ on regMsgList me, tBool
   tCmds.setaProp("REJOINGAME", 172)
   tCmds.setaProp("REQUESTFULLSTATUSUPDATE", 173)
   if tBool then
-    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   end if
   return 1
 end

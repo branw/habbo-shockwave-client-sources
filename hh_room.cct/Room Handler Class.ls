@@ -615,11 +615,11 @@ end
 on handle_idata me, tMsg
   tDelim = the itemDelimiter
   the itemDelimiter = TAB
-  tID = integer(tMsg.content.line[1].item[1])
+  tid = integer(tMsg.content.line[1].item[1])
   ttype = tMsg.content.line[1].item[2]
   tText = tMsg.content.line[1].item[2] & RETURN & tMsg.content.line[2..tMsg.content.line.count]
   the itemDelimiter = tDelim
-  executeMessage(symbol("itemdata_received" & tID), [#id: tID, #text: tText, #type: ttype])
+  executeMessage(symbol("itemdata_received" & tid), [#id: tid, #text: tText, #type: ttype])
 end
 
 on handle_trade_items me, tMsg
@@ -708,17 +708,17 @@ on handle_doordeleted me, tMsg
 end
 
 on handle_dice_value me, tMsg
-  tID = tMsg.content.word[1]
+  tid = tMsg.content.word[1]
   if tMsg.content.word.count = 1 then
     tValue = -1
   else
-    tValue = integer(tMsg.content.word[2] - tID * 38)
+    tValue = integer(tMsg.content.word[2] - tid * 38)
     if tValue > 6 then
       tValue = 0
     end if
   end if
-  if me.getComponent().activeObjectExists(tID) then
-    call(#diceThrown, [me.getComponent().getActiveObject(tID)], tValue)
+  if me.getComponent().activeObjectExists(tid) then
+    call(#diceThrown, [me.getComponent().getActiveObject(tid)], tValue)
   end if
 end
 
@@ -1067,6 +1067,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_SPECTATOR_AMOUNT", 216)
   tCmds.setaProp("GET_GROUP_BADGES", 230)
   tCmds.setaProp("GET_GROUP_DETAILS", 231)
+  tCmds.setaProp("SPIN_WHEEL_OF_FORTUNE", 247)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

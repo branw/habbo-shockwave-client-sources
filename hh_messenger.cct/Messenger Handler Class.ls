@@ -176,7 +176,7 @@ on handle_messenger_message me, tMsg
   if tdata <> 0 then
     me.getComponent().receive_Message(tdata)
   end if
-  playSound("con_new_message")
+  puppetSound(3, getmemnum("con_new_message"))
   return 1
 end
 
@@ -193,7 +193,7 @@ on handle_messenger_messages me, tMsg
     end if
   end repeat
   if tMessageCount > 1 then
-    playSound("con_new_message")
+    puppetSound(3, getmemnum("con_new_message"))
   end if
   return 1
 end
@@ -396,6 +396,7 @@ on get_buddy_request me, tMsg
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#name] = tConn.GetStrFrom()
+  tdata[#webID] = tConn.GetStrFrom()
   return tdata
 end
 

@@ -62,21 +62,21 @@ on showprogram me, tMsg
   end if
 end
 
-on curtains me, tID, tCommand
+on curtains me, tid, tCommand
   case tCommand of
     "open":
       tmember = member(getmemnum("dew_verho_auki"))
-      tlocz = pCurtainsLocZ[tID] - 2000
+      tlocz = pCurtainsLocZ[tid] - 2000
     "close":
       tmember = member(getmemnum("dew_verho_kiinni"))
-      tlocz = pCurtainsLocZ[tID] - 1000
+      tlocz = pCurtainsLocZ[tid] - 1000
   end case
   tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
   if tRoomVis = 0 then
     return 0
   end if
-  tRoomVis.getSprById(tID).setMember(tmember)
-  tRoomVis.getSprById(tID).locZ = tlocz
+  tRoomVis.getSprById(tid).setMember(tmember)
+  tRoomVis.getSprById(tid).locZ = tlocz
   return 1
 end
 

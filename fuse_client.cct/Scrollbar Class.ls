@@ -270,8 +270,11 @@ on sendAdjustOffsetTo me, tNewOffset
   if abs(pScrollOffset - tNewOffset) < pScrollStep and tNewOffset < pMaxOffset and tNewOffset > 0 then
     return 1
   end if
-  if tNewOffset <= pMaxOffset then
+  if tNewOffset < pMaxOffset then
     pScrollOffset = tNewOffset
+    if pScrollStep > 0 then
+      pScrollOffset = pScrollOffset / pScrollStep * pScrollStep
+    end if
   else
     pScrollOffset = pMaxOffset
   end if

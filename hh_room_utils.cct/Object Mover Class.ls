@@ -585,8 +585,8 @@ on checkObjectExists me
   end if
 end
 
-on objectFinalized me, tID
-  if pActive and pClientID = tID then
+on objectFinalized me, tid
+  if pActive and pClientID = tid then
     tClientID = pClientID
     tStripID = pStripID
     tObjType = pObjType

@@ -118,14 +118,14 @@ on getNodeInfo me, tNodeId, tCategoryId
   return 0
 end
 
-on getTreeInfoFor me, tID
-  if tID = VOID then
+on getTreeInfoFor me, tid
+  if tid = VOID then
     return 0
   end if
-  if pCategoryIndex[tID] = VOID then
+  if pCategoryIndex[tid] = VOID then
     return 0
   end if
-  return pCategoryIndex[tID]
+  return pCategoryIndex[tid]
 end
 
 on setNodeProperty me, tNodeId, tProp, tValue
@@ -148,11 +148,11 @@ on getNodeProperty me, tNodeId, tProp
   return tNodeInfo.getaProp(tProp)
 end
 
-on updateInterface me, tID
-  if tID = #own or tID = #src or tID = #fav then
-    return me.feedNewRoomList(tID)
+on updateInterface me, tid
+  if tid = #own or tid = #src or tid = #fav then
+    return me.feedNewRoomList(tid)
   else
-    return me.feedNewRoomList(tID & "/" & me.getCurrentNodeMask())
+    return me.feedNewRoomList(tid & "/" & me.getCurrentNodeMask())
   end if
 end
 
@@ -353,12 +353,12 @@ on checkCacheForNode me, tNodeId
   return 0
 end
 
-on feedNewRoomList me, tID
-  if tID = VOID then
+on feedNewRoomList me, tid
+  if tid = VOID then
     return 0
   end if
-  tNodeInfo = me.getNodeInfo(tID)
-  if not listp(tNodeInfo) or not me.checkCacheForNode(tID) then
+  tNodeInfo = me.getNodeInfo(tid)
+  if not listp(tNodeInfo) or not me.checkCacheForNode(tid) then
     return me.callNodeUpdate()
   end if
   me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
@@ -368,9 +368,9 @@ end
 on purgeNodeCacheExpList me
   repeat with i = 1 to pNodeCacheExpList.count
     if the milliSeconds - pNodeCacheExpList[i] > pUpdateInterval then
-      tID = pNodeCacheExpList.getPropAt(i)
+      tid = pNodeCacheExpList.getPropAt(i)
       pNodeCacheExpList.deleteAt(i)
-      pNodeCache.deleteProp(tID)
+      pNodeCache.deleteProp(tid)
     end if
   end repeat
 end

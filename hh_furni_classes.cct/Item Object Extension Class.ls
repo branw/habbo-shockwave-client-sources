@@ -131,8 +131,11 @@ on update me
               else
                 pFrameNumberList2[tLayer] = pFrameNumberList[tLayer]
               end if
-              if pFrameNumberList2[tLayer] < 0 then
-                pFrameNumberList2[tLayer] = random(abs(pFrameNumberList2[tLayer]))
+              if not voidp(tFrameList[#blend]) then
+                tBlendList = tFrameList[#blend]
+                if tBlendList.count >= pFrameNumberList2[tLayer] then
+                  me.pSprList[tLayer].blend = tBlendList[pFrameNumberList2[tLayer]]
+                end if
               end if
             end if
           end if
@@ -332,22 +335,39 @@ on setState me, tNewState
       end if
     end if
     if tNewIndex <> 0 then
-      pStateIndex = tNewIndex
-      pState = tNewState
-      me.resetFrameNumbers()
-      repeat with tLayer = 1 to pLayerDataList.count
-        tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
-        if not voidp(tFrameList) then
-          tLoop = 1
-          if not voidp(tFrameList[#loop]) then
-            tLoop = tFrameList[#loop] - 1
-          end if
-          pLoopCountList[tLayer] = tLoop
-        end if
-      end repeat
-      return 1
+      exit repeat
     end if
   end repeat
+  if tNewIndex = 0 then
+    if pStateSequenceList.count > 0 then
+      tstate = pStateSequenceList[1]
+      if ilk(tstate) = #list then
+        if tstate.count > 0 then
+          tNewState = tstate[1]
+          tNewIndex = 1
+        end if
+      else
+        tNewState = tstate
+        tNewIndex = 1
+      end if
+    end if
+  end if
+  if tNewIndex <> 0 then
+    pStateIndex = tNewIndex
+    pState = tNewState
+    me.resetFrameNumbers()
+    repeat with tLayer = 1 to pLayerDataList.count
+      tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
+      if not voidp(tFrameList) then
+        tLoop = 1
+        if not voidp(tFrameList[#loop]) then
+          tLoop = tFrameList[#loop] - 1
+        end if
+        pLoopCountList[tLayer] = tLoop
+      end if
+    end repeat
+    return 1
+  end if
   return 0
 end
 
@@ -416,7 +436,7 @@ on resetFrameNumbers me
   pFrameNumberList = []
   pFrameNumberList2 = []
   repeat with i = 1 to max(me.pLocShiftList.count, pLayerDataList.count)
-    pFrameNumberList[i] = 1
+    pFrameNumberList[i] = 0
     pFrameNumberList2[i] = 1
     pFrameRepeatList[i] = 1
     pIsAnimatingList[i] = 1

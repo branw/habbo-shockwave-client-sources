@@ -26,8 +26,8 @@ end
 
 on processObject me, tObj, ttype
   tClass = me.getClassName(tObj[#class], tObj[#type])
-  tID = tObj[#id]
-  if voidp(tClass) or voidp(tID) then
+  tid = tObj[#id]
+  if voidp(tClass) or voidp(tid) then
     return tObj
   end if
   if ttype <> "active" and ttype <> "item" then
@@ -47,10 +47,10 @@ on processObject me, tObj, ttype
       pPlaceHolderList[ttype] = [:]
     end if
     tObjCopy = tObj.duplicate()
-    if voidp(pPlaceHolderList[ttype].findPos(tID)) then
-      pPlaceHolderList[ttype].addProp(tID, tObjCopy)
+    if voidp(pPlaceHolderList[ttype].findPos(tid)) then
+      pPlaceHolderList[ttype].addProp(tid, tObjCopy)
     else
-      pPlaceHolderList[ttype][tID] = tObjCopy
+      pPlaceHolderList[ttype][tid] = tObjCopy
     end if
     tAssetType = EMPTY
     if ttype = "active" then
@@ -78,35 +78,35 @@ on downloadCompleted me, tClassID, tSuccess
       tObj = tPlaceHolderList[tIndex]
       tClass = me.getClassName(tObj[#class], tObj[#type])
       if tClass = tClassID then
-        tID = tObj[#id]
+        tid = tObj[#id]
         tExists = 0
         if tTypeName = "active" then
-          tExists = getThread(#room).getComponent().activeObjectExists(tID)
+          tExists = getThread(#room).getComponent().activeObjectExists(tid)
         else
           if tTypeName = "item" then
-            tExists = getThread(#room).getComponent().itemObjectExists(tID)
+            tExists = getThread(#room).getComponent().itemObjectExists(tid)
           end if
         end if
         if tExists and tSuccess then
           if tTypeName = "active" then
             getThread(#room).getComponent().validateActiveObjects(tObj)
             if not voidp(tObj.findPos(#stripId)) then
-              getThread(#room).getComponent().getActiveObject(tID).setaProp(#stripId, tObj[#stripId])
+              getThread(#room).getComponent().getActiveObject(tid).setaProp(#stripId, tObj[#stripId])
             end if
           else
             if tTypeName = "item" then
               getThread(#room).getComponent().validateItemObjects(tObj)
               if not voidp(tObj.findPos(#stripId)) then
-                getThread(#room).getComponent().getItemObject(tID).setaProp(#stripId, tObj[#stripId])
+                getThread(#room).getComponent().getItemObject(tid).setaProp(#stripId, tObj[#stripId])
               end if
             end if
           end if
-          me.processMessageBuffer(tID, ttype)
+          me.processMessageBuffer(tid, ttype)
           tUpdated = 1
-          executeMessage(#objectFinalized, tID)
+          executeMessage(#objectFinalized, tid)
         else
           if not voidp(pMessageBuffer[ttype]) then
-            pMessageBuffer[ttype].deleteProp(tID)
+            pMessageBuffer[ttype].deleteProp(tid)
           end if
         end if
         tPlaceHolderList.deleteAt(tIndex)
@@ -143,31 +143,31 @@ on downloadObject me, tdata
   return 1
 end
 
-on removeObject me, tID, ttype
+on removeObject me, tid, ttype
   if not voidp(pPlaceHolderList[ttype]) then
-    pPlaceHolderList[ttype].deleteProp(tID)
+    pPlaceHolderList[ttype].deleteProp(tid)
   end if
   if not voidp(pMessageBuffer[ttype]) then
-    pMessageBuffer[ttype].deleteProp(tID)
+    pMessageBuffer[ttype].deleteProp(tid)
   end if
 end
 
-on bufferMessage me, tMsg, tID, ttype
+on bufferMessage me, tMsg, tid, ttype
   if not listp(tMsg) then
     return 0
   end if
   tSubject = tMsg[#subject]
-  if voidp(tID) or voidp(ttype) or voidp(tSubject) then
+  if voidp(tid) or voidp(ttype) or voidp(tSubject) then
     return 0
   end if
   if voidp(pPlaceHolderList[ttype]) or voidp(pMessageBuffer[ttype]) then
     return 0
   end if
-  if not voidp(pPlaceHolderList[ttype].findPos(tID)) then
-    if voidp(pMessageBuffer[ttype].findPos(tID)) then
-      pMessageBuffer[ttype][tID] = []
+  if not voidp(pPlaceHolderList[ttype].findPos(tid)) then
+    if voidp(pMessageBuffer[ttype].findPos(tid)) then
+      pMessageBuffer[ttype][tid] = []
     end if
-    tBuffer = pMessageBuffer[ttype][tID]
+    tBuffer = pMessageBuffer[ttype][tid]
     repeat with tIndex = 1 to tBuffer.count
       tMsg_old = tBuffer[tIndex]
       tSubjectOld = tMsg_old[#subject]
@@ -176,18 +176,18 @@ on bufferMessage me, tMsg, tID, ttype
         exit repeat
       end if
     end repeat
-    pMessageBuffer[ttype][tID].add(tMsg)
+    pMessageBuffer[ttype][tid].add(tMsg)
   end if
 end
 
-on processMessageBuffer me, tID, ttype
-  if voidp(tID) or voidp(ttype) then
+on processMessageBuffer me, tid, ttype
+  if voidp(tid) or voidp(ttype) then
     return 0
   end if
   if voidp(pMessageBuffer[ttype]) then
     return 0
   end if
-  tBuffer = pMessageBuffer[ttype].getaProp(tID)
+  tBuffer = pMessageBuffer[ttype].getaProp(tid)
   if not voidp(tBuffer) then
     repeat with tMsg in tBuffer
       tSubject = tMsg[#subject]
@@ -217,7 +217,7 @@ on processMessageBuffer me, tID, ttype
         end repeat
       end if
     end repeat
-    pMessageBuffer[ttype].deleteProp(tID)
+    pMessageBuffer[ttype].deleteProp(tid)
   end if
   return 1
 end
