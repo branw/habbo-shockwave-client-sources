@@ -25,19 +25,8 @@ on hideLinks me
 end
 
 on update me
-  tWindowList = getWindowIDList()
-  tPosTutor = tWindowList.getPos(me.pTutorWindowID)
-  if tPosTutor > 0 then
-    tWindowList.deleteAt(tPosTutor)
-  end if
-  tPosBubble = tWindowList.getPos(me.pBubble.getProperty(#windowID))
-  if tPosBubble > 0 then
-    tWindowList.deleteAt(tPosBubble)
-  end if
-  tWindowList.add(me.pTutorWindowID)
-  tWindowList.add(me.pBubble.getProperty(#windowID))
-  getWindowManager().reorder(tWindowList)
   me.pBubble.update()
+  return [me.pTutorWindowID, me.pBubble.getProperty(#windowID)]
 end
 
 on setProperties me, tProperties
