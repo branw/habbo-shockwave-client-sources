@@ -41,7 +41,7 @@ on updateGroupInformation me, tGroupsArr
       end if
     end repeat
     pGroupData[tID] = tCombinedData
-    if pLastPendingData[#groupid] = tID then
+    if pLastPendingData[#groupID] = tID then
       me.showUsersInfo(pLastPendingData[#userindex])
       pGroupData[tID][#download] = #done
       pLastPendingData = [:]
@@ -136,7 +136,7 @@ on showUsersInfo me, tUserIndex
   if voidp(tuser) then
     return 0
   end if
-  tGroupId = tuser.getProperty(#groupid)
+  tGroupId = tuser.getProperty(#groupID)
   tGroupId = string(tGroupId)
   tGroupStatus = tuser.getProperty(#groupstatus)
   if tGroupId = EMPTY then
@@ -146,12 +146,12 @@ on showUsersInfo me, tUserIndex
     return 0
   end if
   if voidp(pGroupData[tGroupId]) then
-    pLastPendingData = [#userindex: tUserIndex, #groupid: tGroupId]
+    pLastPendingData = [#userindex: tUserIndex, #groupID: tGroupId]
     getConnection(getVariable("connection.info.id")).send("GET_GROUP_DETAILS", [#integer: integer(tGroupId)])
     return 0
   end if
   if voidp(pGroupData[tGroupId][#name]) then
-    pLastPendingData = [#userindex: tUserIndex, #groupid: tGroupId]
+    pLastPendingData = [#userindex: tUserIndex, #groupID: tGroupId]
     getConnection(getVariable("connection.info.id")).send("GET_GROUP_DETAILS", [#integer: integer(tGroupId)])
     return 0
   end if

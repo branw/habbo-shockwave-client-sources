@@ -3,6 +3,14 @@ property pConvList, pDigits, pUsesUTF8, pUTF8ObjectName, pUTF8Object, pUnicodeDi
 on construct me
   pConvList = [:]
   pDigits = "0123456789ABCDEF"
+  if value(_player.productVersion) >= 11 then
+    pUnicodeDirector = 1
+    setVariable("char.conversion.mac", [:])
+    setVariable("char.conversion.win", [:])
+  else
+    pUnicodeDirector = 0
+  end if
+  return 1
   me.initConvList()
   pUsesUTF8 = VOID
   pUTF8ObjectName = "Localized UTF8 converter"
@@ -12,8 +20,6 @@ on construct me
   else
     pUTF8Object = VOID
   end if
-  pUnicodeDirector = value(_player.productVersion) >= 11
-  return 1
 end
 
 on convertToPropList me, tStr, tDelim
@@ -422,6 +428,11 @@ on convertFromUnicode me, tUnicodeData
 end
 
 on initConvList me
+  if pUnicodeDirector then
+    setVariable("char.conversion.mac", [:])
+    setVariable("char.conversion.win", [:])
+    return 1
+  end if
   if the platform contains "win" then
     tMachineType = ".win"
   else

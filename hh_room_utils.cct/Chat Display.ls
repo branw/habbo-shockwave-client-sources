@@ -1,4 +1,4 @@
-property pFreeChatItemList, pReservedChatItemList, pMarginFromScreenTop, pBalloonsVisible, pAutoScrollOn, pAutoScrollAmountPx, pAutoScrolledNow, pScrollDelayTime, pScrollDelayStartTime, pMessageBuffer, pUserCache, pChatItemCount
+property pFreeChatItemList, pReservedChatItemList, pMarginFromScreenTop, pBalloonsVisible, pAutoScrollOn, pAutoScrollAmountPx, pAutoScrolledNow, pScrollDelayTime, pScrollDelayStartTime, pMessageBuffer, pUserCache, pChatItemCount, pMaximumChatBufferSize, pSpeedUpChatBufferLim, pForceScrollAmount, pScrollSpdMultiplier
 
 on construct me
   pFreeChatItemList = []
@@ -10,6 +10,15 @@ on construct me
   pScrollDelayTime = getVariableValue("chat.scroll.delay", 5000)
   pAutoScrolledNow = 0
   pChatItemCount = 0
+  pMaximumChatBufferSize = 7
+  if variableExists("chat.buffersize.maximum") then
+    getVariableValue("chat.buffersize.maximum")
+  end if
+  pSpeedUpChatBufferLim = 2
+  if variableExists("chat.buffersize.speedup") then
+    getVariableValue("chat.buffersize.speedup")
+  end if
+  pScrollSpdMultiplier = 1.0
   pMessageBuffer = []
   pUserCache = []
   registerMessage(#enterRoom, me.getID(), #startUpdate)
@@ -187,8 +196,16 @@ on update me
   if pReservedChatItemList.count = 0 and pMessageBuffer.count = 0 then
     return 0
   end if
+  if pMessageBuffer.count > pSpeedUpChatBufferLim then
+    pScrollSpdMultiplier = 1.0 + float(pMessageBuffer.count - pSpeedUpChatBufferLim) * 0.5
+  else
+    pScrollSpdMultiplier = 1.0
+  end if
   if pAutoScrollOn then
-    tOffV = 3
+    tOffV = integer(3.0 * pScrollSpdMultiplier)
+    if tOffV + pAutoScrolledNow > pAutoScrollAmountPx then
+      tOffV = pAutoScrollAmountPx - pAutoScrolledNow
+    end if
     pAutoScrolledNow = pAutoScrolledNow + tOffV
     me.moveAllItemsUpBy(-1 * tOffV)
     if pAutoScrolledNow >= pAutoScrollAmountPx then
@@ -205,6 +222,15 @@ on update me
           tSpaceAvailable = 0
         end if
       else
+        tSpaceAvailable = 1
+      end if
+      if not tSpaceAvailable and pMessageBuffer.count > pMaximumChatBufferSize then
+        repeat with k = 1 to pMessageBuffer.count - pMaximumChatBufferSize
+          me.moveAllItemsUpBy(-1 * pAutoScrollAmountPx)
+          if k <> 1 then
+            me.showNextChatMessage()
+          end if
+        end repeat
         tSpaceAvailable = 1
       end if
       if tSpaceAvailable then

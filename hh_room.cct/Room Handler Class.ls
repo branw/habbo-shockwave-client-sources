@@ -198,7 +198,7 @@ on handle_users me, tMsg
       "a":
         tList[tuser][#webID] = tdata
       "g":
-        tList[tuser][#groupid] = tdata
+        tList[tuser][#groupID] = tdata
       "t":
         tList[tuser][#groupstatus] = tdata
       otherwise:
@@ -941,7 +941,7 @@ on handle_group_membership_update me, tMsg
   tuser = me.getComponent().getUserObject(tUserIndex)
   if not voidp(tuser) then
     if tuser <> 0 then
-      tuser.setProperty(#groupid, tGroupId)
+      tuser.setProperty(#groupID, tGroupId)
       tuser.setProperty(#groupstatus, tStatus)
     end if
   end if
