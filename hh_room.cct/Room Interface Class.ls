@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pInfoStandName, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -28,6 +28,7 @@ on construct me
   pVisitorQueue = []
   pBannerLink = 0
   pSwapAnimations = []
+  pInfoStandName = VOID
   pLoadingBarID = 0
   pQueueCollection = []
   pModBadgeList = getVariableValue("moderator.badgelist")
@@ -431,10 +432,29 @@ on showObjectInfo me, tObjType
       tElem.feedImage(tProps[#image])
     end if
     me.updateInfoStandBadge(tProps[#badge])
+    if tObjType = "user" then
+      pInfoStandName = tProps[#name]
+    else
+      pInfoStandName = VOID
+    end if
     return 1
   else
     return me.hideObjectInfo()
   end if
+end
+
+on updateInfostandAvatar me, tUserObj
+  if call(#getClass, [tUserObj]) <> "user" then
+    return 1
+  end if
+  if tUserObj.getName() <> pInfoStandName then
+    return 1
+  end if
+  tSaveSelectedObj = pSelectedObj
+  pSelectedObj = tUserObj.getID()
+  me.showObjectInfo("user")
+  pSelectedObj = tSaveSelectedObj
+  return 1
 end
 
 on hideObjectInfo me
