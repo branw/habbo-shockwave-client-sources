@@ -213,7 +213,7 @@ end
 
 on partListLoaded me, tParams, tSuccess
   if not tSuccess then
-    fatalError("load_failed", "part_list")
+    fatalError(["error": "part_list"])
     return error(me, "Failure while loading part list", #partListLoaded, #critical)
   end if
   tMemName = getVariable("external.figurepartlist.txt")
@@ -330,8 +330,9 @@ on loadAnimationSetXML me
 end
 
 on partSetLoaded me, tParams, tSuccess
+  sendProcessTracking(18)
   if not tSuccess then
-    fatalError("load_failed", "part_sets")
+    fatalError(["error": "part_sets"])
     return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
   end if
   tMemName = getVariable("figure.partsets.xml")
@@ -441,8 +442,9 @@ on partSetLoaded me, tParams, tSuccess
 end
 
 on actionSetLoaded me, tParams, tSuccess
+  sendProcessTracking(19)
   if not tSuccess then
-    fatalError("load_failed", "action_set")
+    fatalError(["error": "action_set"])
     return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
   end if
   tMemName = getVariable("figure.draworder.xml")
@@ -519,8 +521,9 @@ on actionSetLoaded me, tParams, tSuccess
 end
 
 on animationSetLoaded me, tParams, tSuccess
+  sendProcessTracking(20)
   if not tSuccess then
-    fatalError("load_failed", "animation_set")
+    fatalError(["error": "animation_set"])
     return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
   end if
   tAnimationData = [:]

@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime
 
 on construct me
   pFrozenAnimFrame = 0
@@ -52,7 +52,10 @@ on construct me
   pStatusInGroup = VOID
   pBaseLocZ = 0
   pPeopleSize = getVariable("human.size.64")
+  pRawFigure = [:]
   pPartOrderOld = EMPTY
+  pUserIsTyping = 0
+  pUserTypingStartTime = 0
   tSubSetList = ["figure", "head", "speak", "gesture", "eye", "handRight", "handLeft", "walk", "sit", "itemRight"]
   pPartListSubSet = [:]
   repeat with tSubSet in tSubSetList
@@ -86,6 +89,9 @@ on deconstruct me
   end if
   if not voidp(pShadowSpr) then
     releaseSprite(pShadowSpr.spriteNum)
+  end if
+  if not voidp(pTypingSprite) then
+    releaseSprite(pTypingSprite.spriteNum)
   end if
   if memberExists(me.getCanvasName()) then
     removeMember(me.getCanvasName())
@@ -423,6 +429,10 @@ on getProperty me, tPropID
       return pGroupId
     #groupstatus:
       return pStatusInGroup
+    #typing:
+      return pUserIsTyping
+    #peoplesize:
+      return pPeopleSize
   end case
   return 0
 end
@@ -435,6 +445,43 @@ on setProperty me, tPropID, tValue
       pStatusInGroup = tValue
   end case
   return 0
+end
+
+on setUserTypingStatus me, tValue
+  if tValue = 1 then
+    if ilk(pTypingSprite) <> #sprite then
+      pTypingSprite = sprite(reserveSprite(me.getID()))
+    end if
+    if ilk(pTypingSprite) = #sprite then
+      if pPeopleSize = "sh" then
+        pTypingSprite.member = getMember("chat_typing_bubble_small")
+      else
+        pTypingSprite.member = getMember("chat_typing_bubble")
+      end if
+      pTypingSprite.ink = 8
+      me.updateTypingSpriteLoc()
+    end if
+    pUserTypingStartTime = the milliSeconds
+  else
+    if ilk(pTypingSprite) = #sprite then
+      releaseSprite(pTypingSprite.spriteNum)
+      pTypingSprite = VOID
+      pUserTypingStartTime = 0
+    end if
+  end if
+end
+
+on updateTypingSpriteLoc me
+  if ilk(pTypingSprite) = #sprite and ilk(pSprite) = #sprite then
+    tOffset = point(57, -75)
+    tOffsetLocZ = 30
+    if pPeopleSize = "sh" then
+      tOffset = point(33, -40)
+    end if
+    pTypingSprite.loc = pSprite.loc + tOffset
+    pTypingSprite.visible = pSprite.visible
+    pTypingSprite.locZ = pSprite.locZ + tOffsetLocZ
+  end if
 end
 
 on getPartCarrying me, tPart
@@ -508,12 +555,14 @@ on show me
   pSprite.visible = 1
   pMatteSpr.visible = 1
   pShadowSpr.visible = 1
+  me.updateTypingSpriteLoc()
 end
 
 on hide me
   pSprite.visible = 0
   pMatteSpr.visible = 0
   pShadowSpr.visible = 0
+  me.updateTypingSpriteLoc()
 end
 
 on draw me, tRGB
@@ -559,6 +608,12 @@ on prepare me
   if pDancing then
     pAnimating = 1
     pChanges = 1
+  end if
+  tTimeNow = the milliSeconds
+  tMaxTypingTime = 30000
+  if tTimeNow - pUserTypingStartTime > tMaxTypingTime and pUserTypingStartTime <> 0 then
+    pUserTypingStartTime = 0
+    me.setUserTypingStatus(0)
   end if
 end
 
@@ -623,6 +678,7 @@ on render me, tForceUpdate
   end if
   pMatteSpr.locZ = pSprite.locZ + 1
   pShadowSpr.locZ = pSprite.locZ - 3
+  me.updateTypingSpriteLoc()
   pBuffer.fill(pBuffer.rect, pAlphaColor)
   repeat with tPart in pPartList
     tRectMod = [0, 0, 0, 0]
@@ -670,11 +726,16 @@ on getSpecificClearedFigurePartList me, tmodels, tListName
   return tPartList
 end
 
+on getRawFigure me
+  return pRawFigure
+end
+
 on setPartLists me, tmodels
   if voidp(pPartActionList) then
     me.resetAction()
   end if
   tmodels = tmodels.duplicate()
+  pRawFigure = tmodels
   tPartDefinition = me.getClearedFigurePartList(tmodels)
   tCurrentPartList = [:]
   repeat with i = pPartList.count down to 1

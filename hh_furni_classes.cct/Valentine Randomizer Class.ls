@@ -18,7 +18,6 @@ on define me, tProps
       pFlippedLayerDataList[tLayerCount - pStateCount * j + pStateCount + 1 - i] = tTmp
     end repeat
   end repeat
-  pRunning = 1
   return tRetVal
 end
 
@@ -26,6 +25,7 @@ on select me
   if the doubleClick then
     if me.pState = 1 or me.pState = pExtraStateCount and the milliSeconds - pRollStartMillis > 15 * 1000 then
       getThread(#room).getComponent().getRoomConnection().send("SET_RANDOM_STATE", [#integer: value(me.getID())])
+      pRunning = 1
     end if
   else
     return 0

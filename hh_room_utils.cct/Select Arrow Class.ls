@@ -83,7 +83,7 @@ on update me
   if tChanges then
     pLastLoc = tHumanLoc
     pLastDir = tHumanDir
-    tdir = [0, 1, 2, 3, 2, 1, 0, 3][tHumanDir + 1]
+    tdir = 2
     if tHumanDir < 4 then
       pArrowSpr.flipH = 0
     else

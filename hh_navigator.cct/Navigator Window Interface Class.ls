@@ -143,6 +143,13 @@ on showhidenavigator me, tHideOrRemove
   end if
 end
 
+on isOpen me
+  if windowExists(pWindowTitle) then
+    return getWindow(pWindowTitle).getProperty(#visible)
+  end if
+  return 0
+end
+
 on ChangeWindowView me, tWindowName
   if tWindowName = "nav_pr" then
     me.sendTrackingCall()

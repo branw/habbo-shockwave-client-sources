@@ -1,4 +1,4 @@
-property pBottomBarId, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID
+property pBottomBarId, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID, pPopupControllerID, pTypingTimeoutName
 
 on construct me
   pBottomBarId = "RoomBarID"
@@ -10,19 +10,26 @@ on construct me
   pFloodEnterCount = 0
   pTextIsHelpTExt = 0
   pBouncerID = #roombar_messenger_icon_bouncer
+  pPopupControllerID = #roombar_popup_controller
+  pTypingTimeoutName = "typing_state_timeout"
   registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
   registerMessage(#soundSettingChanged, me.getID(), #updateSoundButton)
+  registerMessage(#showInvitation, me.getID(), #showInvitation)
   return 1
 end
 
 on deconstruct me
+  if timeoutExists(pTypingTimeoutName) then
+    removeTimeout(pTypingTimeoutName)
+  end if
   unregisterMessage(#notify, me.getID())
   unregisterMessage(#updateMessageCount, me.getID())
   unregisterMessage(#updateBuddyrequestCount, me.getID())
   unregisterMessage(#objectFinalized, me.getID())
   unregisterMessage(#soundSettingChanged, me.getID())
+  unregisterMessage(#showInvitation, me.getID())
   return 1
 end
 
@@ -71,23 +78,29 @@ on applyChatHelpText me
   if not windowExists(pBottomBarId) then
     return 0
   end if
-  tWindowObj = getWindow(pBottomBarId)
-  tChatElem = tWindowObj.getElement("chat_field")
-  tChatElem.setText(getText("NUH_chat"))
-  pTextIsHelpTExt = 1
+  if windowExists(pBottomBarId) then
+    tWindowObj = getWindow(pBottomBarId)
+    if tWindowObj.elementExists("chat_field") then
+      tChatElem = tWindowObj.getElement("chat_field")
+      tChatElem.setText(getText("NUH_chat"))
+      pTextIsHelpTExt = 1
+    end if
+  end if
 end
 
 on setSpeechDropdown me, tMode
-  tWndObj = getWindow(pBottomBarId)
-  if tWndObj = 0 then
+  if windowExists(pBottomBarId) then
+    tWndObj = getWindow(pBottomBarId)
+    if tWndObj = 0 then
+      return 1
+    end if
+    tElem = tWndObj.getElement("int_speechmode_dropmenu")
+    if tElem = 0 then
+      return 1
+    end if
+    tElem.setSelection(tMode, 1)
     return 1
   end if
-  tElem = tWndObj.getElement("int_speechmode_dropmenu")
-  if tElem = 0 then
-    return 1
-  end if
-  tElem.setSelection(tMode, 1)
-  return 1
 end
 
 on setRollOverInfo me, tInfo
@@ -213,6 +226,36 @@ on updateSoundButton me
   end if
 end
 
+on showInvitation me, tInvitationData
+  tInvitation = createObject(#random, "Invitation Class")
+  tInvitation.show(tInvitationData, pBottomBarId, "int_messenger_image")
+end
+
+on setTypingState me, tstate
+  tTimeoutTime = 2000
+  if tstate = 0 then
+    if timeoutExists(pTypingTimeoutName) then
+      removeTimeout(pTypingTimeoutName)
+    else
+      me.sendTypingState(0)
+    end if
+  else
+    if timeoutExists(pTypingTimeoutName) then
+      removeTimeout(pTypingTimeoutName)
+    end if
+    createTimeout(pTypingTimeoutName, tTimeoutTime, #sendTypingState, me.getID(), 1, 1)
+  end if
+end
+
+on sendTypingState me, tstate
+  tConn = getConnection(#Info)
+  if tstate = 1 then
+    tConn.send("USER_START_TYPING")
+  else
+    tConn.send("USER_CANCEL_TYPING")
+  end if
+end
+
 on eventProcRoomBar me, tEvent, tSprID, tParam
   if tSprID = "chat_field" and (tEvent = #keyDown or tEvent = #mouseUp) then
     if pTextIsHelpTExt then
@@ -229,7 +272,8 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         return 1
       end if
     end if
-    case the keyCode of
+    tKeyCode = the keyCode
+    case tKeyCode of
       36, 76:
         if tChatField.getText() = EMPTY then
           return 1
@@ -267,10 +311,24 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           tComponent = getThread("new_user_help").getComponent()
           tComponent.setHelpItemClosed("chat")
         end if
+        if timeoutExists(pTypingTimeoutName) then
+          removeTimeout(pTypingTimeoutName)
+        end if
         tChatField.setText(EMPTY)
         return 1
+      51:
+        if tChatField.getText().length = 1 then
+          me.setTypingState(0)
+        end if
       117:
+        if tChatField.getText() <> EMPTY then
+          me.setTypingState(0)
+        end if
         tChatField.setText(EMPTY)
+      otherwise:
+        if tChatField.getText().length = 0 then
+          me.setTypingState(1)
+        end if
     end case
     return 0
   end if
@@ -388,5 +446,12 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           end if
         end if
     end case
+  end if
+  if tEvent = #mouseEnter or tEvent = #mouseLeave then
+    if not objectExists(pPopupControllerID) then
+      createObject(pPopupControllerID, "Popup Controller Class")
+    end if
+    tPopupController = getObject(pPopupControllerID)
+    tPopupController.handleEvent(tEvent, tSprID, tParam)
   end if
 end

@@ -1,10 +1,12 @@
-property pWindowTitle, pSwimSuitIndex, pSwimSuitModel, pSwimSuitColor, pBottomBarId, pWindowName, pChatmode, pSelectedObj, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSignImg, pSignState, pOldPosH, pOldPosV
+property pWindowTitle, pSwimSuitIndex, pSwimSuitModel, pSwimSuitColor, pBottomBarId, pWindowName, pChatmode, pSelectedObj, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSignImg, pSignState, pOldPosH, pOldPosV, pPopupControllerID, pTypingTimeoutName
 
 on construct me
   pWindowTitle = "pellehyppy"
   pBottomBarId = "RoomBarID"
   pSignState = VOID
   pChatmode = "CHAT"
+  pPopupControllerID = "Pool_Bar_Popup_Controller"
+  pTypingTimeoutName = "typing_state_timeout"
   if not objectExists("Figure_System_Pool") then
     createObject("Figure_System_Pool", ["OLD Figure System Class"])
     getObject("Figure_System_Pool").define(["type": "member", "source": "swimfigure_ids_"])
@@ -13,8 +15,14 @@ on construct me
 end
 
 on deconstruct me
+  if timeoutExists(pTypingTimeoutName) then
+    removeTimeout(pTypingTimeoutName)
+  end if
   if objectExists("Figure_System_Pool") then
     removeObject("Figure_System_Pool")
+  end if
+  if objectExists(pPopupControllerID) then
+    removeObject(pPopupControllerID)
   end if
   me.closeUimaKoppi()
   me.hideRoomBar()
@@ -176,6 +184,8 @@ on showRoomBar me, tRoomData
     tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #keyDown)
     tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseWithin)
     tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUpOutSide)
+    tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseEnter)
+    tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseLeave)
     executeMessage(#messageUpdateRequest)
     executeMessage(#buddyUpdateRequest)
     if tWndObj.elementExists("int_drop_vote") then
@@ -268,6 +278,31 @@ on flashMessengerIcon me
   return 1
 end
 
+on setTypingState me, tstate
+  tTimeoutTime = 2000
+  if tstate = 0 then
+    if timeoutExists(pTypingTimeoutName) then
+      removeTimeout(pTypingTimeoutName)
+    else
+      me.sendTypingState(0)
+    end if
+  else
+    if timeoutExists(pTypingTimeoutName) then
+      removeTimeout(pTypingTimeoutName)
+    end if
+    createTimeout(pTypingTimeoutName, tTimeoutTime, #sendTypingState, me.getID(), 1, 1)
+  end if
+end
+
+on sendTypingState me, tstate
+  tConn = getConnection(#Info)
+  if tstate = 1 then
+    tConn.send("USER_START_TYPING")
+  else
+    tConn.send("USER_CANCEL_TYPING")
+  end if
+end
+
 on eventProcRoomBar me, tEvent, tSprID, tParam
   tWndObj = getWindow(pBottomBarId)
   if tWndObj.getElement(tSprID).getProperty(#blend) < 100 then
@@ -309,10 +344,26 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
       end if
       getThread(#room).getComponent().sendChat(tChatField.getText())
       tChatField.setText(EMPTY)
+      if timeoutExists(pTypingTimeoutName) then
+        removeTimeout(pTypingTimeoutName)
+      end if
       return 1
     else
       if the keyCode = 117 then
+        if tChatField.getText() <> EMPTY then
+          me.setTypingState(0)
+        end if
         tChatField.setText(EMPTY)
+      else
+        if the keyCode = 51 then
+          if tChatField.getText().length = 1 then
+            me.setTypingState(0)
+          end if
+        else
+          if tChatField.getText().length = 0 then
+            me.setTypingState(1)
+          end if
+        end if
       end if
     end if
     return 0
@@ -332,6 +383,16 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           executeMessage(#openGeneralDialog, #help)
       end case
     end if
+  end if
+  if tSprID = "int_nav_image" then
+    if not objectExists(pPopupControllerID) then
+      pPopupController = createObject(pPopupControllerID, "Popup Controller Class")
+    end if
+    tPopupController = getObject(pPopupControllerID)
+    case tEvent of
+      #mouseEnter, #mouseLeave:
+        tPopupController.handleEvent(tEvent, tSprID, tParam)
+    end case
   end if
   if tEvent = #mouseDown then
     getWindow(pBottomBarId).lock(0)

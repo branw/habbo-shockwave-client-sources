@@ -41,9 +41,12 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
     else
     end if
     tWndObj.center()
-    if me.getGameSystem().getTournamentFlag() then
+    if me.getGameSystem().getTournamentFlag() or me.getGameSystem().getGameTicketsNotUsedFlag() then
       if tWndObj.elementExists("sw_gameprice") then
         tWndObj.getElement("sw_gameprice").hide()
+      end if
+      if tWndObj.elementExists("bb_win_gameList") then
+        tWndObj.getElement("bb_win_gameList").hide()
       end if
     end if
     tElem = tWndObj.getElement("gs_bar_cntDwn")
@@ -63,14 +66,22 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
     if me.getGameSystem() = 0 then
       return 0
     end if
-    tNumTickets = string(me.getGameSystem().getNumTickets())
-    if tNumTickets.length = 1 then
-      tNumTickets = "00" & tNumTickets
+    if me.getGameSystem().getGameTicketsNotUsedFlag() then
+      tElem.hide()
+      tElem = tWndObj.getElement("gs_amount_tickets_bg")
+      if tElem <> 0 then
+        tElem.hide()
+      end if
+    else
+      tNumTickets = string(me.getGameSystem().getNumTickets())
+      if tNumTickets.length = 1 then
+        tNumTickets = "00" & tNumTickets
+      end if
+      if tNumTickets.length = 2 then
+        tNumTickets = "0" & tNumTickets
+      end if
+      tElem.setText(tNumTickets)
     end if
-    if tNumTickets.length = 2 then
-      tNumTickets = "0" & tNumTickets
-    end if
-    tElem.setText(tNumTickets)
     return 1
   else
     return 0

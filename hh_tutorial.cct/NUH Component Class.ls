@@ -34,6 +34,8 @@ on setHelpItemClosed me, tHelpItemId
       tKey = 4
     "hand":
       tKey = 5
+    "invite":
+      tKey = 6
   end case
   if tKey <> EMPTY then
     tConn.send("MSG_REMOVE_ACCOUNT_HELP_TEXT", [#integer: tKey])
@@ -133,5 +135,36 @@ on tryToShowHelp me, tHelpId
         me.getInterface().showGenericHelp(tHelpId)
         pOpenHelps.add(tHelpId)
       end if
+    "invite":
+      me.checkHelpers()
   end case
+end
+
+on checkHelpers me
+  tConn = getConnection(getVariable("connection.info.id"))
+  if voidp(tConn) then
+    return error(me, "Connection not found.", #checkHelpers, #major)
+  end if
+  tConn.send("MSG_GET_TUTORS_AVAILABLE")
+end
+
+on showInviteWindow me
+  me.pOpenHelps.add("invite")
+  me.getInterface().showInviteWindow()
+end
+
+on sendInvitations me
+  tConn = getConnection(getVariable("connection.info.id"))
+  if voidp(tConn) then
+    return error(me, "Connection not found.", #sendInvitations, #major)
+  end if
+  tConn.send("MSG_INVITE_TUTORS")
+end
+
+on invitationExpired me
+  executeMessage(#alert, "invitation_expired")
+end
+
+on invitationExists me
+  executeMessage(#alert, "invitation_exists")
 end

@@ -289,8 +289,8 @@ on bubbleCheck me
   end if
   if tNewName <> pBubbleSongName then
     if tNewName <> EMPTY then
-      tMsg = [#command: "SHOUT", #id: pFurniID, #message: tNewName, #furni: 1]
-      executeMessage(#show_balloon, tMsg)
+      tMsg = [#command: "OBJECT", #id: pFurniID, #message: tNewName]
+      executeMessage(#showObjectMessage, tMsg)
     end if
     pBubbleSongName = tNewName
   end if

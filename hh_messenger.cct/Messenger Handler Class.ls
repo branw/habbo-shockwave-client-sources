@@ -177,7 +177,10 @@ on handle_follow_failed me, tMsg
       tTextKey = "console_follow_offline"
     2:
       tTextKey = "console_follow_hotelview"
+    3:
+      tTextKey = "console_follow_prevented"
   end case
+  return 0
   if threadExists(#room) then
     tRoomID = getThread(#room).getComponent().getRoomID()
     if tRoomID = EMPTY then
@@ -430,6 +433,26 @@ on get_user_list me, tMsg
   return tdata
 end
 
+on handle_invitation me, tMsg
+  tConn = tMsg.connection
+  if tConn = 0 then
+    return 0
+  end if
+  tInvitationData = [:]
+  tInvitationData.setaProp(#userID, tConn.GetStrFrom())
+  tInvitationData.setaProp(#name, tConn.GetStrFrom())
+  me.getComponent().showInvitation(tInvitationData)
+  return 1
+end
+
+on handle_invitation_expired me, tMsg
+  me.getComponent().hideInvitation()
+end
+
+on handle_invitation_follow_failed me, tMsg
+  me.getComponent().invitationFollowFailed()
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(3, #handle_ok)
@@ -448,6 +471,9 @@ on regMsgList me, tBool
   tMsgs.setaProp(314, #handle_buddy_request_list)
   tMsgs.setaProp(315, #handle_buddy_request_result)
   tMsgs.setaProp(349, #handle_follow_failed)
+  tMsgs.setaProp(355, #handle_invitation)
+  tMsgs.setaProp(359, #handle_invitation_follow_failed)
+  tMsgs.setaProp(360, #handle_invitation_expired)
   tCmds = [:]
   tCmds.setaProp("MESSENGERINIT", 12)
   tCmds.setaProp("MESSENGER_UPDATE", 15)
@@ -465,6 +491,8 @@ on regMsgList me, tBool
   tCmds.setaProp("MESSENGER_REPORTMESSAGE", 201)
   tCmds.setaProp("GET_BUDDY_REQUESTS", 233)
   tCmds.setaProp("FOLLOW_FRIEND", 262)
+  tCmds.setaProp("MSG_ACCEPT_TUTOR_INVITATION", 357)
+  tCmds.setaProp("MSG_REJECT_TUTOR_INVITATION", 358)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

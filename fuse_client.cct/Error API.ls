@@ -33,8 +33,8 @@ on error tObject, tMsg, tMethod, tErrorLevel
   return getErrorManager().error(tObject, tMsg, tMethod, tErrorLevel)
 end
 
-on fatalError tErrorType, tErrorValue
-  return getErrorManager().fatalError(tErrorType, tErrorValue)
+on fatalError tErrorData
+  return getErrorManager().fatalError(tErrorData)
 end
 
 on SystemAlert tObject, tMsg, tMethod

@@ -14,8 +14,24 @@ on deconstruct me
 end
 
 on handleDisconnect me, tMsg
+  tSession = getObject(#session)
+  tUserLoggedIn = 0
+  if objectp(tSession) then
+    tUserLoggedIn = tSession.GET("userLoggedIn")
+  end if
   error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleDisconnect, #dummy)
-  return me.getInterface().showDisconnect()
+  if tUserLoggedIn then
+    return me.getInterface().showDisconnect()
+  else
+    tErrorList = [:]
+    tErrorList["error"] = "socket_init"
+    tConnection = getConnection(getVariable("connection.info.id", #Info))
+    if tConnection <> VOID then
+      tErrorList["host"] = tConnection.getProperty(#host)
+      tErrorList["port"] = tConnection.getProperty(#port)
+    end if
+    return fatalError(tErrorList)
+  end if
 end
 
 on handleHello me, tMsg
@@ -438,7 +454,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(278, #handleEndCrypto)
   tMsgs.setaProp(287, #handleHotelLogout)
   tMsgs.setaProp(308, #handleSoundSetting)
-  tMsgs.setaProp(666, #handleLatencyTest)
+  tMsgs.setaProp(354, #handleLatencyTest)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
   tCmds.setaProp("VERSIONCHECK", 5)
@@ -457,8 +473,8 @@ on regMsgList me, tBool
   tCmds.setaProp("SECRETKEY", 207)
   tCmds.setaProp("GET_SOUND_SETTING", 228)
   tCmds.setaProp("SET_SOUND_SETTING", 229)
-  tCmds.setaProp("TEST_LATENCY", 666)
-  tCmds.setaProp("REPORT_LATENCY", 667)
+  tCmds.setaProp("TEST_LATENCY", 315)
+  tCmds.setaProp("REPORT_LATENCY", 316)
   tConn = getVariable("connection.info.id", #Info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

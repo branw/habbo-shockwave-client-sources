@@ -78,7 +78,7 @@ on assetDownloadCallbacks me, tAssetId, tSuccess
   if tSuccess = 0 then
     case tAssetId of
       "load_variables", "load_texts", "load_casts":
-        fatalError("loadFailed", tAssetId)
+        fatalError(["error": tAssetId])
     end case
     return 0
   end if
@@ -155,7 +155,7 @@ on updateState me, tstate
       sendProcessTracking(9)
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
       if tMemNum = 0 then
-        fatalError("loadFailed", tstate)
+        fatalError(["error": tstate])
         return 0
       else
         return registerDownloadCallback(tMemNum, #assetDownloadCallbacks, me.getID(), tstate)
@@ -211,7 +211,7 @@ on updateState me, tstate
       sendProcessTracking(12)
       tMemNum = queueDownload(tURL, tMemName, #field)
       if tMemNum = 0 then
-        fatalError("loadFailed", tstate)
+        fatalError(["error": tstate])
         return 0
       else
         return registerDownloadCallback(tMemNum, #assetDownloadCallbacks, me.getID(), tstate)

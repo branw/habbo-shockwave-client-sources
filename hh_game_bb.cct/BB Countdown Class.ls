@@ -34,17 +34,25 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
   end if
   pDuration = tDuration
   pEndTime = the milliSeconds + tMSecLeft
+  tGameSystem = me.getGameSystem()
+  if tGameSystem = 0 then
+    return 0
+  end if
   if createWindow(pWindowID, "bb_cdown.window") then
     tWndObj = getWindow(pWindowID)
-    if me.getGameSystem().getSpectatorModeFlag() then
+    if tGameSystem.getSpectatorModeFlag() then
       tElem = tWndObj.getElement("bb_button_cdown_exit")
       if tElem <> 0 then
         tElem.hide()
       end if
     end if
     tWndObj.center()
-    if me.getGameSystem().getTournamentFlag() then
+    if tGameSystem.getTournamentFlag() or tGameSystem.getGameTicketsNotUsedFlag() then
       tElem = tWndObj.getElement("bb_gameprice")
+      if tElem <> 0 then
+        tElem.hide()
+      end if
+      tElem = tWndObj.getElement("bb_gameprice_bg")
       if tElem <> 0 then
         tElem.hide()
       end if
@@ -60,17 +68,22 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
     if tElem = 0 then
       return 0
     end if
-    if me.getGameSystem() = 0 then
-      return 0
+    if tGameSystem.getGameTicketsNotUsedFlag() then
+      tElem.hide()
+      tElem = tWndObj.getElement("bb_amount_tickets_bg")
+      if tElem <> 0 then
+        tElem.hide()
+      end if
+    else
+      tNumTickets = string(tGameSystem.getNumTickets())
+      if tNumTickets.length = 1 then
+        tNumTickets = "00" & tNumTickets
+      end if
+      if tNumTickets.length = 2 then
+        tNumTickets = "0" & tNumTickets
+      end if
+      tElem.setText(tNumTickets)
     end if
-    tNumTickets = string(me.getGameSystem().getNumTickets())
-    if tNumTickets.length = 1 then
-      tNumTickets = "00" & tNumTickets
-    end if
-    if tNumTickets.length = 2 then
-      tNumTickets = "0" & tNumTickets
-    end if
-    tElem.setText(tNumTickets)
     me.setBar(0)
     createTimeout(pTimeOutID, 300, #setBar, me.getID())
     return 1

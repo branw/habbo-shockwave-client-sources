@@ -68,6 +68,18 @@ on setNumTickets me
   if tGameSystemObj = 0 then
     return error(me, "Gamesystem not found.", #setNumTickets)
   end if
+  if tGameSystemObj.getGameTicketsNotUsedFlag() then
+    tElem.hide()
+    tElem = tWndObj.getElement("gs_button_buytickets")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
+    tElem = tWndObj.getElement("bb_amount_tickets_bg")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
+    return 1
+  end if
   tNum = string(tGameSystemObj.getNumTickets())
   if tNum.length = 1 then
     tNum = "00" & tNum

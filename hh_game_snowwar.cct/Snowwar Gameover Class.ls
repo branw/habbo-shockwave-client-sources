@@ -111,14 +111,27 @@ on renderNumTickets me
   if me.getGameSystem() = 0 then
     return 0
   end if
-  tNumTickets = string(me.getGameSystem().getNumTickets())
-  if tNumTickets.length = 1 then
-    tNumTickets = "00" & tNumTickets
+  if me.getGameSystem().getGameTicketsNotUsedFlag() then
+    tElem.hide()
+    tElem = tWndObj.getElement("gs_amount_tickets_bg")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
+    tElem = tWndObj.getElement("gs_button_buytickets")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
+  else
+    tNumTickets = string(me.getGameSystem().getNumTickets())
+    if tNumTickets.length = 1 then
+      tNumTickets = "00" & tNumTickets
+    end if
+    if tNumTickets.length = 2 then
+      tNumTickets = "0" & tNumTickets
+    end if
+    tElem.setText(tNumTickets)
   end if
-  if tNumTickets.length = 2 then
-    tNumTickets = "0" & tNumTickets
-  end if
-  tElem.setText(tNumTickets)
+  return 1
 end
 
 on saveSortedScores me, tdata

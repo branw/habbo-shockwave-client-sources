@@ -25,6 +25,8 @@ on handleHelpItems me, tMsg
         tKey = "chat"
       5:
         tKey = "hand"
+      6:
+        tKey = "invite"
     end case
     if tKey <> EMPTY then
       tdata[tKey] = 1
@@ -33,11 +35,34 @@ on handleHelpItems me, tMsg
   me.getComponent().setHelpStatusData(tdata)
 end
 
+on handleTutorsAvailable me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tAreAvailable = tConn.GetIntFrom()
+  if not tAreAvailable then
+    return 0
+  end if
+  me.getComponent().showInviteWindow()
+  return 1
+end
+
+on handleInvitationExpired me, tMsg
+  me.getComponent().invitationExpired()
+end
+
+on handleInvitationExists me, tMsg
+  me.getComponent().invitationExists()
+end
+
 on registerServerMessages me, tBool
   tMsgs = [:]
   tMsgs.setaProp(352, #handleHelpItems)
+  tMsgs.setaProp(356, #handleTutorsAvailable)
+  tMsgs.setaProp(357, #handleInvitationExpired)
+  tMsgs.setaProp(358, #handleInvitationExists)
   tCmds = [:]
   tCmds.setaProp("MSG_REMOVE_ACCOUNT_HELP_TEXT", 313)
+  tCmds.setaProp("MSG_GET_TUTORS_AVAILABLE", 355)
+  tCmds.setaProp("MSG_INVITE_TUTORS", 356)
   if tBool then
     registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)

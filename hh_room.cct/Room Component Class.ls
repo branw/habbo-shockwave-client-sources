@@ -16,7 +16,7 @@ on construct me
   pPassiveObjList = [:]
   pItemObjList = [:]
   pFlatRatings = [#rate: -1, #Percent: 0]
-  pBalloonId = "Room Balloon"
+  pBalloonId = "Chat Manager"
   pClassContId = "Room Classes"
   pRoomPrgID = "Room Program"
   pRoomPollerID = "Room Poller"
@@ -34,7 +34,7 @@ on construct me
   pChatProps["hobbaCmds"] = getVariableValue("moderator.cmds")
   createObject(pClassContId, getClassVariable("variable.manager.class"))
   getObject(pClassContId).dump("fuse.object.classes", RETURN)
-  createObject(pBalloonId, "Balloon Manager")
+  createObject(pBalloonId, "Chat Manager")
   createObject(pAdSystemID, "Ad Manager")
   pCastLoaded = 0
   pPrvRoomsReady = 0
@@ -306,7 +306,8 @@ on removeUserObject me, tID
 end
 
 on getUserObject me, tID
-  return me.getRoomObject(tID, pUserObjList)
+  tObj = me.getRoomObject(tID, pUserObjList)
+  return tObj
 end
 
 on getUsersRoomId me, tUserName
@@ -571,9 +572,9 @@ on sendChat me, tChat
     if tChat.word[2] = "x" then
       if tSelected = EMPTY then
         tMode = "WHISPER"
-        tMsg = "User not found."
+        tMsg = getText("chat_user_not_found", "User not found.")
         tID = getObject(#session).GET("user_index")
-        me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tID, #message: tMsg])
+        me.getComponent().getBalloon().enterChatMessage(tMode, tID, tMsg)
         return 1
       end if
       tOffsetX = offset("x", tChat)
@@ -600,6 +601,13 @@ on setChatMode me, tMode, tUpdate
     me.getInterface().setSpeechDropdown(tMode)
   end if
   return 1
+end
+
+on setUserTypingStatus me, tUserID, tStatus
+  tUserObject = me.getUserObject(tUserID)
+  if tUserObject <> 0 then
+    tUserObject.setUserTypingStatus(tStatus)
+  end if
 end
 
 on print me
@@ -751,6 +759,15 @@ on updateSpectatorCount me, tSpectatorCount, tSpectatorMax
     return error(me, "Spectator System missing!", #updateSpectatorCount, #major)
   end if
   tModeMgrObj.updateSpectatorCount(tSpectatorCount, tSpectatorMax)
+end
+
+on highlightUser me, tUserID
+  repeat with tuser in pUserObjList
+    if tuser.getWebID() = tUserID then
+      me.getInterface().eventProcUserObj(#mouseUp, tuser.getID())
+      exit repeat
+    end if
+  end repeat
 end
 
 on loadRoomCasts me

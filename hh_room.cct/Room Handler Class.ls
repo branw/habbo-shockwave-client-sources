@@ -1,4 +1,4 @@
-property pRemoteControlledUsers
+property pRemoteControlledUsers, pHighlightUser
 
 on construct me
   pRemoteControlledUsers = []
@@ -140,26 +140,6 @@ on handle_status me, tMsg
   end repeat
 end
 
-on handle_chat me, tMsg
-  tConn = tMsg.getaProp(#connection)
-  tuser = string(tConn.GetIntFrom())
-  tChat = tConn.GetStrFrom()
-  if me.getInterface().getIgnoreStatus(tuser) then
-    return 0
-  end if
-  case tMsg.getaProp(#subject) of
-    24:
-      tMode = "CHAT"
-    25:
-      tMode = "WHISPER"
-    26:
-      tMode = "SHOUT"
-  end case
-  if me.getComponent().userObjectExists(tuser) then
-    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #message: tChat])
-  end if
-end
-
 on handle_users me, tMsg
   tCount = tMsg.content.line.count
   tDelim = the itemDelimiter
@@ -246,6 +226,10 @@ on handle_users me, tMsg
       end if
       if tuser[#name] = tName then
         me.getInterface().eventProcUserObj(#selection, tuser[#id], #userEnters)
+        if not voidp(pHighlightUser) then
+          me.getComponent().highlightUser(pHighlightUser)
+          pHighlightUser = VOID
+        end if
       end if
     end repeat
   end if
@@ -981,14 +965,25 @@ on handle_user_tag_list me, tMsg
   executeMessage(#updateUserTags, tUserID, tTagList)
 end
 
+on handle_user_typing_status me, tMsg
+  tConn = tMsg.connection
+  tUserID = tConn.GetIntFrom()
+  tstate = tConn.GetIntFrom()
+  tUserID = string(tUserID)
+  me.getComponent().setUserTypingStatus(tUserID, tstate)
+end
+
+on handle_highlight_user me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tUserID = tConn.GetStrFrom()
+  pHighlightUser = tUserID
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
   tMsgs.setaProp(18, #handle_clc)
   tMsgs.setaProp(19, #handle_opc_ok)
-  tMsgs.setaProp(24, #handle_chat)
-  tMsgs.setaProp(25, #handle_chat)
-  tMsgs.setaProp(26, #handle_chat)
   tMsgs.setaProp(28, #handle_users)
   tMsgs.setaProp(29, #handle_logout)
   tMsgs.setaProp(30, #handle_OBJECTS)
@@ -1050,6 +1045,8 @@ on regMsgList me, tBool
   tMsgs.setaProp(311, #handle_group_details)
   tMsgs.setaProp(345, #handle_room_rating)
   tMsgs.setaProp(350, #handle_user_tag_list)
+  tMsgs.setaProp(361, #handle_user_typing_status)
+  tMsgs.setaProp(362, #handle_highlight_user)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1112,6 +1109,8 @@ on regMsgList me, tBool
   tCmds.setaProp("RATEFLAT", 261)
   tCmds.setaProp("GET_USER_TAGS", 263)
   tCmds.setaProp("SET_RANDOM_STATE", 314)
+  tCmds.setaProp("USER_START_TYPING", 317)
+  tCmds.setaProp("USER_CANCEL_TYPING", 318)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

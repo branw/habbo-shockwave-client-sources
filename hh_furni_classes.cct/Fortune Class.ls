@@ -12,8 +12,23 @@ on select me
   if not the doubleClick then
     return 0
   end if
-  tConn = getThread(#room).getComponent().getRoomConnection()
-  tConn.send("SET_RANDOM_STATE", [#integer: integer(me.getID())])
+  tUserObj = getThread(#room).getComponent().getOwnUser()
+  if not tUserObj then
+    return 1
+  end if
+  if abs(tUserObj.pLocX - me.pLocX) > 1 or abs(tUserObj.pLocY - me.pLocY) > 1 then
+    repeat with tX = me.pLocX - 1 to me.pLocX + 1
+      repeat with tY = me.pLocY - 1 to me.pLocY + 1
+        if getThread(#room).getInterface().getGeometry().emptyTile(tX, tY) then
+          getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: tX, #short: tY])
+          return 1
+        end if
+      end repeat
+    end repeat
+  else
+    tConn = getThread(#room).getComponent().getRoomConnection()
+    tConn.send("SET_RANDOM_STATE", [#integer: integer(me.getID())])
+  end if
   return 1
 end
 

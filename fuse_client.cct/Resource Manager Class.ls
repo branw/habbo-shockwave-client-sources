@@ -158,7 +158,7 @@ on preIndexMembers me, tCastNum
     end repeat
     tVarIndex = getVariable("props.index.field")
     if member(tVarIndex, tCastLib).number > 0 then
-      getVariableManager().dump(member(tVarIndex, tCastLib).number)
+      getVariableManager().dump(member(tVarIndex, tCastLib).number, RETURN, 0)
     end if
     tAliasIndex = getVariable("alias.index.field")
     if member(tAliasIndex, tCastLib).number > 0 then

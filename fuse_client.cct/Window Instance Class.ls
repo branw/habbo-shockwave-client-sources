@@ -312,6 +312,13 @@ on setProperty me, tProp, tValue
   return 1
 end
 
+on setBlend me, tNewBlend
+  repeat with tsprite in pSpriteList
+    tsprite.blend = tNewBlend
+  end repeat
+  return 1
+end
+
 on mouseEnter me, tNull, tSprID
   return me.redirectEvent(#mouseEnter, tSprID)
 end

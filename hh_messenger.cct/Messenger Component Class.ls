@@ -1,4 +1,4 @@
-property pState, pPaused, pTimeOutID, pReadyFlag, pBuddyList, pItemList, pUpdateBuddiesInterval, pLastBuddiesUpdateTime, pFriendRequestList, pFriendRequestUpdateRequired, pMessageUpdateRequired
+property pState, pPaused, pTimeOutID, pReadyFlag, pBuddyList, pItemList, pUpdateBuddiesInterval, pLastBuddiesUpdateTime, pFriendRequestList, pFriendRequestUpdateRequired, pMessageUpdateRequired, pInvitationData
 
 on construct me
   registerMessage(#enterRoom, me.getID(), #hideMessenger)
@@ -13,6 +13,8 @@ on construct me
   registerMessage(#pause_messeger_update, me.getID(), #pause)
   registerMessage(#resume_messeger_update, me.getID(), #resume)
   registerMessage(#updateClubStatus, me.getID(), #updateClubStatus)
+  registerMessage(#acceptInvitation, me.getID(), #acceptInvitation)
+  registerMessage(#rejectInvitation, me.getID(), #rejectInvitation)
   pState = VOID
   pPaused = 0
   pTimeOutID = #messenger_msg_poller
@@ -24,6 +26,7 @@ on construct me
   pFriendRequestList = []
   pFriendRequestUpdateRequired = 0
   pMessageUpdateRequired = 0
+  pInvitationData = [:]
   pBuddyList.setProp(#value, [#buddies: [:], #online: [], #offline: [], #render: []])
   me.getInterface().createBuddyList(pBuddyList)
   executeMessage(#messenger_ready, #messenger)
@@ -625,6 +628,42 @@ on handleFriendlistConcurrency me
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
   end if
+end
+
+on showInvitation me, tInvitationData
+  pInvitationData = tInvitationData
+  executeMessage(#showInvitation, tInvitationData)
+end
+
+on hideInvitation me
+  pInvitationData = [:]
+  executeMessage(#hideInvitation)
+end
+
+on acceptInvitation me
+  tSenderId = pInvitationData.getaProp(#userID)
+  if voidp(tSenderId) then
+    return 0
+  end if
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MSG_ACCEPT_TUTOR_INVITATION", [#string: tSenderId])
+  end if
+  me.hideInvitation()
+end
+
+on rejectInvitation me
+  tSenderId = pInvitationData.getaProp(#userID)
+  if voidp(tSenderId) then
+    return 0
+  end if
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MSG_REJECT_TUTOR_INVITATION", [#string: tSenderId])
+  end if
+  me.hideInvitation()
+end
+
+on invitationFollowFailed me
+  executeMessage(#alert, "invitation_follow_failed")
 end
 
 on updateClubStatus me, tStatus

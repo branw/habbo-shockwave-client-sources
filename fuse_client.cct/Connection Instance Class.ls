@@ -20,6 +20,7 @@ on deconstruct me
 end
 
 on connect me, tHost, tPort
+  sendProcessTracking(30)
   pHost = tHost
   pPort = tPort
   pXtra = new(xtra("Multiuser"))

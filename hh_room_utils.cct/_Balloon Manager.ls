@@ -27,7 +27,7 @@ on construct me
   if variableExists("balloon.margin.offset.v") then
     pMarginV = pMarginV + getVariable("balloon.margin.offset.v")
   end if
-  tVariations = ["CHAT": "plain", "SHOUT": "bold", "WHISPER": "italic"]
+  tVariations = ["CHAT": "plain", "SHOUT": "bold", "WHISPER": "italic", "OBJECT": "plain"]
   repeat with i = 1 to tVariations.count
     tFontStruct = getStructVariable("struct.font." & tVariations[i])
     tmember = member(createMember("balloon.text." & tVariations.getPropAt(i), #text))

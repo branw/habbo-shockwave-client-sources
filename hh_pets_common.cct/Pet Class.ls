@@ -147,6 +147,10 @@ on update me
   end if
 end
 
+on setUserTypingStatus me, tStatus
+  nothing()
+end
+
 on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pWaving = 0
   pMoving = 0

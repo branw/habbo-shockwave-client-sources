@@ -22,6 +22,7 @@ on construct me
   registerMessage(#userlogin, me.getID(), #showEntryBar)
   registerMessage(#messenger_ready, me.getID(), #activateIcon)
   registerMessage(#showHotelView, me.getID(), #showHotel)
+  registerMessage(#showInvitation, me.getID(), #showInvitation)
   executeMessage(#requestHotelView)
   return 1
 end
@@ -30,6 +31,7 @@ on deconstruct me
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#messenger_ready, me.getID())
   unregisterMessage(#showHotelView, me.getID())
+  unregisterMessage(#showInvitation, me.getID())
   repeat with tAnimation in pSwapAnimations
     tAnimation.deconstruct()
   end repeat
@@ -471,6 +473,11 @@ on createMyHeadIcon me
   if objectExists("Figure_Preview") then
     getObject("Figure_Preview").createHumanPartPreview(pBottomBar, "ownhabbo_icon_image", #head)
   end if
+end
+
+on showInvitation me, tInvitationData
+  tInvitation = createObject(#random, "Invitation Class")
+  tInvitation.show(tInvitationData, pBottomBar, "messenger_icon_image")
 end
 
 on eventProcEntryBar me, tEvent, tSprID, tParam

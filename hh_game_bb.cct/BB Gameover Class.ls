@@ -107,14 +107,22 @@ on renderNumTickets me
   if me.getGameSystem() = 0 then
     return 0
   end if
-  tNumTickets = string(me.getGameSystem().getNumTickets())
-  if tNumTickets.length = 1 then
-    tNumTickets = "00" & tNumTickets
+  if not me.getGameSystem().getGameTicketsNotUsedFlag() then
+    tNumTickets = string(me.getGameSystem().getNumTickets())
+    if tNumTickets.length = 1 then
+      tNumTickets = "00" & tNumTickets
+    end if
+    if tNumTickets.length = 2 then
+      tNumTickets = "0" & tNumTickets
+    end if
+    tElem.setText(tNumTickets)
+  else
+    tElem.hide()
+    tElem = tWndObj.getElement("bb_amount_tickets_bg")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
   end if
-  if tNumTickets.length = 2 then
-    tNumTickets = "0" & tNumTickets
-  end if
-  tElem.setText(tNumTickets)
 end
 
 on saveSortedScores me, tdata
@@ -197,6 +205,12 @@ on renderFinalScoresText me
     repeat with tButtonID in ["bb_button_playAgn", "bb_button_leaveGam2", "gs_button_buytickets"]
       tWndObj.getElement(tButtonID).hide()
     end repeat
+  end if
+  if me.getGameSystem().getGameTicketsNotUsedFlag() then
+    tElem = tWndObj.getElement("gs_button_buytickets")
+    if tElem <> 0 then
+      tElem.hide()
+    end if
   end if
   tTeamNum = pScoreData.count
   repeat with tTeamInfoCount = 1 to tTeamNum

@@ -95,37 +95,31 @@ on print me
   return 1
 end
 
-on fatalError me, tErrorType, tErrorValue
-  if voidp(tErrorType) or voidp(tErrorValue) then
-    error(me, "Invalid error parameters for fatal error!", #fatalError, #major)
+on fatalError me, tErrorData
+  if ilk(tErrorData) <> #propList then
+    error(me, "Invalid error parameters for fatal error!", #fatalError, #critical)
     tErrorData = [:]
-  else
-    tErrorData = [:]
-    tErrorData[string(tErrorType)] = string(tErrorValue)
   end if
   me.handleFatalError(tErrorData)
 end
 
 on alertHook me, tErr, tMsgA, tMsgB
   tErrorData = [:]
-  tErrorData["hookErr"] = tErr
-  tErrorData["hookMsgA"] = tMsgA
-  tErrorData["hookMsgB"] = tMsgB
-  tEnv = the environment
-  tErrorData["version"] = tEnv[#productVersion]
-  tErrorData["build"] = tEnv[#productBuildVersion]
-  tErrorData["os"] = tEnv[#osVersion]
-  tErrorData["lastExecute"] = getBrokerManager().getLastExecutedMessageId()
-  tErrorData["lastClick"] = getWindowManager().getLastEvent()
-  tErrorData["lastMessage"] = getConnectionManager().getLastMessageData()
+  tErrorData["error"] = "script_error"
+  tErrorData["hookerror"] = tErr
+  tErrorData["hookmsga"] = tMsgA
+  tErrorData["hookmsgb"] = tMsgB
+  tErrorData["lastexecute"] = getBrokerManager().getLastExecutedMessageId()
+  tErrorData["lastclick"] = getWindowManager().getLastEvent()
+  tErrorData["lastmessage"] = getConnectionManager().getLastMessageData()
   tSessionObj = getObject(#session)
   if objectp(tSessionObj) then
     tLastRoom = tSessionObj.GET("lastroom")
     if stringp(tLastRoom) then
-      tErrorData["lastRoom"] = tLastRoom
+      tErrorData["lastroom"] = tLastRoom
     else
       if listp(tLastRoom) then
-        tErrorData["lastRoom"] = string(tLastRoom[#id])
+        tErrorData["lastroom"] = string(tLastRoom[#id])
       end if
     end if
     me.handleFatalError(tErrorData)
@@ -136,14 +130,29 @@ end
 on handleFatalError me, tErrorData
   tErrorUrl = EMPTY
   tParams = EMPTY
-  if variableExists("client.fatal.error.url") then
-    tErrorUrl = getVariable("client.fatal.error.url")
-    if tErrorUrl contains "?" then
-      tParams = "&"
-    else
-      tParams = "?"
-    end if
+  if ilk(tErrorData) <> #propList then
+    return error(me, "Invalid error data", #handleFatalError, #critical)
   end if
+  tErrorType = tErrorData["error"]
+  case tErrorType of
+    "socket_init":
+      if variableExists("client.connection.failed.url") then
+        tErrorUrl = getVariable("client.connection.failed.url")
+      end if
+    otherwise:
+      if variableExists("client.fatal.error.url") then
+        tErrorUrl = getVariable("client.fatal.error.url")
+      end if
+  end case
+  if tErrorUrl contains "?" then
+    tParams = "&"
+  else
+    tParams = "?"
+  end if
+  tEnv = the environment
+  tErrorData["version"] = tEnv[#productVersion]
+  tErrorData["build"] = tEnv[#productBuildVersion]
+  tErrorData["os"] = tEnv[#osVersion]
   repeat with tItemNo = 1 to tErrorData.count
     tKey = string(tErrorData.getPropAt(tItemNo))
     tKey = urlEncode(tKey)

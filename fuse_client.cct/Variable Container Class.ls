@@ -77,13 +77,16 @@ on exists me, tVariable
   return not voidp(me.pItemList[tVariable])
 end
 
-on dump me, tField, tDelimiter
+on dump me, tField, tDelimiter, tOverride
   tStr = field(tField)
   tDelim = the itemDelimiter
   if voidp(tDelimiter) then
     tDelimiter = RETURN
   end if
   the itemDelimiter = tDelimiter
+  if voidp(tOverride) then
+    tOverride = 1
+  end if
   repeat with i = 1 to tStr.item.count
     tPair = tStr.item[i]
     if tPair.word[1].char[1] <> "#" and tPair <> EMPTY then
@@ -116,7 +119,10 @@ on dump me, tField, tDelimiter
           end case
         end repeat
       end if
-      me.pItemList[tProp] = tValue
+      tPos = me.pItemList.findPos(tProp)
+      if tOverride or voidp(tPos) then
+        me.pItemList[tProp] = tValue
+      end if
       the itemDelimiter = tDelimiter
     end if
   end repeat

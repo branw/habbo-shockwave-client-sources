@@ -230,6 +230,7 @@ on render me
   me.pSprite.locH = me.pScreenLoc[1]
   me.pSprite.locV = me.pScreenLoc[2]
   me.pSprite.locZ = me.pScreenLoc[3] + 2
+  me.updateTypingSpriteLoc()
   me.pMatteSpr.loc = me.pSprite.loc
   me.pMatteSpr.locZ = me.pSprite.locZ + 1
   me.pShadowSpr.loc = me.pSprite.loc + [me.pShadowFix, 0]

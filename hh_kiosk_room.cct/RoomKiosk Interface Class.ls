@@ -376,6 +376,9 @@ on eventProc me, tEvent, tSprID, tParm
         end if
       "roomatic_7_button_cancel":
         me.showHideRoomKiosk()
+        if threadExists(#navigator) then
+          getThread(#navigator).getComponent().sendGetOwnFlats()
+        end if
       "close":
         me.showHideRoomKiosk()
     end case

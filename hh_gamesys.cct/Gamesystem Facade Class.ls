@@ -57,6 +57,13 @@ on getTournamentFlag me
   return me.getVarMgr().GET(#tournament_flag)
 end
 
+on getGameTicketsNotUsedFlag me
+  if not variableExists("games.tickets.hide") then
+    return 0
+  end if
+  return value(getVariable("games.tickets.hide"))
+end
+
 on getWorldReady me
   if pThread = 0 then
     return 0
