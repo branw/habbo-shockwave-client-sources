@@ -146,7 +146,7 @@ end
 
 on eventProcJumpTicketAutomatic me
   if threadExists(#pellehyppy) then
-    return getThread(#pellehyppy).getInterface().showTicketWnd()
+    return executeMessage(#show_ticketWindow)
   else
     return 0
   end if

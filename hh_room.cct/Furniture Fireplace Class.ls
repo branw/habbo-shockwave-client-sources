@@ -1,7 +1,7 @@
 property pChanges, pActive, pTiming
 
 on prepare me, tdata
-  if tdata["FIREON"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     pChanges = 1
     pActive = 1
   else
@@ -12,7 +12,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "ON" then
     pActive = 1
   else
@@ -59,7 +59,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
 end

@@ -238,7 +238,7 @@ on eventProc me, tEvent, tSprID, tProp
         end if
       end if
       tText = tText.char[1..15]
-      tText = getStringServices().convertSpecialChars(tText, 1)
+      tText = convertSpecialChars(tText, 1)
       if pSelectedProduct.ilk <> #propList then
         return error(me, "incorrect Selected Product Data", #eventProc)
       end if

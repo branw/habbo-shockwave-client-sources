@@ -423,6 +423,12 @@ on updateLocation me
     if tSpr.rotation = 180 then
       tSpr.locH = tSpr.locH + pXFactor
     end if
+    if pDirection[1] < 0 then
+      pDirection[1] = 0
+    end if
+    if pDirection[1] + 1 > pLocShiftList[i].count then
+      pDirection[1] = 0
+    end if
     tLocShift = pLocShiftList[i][pDirection[1] + 1]
     tSpr.loc = tSpr.loc + tLocShift
     tZ = pLoczList[i][pDirection[1] + 1]

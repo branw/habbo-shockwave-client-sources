@@ -1,10 +1,13 @@
-property pAdMemNum, pClickURL, pSprite, pState, pFrame, pTimeOutID, pToolTipSpr, pBlendFlag
+property pAdMemNum, pClickURL, pSprite, pState, pFrame, pTimeOutID, pToolTipSpr, pBlendFlag, pRegisteredLayout, pDLCounter, pMemberID, pMemberIDBase
 
 on construct me
   pState = 0
   pFrame = 0
   pTimeOutID = "showAdTimeOut"
   pBlendFlag = 0
+  pDLCounter = 1
+  pMemberIDBase = "billboard-image"
+  pMemberID = pMemberIDBase & pDLCounter
   registerMessage(#leaveRoom, me.getID(), #removeAd)
   registerMessage(#changeRoom, me.getID(), #removeAd)
   registerMessage(#takingPhoto, me.getID(), #hideAd)
@@ -24,6 +27,7 @@ on deconstruct me
   unregisterMessage(#changeRoom, me.getID())
   unregisterMessage(#takingPhoto, me.getID())
   unregisterMessage(#photoTaken, me.getID())
+  me.removeAd()
   return 1
 end
 
@@ -57,17 +61,25 @@ on showAd me
   end if
 end
 
-on Init me, tSourceURL, tClickURL
+on Init me, tSourceURL, tClickURL, tRegisteredLayout
   if tSourceURL <> 0 then
     if not (tSourceURL starts "http") then
       pState = 0
       return error(me, "Incorrect URL!", #Init)
     end if
-    pAdMemNum = queueDownload(tSourceURL, "ad-system", #bitmap, 1)
+    pMemberID = pMemberIDBase & pDLCounter
+    if tSourceURL contains "?" then
+      tSeparator = "&"
+    else
+      tSeparator = "?"
+    end if
+    tSourceURL = tSourceURL & tSeparator & "r=" & random(9999999999.0)
+    pAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1)
     if not (pAdMemNum > 0) then
       pState = 0
       return error(me, "Incorrect URL!", #Init)
     end if
+    pRegisteredLayout = tRegisteredLayout
     member(pAdMemNum).image = image(1, 1, 32)
     member(pAdMemNum).trimWhiteSpace = 0
     registerDownloadCallback(pAdMemNum, #adLoaded, me.getID())
@@ -116,6 +128,9 @@ on adReady me
     return 0
   end if
   if tVisObj.spriteExists("billboard_img") then
+    if tVisObj.pLayout <> pRegisteredLayout then
+      return 0
+    end if
     tSpr = tVisObj.getSprById("billboard_img")
     pSprite = tSpr
     tSpr.setMember(member(pAdMemNum))
@@ -151,6 +166,10 @@ on removeAd me
     releaseSprite(pToolTipSpr.spriteNum)
     pToolTipSpr = VOID
   end if
+  if memberExists(pMemberID) then
+    removeMember(pMemberID)
+  end if
+  pDLCounter = pDLCounter + 1
   if timeoutExists(pTimeOutID) then
     removeTimeout(pTimeOutID)
   end if

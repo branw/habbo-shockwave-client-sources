@@ -8,7 +8,7 @@ on prepare me
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "TRUE" then
     pDoorTimer = 43
   else
@@ -63,7 +63,7 @@ on giveDrink me
   if tConnection = 0 then
     return 0
   end if
-  tConnection.send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
   tConnection.send("LOOKTO", me.pLocX && me.pLocY)
   tConnection.send("CARRYDRINK", me.getDrinkname())
 end

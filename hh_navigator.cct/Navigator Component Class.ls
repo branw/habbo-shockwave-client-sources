@@ -1,4 +1,4 @@
-property pState, pCategoryIndex, pNodeCache, pNaviHistory, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdatePeriod, pConnectionId
+property pState, pCategoryIndex, pNodeCache, pCacheTimeStamp, pNaviHistory, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdatePeriod, pConnectionId
 
 on construct me
   pRootUnitCatId = string(getIntVariable("navigator.visible.public.root"))
@@ -15,6 +15,7 @@ on construct me
   end if
   pCategoryIndex = [:]
   pNodeCache = [:]
+  pCacheTimeStamp = 0
   pNaviHistory = []
   pUpdatePeriod = getIntVariable("navigator.updatetime", 60000)
   pConnectionId = getVariableValue("connection.info.id")
@@ -54,6 +55,23 @@ end
 
 on showhidenavigator me
   return me.getInterface().showhidenavigator(#hide)
+end
+
+on setUpdates me, tBoolean
+  if tBoolean then
+    if pCacheTimeStamp < the milliSeconds - pUpdatePeriod then
+      me.callNodeUpdate()
+    end if
+    if timeoutExists(#navigator_update) then
+      return 1
+    end if
+    return createTimeout(#navigator_update, pUpdatePeriod, #callNodeUpdate, me.getID(), VOID, 0)
+  else
+    if timeoutExists(#navigator_update) then
+      removeTimeout(#navigator_update)
+    end if
+    return 1
+  end if
 end
 
 on getState me
@@ -113,8 +131,10 @@ on getNodeName me, tid
     return pCategoryIndex[tid][#name]
   end if
   repeat with tList in pNodeCache
-    if tList[#children][tid] <> VOID then
-      return tList[#children][tid][#name]
+    if not (tList[#children] = VOID) then
+      if tList[#children][tid] <> VOID then
+        return tList[#children][tid][#name]
+      end if
     end if
   end repeat
   return EMPTY
@@ -154,6 +174,7 @@ on feedNewRoomList me, tid
   end if
   tNodeCache = pNodeCache[tid]
   me.getInterface().updateRoomList(tNodeCache[#id], tNodeCache[#children])
+  pCacheTimeStamp = the milliSeconds
   return 1
 end
 
@@ -444,6 +465,7 @@ on sendSearchFlats me, tQuery
     if voidp(tQuery) then
       return error(me, "Search query is void!", #sendSearchFlats)
     end if
+    tQuery = convertSpecialChars(tQuery, 1)
     return getConnection(pConnectionId).send("SRCHF", "%" & tQuery & "%")
   else
     return 0
@@ -570,9 +592,7 @@ on updateState me, tstate, tProps
   case tstate of
     "reset":
       pState = tstate
-      if timeoutExists(#navigator_update) then
-        removeTimeout(#navigator_update)
-      end if
+      me.setUpdates(0)
       return 0
     "userLogin":
       pState = tstate
@@ -593,9 +613,8 @@ on updateState me, tstate, tProps
       return 1
     "openNavigator":
       pState = tstate
-      me.showNavigator()
+      me.getInterface().showNavigator()
       executeMessage(#updateAvailableFlatCategories)
-      return createTimeout(#navigator_update, pUpdatePeriod, #callNodeUpdate, me.getID(), VOID, 0)
     "enterEntry":
       pState = tstate
       executeMessage(#leaveRoom)

@@ -255,13 +255,13 @@ on ScrollByLift me
     tNowPercent = float(tScrollPercent) / 100
     tNowOffset = integer((pClientSourceRect.right - pViewClientRect.width) * float(tScrollPercent) / 100)
   end if
-  if tNowOffset mod pScrollStep <> 0 then
-    tNowOffset = tNowOffset - tNowOffset mod pScrollStep
-  end if
   me.sendAdjustOffsetTo(tNowOffset)
 end
 
 on sendAdjustOffsetTo me, tNewOffset
+  if abs(pScrollOffset - tNewOffset) < pScrollStep and tNewOffset < pMaxOffset and tNewOffset > 0 then
+    return 1
+  end if
   if tNewOffset <= pMaxOffset then
     pScrollOffset = tNewOffset
   else

@@ -159,6 +159,14 @@ on showDialog me, tWndID, tProps
           tWndObj.getElement("help_callforhelp_textlink").hide()
         end if
       end if
+      if tWndObj.elementExists("help_tutorial_link") then
+        tLinkURL = getText("reg_tutorial_url", EMPTY)
+        if not stringp(tLinkURL) or tLinkURL.length < 10 then
+          tWndObj.getElement("help_tutorial_link").setProperty(#visible, 0)
+        else
+          tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
+        end if
+      end if
     #call_for_help, "call_for_help":
       tWndTitle = getText("win_callforhelp", "Alert a Hobba")
       if windowExists(tWndTitle) then
@@ -263,6 +271,8 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
         return 1
       "close", "help_ok":
         return me.removeDialog(tWndID, pWindowList)
+      "help_tutorial_link":
+        openNetPage(getText("reg_tutorial_url", "_new"))
       "help_callforhelp_textlink":
         me.removeDialog(tWndID, pWindowList)
         me.showDialog(#call_for_help)

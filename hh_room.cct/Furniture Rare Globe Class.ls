@@ -1,7 +1,7 @@
 property pChanges, pActive, pTimer, pNextChange
 
 on prepare me, tdata
-  if tdata["CHANNEL"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     pActive = 1
   else
     pActive = 0
@@ -12,7 +12,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "OFF" then
     pActive = 0
   else
@@ -50,11 +50,11 @@ on update me
 end
 
 on setOn me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & "ON")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "ON"])
 end
 
 on setOff me
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & "OFF")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "OFF"])
 end
 
 on select me

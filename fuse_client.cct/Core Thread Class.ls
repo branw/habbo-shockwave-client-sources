@@ -93,7 +93,7 @@ on updateState me, tstate
         end repeat
         the itemDelimiter = tDelim
       end if
-      setDebugLevel(getIntVariable("system.debug", 0))
+      setDebugLevel(0)
       getStringServices().initConvList()
       puppetTempo(getIntVariable("system.tempo", 30))
       if variableExists("client.reload.url") then

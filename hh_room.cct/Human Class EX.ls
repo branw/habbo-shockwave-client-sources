@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc
 
 on construct me
   pName = EMPTY
@@ -28,6 +28,7 @@ on construct me
   pTrading = 0
   pCtrlType = 0
   pAnimating = 0
+  pSwim = 0
   pBadge = SPACE
   pCurrentAnim = EMPTY
   pAlphaColor = rgb(255, 255, 255)
@@ -128,12 +129,11 @@ on setup me, tdata
     error(me, "Canvas size not found, using default!", #setup)
     pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
   end if
-  tPartSymbols = tdata[#parts]
   if not me.setPartLists(tdata[#figure]) then
     return error(me, "Couldn't create part lists!", #setup)
   end if
-  me.arrangeParts()
-  me.refresh(pLocX, pLocY, pLocH, pDirection, pHeadDir)
+  me.resetValues(pLocX, pLocY, pLocH, pHeadDir, pDirection)
+  me.refresh(pLocX, pLocY, pLocH, pDirection)
   pSync = 0
 end
 
@@ -151,12 +151,9 @@ on update me
   end if
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on resetValues me, tX, tY, tH, tDirHead, tDirBody
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
-  end if
-  if pDancing then
-    tDirHead = tDirBody
   end if
   pMoving = 0
   pDancing = 0
@@ -168,6 +165,7 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   pAnimating = 0
   pModState = 0
   pSleeping = 0
+  pQueuesWithObj = 0
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
   pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
@@ -190,15 +188,23 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
       end case
     end if
   end if
-  call(#defineDir, pPartList, tDirBody)
-  call(#defineDirMultiple, pPartList, tDirHead, ["hd", "hr", "ey", "fc"])
   pDirection = tDirBody
   pHeadDir = tDirHead
-  me.arrangeParts()
   if pExtraObjs.count > 0 then
     call(#refresh, pExtraObjs)
   end if
-  pQueuesWithObj = 0
+end
+
+on refresh me, tX, tY, tH
+  if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
+    return 1
+  end if
+  if pDancing > 0 then
+    pHeadDir = pDirection
+  end if
+  call(#defineDir, pPartList, pDirection)
+  call(#defineDirMultiple, pPartList, pHeadDir, ["hd", "hr", "ey", "fc"])
+  me.arrangeParts()
   pChanges = 1
 end
 
@@ -323,6 +329,10 @@ on getProperty me, tPropID
       return pCarrying
     #loc:
       return [pLocX, pLocY, pLocH]
+    #mainAction:
+      return pMainAction
+    #swimming:
+      return me.pSwim
   end case
   return 0
 end
@@ -436,6 +446,15 @@ end
 on render me
   if not pChanges then
     return 
+  end if
+  if pPeopleSize = "sh" then
+    tSkipFreq = 4
+  else
+    tSkipFreq = 5
+  end if
+  if random(tSkipFreq) = 2 and not pMoving then
+    call(#skipAnimationFrame, pPartList)
+    return 1
   end if
   pChanges = 0
   if pMainAction = "sit" then
@@ -583,9 +602,15 @@ on arrangeParts me
       pPartList.addAt(2, tRH)
       pPartList.addAt(3, tRS)
     else
-      pPartList.append(tRI)
-      pPartList.append(tRH)
-      pPartList.append(tRS)
+      if pDirection = 3 and pDancing > 0 then
+        pPartList.addAt(7, tRI)
+        pPartList.addAt(8, tRH)
+        pPartList.addAt(9, tRS)
+      else
+        pPartList.append(tRI)
+        pPartList.append(tRH)
+        pPartList.append(tRS)
+      end if
     end if
   end if
   repeat with i = 1 to pPartList.count
@@ -667,7 +692,6 @@ on action_sit me, tProps
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   tIsInQueue = integer(tProps.word[3])
   pQueuesWithObj = tIsInQueue
-  me.arrangeParts()
 end
 
 on action_lay me, tProps
@@ -685,14 +709,14 @@ on action_lay me, tProps
   call(#layDown, pPartList)
   if pDirection = 0 then
     pDirection = 4
+    pHeadDir = 4
   end if
   call(#defineDir, pPartList, pDirection)
-  me.arrangeParts()
 end
 
 on action_carryd me, tProps
   tItem = tProps.word[2]
-  if integerp(value(tItem)) then
+  if value(tItem) > 0 then
     tCarrying = tItem
     if variableExists("handitem.right." & tCarrying) then
       tCarryItm = getVariable("handitem.right." & tCarrying, "001")
@@ -752,7 +776,6 @@ on action_usei me, tProps
     end if
     call(#doHandWorkRight, pPartList, "drk")
     pPartList[pPartIndex["ri"]].setModel(tCarryItm)
-    me.arrangeParts()
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
@@ -777,7 +800,6 @@ on action_drink me, tProps
     end if
     call(#doHandWorkRight, pPartList, "drk")
     pPartList[pPartIndex["ri"]].setModel(tCarryItm)
-    me.arrangeParts()
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
@@ -785,7 +807,6 @@ on action_drink me, tProps
       call(#doHandWorkRight, pPartList, "drk")
       pPartList[pPartIndex["ri"]].setModel(tCarryItm)
     end if
-    me.arrangeParts()
   end if
 end
 
@@ -867,11 +888,12 @@ on action_wave me, tProps
 end
 
 on action_dance me, tProps
-  pDancing = 1
-  tStyle = tProps.word[2]
-  if tStyle = EMPTY then
-    tStyle = "dance.aero"
+  tStyleNum = tProps.word[2]
+  pDancing = integer(tStyleNum)
+  if pDancing = VOID then
+    pDancing = 1
   end if
+  tStyle = "dance." & pDancing
   me.startAnimation(tStyle)
 end
 
@@ -898,6 +920,9 @@ end
 
 on action_sign me, props
   tSignMem = "sign" & props.word[2]
+  if getmemnum(tSignMem) = 0 then
+    return 0
+  end if
   call(#doHandWorkLeft, me.pPartList, "sig")
   tSignObjID = "SIGN_EXTRA"
   if voidp(pExtraObjs[tSignObjID]) then

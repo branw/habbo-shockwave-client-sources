@@ -1,7 +1,7 @@
 property pSprite, pDelayAmount, pDelayCounter, pFrame, pStartFrame, pLastFrame, pFountainModel
 
-on define me, tSprite, tmodel
-  pSprite = tSprite
+on define me, tsprite, tmodel
+  pSprite = tsprite
   pDelayAmount = 0
   pDelayCounter = 0
   pStartFrame = 1

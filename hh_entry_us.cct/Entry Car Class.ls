@@ -1,9 +1,9 @@
 property pSprite, pOffset, pTurnPnt, pDirection, ancestor, pID
 
-on define me, tid, tSprite, tDirection, tAncestor
+on define me, tid, tsprite, tDirection, tAncestor
   pID = tid
   ancestor = tAncestor
-  pSprite = tSprite
+  pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
   pDirection = tDirection

@@ -1,10 +1,10 @@
 property pSprite, pFrameSpeed, pInFrame, pFrames, pDelayCounter, pFrameDelay, pMemberBase
 
-on define me, tSprite
+on define me, tsprite
   pFrameDelay = 2
   pFrames = [1, 1, 2, 1]
   pMemberBase = "Waterfall."
-  pSprite = tSprite
+  pSprite = tsprite
   me.reset()
   return 1
 end

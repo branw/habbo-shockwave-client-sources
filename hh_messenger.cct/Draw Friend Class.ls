@@ -1,4 +1,4 @@
-property pData, pID, pName, pSex, pMsg, pEmailOK, pOnline, pUnit, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pUnitNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText
+property pData, pID, pName, pSex, pMsg, pEmailOK, pOnline, pUnit, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pUnitNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
@@ -21,6 +21,18 @@ on construct me
   pUnitNeedUpdate = 1
   pLastNeedUpdate = 1
   pMissNeedUpdate = 1
+  pFriendNameOffset = 0
+  if variableExists("messenger_friend_name_offset") then
+    pFriendNameOffset = getVariable("messenger_friend_name_offset")
+  end if
+  pFriendLastOffset = 0
+  if variableExists("messenger_friend_last_offset") then
+    pFriendLastOffset = getVariable("messenger_friend_last_offset")
+  end if
+  pFriendPerMsgOffset = 0
+  if variableExists("messenger_friend_permsg_offset") then
+    pFriendPerMsgOffset = getVariable("messenger_friend_permsg_offset")
+  end if
   return 1
 end
 
@@ -103,7 +115,7 @@ on render me, tBuffer, tPosition
       pNameNeedUpdate = 0
       tX1 = pLeftMarg
       tX2 = tX1 + pCacheNameImg.width
-      tY1 = pTopMarg
+      tY1 = pTopMarg + pFriendNameOffset
       tY2 = tY1 + pCacheNameImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pCacheImage.copyPixels(pCacheNameImg, tDstRect, pCacheNameImg.rect)
@@ -112,7 +124,7 @@ on render me, tBuffer, tPosition
       tMsgsImg = pWriterMsgs.render(pMsgCount)
       tX1 = pLeftMarg + pCacheNameImg.width + 5
       tX2 = tX1 + tMsgsImg.width
-      tY1 = pTopMarg
+      tY1 = pTopMarg + pFriendNameOffset
       tY2 = tY1 + tMsgsImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pCacheImage.fill(tDstRect, rgb(255, 255, 255))
@@ -136,7 +148,7 @@ on render me, tBuffer, tPosition
       tLastTimeImg = pWriterLast.render(tText)
       tX1 = pLeftMarg
       tX2 = tX1 + tLastTimeImg.width
-      tY1 = pLineHeight + pTopMarg
+      tY1 = pLineHeight + pTopMarg + pFriendLastOffset
       tY2 = tY1 + tLastTimeImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pCacheImage.fill(rect(tX1, tY1, pCacheImage.width, tY2), rgb(255, 255, 255))
@@ -157,7 +169,7 @@ on render me, tBuffer, tPosition
       tMissionImg = pWriterText.render(QUOTE & pMsg & QUOTE)
       tX1 = pLeftMarg
       tX2 = tX1 + tMissionImg.width
-      tY1 = pLineHeight * 2 + pTopMarg
+      tY1 = pLineHeight * 2 + pTopMarg + pFriendPerMsgOffset
       tY2 = tY1 + tMissionImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pCacheImage.fill(tDstRect, rgb(255, 255, 255))

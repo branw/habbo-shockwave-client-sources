@@ -1,4 +1,4 @@
-property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag
+property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag, pHandButtonsWnd, pNextActive, pPrevActive
 
 on construct me
   pItemList = [:]
@@ -8,6 +8,9 @@ on construct me
   pAnimLocs = [[-54, 27], [-42, 21], [-36, 18], [-28, 14], [-22, 11], [-18, 9], [-12, 6], [-10, 5], [-8, 4]]
   pAnimFrm = 1
   pAppendFlag = 0
+  pHandButtonsWnd = "habbo_hand_buttons"
+  pNextActive = 1
+  pPrevActive = 1
   return 1
 end
 
@@ -17,6 +20,7 @@ on deconstruct me
       removeMember("handcontainer_" & i)
     end if
   end repeat
+  removeWindow(pHandButtonsWnd)
   removeUpdate(me.getID())
   if visualizerExists(pHandVisID) then
     removeVisualizer(pHandVisID)
@@ -37,7 +41,6 @@ on open me, tStripInfo
     tHandVisualizer = getVisualizer(pHandVisID)
     tHandVisualizer.moveTo(694, -137)
     tHandVisualizer.setProperty(#locZ, -1000)
-    tHandVisualizer.getSprById("room_hand_next").visible = 0
     tSprList = tHandVisualizer.getProperty(#spriteList)
     call(#registerProcedure, tSprList, #eventProcContainer, me.getID(), #mouseDown)
     call(#registerProcedure, tSprList, #eventProcContainer, me.getID(), #mouseUp)
@@ -58,8 +61,8 @@ on close me
   if not visualizerExists(pHandVisID) then
     return 0
   end if
-  getVisualizer(pHandVisID).getSprById("room_hand_next").visible = 0
   pAnimMode = #close
+  removeWindow(pHandButtonsWnd)
   receiveUpdate(me.getID())
   return 1
 end
@@ -181,7 +184,7 @@ on setStripItemCount me, tCount
   end if
   if visualizerExists(pHandVisID) then
     if pTotalCount > pItemList.count then
-      getVisualizer(pHandVisID).getSprById("room_hand_next").visible = 1
+      me.setHandButtonsVisible()
     end if
   end if
   return 1
@@ -206,6 +209,9 @@ on placeItemToRoom me, tid
     tdata[#direction] = [0, 0, 0]
     tdata[#altitude] = 100.0
     getThread(#room).getComponent().createActiveObject(tdata)
+    if getThread(#room).getComponent().getActiveObject(tdata[#id]) = 0 then
+      return 0
+    end if
     getThread(#room).getComponent().getActiveObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
     removeStripItem(me, tid)
     return 1
@@ -251,6 +257,19 @@ on print me
   end repeat
 end
 
+on setHandButton me, tButtonID, tActive
+  if voidp(tButtonID) then
+    return 0
+  end if
+  case tButtonID of
+    "next":
+      pNextActive = tActive
+    "prev":
+      pPrevActive = tActive
+  end case
+  return 0
+end
+
 on update me
   if not visualizerExists(pHandVisID) then
     return removeUpdate(me.getID())
@@ -276,8 +295,7 @@ on update me
     end if
     if pAnimFrm = pAnimLocs.count then
       if pTotalCount > pItemList.count then
-        tHand.getSprById("room_hand_next").loc = point(630, 10)
-        tHand.getSprById("room_hand_next").visible = 1
+        me.setHandButtonsVisible()
       end if
       removeUpdate(me.getID())
     end if
@@ -322,6 +340,11 @@ on showContainerItems me
       tImage = getObject("Preview_renderer").renderPreviewImage(tItem[#member], VOID, tItem[#colors], tItem[#class])
       member(tMem).image = tImage
       tVisible = not getThread(#room).getInterface().getSafeTrader().isUnderTrade(pItemList.getPropAt(i))
+      if tVisible then
+        if not (tItem[#class] contains "post.it") then
+          tVisible = not (getThread(#room).getInterface().getObjectMover().pClientID = pItemList.getPropAt(i))
+        end if
+      end if
     else
       tMem = member(getmemnum("room_object_placeholder_sd"))
       tVisible = 0
@@ -332,6 +355,7 @@ on showContainerItems me
     tSpr.visible = tVisible
     tSpr.ink = 8
   end repeat
+  me.setHandButtonsVisible()
   return 1
 end
 
@@ -349,29 +373,13 @@ on hideContainerItems me
 end
 
 on eventProcContainer me, tEvent, tSprID, tParam
-  if tSprID = "room_hand_next" then
-    case tEvent of
-      #mouseDown:
-        getVisualizer(pHandVisID).getSprById("room_hand_next").setMember(member(getmemnum("room_hand_next hi")))
-      #mouseUpOutSide:
-        getVisualizer(pHandVisID).getSprById("room_hand_next").setMember(member(getmemnum("room_hand_next")))
-      #mouseUp:
-        getVisualizer(pHandVisID).getSprById("room_hand_next").setMember(member(getmemnum("room_hand_next")))
-        getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "next")
-    end case
-    return 1
-  end if
   if tEvent <> #mouseUp then
     return 0
   end if
   case getThread(#room).getInterface().getProperty(#clickAction) of
-    "moveHuman", "tradeItem":
-      if tSprID = "room_hand" then
-        return me.close()
-      end if
     "placeActive", "placeItem":
       getThread(#room).getInterface().stopObjectMover()
-      return getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "new")
+      return getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
     "moveActive", "moveItem":
       if not getObject(#session).get("room_owner") then
         return 0
@@ -430,4 +438,42 @@ on setItemPlacingMode me, tdata
       tRoomInterface.setProperty(#clickAction, "placeItem")
     end if
   end if
+end
+
+on setHandButtonsVisible me
+  if not windowExists(pHandButtonsWnd) then
+    if not createWindow(pHandButtonsWnd, "habbo_hand_buttons.window") then
+      return 0
+    end if
+  end if
+  tWndObj = getWindow(pHandButtonsWnd)
+  tStageRight = the stageRight - the stageLeft
+  tTopOffset = 5
+  tWndObj.moveTo(tStageRight - tWndObj.getProperty(#width) - 5, tTopOffset)
+  if pNextActive then
+    tWndObj.getElement("habbo_hand_next").Activate()
+  else
+    tWndObj.getElement("habbo_hand_next").deactivate()
+  end if
+  if pPrevActive then
+    tWndObj.getElement("habbo_hand_prev").Activate()
+  else
+    tWndObj.getElement("habbo_hand_prev").deactivate()
+  end if
+  tWndObj.registerProcedure(#eventProcHandButtons, me.getID())
+end
+
+on eventProcHandButtons me, tEvent, tSprID, tParam
+  if tEvent <> #mouseUp then
+    return 0
+  end if
+  case tSprID of
+    "habbo_hand_next":
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "next")
+    "habbo_hand_prev":
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "prev")
+    "habbo_hand_close":
+      me.close()
+  end case
+  return 0
 end

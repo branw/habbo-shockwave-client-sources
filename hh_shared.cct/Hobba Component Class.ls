@@ -48,7 +48,9 @@ on send_cryPick me, tCryID, tGoHelp
     if not tOk then
       return error(me, "Invalid or missing data in saved help cry!", #send_cryPick)
     end if
-    if tdata[#type] = #public then
+    if tdata[#type] = #private then
+      tdata[#casts] = getVariableValue("room.cast.private")
+    else
       if ilk(tdata[#casts]) = #string then
         tCasts = tdata[#casts]
         tdata[#casts] = []
@@ -59,8 +61,6 @@ on send_cryPick me, tCryID, tGoHelp
         end repeat
         the itemDelimiter = tDelim
       end if
-    else
-      tdata[#casts] = getVariableValue("room.cast.private")
     end if
     executeMessage(#executeRoomEntry, tdata[#id], tdata)
   end if
@@ -74,16 +74,16 @@ on send_cryForHelp me, tMsg
   end if
   tMsg = replaceChars(tMsg, "/", SPACE)
   tMsg = replaceChunks(tMsg, RETURN, "<br>")
-  tMsg = getStringServices().convertSpecialChars(tMsg, 1)
+  tMsg = convertSpecialChars(tMsg, 1)
   if tRoomData[#type] = #private then
-    tPropList = [#string: tMsg, #integer: 1, #string: tRoomData[#marker], #string: tRoomData[#name], #integer: integer(tRoomData[#id]), #string: tRoomData[#owner]]
+    tPropList = [#string: tMsg, #string: tRoomData[#marker]]
   else
     tCasts = string(tRoomData[#casts])
     tCasts = replaceChars(tCasts, QUOTE, EMPTY)
     tCasts = replaceChars(tCasts, " ", EMPTY)
     tCasts = replaceChars(tCasts, "[", EMPTY)
     tCasts = replaceChars(tCasts, "]", EMPTY)
-    tPropList = [#string: tMsg, #integer: 0, #string: tCasts, #string: tRoomData[#name], #string: tRoomData[#id], #integer: tRoomData[#port], #integer: tRoomData[#door]]
+    tPropList = [#string: tMsg, #string: tCasts]
   end if
   if connectionExists(getVariable("connection.room.id")) then
     return getConnection(getVariable("connection.room.id")).send("CRYFORHELP", tPropList)

@@ -24,9 +24,9 @@ end
 on prepareRoom me
   pCurtainsLocZ = [:]
   repeat with f = 1 to 2
-    tSprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("curtains" & f)
-    pCurtainsLocZ["curtains" & f] = tSprite.locZ
-    tSprite.locZ = tSprite.locZ - 2000
+    tsprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("curtains" & f)
+    pCurtainsLocZ["curtains" & f] = tsprite.locZ
+    tsprite.locZ = tsprite.locZ - 2000
   end repeat
   tProps = [:]
   pSplashs = [:]

@@ -29,7 +29,7 @@ on handle_flatinfo me, tMsg
       tFlat[#door] = "password"
   end case
   if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).get(#user_name) then
-    me.getComponent().delayedAlert("alert_no_category", 2500)
+    executeMessage(#setEnterRoomAlert, "alert_no_category")
   end if
   tMode = me.getInterface().getNaviView()
   me.getComponent().updateSingleFlatInfo(tFlat, tMode)
@@ -216,6 +216,8 @@ on handle_cantconnect me, tMsg
       tError = "nav_error_room_full"
     2:
       tError = "nav_error_room_closed"
+    3:
+      tError = "queue_set." & tConn.GetStrFrom() & ".alert"
   end case
   return executeMessage(#alert, [#id: "nav_error", #msg: tError])
 end

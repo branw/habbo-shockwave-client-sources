@@ -6,7 +6,7 @@ on prepare me, tdata
   end if
   removeEventBroker(me.pSprList[2].spriteNum)
   removeEventBroker(me.pSprList[3].spriteNum)
-  if tdata["SWITCHON"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     me.setOn()
   else
     me.setOff()
@@ -16,7 +16,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "ON" then
     me.setOn()
   else
@@ -103,7 +103,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCHON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
 end

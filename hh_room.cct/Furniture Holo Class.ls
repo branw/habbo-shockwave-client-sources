@@ -4,7 +4,7 @@ on prepare me, tdata
   pActive = 0
   pAnimFrm = 0
   pDelay = 1
-  if tdata["SWITCHON"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     me.setOn()
   else
     me.setOff()
@@ -12,7 +12,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "ON" then
     me.setOn()
   else
@@ -102,6 +102,6 @@ on select me
     else
       tOnString = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCHON" & "/" & tOnString)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tOnString])
   end if
 end

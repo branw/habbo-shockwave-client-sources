@@ -79,6 +79,7 @@ on setProperty me, tProp, tValue, tView
 end
 
 on showNavigator me
+  me.getComponent().setUpdates(1)
   if windowExists(pWindowTitle) then
     getWindow(pWindowTitle).show()
   else
@@ -88,6 +89,7 @@ on showNavigator me
 end
 
 on hideNavigator me, tHideOrRemove
+  me.getComponent().setUpdates(0)
   if voidp(tHideOrRemove) then
     tHideOrRemove = #remove
   end if
@@ -109,10 +111,10 @@ on showhidenavigator me, tHideOrRemove
     if getWindow(pWindowTitle).getProperty(#visible) then
       me.hideNavigator(tHideOrRemove)
     else
-      getWindow(pWindowTitle).show()
+      me.showNavigator()
     end if
   else
-    me.ChangeWindowView(pOpenWindow)
+    me.showNavigator()
   end if
 end
 
@@ -288,6 +290,12 @@ on renderHistory me, tNodeId, tHistoryTxt
   call(#moveBy, tScaleList, 0, tOffset)
   call(#resizeBy, tScaleList, 0, -tOffset)
   tTextImg = me.pWriterBackTabs.render(tHistoryTxt)
+  if variableExists("nav_roomlist_marginv") then
+    tMargin = getVariable("nav_roomlist_marginv")
+    tTempImg = image(tTextImg.width, tTextImg.height + tMargin, me.pBufferDepth)
+    tTempImg.copyPixels(tTextImg, tTextImg.rect + rect(0, tMargin, 0, tMargin), tTextImg.rect)
+    tTextImg = tTempImg
+  end if
   tWndObj.getElement("nav_roomlistBackLinks").feedImage(tTextImg)
 end
 
@@ -349,17 +357,23 @@ on showNodeInfo me, tNodeId
   else
     case tView of
       #unit:
-        if tNodeInfo[#door] > 0 then
-          tRoomDesc = getText("nav_venue_" & tNodeInfo[#unitStrId] & "/" & tNodeInfo[#door] & "_desc")
-        else
-          tRoomDesc = getText("nav_venue_" & tNodeInfo[#unitStrId] & "/0_desc")
+        tTextId = "nav_venue_" & tNodeInfo[#unitStrId] & "/" & tNodeInfo[#door] & "_desc"
+        if not textExists(tTextId) then
+          tDelim = the itemDelimiter
+          the itemDelimiter = "_"
+          tTextId = "nav_venue_" & tNodeInfo[#unitStrId].item[1..tNodeInfo[#unitStrId].item.count - 1] & "_desc"
+          the itemDelimiter = tDelim
         end if
+        tRoomDesc = getText(tTextId)
         tIconName = "thumb." & tNodeInfo[#unitStrId]
         if not memberExists(tIconName) then
           tDelim = the itemDelimiter
           the itemDelimiter = "_"
           tIconName = tIconName.item[1..tIconName.item.count - 1]
           the itemDelimiter = tDelim
+        end if
+        if not memberExists(tIconName) then
+          tIconName = "nav_ico_def_pr"
         end if
         tHeaderTxt = tNodeInfo[#name]
         tWndObj.getElement("nav_go_button").show()
@@ -405,11 +419,16 @@ on showNodeInfo me, tNodeId
     end case
   end if
   tHeaderImage = pWriterPlainBoldLeft.render(tHeaderTxt)
-  tElem.feedImage(tHeaderImage)
   tWidth = tElem.getProperty(#width)
   pWriterPlainNormWrap.define([#rect: rect(0, 0, tWidth, 0)])
   tImage = pWriterPlainNormWrap.render(tRoomDesc)
-  tWndObj.getElement("nav_roomnfo").feedImage(tImage)
+  tMargin = 2
+  tDataImage = image(tWidth, tHeaderImage.height + tMargin + tImage.height, 8)
+  tDataImage.copyPixels(tHeaderImage, tHeaderImage.rect, tHeaderImage.rect)
+  tSourceRect = rect(0, 0, tImage.width, tImage.height)
+  tTargetRect = rect(0, tHeaderImage.height + tMargin, tImage.width, tImage.height + tHeaderImage.height + tMargin)
+  tDataImage.copyPixels(tImage, tTargetRect, tSourceRect)
+  tElem.feedImage(tDataImage)
   if memberExists(tIconName) and tWndObj.elementExists("nav_roomnfo_icon") then
     tElemID = "nav_roomnfo_icon"
     tTempImg = member(getmemnum(tIconName)).image
@@ -550,7 +569,7 @@ on renderRoomList me, tList
     if tItem[#nodeType] = 0 then
       me.renderRoomListItem(#cat, i, tTargetImg, tUserStatus)
     else
-      me.renderRoomListItem(#room, i, tTargetImg, tUserStatus)
+      me.renderRoomListItem(#room, i, tTargetImg, tUserStatus, tItem[#nodeType])
     end if
     case tItem[#door] of
       "closed":
@@ -568,22 +587,43 @@ on renderRoomList me, tList
     end if
   end repeat
   delete char -30003 of tNameTxt
+  if variableExists("nav_roomlist_marginv") then
+    tNameVertMargin = getVariable("nav_roomlist_marginv")
+  else
+    tNameVertMargin = 0
+  end if
   tNameImage = me.pWriterPrivPlain.render(tNameTxt)
-  tTargetImg.copyPixels(tNameImage, tNameImage.rect + rect(17, -5, 17, -5), tNameImage.rect)
+  tTargetImg.copyPixels(tNameImage, tNameImage.rect + rect(17, -5 + tNameVertMargin, 17, -5 + tNameVertMargin), tNameImage.rect)
   return tTargetImg
 end
 
-on renderRoomListItem me, ttype, tNum, tTargetImg, tUserStatus
-  if tUserStatus = 0 then
-    tBackImgId = 1
-  else
-    if tUserStatus < 0.34000000000000002 then
-      tBackImgId = 2
+on renderRoomListItem me, ttype, tNum, tTargetImg, tUserStatus, tNodeType
+  if tNodeType = 1 then
+    if tUserStatus = 0 then
+      tBackImgId = 1
     else
-      if tUserStatus < 0.78000000000000003 then
-        tBackImgId = 3
+      if tUserStatus < 0.47999999999999998 then
+        tBackImgId = 2
       else
-        tBackImgId = 4
+        if tUserStatus < 0.98999999999999999 then
+          tBackImgId = 3
+        else
+          tBackImgId = 4
+        end if
+      end if
+    end if
+  else
+    if tUserStatus = 0 then
+      tBackImgId = 1
+    else
+      if tUserStatus < 0.47999999999999998 then
+        tBackImgId = 2
+      else
+        if tUserStatus < 0.78000000000000003 then
+          tBackImgId = 3
+        else
+          tBackImgId = 4
+        end if
       end if
     end if
   end if
@@ -596,16 +636,20 @@ on renderRoomListItem me, ttype, tNum, tTargetImg, tUserStatus
   tdestrect = tBackImg.rect + rect(0, tLocV, 0, tLocV)
   tTargetImg.copyPixels(tBackImg, tdestrect, tBackImg.rect)
   if ttype = #room then
+    tAddOffset = 0
+    if variableExists("nav_golink_voffset") then
+      tAddOffset = getVariable("nav_golink_voffset")
+    end if
     tX1 = tBackImg.width - me.pGoLinkTextImg.width - 12
     tX2 = tX1 + me.pGoLinkTextImg.width
-    tY1 = 3 + tLocV
+    tY1 = 3 + tLocV + tAddOffset
     tY2 = tY1 + me.pGoLinkTextImg.height
     tdestrect = rect(tX1, tY1, tX2, tY2)
     tTargetImg.copyPixels(me.pGoLinkTextImg, tdestrect, me.pGoLinkTextImg.rect, [#bgColor: rgb("#DDDDDD"), #ink: 36])
   else
     tX1 = tBackImg.width - me.pOpenLinkTextImg.width - 27
     tX2 = tX1 + me.pOpenLinkTextImg.width
-    tY1 = 3 + tLocV
+    tY1 = tLocV + (me.pListItemHeight - me.pGoLinkTextImg.height) / 2 - 1
     tY2 = tY1 + me.pOpenLinkTextImg.height
     tdestrect = rect(tX1, tY1, tX2, tY2)
     tTargetImg.copyPixels(me.pOpenLinkTextImg, tdestrect, me.pOpenLinkTextImg.rect, [#bgColor: rgb("#DDDDDD"), #ink: 36])
