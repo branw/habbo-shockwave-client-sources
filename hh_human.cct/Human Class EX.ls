@@ -397,7 +397,7 @@ on setProperty me, tPropID, tValue
     #groupid:
       pGroupId = tValue
     #groupstatus:
-      pGroupStatus = tValue
+      pStatusInGroup = tValue
   end case
   return 0
 end

@@ -236,6 +236,9 @@ end
 on toggleOwnBadgeVisibility me
   tMyBadgeInfo = me.getMyBadgeInfo()
   tVisibilityNow = tMyBadgeInfo[2]
+  if tMyBadgeInfo[1] = " " then
+    return 0
+  end if
   if tVisibilityNow then
     tUpdatedVisibility = 0
   else

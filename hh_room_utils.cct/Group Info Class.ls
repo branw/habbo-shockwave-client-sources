@@ -137,13 +137,17 @@ on showUsersInfo me, tUserIndex
     return 0
   end if
   tGroupId = tuser.getProperty(#groupid)
+  tGroupId = string(tGroupId)
   tGroupStatus = tuser.getProperty(#groupstatus)
-  if voidp(tGroupId) then
+  if tGroupId = EMPTY then
+    return 0
+  end if
+  if integer(tGroupId) < 0 then
     return 0
   end if
   if voidp(pGroupData[tGroupId]) then
     pLastPendingData = [#userindex: tUserIndex, #groupid: tGroupId]
-    getConnection(getVariable("room.connection")).send("GET_GROUP_DETAILS", [#integer: tGroupId])
+    getConnection(getVariable("connection.info.id")).send("GET_GROUP_DETAILS", [#integer: integer(tGroupId)])
     return 0
   end if
   if voidp(pGroupData[tGroupId][#name]) then

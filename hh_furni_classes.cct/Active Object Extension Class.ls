@@ -101,13 +101,14 @@ on update me
           tDelay = 1
         end if
         if pFrameRepeatList[tLayer] >= tDelay then
-          tLoop = pLoopCountList[tLayer]
+          tLoop = 1
           tFrameCount = tFrameList[#frames].count
           if tFrameCount > 0 then
             if pFrameNumberList[tLayer] = tFrameCount then
               if pLoopCountList[tLayer] > 0 then
                 pLoopCountList[tLayer] = pLoopCountList[tLayer] - 1
               end if
+              tLoop = pLoopCountList[tLayer]
               if pLoopCountList[tLayer] = 0 then
                 tIsAnimatingList[tLayer] = 0
               end if
@@ -391,7 +392,9 @@ on validateStateSequenceList me
     end if
     if tstatelist[tstate] > 0 then
       return error(me, "Invalid state sequence list for item" && me.pNameBase, #validateStateSequenceList)
+      next repeat
     end if
+    tstatelist[tstate] = 1
   end repeat
   return 1
 end
