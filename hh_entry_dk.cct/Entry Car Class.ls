@@ -1,7 +1,7 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pmodel, pDelayCounter
 
-on define me, tsprite, tDirection
-  pSprite = tsprite
+on define me, tSprite, tDirection
+  pSprite = tSprite
   pOffset = [0, 0]
   pDirection = tDirection
   me.reset()

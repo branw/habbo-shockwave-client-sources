@@ -222,7 +222,7 @@ on hideMainWindow me
   if tWndObj = 0 then
     return 0
   end if
-  return tWndObj.Hide()
+  return tWndObj.hide()
 end
 
 on eventProcMainWindow me, tEvent, tSprID, tParam
@@ -477,7 +477,7 @@ on showErrorMessage me, tErrorStr, tRequestStr, tExtra
     "kicked":
       me.ChangeWindowView(#gameList)
   end case
-  return executeMessage(#alert, [#id: "bb_error", #Msg: tAlertStr])
+  return executeMessage(#alert, [#id: "bb_error", #msg: tAlertStr])
 end
 
 on delayedMenuToBack me

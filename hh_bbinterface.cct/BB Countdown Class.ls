@@ -10,7 +10,7 @@ on deconstruct me
   return me.removeGameCountdown()
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #gamereset:
       return me.startGameCountdown(tdata[#time_until_game_start], 0)
@@ -36,13 +36,13 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
   if createWindow(pWindowID, "bb_cdown.window") then
     tWndObj = getWindow(pWindowID)
     if me.getGameSystem().getSpectatorModeFlag() then
-      tWndObj.getElement("bb_button_cdown_exit").Hide()
+      tWndObj.getElement("bb_button_cdown_exit").hide()
       tWndObj.moveTo(41, 50)
     else
       tWndObj.moveTo(25, 26)
     end if
     if me.getGameSystem().getTournamentFlag() then
-      tWndObj.getElement("bb_gameprice").Hide()
+      tWndObj.getElement("bb_gameprice").hide()
     end if
     tElem = tWndObj.getElement("bb_bar_cntDwn")
     tElem.setProperty(#member, member(getmemnum("bb_scrbar_4")))

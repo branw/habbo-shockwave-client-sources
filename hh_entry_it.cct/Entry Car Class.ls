@@ -1,7 +1,7 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pInitDelay
 
-on define me, tsprite, tDirection
-  pSprite = tsprite
+on define me, tSprite, tDirection
+  pSprite = tSprite
   pOffset = [0, 0]
   pTurnPnt = 535
   pDirection = tDirection

@@ -6,7 +6,7 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   if tdata = 0 then
     return 0
   end if
@@ -24,5 +24,5 @@ on Refresh me, tTopic, tdata
     otherwise:
       tAlertStr = "bb_error_" & tdata[#request] & "_" & tdata[#reasonstr]
   end case
-  return executeMessage(#alert, [#id: "bb_error", #Msg: tAlertStr])
+  return executeMessage(#alert, [#id: "bb_error", #msg: tAlertStr])
 end

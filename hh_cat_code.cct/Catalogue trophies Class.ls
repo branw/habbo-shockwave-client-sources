@@ -331,10 +331,10 @@ on eventProc me, tEvent, tSprID, tProp
                 tText = replaceChunks(tText, RETURN, "\r")
               end if
               if tText.length < 1 then
-                return executeMessage(#alert, [#Msg: "catalog_give_trophymsg", #id: "ctlg_trophymsg"])
+                return executeMessage(#alert, [#msg: "catalog_give_trophymsg", #id: "ctlg_trophymsg"])
               else
                 if tText.length > 150 then
-                  return executeMessage(#alert, [#Msg: "catalog_length_trophymsg", #id: "ctlg_trophymsg"])
+                  return executeMessage(#alert, [#msg: "catalog_length_trophymsg", #id: "ctlg_trophymsg"])
                 end if
               end if
               if pSelectedProduct.ilk <> #propList then

@@ -64,9 +64,9 @@ on ShowAlert me, tProps
     return error(me, "Properties for window expected!", #showHideWindow)
   end if
   if stringp(tProps) then
-    tProps = [#Msg: tProps]
+    tProps = [#msg: tProps]
   end if
-  tText = getText(tProps[#Msg])
+  tText = getText(tProps[#msg])
   tWndTitle = getText("win_error", "Notice!")
   tTextImg = getWriter(pWriterPlain).render(tText).duplicate()
   if voidp(tProps[#id]) then
@@ -172,7 +172,7 @@ on showDialog me, tWndID, tProps
       tWndObj.getElement("link_list").feedImage(tLinkImg)
       if threadExists(#room) then
         if getThread(#room).getComponent().getRoomID() = EMPTY then
-          tWndObj.getElement("help_callforhelp_textlink").Hide()
+          tWndObj.getElement("help_callforhelp_textlink").hide()
         end if
       end if
       if tWndObj.elementExists("help_tutorial_link") then
