@@ -1,7 +1,9 @@
 on prepareMovie
-  castLib("fuse_client").preloadMode = 1
   clearGlobals()
+  castLib(2).preloadMode = 1
+  preloadNetThing(castLib(2).fileName)
   moveToFront(the stage)
+  set the exitLock to 1
 end
 
 on stopMovie

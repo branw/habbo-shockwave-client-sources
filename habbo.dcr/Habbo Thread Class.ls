@@ -1,11 +1,7 @@
 property pLoaderBarID
 
-on new me
-  return me
-end
-
 on construct me
-  pLoaderBarID = "JustAloader"
+  pLoaderBarID = "InitLoader"
   registerMessage(#initialize, me.getID(), #updateState)
   return 1
 end
@@ -18,34 +14,13 @@ on deconstruct me
   return 1
 end
 
-on updateState me, tState
-  case tState of
+on updateState me, tstate
+  case tstate of
     "initialize":
-      pState = tState
+      pState = tstate
       return me.delay(1000, #updateState, "load_external_casts")
     "load_external_casts":
-      pState = tState
-      tCastList = me.solveRequiredCasts()
-      if tCastList.count > 0 then
-        tCastLoadId = startCastLoad(tCastList, 1)
-        if memberExists("habbo_simple.window") then
-          createWindow(pLoaderBarID, "habbo_simple.window", 255, 215)
-          tWndObj = getWindow(pLoaderBarID)
-          tWndObj.merge("general_loader.window")
-          tWndObj.getElement("general_loader_text").setText(getText("loading_project"))
-          tBuffer = tWndObj.getSpriteByID("gen_loaderbar").member.image
-          tProps = [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)]
-        else
-          tProps = [#buffer: #window, #bgColor: rgb(255, 255, 255)]
-        end if
-        showLoadingBar(tCastLoadId, tProps)
-        registerCastloadCallback(tCastLoadId, #updateState, me.getID(), "holdOn")
-      else
-        return me.updateState("login")
-      end if
-      return 1
-    "holdOn":
-      pState = tState
+      pState = tstate
       tCastList = me.solveRequiredCasts()
       tNewList = [:]
       repeat with i = 1 to tCastList.count
@@ -57,19 +32,30 @@ on updateState me, tState
       end repeat
       if tNewList.count > 0 then
         tCastLoadId = startCastLoad(tNewList, 1)
-        tBuffer = getWindow(pLoaderBarID).getSpriteByID("gen_loaderbar").member.image
-        tProps = [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)]
+        if memberExists("habbo_simple.window") and memberExists("general_loader.window") then
+          createWindow(pLoaderBarID, "habbo_simple.window")
+          tWndObj = getWindow(pLoaderBarID)
+          tWndObj.merge("general_loader.window")
+          tWndObj.center()
+          tWndObj.getElement("general_loader_text").setText(getText("loading_project"))
+          tBuffer = tWndObj.getElement("gen_loaderbar").getProperty(#buffer).image
+          tProps = [#buffer: tBuffer, #bgColor: rgb(255, 255, 255)]
+        else
+          tProps = [#buffer: #window, #bgColor: rgb(255, 255, 255)]
+        end if
         showLoadingBar(tCastLoadId, tProps)
-        registerCastloadCallback(tCastLoadId, #updateState, me.getID(), "holdOn")
+        registerCastloadCallback(tCastLoadId, #updateState, me.getID(), "load_external_casts")
       else
         if windowExists(pLoaderBarID) then
           removeWindow(pLoaderBarID)
         end if
-        return me.delay(1000, #updateState, "login")
+        return me.delay(100, #updateState, "login")
       end if
     "login":
-      pState = tState
-      getThread(#navigator).getComponent().updateState("login")
+      pState = tstate
+      if threadExists(#navigator) then
+        getThread(#navigator).getComponent().updateState("login")
+      end if
       return 1
   end case
 end
@@ -78,10 +64,11 @@ on solveRequiredCasts me
   tCastList = [:]
   tDelim = the itemDelimiter
   the itemDelimiter = ":"
+  tPrefix = "cast.load."
   i = 1
   repeat while 1
-    if variableExists("cast.load." & i) then
-      tString = getVariable("cast.load." & i)
+    if variableExists(tPrefix & i) then
+      tString = getVariable(tPrefix & i)
       if tString.item.count = 2 then
         tInt = value(tString.item[1])
         if voidp(tInt) then
