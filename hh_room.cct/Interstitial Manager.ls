@@ -53,12 +53,6 @@ on Init me, tSourceURL, tClickURL
   end if
   pDLCounter = pDLCounter + 1
   pMemberID = pMemberIDBase & pDLCounter
-  if tSourceURL contains "?" then
-    tSeparator = "&"
-  else
-    tSeparator = "?"
-  end if
-  tSourceURL = tSourceURL & tSeparator & "r=" & random(9999999999.0)
   tAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
   if tAdMemNum < 1 then
     me.adFinished()
