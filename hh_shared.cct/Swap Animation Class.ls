@@ -94,18 +94,14 @@ on advanceAnimFrame me
       pCurrentFrame = 1
     end if
   end if
-  if ilk(pFrameList) = #list then
-    if pFrameList.count > 0 then
-      tAnimFrame = value(pFrameList[pCurrentFrame])
-      if not voidp(pMemberClass) then
-        tMem = pMemberClass & tAnimFrame
-        pPrefs[#sprite].member = tMem
-        pPrefs[#sprite].width = member(tMem).width
-        pPrefs[#sprite].height = member(tMem).height
-      else
-        tMem = pPaletteClass & tAnimFrame
-        pPrefs[#sprite].member.paletteRef = member(tMem)
-      end if
-    end if
+  tAnimFrame = value(pFrameList[pCurrentFrame])
+  if not voidp(pMemberClass) then
+    tMem = pMemberClass & tAnimFrame
+    pPrefs[#sprite].member = tMem
+    pPrefs[#sprite].width = member(tMem).width
+    pPrefs[#sprite].height = member(tMem).height
+  else
+    tMem = pPaletteClass & tAnimFrame
+    pPrefs[#sprite].member.paletteRef = member(tMem)
   end if
 end

@@ -148,10 +148,6 @@ on xtraMsgHandler me
   end if
   pConnectionOk = 1
   tNewMsg = pXtra.getNetMessage()
-  if tNewMsg = VOID then
-    me.disconnect()
-    return error(me, "getNetMessage() returned VOID.", #xtraMsgHandler)
-  end if
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
   tSubject = tNewMsg.getaProp(#subject)
@@ -214,10 +210,9 @@ on forwardMsg me, tMessage
 end
 
 on log me, tMsg
-  if not (the runMode contains "Author") then
-    return 0
-  end if
   case pLogMode of
+    1:
+      put "[Connection" && me.getID() & "] :" && tMsg
     2:
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield

@@ -204,7 +204,7 @@ on updateLocation me
               tPartTypes = [#wallright]
           end case
           tLounge = tVisualizer.getProperty(#layout)
-          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 and pDirection = #right then
+          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 then
             pWallY = 0
           end if
           tPartProps = tVisualizer.getPartAtLocation(pWallX, pWallY, tPartTypes)

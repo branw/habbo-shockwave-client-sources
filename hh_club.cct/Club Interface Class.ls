@@ -1,7 +1,8 @@
-property pDialogId, pConnectionId, pChosenLength
+property pDialogId, pGiftDialogID, pConnectionId, pChosenLength
 
 on construct me
-  pDialogId = "clubinfo1"
+  pGiftDialogID = "window_clubgift"
+  pDialogId = "window_clubinfo1"
   pConnectionId = getVariable("connection.info.id")
   pChosenLength = 1
   registerMessage(#show_clubinfo, me.getID(), #show_clubinfo)
@@ -12,6 +13,23 @@ end
 on deconstruct me
   unregisterMessage(#show_clubinfo, me.getID())
   unregisterMessage(#notify, me.getID())
+  return 1
+end
+
+on show_giftinfo me
+  if windowExists(pGiftDialogID) then
+    return 0
+  end if
+  me.setupWindow(pGiftDialogID, #modal)
+  tWndObj = getWindow(pGiftDialogID)
+  if not objectp(tWndObj) then
+    return 0
+  end if
+  tWndObj.merge("habbo_club_confirm.window")
+  tWndObj.center()
+  tWndObj.getElement("club_confirm_title").setText(getText("club_confirm_gift_title"))
+  tWndObj.getElement("club_confirm_text").setText(getText("club_confirm_gift_text"))
+  tWndObj.registerProcedure(#eventProcGiftDialogMousedown, me.getID(), #mouseDown)
   return 1
 end
 
@@ -119,20 +137,20 @@ on replaceCreditsText me
   return 1
 end
 
-on setupWindow me, ttype
-  if windowExists(pDialogId) then
-    removeWindow(pDialogId)
+on setupWindow me, tWindowID, ttype
+  if windowExists(tWindowID) then
+    removeWindow(tWindowID)
   end if
   if ttype = #modal then
-    if not createWindow(pDialogId, VOID, 0, 0, #modal) then
+    if not createWindow(tWindowID, VOID, 0, 0, #modal) then
       return 0
     end if
   else
-    if not createWindow(pDialogId) then
+    if not createWindow(tWindowID) then
       return 0
     end if
   end if
-  tWndObj = getWindow(pDialogId)
+  tWndObj = getWindow(tWindowID)
   tWndObj.setProperty(#title, getText("club_habbo.window.title"))
   if not tWndObj.merge("habbo_full.window") then
     return tWndObj.close()
@@ -144,7 +162,7 @@ on show_clubinfo me
   tClubInfo = me.getComponent().getStatus()
   if tClubInfo <> 0 then
     if not windowExists(pDialogId) then
-      me.setupWindow()
+      me.setupWindow(pDialogId)
       tWndObj = getWindow(pDialogId)
       if tClubInfo[#daysLeft] = 0 and tClubInfo[#ElapsedPeriods] = 0 then
         if not (getText("club_paybycash_url") starts "http") then
@@ -173,7 +191,7 @@ end
 
 on updateClubStatus me, tStatus, tResponseFlag, tOldClubStatus
   if tResponseFlag = 2 then
-    me.setupWindow()
+    me.setupWindow(pDialogId)
     tWndObj = getWindow(pDialogId)
     if not objectp(tWndObj) then
       return 0
@@ -187,7 +205,7 @@ on updateClubStatus me, tStatus, tResponseFlag, tOldClubStatus
     end if
   end if
   if tResponseFlag = 3 then
-    me.setupWindow(#modal)
+    me.setupWindow(pDialogId, #modal)
     tWndObj = getWindow(pDialogId)
     tWndObj.merge("habbo_club_ended.window")
     tWndObj.center()
@@ -263,6 +281,20 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
       removeWindow(me.pDialogId)
     "close":
       removeWindow(me.pDialogId)
+  end case
+  return 1
+end
+
+on eventProcGiftDialogMousedown me, tEvent, tSprID, tParam
+  case tSprID of
+    "club_confirm_ok":
+      removeWindow(pGiftDialogID)
+      me.getComponent().acceptGift()
+    "club_confirm_cancel", "club_button_close":
+      removeWindow(pGiftDialogID)
+      me.getComponent().rejectGift()
+    "close":
+      me.getComponent().resetGiftList()
   end case
   return 1
 end

@@ -1,17 +1,14 @@
-property pAnimThisUpdate, pSin, pAnimTimer, pSpriteList, pOrigLocs, pDiscoStyle, pDiscoStyleCount, pLightSwitchTimer, pWallLightSprites, pWallLightValues, pWallLightCount
+property pAnimThisUpdate, pSin, pSpriteList, pOrigLocs, pWallLightSprites, pWallLightValues, pWallLightCount, pTileSprites
 
 on construct me
   pSin = 0.0
-  pAnimTimer = the timer
   pSpriteList = []
   pOrigLocs = []
-  pDiscoStyle = 1
-  pDiscoStyleCount = 10
-  pLightSwitchTimer = the timer
   pAnimThisUpdate = 0
   pWallLightCount = 60
   pWallLightSprites = []
   pWallLightValues = []
+  pTileSprites = []
   return 1
 end
 
@@ -24,29 +21,9 @@ on prepare me
   return receiveUpdate(me.getID())
 end
 
-on showprogram me, tMsg
-  if voidp(tMsg) then
-    return 0
-  end if
-  tNum = tMsg[#show_command]
-  return me.changeDiscoStyle(tNum)
-end
-
-on changeDiscoStyle me, tNr
-  if tNr = VOID then
-    pDiscoStyle = pDiscoStyle + 1
-  else
-    pDiscoStyle = tNr
-  end if
-  if pDiscoStyle < 1 or pDiscoStyle > pDiscoStyleCount then
-    pDiscoStyle = 1
-  end if
-  return 1
-end
-
 on update me
   pAnimThisUpdate = not pAnimThisUpdate
-  if pAnimThisUpdate then
+  if not pAnimThisUpdate then
     return 1
   end if
   pSin = pSin + 0.07000000000000001
@@ -54,33 +31,9 @@ on update me
     return me.getSpriteList()
   end if
   me.rotateWallLights()
-  case pDiscoStyle of
-    1:
-      me.fullRotation(15, 15, 15, 15, point(-10, -10), point(-10, -10))
-    2:
-      me.fullRotation(15, 15, 15, 15, point(30, 15), point(-40, -15))
-      me.switchLights(#show1, 1)
-    3:
-      me.fullRotation(15, 15, 15, 15, point(30, 15), point(-40, -15))
-      me.switchLights(#showAll, 0.69999999999999996)
-    4:
-      me.fullRotation(0, 19, 19, 0, point(30, 0), point(-10, 0))
-    5:
-      me.fullRotation(19, 0, 0, 19, point(50, 20), point(-50, 20))
-    6:
-      me.fullRotation(15, 15, 15, 15, VOID, VOID)
-    7:
-      me.fullRotation(20, 20, 20, 20, VOID, VOID)
-    8:
-      me.switchLights(#show1, 3)
-    9:
-      me.fullRotation(8, 8, 8, 8, VOID, point(-5, -5))
-      me.switchLights(#showAll, 1)
-    10:
-      me.switchLights(#showAll, 0.69999999999999996)
-    11:
-      me.switchLights(#show1, 2)
-  end case
+  me.blinkFloorLights()
+  me.fullRotation(15, 15, 15, 15, point(-10, -10), point(-10, -10))
+  return 1
 end
 
 on fullRotation me, tX1, tY1, tX2, tY2, tOffset1, tOffset2
@@ -96,37 +49,6 @@ on fullRotation me, tX1, tY1, tX2, tY2, tOffset1, tOffset2
   pSpriteList[2].rect = rect(pSpriteList[2].rect[1], pSpriteList[2].rect[2], tLocs[1][1], tLocs[1][2])
   pSpriteList[5].rect = rect(tLocs[2][1], pSpriteList[5].rect[2], pSpriteList[5].rect[3], tLocs[2][2])
   return 1
-end
-
-on switchLights me, tStyle, tTime
-  if the timer < pLightSwitchTimer + tTime * 60 then
-    return 1
-  end if
-  pLightSwitchTimer = the timer
-  tVisibleList = [pSpriteList[1].visible, pSpriteList[4].visible]
-  case tStyle of
-    #show1:
-      repeat with i = 1 to tVisibleList.count
-        tVisibleList[i] = not tVisibleList[i]
-        tLightStart = (i - 1) * 3
-        repeat with j = 1 to 6
-          if j = tLightStart + 1 or j = tLightStart + 2 or j = tLightStart + 3 then
-            pSpriteList[j].visible = tVisibleList[i]
-          end if
-        end repeat
-      end repeat
-    #blink:
-      repeat with i = 1 to tVisibleList.count
-        tVisibleList[i] = not tVisibleList[1]
-      end repeat
-      repeat with j = 1 to 6
-        pSpriteList[j].visible = tVisibleList[1]
-      end repeat
-    #showAll:
-      repeat with j = 1 to 6
-        pSpriteList[j].visible = 1
-      end repeat
-  end case
 end
 
 on getSpriteList me
@@ -150,6 +72,17 @@ on getSpriteList me
   repeat with i = 1 to pSpriteList.count
     removeEventBroker(pSpriteList[i].spriteNum)
   end repeat
+  tColors = [rgb(30, 30, 115), rgb(20, 20, 105), rgb(30, 13, 110), rgb(30, 30, 120)]
+  repeat with i = 1 to 20
+    tSp = tObj.getSprById("valo" & i)
+    if tSp < 1 then
+      pSpriteList = []
+      return 0
+    end if
+    pTileSprites.add(tSp)
+    pTileSprites[i].color = tColors[random(tColors.count)]
+    pTileSprites[i].blend = 0
+  end repeat
   me.createWallLights()
   return 1
 end
@@ -159,17 +92,22 @@ on createWallLights me
     pWallLightValues[i] = []
     pWallLightValues[i][1] = random(155)
     pWallLightValues[i][2] = random(100)
-    pWallLightSprites[i] = sprite(reserveSprite(me.getID()))
+    tSpriteChannel = reserveSprite(me.getID())
+    if tSpriteChannel = 0 then
+      me.removeWallLights()
+      return 1
+    end if
+    pWallLightSprites[i] = sprite(tSpriteChannel)
     pWallLightSprites[i].ink = 32
     pWallLightSprites[i].blend = random(70)
     pWallLightSprites[i].locH = 64 + random(608 - 65)
     pWallLightSprites[i].member = getMember("lightspot_1")
   end repeat
-  return me.rotateWallLights()
+  return 1
 end
 
 on rotateWallLights me
-  repeat with i = 1 to pWallLightCount
+  repeat with i = 1 to pWallLightSprites.count
     tDimValue = pWallLightValues[i][2]
     tDimValue = tDimValue + 0.19
     if tDimValue > 100 then
@@ -200,6 +138,15 @@ on removeWallLights me
     if tWallSprite.ilk = #sprite then
       releaseSprite(tWallSprite.spriteNum)
     end if
+    pWallLightSprites = []
+  end repeat
+  return 1
+end
+
+on blinkFloorLights me
+  repeat with i = 1 to 20
+    tMultiplier = sin(pSin * 1.5 + i * 0.29999999999999999)
+    pTileSprites[i].blend = abs(tMultiplier * 100)
   end repeat
   return 1
 end

@@ -1,10 +1,11 @@
-property pChosenBadge, pChosenVisibility, pImageLibraryURL, pActiveDownloads
+property pChosenBadge, pChosenVisibility, pImageLibraryURL, pActiveDownloads, pUpdatedBadges
 
 on construct me
   pChosenBadge = 1
   pChosenVisibility = 1
   pImageLibraryURL = getVariable("image.library.url", "http://images.habbohotel.com/c_images/")
   pActiveDownloads = []
+  pUpdatedBadges = [:]
   return 1
 end
 
@@ -108,7 +109,7 @@ on updateBadgeImage me
   end if
   tBadgeName = tBadgeList[pChosenBadge]
   tMemNum = getmemnum("badge" && tBadgeName)
-  if tMemNum < 1 then
+  if tMemNum < 1 or pUpdatedBadges[tBadgeName] = 0 then
     tWndObj.getElement("badge_preview").clearImage()
     me.startBadgeDownload(tBadgeName)
     return 0
@@ -182,8 +183,15 @@ on startBadgeDownload me, tBadgeName
   if downloadExists("badge" && tBadgeName) then
     return 0
   end if
+  if downloadExists("badge localized" && tBadgeName) then
+    return 0
+  end if
   tSourceURL = pImageLibraryURL & "Badges/" & tBadgeName & ".gif"
-  tBadgeMemNum = queueDownload(tSourceURL, "badge" && tBadgeName, #bitmap, 1)
+  if getmemnum("badge" && tBadgeName) <> 0 then
+    tBadgeMemNum = queueDownload(tSourceURL, "badge localized" && tBadgeName, #bitmap, 1)
+  else
+    tBadgeMemNum = queueDownload(tSourceURL, "badge" && tBadgeName, #bitmap, 1)
+  end if
   member(tBadgeMemNum).image = image(1, 1, 32)
   member(tBadgeMemNum).trimWhiteSpace = 0
   registerDownloadCallback(tBadgeMemNum, #badgeLoaded, me.getID(), tBadgeName)
@@ -192,6 +200,16 @@ on startBadgeDownload me, tBadgeName
 end
 
 on badgeLoaded me, tBadgeName
+  pUpdatedBadges[tBadgeName] = 1
+  tLoadedBadgeNum = getmemnum("badge localized" && tBadgeName)
+  if tLoadedBadgeNum <> 0 then
+    if member(tLoadedBadgeNum).image.rect <> rect(0, 0, 1, 1) then
+      tBadgeNum = getmemnum("badge" && tBadgeName)
+      if tBadgeNum <> 0 then
+        member(tBadgeNum).image = member(tLoadedBadgeNum).image
+      end if
+    end if
+  end if
   me.updateBadgeImage()
   getThread(#room).getInterface().updateInfoStandBadge(tBadgeName)
   pActiveDownloads.deleteOne("badge" && tBadgeName)
@@ -283,7 +301,7 @@ on updateInfoStandBadge me, tInfoStandID, tSelectedObj, tBadgeID, tUserID
   else
     me.removeBadgeEffect()
   end if
-  if tBadgeMember.type = #bitmap then
+  if tBadgeMember.type = #bitmap and pUpdatedBadges[tBadgeID] = 1 then
     return tElem.feedImage(tBadgeMember.image)
   else
     me.startBadgeDownload(tBadgeID)

@@ -344,7 +344,7 @@ on mouseUp me, tNull, tSprID
       else
         if tSprID contains "close" then
           if voidp(pClientID) then
-            return pWindowMngr.Remove(me.getID())
+            return pWindowMngr.remove(me.getID())
           else
             tSprID = "close"
           end if

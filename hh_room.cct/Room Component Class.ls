@@ -178,7 +178,7 @@ on leaveRoom me, tJumpingToSubUnit
     removeObject(pRoomPrgID)
   end if
   if not pCacheFlag then
-    getObject(#cache).Remove(pCacheKey)
+    getObject(#cache).remove(pCacheKey)
   end if
   if objectp(me.getInterface().pIgnoreListObj) then
     me.getInterface().pIgnoreListObj.reset()
@@ -1005,7 +1005,7 @@ on processTeleportStruct me, tFlatStruct
   unregisterMessage(symbol("receivedFlatStructf_" & getObject(#session).get("target_flat_ID")))
   tFlatStruct[#id] = tFlatStruct[#flatId]
   tFlatStruct.addProp(#teleport, getObject(#session).get("target_door_ID"))
-  getObject(#session).Remove("target_flat_id")
+  getObject(#session).remove("target_flat_id")
   if getObject(#session).exists("current_door_ID") then
     tDoorID = getObject(#session).get("current_door_ID")
     tDoorObj = me.getComponent().getActiveObject(tDoorID)

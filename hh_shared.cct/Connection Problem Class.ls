@@ -8,7 +8,7 @@ on construct me
   else
     pDelayLength = 20000
   end if
-  registerMessage(#userlogin, me.getID(), #Remove)
+  registerMessage(#userlogin, me.getID(), #remove)
   if pDelayLength = 0 then
     return removeObject(me.getID())
   else
@@ -27,7 +27,7 @@ on deconstruct me
   return 1
 end
 
-on Remove me
+on remove me
   return removeObject(me.getID())
 end
 

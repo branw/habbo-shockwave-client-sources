@@ -124,7 +124,7 @@ on setup me, tdata
     return error(me, "Couldn't create part lists!", #setup)
   end if
   me.resetValues(pLocX, pLocY, pLocH, pDirection, pDirection)
-  me.Refresh(pLocX, pLocY, pLocH)
+  me.refresh(pLocX, pLocY, pLocH)
   pSync = 0
 end
 
@@ -172,7 +172,7 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pDirection = tDirBody
 end
 
-on Refresh me, tX, tY, tH, tDirHead, tDirBody
+on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.arrangeParts()
   pChanges = 1
 end

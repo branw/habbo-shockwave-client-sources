@@ -274,17 +274,6 @@ on validateParentEmail me, tUserEmail, tParentEmail
   return 1
 end
 
-on sendValidatePassword me, tPassword
-  if voidp(tPassword) or ilk(tPassword) <> #string then
-    tPassword = EMPTY
-  end if
-  tUserName = getObject(#session).get(#userName)
-  if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("APPROVE_PASSWORD", [#string: tUserName, #string: tPassword])
-  end if
-  return 1
-end
-
 on setAgeCheckResult me, tFlag
   pAgeCheckFlag = tFlag
   return me.getInterface().finishRegistration(tFlag)
@@ -368,18 +357,6 @@ on updateState me, tstate, tProps
       return 0
     "loadFigurePartList":
       return 
-      pState = tstate
-      tURL = getVariable("external.figurepartlist.txt")
-      tMem = tURL
-      if the moviePath contains "http://" then
-        tURL = tURL & "?" & the milliSeconds
-      else
-        if tURL contains "http://" then
-          tURL = tURL & "?" & the milliSeconds
-        end if
-      end if
-      tmember = queueDownload(tURL, tMem, #field, 1)
-      return registerDownloadCallback(tmember, #updateState, me.getID(), "initialize")
     "initialize":
       pState = tstate
       tMemName = getVariable("external.figurepartlist.txt")

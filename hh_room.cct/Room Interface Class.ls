@@ -363,11 +363,11 @@ end
 
 on hideInterface me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #Remove
+    tHideOrRemove = #remove
   end if
   tWndObj = getWindow(pInterfaceId)
   if tWndObj <> 0 then
-    if tHideOrRemove = #Remove then
+    if tHideOrRemove = #remove then
       return removeWindow(pInterfaceId)
     else
       return tWndObj.hide()
@@ -696,7 +696,7 @@ on hideAll me
   me.hideRoom()
   me.hideRoomBar()
   me.hideInfoStand()
-  me.hideInterface(#Remove)
+  me.hideInterface(#remove)
   me.hideConfirmDelete()
   me.hideConfirmPlace()
   me.hideDoorBellDialog()
@@ -1754,7 +1754,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   tdata[#x] = tObj.pLocX
   tdata[#y] = tObj.pLocY
   tdata[#h] = tObj.pLocH
-  tdata[#Dir] = tObj.pDirection
+  tdata[#dir] = tObj.pDirection
   tdata[#locH] = sprite(tSprNum).locH
   tdata[#locV] = sprite(tSprNum).locV
   tdata[#locZ] = EMPTY
@@ -1774,7 +1774,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   put "World X       " & tdata[#x]
   put "World Y       " & tdata[#y]
   put "World H       " & tdata[#h]
-  put "Dir           " & tdata[#Dir]
+  put "Dir           " & tdata[#dir]
   put "Scr X         " & tdata[#locH]
   put "Scr Y         " & tdata[#locV]
   put "Scr Z         " & tdata[#locZ]

@@ -24,13 +24,20 @@ on handle_scr_sinfo me, tMsg
   me.getComponent().setStatus(tList, tResponseFlag)
 end
 
+on handle_gift me, tMsg
+  tGiftCount = tMsg.connection.GetIntFrom()
+  me.getComponent().showGifts(tGiftCount)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(3, #handle_ok)
   tMsgs.setaProp(7, #handle_scr_sinfo)
+  tMsgs.setaProp(280, #handle_gift)
   tCmds = [:]
   tCmds.setaProp("SCR_GET_USER_INFO", 26)
   tCmds.setaProp("SCR_BUY", 190)
+  tCmds.setaProp("SCR_GIFT_APPROVAL", 210)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

@@ -126,7 +126,7 @@ on accept me, tuser, tValue
   return 1
 end
 
-on Refresh me, tdata
+on refresh me, tdata
   me.open(tdata)
   pMyStripItems = []
   tWndObj = getWindow(pTraderWndID)
@@ -218,20 +218,16 @@ on createItemImg me, tProps
     if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then
       tMemStr = tProps[#class] & "_" & tProps[#props] & "_small"
     else
-      if memberExists(tProps[#class] & "_small") then
-        tMemStr = tProps[#class] & "_small"
+      if memberExists(tClass && tProps[#props] & "_small") then
+        tMemStr = tClass && tProps[#props] & "_small"
       else
-        if memberExists(tClass && tProps[#props] & "_small") then
-          tMemStr = tClass && tProps[#props] & "_small"
+        if memberExists(tClass & "_small") then
+          tMemStr = tClass & "_small"
         else
-          if memberExists(tClass & "_small") then
-            tMemStr = tClass & "_small"
+          if memberExists("rightwall" && tClass && tProps[#props]) then
+            tMemStr = "rightwall" && tClass && tProps[#props]
           else
-            if memberExists("rightwall" && tClass && tProps[#props]) then
-              tMemStr = "rightwall" && tClass && tProps[#props]
-            else
-              error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
-            end if
+            error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
           end if
         end if
       end if

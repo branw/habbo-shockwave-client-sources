@@ -2,7 +2,7 @@ property pConnectionId, pTempPassword
 
 on construct me
   pConnectionId = getVariable("connection.info.id")
-  pTempPassword = EMPTY
+  pTempPassword = []
   return 1
 end
 
@@ -19,7 +19,7 @@ end
 on showLogin me
   getObject(#session).set(#userName, EMPTY)
   getObject(#session).set(#password, EMPTY)
-  pTempPassword = EMPTY
+  pTempPassword = []
   if createWindow(#login_a, "habbo_simple.window", 444, 100) then
     tWndObj = getWindow(#login_a)
     tWndObj.merge("login_a.window")
@@ -87,7 +87,10 @@ on tryLogin me
   end if
   tWndObj = getWindow(#login_b)
   tUserName = tWndObj.getElement("login_username").getText()
-  tPassword = pTempPassword
+  tPassword = EMPTY
+  repeat with tChar in pTempPassword
+    put tChar after tPassword
+  end repeat
   if tUserName = EMPTY then
     return 0
   end if
@@ -164,40 +167,13 @@ on stopWaving me
   me.delay(400, #hideLogin)
 end
 
-on updatePasswordAsterisks me
-  if not windowExists(#login_b) then
-    return 0
-  end if
-  tPwdTxt = getWindow(#login_b).getElement("login_password").getText()
-  repeat with i = 1 to tPwdTxt.length
-    tChar = chars(tPwdTxt, i, i)
-    if tChar <> "*" and tChar <> " " then
-      pTempPassword = chars(pTempPassword, 1, i - 1) & tChar & chars(pTempPassword, i + 1, i + 1)
-    end if
-  end repeat
-  tStars = EMPTY
-  repeat with i = 1 to pTempPassword.length
-    tStars = tStars & "*"
-  end repeat
-  getWindow(#login_b).getElement("login_password").setText(tStars)
-end
-
 on eventProcLogin me, tEvent, tSprID, tParam
-  tWndObj = getWindow(#login_b)
-  if not tWndObj then
-    return 0
-  end if
   case tEvent of
     #mouseUp:
       case tSprID of
-        "login_password":
-          tCount = tWndObj.getElement(tSprID).getText().length
-          set the selStart to tCount
-          set the selEnd to tCount
         "login_ok":
           return me.tryLogin()
         "login_createUser":
-          pTempPassword = EMPTY
           if getWindow(#login_a).getElement(tSprID).getProperty(#blend) = 100 then
             if windowExists(#login_a) then
               removeWindow(#login_a)
@@ -209,12 +185,11 @@ on eventProcLogin me, tEvent, tSprID, tParam
             return 1
           end if
         "login_forgotten":
-          if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then
+          if getWindow(#login_b).getElement(tSprID).getProperty(#blend) = 100 then
             openNetPage(getText("login_forgottenPassword_url"))
           end if
       end case
     #keyDown:
-      tTimeoutHideName = "pwdhide" & the milliSeconds
       if the keyCode = 36 then
         me.tryLogin()
         return 1
@@ -227,18 +202,27 @@ on eventProcLogin me, tEvent, tSprID, tParam
             49:
               return 1
             51:
-              if pTempPassword.length > 0 then
-                pTempPassword = chars(pTempPassword, 1, pTempPassword.length - 1)
+              if pTempPassword.count > 0 then
+                pTempPassword.deleteAt(pTempPassword.count)
               end if
-            123, 124, 125, 126:
-              return 1
             117:
-              if windowExists(#login_b) then
-                tWndObj.getElement(tSprID).setText(EMPTY)
-                pTempPassword = EMPTY
+              pTempPassword = []
+            otherwise:
+              tASCII = charToNum(the key)
+              if tASCII > 31 and tASCII < 128 then
+                if pTempPassword.count < getIntVariable("pass.length.max", 36) then
+                  pTempPassword.append(the key)
+                end if
               end if
           end case
-          createTimeout(tTimeoutHideName, 1, #updatePasswordAsterisks, me.getID(), VOID, 1)
+          tStr = EMPTY
+          repeat with tChar in pTempPassword
+            put "*" after tStr
+          end repeat
+          getWindow(#login_b).getElement(tSprID).setText(tStr)
+          set the selStart to pTempPassword.count
+          set the selEnd to pTempPassword.count
+          return 1
       end case
   end case
   return 0
