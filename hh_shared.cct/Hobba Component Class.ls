@@ -87,7 +87,7 @@ on send_cryPick me, tCryID, tGoHelp
     end if
     tdata[#id] = tdata[#room_id]
     executeMessage(#pickAndGoCFH, tdata[#sender])
-    executeMessage(#executeRoomEntry, tdata[#room_id], tdata)
+    executeMessage(#executeRoomEntry, tdata[#id], tdata)
   end if
   return 1
 end
@@ -117,6 +117,16 @@ on send_CfhReply me, tCryID, tMsg
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
+  tCharsCounted = 0
+  repeat with i = 1 to tMsg.char.count
+    tCharsCounted = tCharsCounted + 1
+    if tCharsCounted > 45 and tMsg.char[i] = SPACE then
+      put "<br>" into (tMsg).char[i]
+      tCharsCounted = 0
+    end if
+  end repeat
+  tMsg = replaceChunks(tMsg, RETURN, "<br>")
+  tMsg = convertSpecialChars(tMsg, 1)
   getConnection(getVariable("connection.info.id")).send("MESSAGETOCALLER", [#string: tCryID, #string: tMsg])
   return 1
 end

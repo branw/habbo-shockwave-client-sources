@@ -259,6 +259,7 @@ on parentEmailNeedQuery me, tBirthday, tHabboID
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("PARENT_EMAIL_REQUIRED", [#string: tBirthday, #string: tHabboID])
   end if
+  return 1
 end
 
 on sendParentEmail me
@@ -268,18 +269,20 @@ on sendParentEmail me
       getConnection(getVariable("connection.info.id")).send("SEND_PARENT_EMAIL", [#string: tParentEmail])
     end if
   end if
+  return 1
 end
 
 on validateParentEmail me, tUserEmail, tParentEmail
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send("VALIDATE_PARENT_EMAIL", [#string: tUserEmail, #string: tParentEmail])
+    getConnection(getVariable("connection.info.id")).send("VALIDATE_PARENT_EMAIL", [#string: tParentEmail])
   end if
   pParentEmailAddress = tParentEmail
+  return 1
 end
 
 on setAgeCheckResult me, tFlag
   pAgeCheckFlag = tFlag
-  me.getInterface().finishRegistration(tFlag)
+  return me.getInterface().finishRegistration(tFlag)
 end
 
 on getAgeCheckResult me
@@ -288,7 +291,7 @@ end
 
 on parentEmailNeedQueryResult me, tFlag
   pParentEmailNeededFlag = tFlag
-  me.getInterface().parentEmailQueryStatus(tFlag)
+  return me.getInterface().parentEmailQueryStatus(tFlag)
 end
 
 on parentEmailValidated me, tFlag

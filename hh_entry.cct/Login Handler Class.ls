@@ -16,7 +16,7 @@ on handleHello me, tMsg
 end
 
 on handleSessionParameters me, tMsg
-  tPairsCount = 5
+  tPairsCount = tMsg.connection.GetIntFrom()
   if integerp(tPairsCount) then
     if tPairsCount > 0 then
       repeat with i = 1 to tPairsCount + 1

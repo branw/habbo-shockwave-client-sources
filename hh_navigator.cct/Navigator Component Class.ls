@@ -579,7 +579,7 @@ on getRoomProperties me, tRoomID
   if tProps = VOID then
     return error(me, "Couldn't find room properties:" && tRoomID, #getRoomProperties)
   end if
-  if tProps[#owner] <> VOID then
+  if tProps[#nodeType] <> 1 then
     tStruct = [:]
     tStruct[#id] = string(tProps[#flatId])
     tStruct[#name] = tProps[#name]

@@ -1021,6 +1021,9 @@ on removeEnterRoomAlert me
 end
 
 on getRoomScale me, tRoomMarker
+  if voidp(tRoomMarker) then
+    return 0
+  end if
   tRoomProps = getVariableValue("private.room.properties")
   if voidp(tRoomProps) then
     return 0
