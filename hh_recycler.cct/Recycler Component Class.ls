@@ -78,7 +78,15 @@ on startRecycling me
   end if
   tRoomItemIds = []
   tWallItemIds = []
-  repeat with tIndexNo = 1 to pGiveFurniPool.count
+  tTargetItem = me.getRewardItemForCurrentAmount()
+  if voidp(tTargetItem) or ilk(tTargetItem) <> #propList then
+    return 0
+  end if
+  tGiveAmount = tTargetItem[#furniValue]
+  if tGiveAmount > pGiveFurniPool.count then
+    return 0
+  end if
+  repeat with tIndexNo = 1 to tGiveAmount
     tItem = pGiveFurniPool[tIndexNo]
     if tItem[#props][#type] = "active" then
       tRoomItemIds.add(integer(tItem[#props][#id]))

@@ -101,6 +101,8 @@ end
 
 on startTeleport me, tDataList
   pTargetData = tDataList
+  pProcessActive = 1
+  me.animate(50)
   getThread(#room).getComponent().getRoomConnection().send("DOORGOIN", me.getID())
 end
 
@@ -129,7 +131,6 @@ end
 on animate me, tTime
   if voidp(tTime) then
     tTime = 25
-    pProcessActive = 1
   end if
   pAnimTime = tTime
   pAnimActive = 1
