@@ -32,11 +32,11 @@ on setItem me, ttype, tid, titemType, tpartColors
     add(tlpartColors, string(item t of tpartColors))
   end repeat
   put "itemtype", itemType
-  if ttype = "post.it" and gpPostItNos <> VOID then
-    if getProp(gpPostItNos, stripId) = VOID then
+  if ttype contains "post.it" and gpPostItNos <> VOID then
+    if getaProp(gpPostItNos, stripId) = VOID then
       Postnums = 6
     else
-      Postnums = integer(getProp(gpPostItNos, stripId) / (20.0 / 6.0))
+      Postnums = integer(getaProp(gpPostItNos, stripId) / (20.0 / 6.0))
     end if
     if Postnums > 6 then
       Postnums = 6
@@ -82,10 +82,10 @@ end
 
 on exitFrame me
   if type contains "post.it" and gpPostItNos <> VOID then
-    if getProp(gpPostItNos, stripId) = VOID then
+    if getaProp(gpPostItNos, stripId) = VOID then
       Postnums = 6
     else
-      Postnums = integer(getProp(gpPostItNos, stripId) / (20.0 / 6.0))
+      Postnums = integer(getaProp(gpPostItNos, stripId) / (20.0 / 6.0))
     end if
     if Postnums > 6 then
       Postnums = 6

@@ -1,15 +1,20 @@
-property location, data, owner, spr, id, myColor
+property location, data, owner, spr, id, myColor, postItClassName
 global popUpOn, gOpenPostIt, gpObjects, gMyName, gPostitCounter
 
-on new me, towner, tlocation, tid, tdata
+on new me, towner, tlocation, tid, tdata, tPostItClassName
+  if tPostItClassName = VOID then
+    postItClassName = "post.it"
+  else
+    postItClassName = tPostItClassName
+  end if
   gPostitCounter = gPostitCounter + 1
   id = tid
   spr = sprMan_getPuppetSprite()
   updateItem(me, id, tlocation, tdata)
   if location contains "leftwall" then
-    sprite(spr).castNum = getmemnum("leftwall" && "post.it")
+    sprite(spr).castNum = getmemnum("leftwall" && postItClassName)
   else
-    sprite(spr).castNum = getmemnum("rightwall" && "post.it")
+    sprite(spr).castNum = getmemnum("rightwall" && postItClassName)
   end if
   sprite(spr).scriptInstanceList = [me]
   setProp(me, #spriteNum, spr)
@@ -23,7 +28,11 @@ on updateItem me, tid, tlocation, tdata
   if id = tid then
     location = tlocation
     data = word 2 to the number of words in tdata of tdata
-    myColor = word 1 of tdata
+    if postItClassName = "post.it.vd" then
+      myColor = "FFFFFF"
+    else
+      myColor = word 1 of tdata
+    end if
   end if
 end
 
@@ -41,7 +50,7 @@ on itemDie me, itemId
   if itemId = me.id then
     sprMan_releaseSprite(spr)
     if gOpenPostIt = me then
-      popupClose("post.it")
+      popupClose(postItClassName)
     end if
   end if
 end
@@ -99,37 +108,37 @@ on mouseDown me
   if myUserSpr > 0 then
     myUserObj = sprite(myUserSpr).scriptInstanceList[1]
     if myUserObj.controller = 0 then
-      repeat with f = 1 to member("post.it .pop").line.count
-        if member("post.it .pop").text.line[f] contains "post.it field_Add" then
-          member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91," & nextLineV & "):36:100:gPostItColor:FocusField"
+      repeat with f = 1 to member(postItClassName && ".pop").line.count
+        if member(postItClassName && ".pop").text.line[f] contains "post.it field_Add" then
+          member(postItClassName && ".pop .controller").line[f] = "post.it field_Add:point(-91," & nextLineV & "):36:100:gPostItColor:FocusField"
           if MyLineNum > 11 then
-            member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91,-1000):36:100:gPostItColor:FocusField"
+            member(postItClassName && ".pop .controller").line[f] = "post.it field_Add:point(-91,-1000):36:100:gPostItColor:FocusField"
           end if
           if MyLineNum = 1 and data = EMPTY then
-            member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91,-63):36:100:gPostItColor:FocusField"
+            member(postItClassName && ".pop .controller").line[f] = "post.it field_Add:point(-91,-63):36:100:gPostItColor:FocusField"
           end if
           exit repeat
         end if
       end repeat
-      popup("post.it .pop", popUpLoc, "post.it")
+      popup(postItClassName && ".pop", popUpLoc, "post.it")
       return 
     end if
   else
     return 
   end if
-  repeat with f = 1 to member("post.it .pop .controller").line.count
+  repeat with f = 1 to member(postItClassName && ".pop .controller").line.count
     if member("post.it .pop .controller").line[f] contains "post.it field_Add" then
       member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91," & nextLineV & "):36:100:gPostItColor:FocusField"
       if MyLineNum > 11 then
-        member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91,-1000):36:100:gPostItColor:FocusField"
+        member(postItClassName && ".pop .controller").line[f] = "post.it field_Add:point(-91,-1000):36:100:gPostItColor:FocusField"
       end if
       if MyLineNum = 1 and data = EMPTY then
-        member("post.it .pop .controller").line[f] = "post.it field_Add:point(-91,-63):36:100:gPostItColor:FocusField"
+        member(postItClassName && ".pop .controller").line[f] = "post.it field_Add:point(-91,-63):36:100:gPostItColor:FocusField"
       end if
       exit repeat
     end if
   end repeat
-  popup("post.it .pop .controller", popUpLoc, "post.it")
+  popup(postItClassName && ".pop .controller", popUpLoc, "post.it")
 end
 
 on deletePostit me

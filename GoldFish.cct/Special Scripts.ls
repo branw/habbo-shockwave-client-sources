@@ -55,18 +55,18 @@ on handleSpecialMessages data
                       s4 = EMPTY
                       oldDelim = the itemDelimiter
                       if ln1 contains "BUSY" then
-                        member("flat_results.description").text = AddTextToField("MostPopularRooms")
+                        member(getmemnum("flat_results.description")).text = AddTextToField("MostPopularRooms")
                       else
                         if ln1 contains "FAVORITE" then
-                          member("flat_results.description").text = AddTextToField("FavoriteRooms")
+                          member(getmemnum("flat_results.description")).text = AddTextToField("FavoriteRooms")
                         else
-                          member("flat_results.description").text = AddTextToField("SearchResults")
+                          member(getmemnum("flat_results.description")).text = AddTextToField("SearchResults")
                         end if
                       end if
-                      member("flat_results.doorstatus").text = EMPTY
-                      member("flat_results.names").text = EMPTY
-                      member("flat_results.load").text = EMPTY
-                      member("flats_go").text = EMPTY
+                      member(getmemnum("flat_results.doorstatus")).text = EMPTY
+                      member(getmemnum("flat_results.names")).text = EMPTY
+                      member(getmemnum("flat_results.load")).text = EMPTY
+                      member(getmemnum("flats_go")).text = EMPTY
                       gFlats = []
                       the itemDelimiter = "/"
                       repeat with i = 2 to the number of lines in data
@@ -103,26 +103,26 @@ on handleSpecialMessages data
                         end if
                       end repeat
                       the itemDelimiter = oldDelim
-                      member("flat_results.load").text = s1
-                      member("flat_results.names").text = s2
-                      member("flat_results.doorstatus").text = s3
-                      member("flats_go").text = s4
+                      member(getmemnum("flat_results.load")).text = s1
+                      member(getmemnum("flat_results.names")).text = s2
+                      member(getmemnum("flat_results.doorstatus")).text = s3
+                      member(getmemnum("flats_go")).text = s4
                     else
                       if ln1 contains "NOFLATS" then
                         put data
                         if not (the movieName contains "entry") then
                           return 
                         end if
-                        member("flat_results.doorstatus").text = EMPTY
-                        member("flat_results.names").text = EMPTY
-                        member("flat_results.load").text = EMPTY
-                        member("flats_go").text = EMPTY
+                        member(getmemnum("flat_results.doorstatus")).text = EMPTY
+                        member(getmemnum("flat_results.names")).text = EMPTY
+                        member(getmemnum("flat_results.load")).text = EMPTY
+                        member(getmemnum("flats_go")).text = EMPTY
                         gFlats = []
                       else
                         if ln1 contains "FLATINFO" then
                           p = keyValueToPropList(data, RETURN)
-                          put getaProp(p, "name") into field "navigator.roomname"
-                          put getaProp(p, "description") into field "navigator.description"
+                          put getaProp(p, "name") into field getmemnum("navigator.roomname")
+                          put getaProp(p, "description") into field getmemnum("navigator.description")
                           if voidp(gProps) then
                             gProps = [:]
                           end if
@@ -138,7 +138,7 @@ on handleSpecialMessages data
                           else
                             if ln1 contains "FLAT_LETIN" then
                               if the movieName contains "entry" then
-                                member("flat_load.status").text = AddTextToField("DoorOpenLoading")
+                                member(getmemnum("flat_load.status")).text = AddTextToField("DoorOpenLoading")
                               end if
                               if gChosenFlatDoorMode = "closed" then
                                 goContext("flat_locked_opens", gPopUpContext2)
@@ -149,7 +149,7 @@ on handleSpecialMessages data
                               updateStage()
                               gIAmOwner = 0
                               gFlatLetIn = 1
-                              member("loading_txt").text = AddTextToField("LoadingRoom")
+                              member(getmemnum("loading_txt")).text = AddTextToField("LoadingRoom")
                               setBanner()
                               hiliter = 0
                               NowinUnit = "Private Room:" && member("goingto_roomname").text
@@ -527,11 +527,11 @@ on handleSpecialMessages data
                                                                                                         if the movieName contains "entry" and the frame < 100 or the movieName contains "cr_entry" then
                                                                                                           nothing()
                                                                                                         else
-                                                                                                          puppetSound(1, "cash1")
+                                                                                                          puppetSound(1, getmemnum("cash1"))
                                                                                                         end if
                                                                                                         gCredits = integer(value(line 2 of data))
-                                                                                                        member("habbo_credits").text = integer(value(line 2 of data)) && AddTextToField("Credit(s)")
-                                                                                                        member("credits_amount_e").text = "You have" && integer(value(line 2 of data)) && "Habbo Credits in your purse."
+                                                                                                        member(getmemnum("habbo_credits")).text = integer(value(line 2 of data)) && AddTextToField("Credit(s)")
+                                                                                                        member(getmemnum("credits_amount_e")).text = "You have" && integer(value(line 2 of data)) && "Habbo Credits in your purse."
                                                                                                       else
                                                                                                         if ln1 contains "DOORFLAT" then
                                                                                                           gChosenTeleport.startTeleport(data)
@@ -626,7 +626,7 @@ on createItem s, update
   data = s2
   if not update then
     if getmemnum(itemType && "ItemClass") > 0 then
-      o = new(script(itemType && "ItemClass"), owner, location, id, data)
+      o = new(script(getmemnum(itemType && "ItemClass")), owner, location, id, data)
     end if
   else
     sendAllSprites(#updateItem, id, location, data)

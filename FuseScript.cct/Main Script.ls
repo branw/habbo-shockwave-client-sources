@@ -94,7 +94,7 @@ on fuseLogin user, password, noDoor
 end
 
 on fuseRegister update
-  global gMySex
+  global gChosenRegion, gLoginPw, gMySex
   if (field("charactername_field")).length = 0 then
     ShowAlert("NoNameSet")
     gotoFrame("regist")
@@ -105,9 +105,13 @@ on fuseRegister update
   if phoneN > 7 then
     gPhonenumberOk = 1
   end if
+  passwd = fieldOrEmpty("password_field")
+  if passwd.length < 3 then
+    passwd = gLoginPw
+  end if
   s = EMPTY
   s = s & "name=" & field("charactername_field") & RETURN
-  s = s & "password=" & fieldOrEmpty("password_field") & RETURN
+  s = s & "password=" & passwd & RETURN
   s = s & "email=" & fieldOrEmpty("email_field") & RETURN
   s = s & "figure=" & toOneLine(fieldOrEmpty("figure_field")) & RETURN
   s = s & "directMail=" & fieldOrEmpty("can_spam_field") & RETURN
@@ -117,6 +121,11 @@ on fuseRegister update
   s = s & "has_read_agreement=" & fieldOrEmpty("Agreement_field") & RETURN
   s = s & "sex=" & fieldOrEmpty("charactersex_field") & RETURN
   s = s & "country=" & fieldOrEmpty("countryname") & RETURN
+  if gChosenRegion = VOID then
+    s = s & "region=0"
+  else
+    s = s & "region=" & gChosenRegion
+  end if
   gMySex = member("charactersex_field").text
   if the movieName contains "cr_entry" then
     s = s & "crossroads=1" & RETURN
@@ -143,10 +152,10 @@ on toOneLine fcont
 end
 
 on fieldOrEmpty fname
-  if the number of member fname < 1 then
+  if getmemnum(fname) < 1 then
     return EMPTY
   else
-    return field(fname)
+    return field(getmemnum(fname))
   end if
 end
 
@@ -231,6 +240,9 @@ on handleMessageContent content
     return 
   end if
   firstline = line 1 of content
+  if the runMode = "author" then
+    put content
+  end if
   if firstline contains "STATUS" then
     st = the ticks
     if voidp(gLastStatusOK) or the ticks - gLastStatusOK > 25 * 60 then

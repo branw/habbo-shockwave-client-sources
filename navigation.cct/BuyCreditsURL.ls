@@ -1,7 +1,7 @@
 global gMyName, gCountryPrefix
 
 on mouseUp me
-  webPage = "purchase.jsp?userName=" & gMyName
+  webPage = "purchase.jsp?userName=" & urlEncode(gMyName)
   url = "http://www.habbohotel.com/"
   if gCountryPrefix = "ch" then
     tFolder = externalParamValue("sw1")

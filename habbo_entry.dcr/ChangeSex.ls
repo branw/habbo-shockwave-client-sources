@@ -5,19 +5,19 @@ on beginSprite me
     put "Hahmosi on liian vanha. Sukupuolta ei voitu mŠŠrittŠŠ. Tee hahmosi uudelleen."
     OldFigureNoSex(me)
   end if
-  if field("charactersex_field") = "null" then
-    member("charactersex_field").text = "Male"
+  if field(getmemnum("charactersex_field")) = "null" then
+    member(getmemnum("charactersex_field")).text = "Male"
   end if
-  if field("charactersex_field") = "M" then
-    member("charactersex_field").text = "Male"
+  if field(getmemnum("charactersex_field")) = "M" then
+    member(getmemnum("charactersex_field")).text = "Male"
   end if
-  if field("charactersex_field") = "F" then
-    member("charactersex_field").text = "Female"
+  if field(getmemnum("charactersex_field")) = "F" then
+    member(getmemnum("charactersex_field")).text = "Female"
   end if
-  if field("charactersex_field") = "Male" then
+  if field(getmemnum("charactersex_field")) = "Male" then
     sendAllSprites(#mobileSexChange, "Male")
   end if
-  if field("charactersex_field") = "Female" then
+  if field(getmemnum("charactersex_field")) = "Female" then
     sendAllSprites(#mobileSexChange, "Female")
   end if
   put field("charactersex_field")
@@ -28,7 +28,7 @@ on mouseDown me
   sendAllSprites(#mobileSexChange, sex)
   sendAllSprites(#changeMySex)
   if isChange = 1 then
-    if OriginalSex = field("charactersex_field") then
+    if OriginalSex = field(getmemnum("charactersex_field")) then
       sendAllSprites(#initMeForChange)
     else
       sendAllSprites(#randomFigure)
@@ -39,12 +39,12 @@ on mouseDown me
 end
 
 on mobileSexChange me, tsex
-  if tsex = sex then
+  if tsex.char[1] = sex.char[1] then
     set the member of sprite the spriteNum of me to "radiobutton on"
   else
     set the member of sprite the spriteNum of me to "radiobutton off"
   end if
-  put tsex into field "charactersex_field"
+  put tsex into field getmemnum("charactersex_field")
 end
 
 on OldFigureNoSex me

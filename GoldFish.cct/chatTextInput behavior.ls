@@ -46,7 +46,7 @@ on keyDown me
     message = sprite(me.spriteNum).member.text
     if getaProp(gUserSprites, getaProp(gpObjects, gMyName)).isModerator then
       s = message
-      if s contains "alert x" or s contains "ban x" or s contains "kick x" or s contains "superban x" then
+      if s contains "alert x" or s contains "ban x" or s contains "kick x" or s contains "superban x" or s contains "shutup x" then
         if s contains member("item.info_name").text = 0 then
           message = stringReplace(s, "x", member("item.info_name").text)
           sprite(me.spriteNum).member.text = message

@@ -1,8 +1,13 @@
-property spr, y, h, stripItemId, noOfPostits, myColor, popUpLoc, leftOrRight, leftWallMatteSpr, DoorSpr, DoorSpr2, maskWallSpr, windowSpr, myLocZ
+property spr, y, h, stripItemId, noOfPostits, myColor, popUpLoc, leftOrRight, leftWallMatteSpr, DoorSpr, DoorSpr2, maskWallSpr, windowSpr, myLocZ, postItClassName
 global xoffset, gpopUpAdder, gPostItColor, gXFactor, gYFactor, gHFactor, MyMaxLines, gPostitCounter
 
-on new me, tSpr, tstripItemId, tNoOfPostIts
+on new me, tSpr, tstripItemId, tNoOfPostIts, tPostItClassName
   global gPostItColor
+  if tPostItClassName = VOID then
+    postItClassName = "post.it"
+  else
+    postItClassName = tPostItClassName
+  end if
   spr = tSpr
   myColor = "FFFF31"
   gPostItColor = rgb(myColor)
@@ -67,10 +72,10 @@ on prepareFrame me
   if IsAddOk1 <> 0 and IsAddOk2 <> 0 and IsAddOk1 <> paletteIndex(0) and IsAddOk2 <> paletteIndex(0) and TopArea <> paletteIndex(0) then
     sprite(spr).blend = 100
     if IsAddOk1Mem contains "right" and IsAddOk2Mem contains "right" then
-      sprite(spr).castNum = getmemnum("rightwall post.it")
+      sprite(spr).castNum = getmemnum("rightwall" && postItClassName)
     end if
     if IsAddOk1Mem contains "left" and IsAddOk2Mem contains "left" then
-      sprite(spr).castNum = getmemnum("leftwall post.it")
+      sprite(spr).castNum = getmemnum("leftwall" && postItClassName)
     end if
     if IsAddOk1Mem contains "left" and IsAddOk2Mem contains "right" or IsAddOk1Mem contains "right" and IsAddOk2Mem contains "left" then
       sprite(spr).blend = 40
@@ -103,7 +108,7 @@ on mouseDown me
     screenRef = getScreenCoordinate(0, y, 0)
     h = (screenRef[2] - mv) / gHFactor
     put EMPTY into field "post.it field_Add"
-    popup("post.it add .pop", popUpLoc, "post.it add")
+    popup(postItClassName && "add .pop", popUpLoc, postItClassName && "add")
     leftOrRight = sprite(spr).member.name
     sprMan_releaseSprite(spr)
   end if
@@ -112,9 +117,9 @@ end
 on createPostIt me
   global gpPostItNos
   if leftOrRight contains "left" then
-    s = "ADDITEM /post.it/leftwall " & y & "," & h & "," & myLocZ & "/" & myColor && field("post.it field_Add")
+    s = "ADDITEM /" & postItClassName & "/leftwall " & y & "," & h & "," & myLocZ & "/" & myColor && field("post.it field_Add")
   else
-    s = "ADDITEM /post.it/frontwall " & y & "," & h & "," & myLocZ & "/" & myColor && field("post.it field_Add")
+    s = "ADDITEM /" & postItClassName & "/frontwall " & y & "," & h & "," & myLocZ & "/" & myColor && field("post.it field_Add")
   end if
   sendFuseMsg(s)
   noOfPostits = getaProp(gpPostItNos, stripItemId)
@@ -146,6 +151,6 @@ end
 on setPostItColor me, col
   myColor = col
   gPostItColor = rgb(myColor)
-  popupClose("post.it add")
-  popup("post.it add .pop", popUpLoc, "post.it add")
+  popupClose(postItClassName && "add")
+  popup(postItClassName && "add .pop", popUpLoc, postItClassName && "add")
 end

@@ -6,6 +6,6 @@ on mouseUp
   if gPopUpContext <> VOID then
     closeMessenger()
   end if
-  gGoTo = "change1"
+  gGoTo = "change"
   fuseRetrieveInfo(gLoginName, gLoginPw)
 end

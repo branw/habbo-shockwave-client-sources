@@ -6,3 +6,9 @@ on doLogin
   gotoFrame("connectloop")
   EPLogon()
 end
+
+on list
+  repeat with i = 136 to 202
+    put i, sprite(i).member
+  end repeat
+end

@@ -35,7 +35,7 @@ on beginSprite me
 end
 
 on changeMySex me
-  sex = field("charactersex_field")
+  sex = member(getmemnum("charactersex_field")).text
   totalParts = (field(myField & "_specs_" & sex)).line.count
   currPartNum = 1
   currColorNum = 1

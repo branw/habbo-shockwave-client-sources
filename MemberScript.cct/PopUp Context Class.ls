@@ -49,10 +49,14 @@ on displayFrame me, tFrame
     sprite(i).scriptInstanceList = []
     sprMan_releaseSprite(i)
   end repeat
-  if the number of member (tFrame & ".recorded") < 1 then
+  mn = getmemnum(tFrame & ".recorded")
+  if mn < 1 then
+    mn = the number of member (tFrame & ".recorded")
+  end if
+  if mn < 1 then
     return 
   end if
-  data = field(tFrame & ".recorded")
+  data = field(mn)
   me.frame = tFrame
   castLibs = []
   lnCount = 1
