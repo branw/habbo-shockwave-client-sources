@@ -353,12 +353,12 @@ on updateRadioButton me, tElement, tListOfOthersElements
 end
 
 on updateMyHeadPreview me, tFigure, tElement
-  me.createHeadPreview(tElement)
+  me.createHeadPreview(tElement, tFigure)
 end
 
-on createHeadPreview me, tElemID
+on createHeadPreview me, tElemID, tFigure
   if objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, tElemID, #head)
+    getObject("Figure_Preview").createHumanPartPreview(pWindowTitle, tElemID, #head, tFigure)
   end if
 end
 

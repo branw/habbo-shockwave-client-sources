@@ -67,11 +67,11 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   call(#defineDirMultiple, me.pPartList, tDirHead, me.pPartListSubSet["head"])
   me.pDirection = tDirBody
   me.pHeadDir = tDirHead
-  me.pMainAction = "std"
   me.pLocX = tX
   me.pLocY = tY
   me.pLocH = tH
   me.pRestingHeight = 0.0
+  me.resetAction()
   if me.pExtraObjs.count > 0 then
     call(#Refresh, me.pExtraObjs)
   end if
@@ -121,11 +121,11 @@ on prepare me
     if me.pMoving then
       pSwimAndStay = 0
       me.pMainAction = "swm"
-      call(#defineActMultiple, me.pPartList, "swm", me.pPartListSubSet["swim"])
+      me.definePartListAction(me.pPartListSubSet["swim"], "swm")
     else
       pSwimAndStay = 1
       me.pMainAction = "sws"
-      call(#defineActMultiple, me.pPartList, "sws", me.pPartListSubSet["swim"])
+      me.definePartListAction(me.pPartListSubSet["swim"], "sws")
     end if
     tSwimAnim = [0, 1, 2, 3, 2, 1]
     pSwimAnimCount = pSwimAnimCount + 1
@@ -142,7 +142,7 @@ on prepare me
     me.pChanges = 1
   else
     if me.pMoving then
-      call(#defineActMultiple, me.pPartList, "wlk", me.pPartListSubSet["walk"])
+      me.definePartListAction(me.pPartListSubSet["walk"], "wlk")
     end if
     me.pAnimCounter = (me.pAnimCounter + 1) mod 4
   end if
@@ -155,9 +155,9 @@ on prepare me
   end if
   if me.pTalking and random(3) > 1 then
     if me.pMainAction = "lay" then
-      call(#defineActMultiple, me.pPartList, "lsp", me.pPartListSubSet["speak"])
+      me.definePartListAction(me.pPartListSubSet["speak"], "lsp")
     else
-      call(#defineActMultiple, me.pPartList, "spk", me.pPartListSubSet["speak"])
+      me.definePartListAction(me.pPartListSubSet["speak"], "spk")
     end if
     me.pChanges = 1
   end if
@@ -182,7 +182,7 @@ on prepare me
     me.pChanges = 1
   end if
   if me.pWaving then
-    call(#doHandWorkLeft, me.getDefinedPartList(me.pPartListSubSet["handLeft"]), "wav")
+    me.definePartListAction(me.pPartListSubSet["handLeft"], "wav")
     me.pChanges = 1
   end if
   if me.pDancing then

@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pPartListSubSet, pPartOrderOld
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld
 
 on construct me
   pID = 0
@@ -63,6 +63,11 @@ on construct me
     end if
     pPartListSubSet[tSubSet] = getVariableValue(tSetName)
   end repeat
+  pPartListFull = getVariableValue("human.parts." & pPeopleSize)
+  if ilk(pPartListFull) <> #list then
+    pPartListFull = []
+  end if
+  me.resetAction()
   return 1
 end
 
@@ -147,33 +152,11 @@ on changeFigureAndData me, tdata
   pSex = tdata[#sex]
   pCustom = tdata[#custom]
   tmodels = tdata[#figure]
-  tPartDefinition = me.getClearedFigurePartList(tmodels)
-  repeat with tPart in pPartList
-    tPartId = tPart.getPartID()
-    tNewModelItem = tmodels[tPartId]
-    if voidp(tNewModelItem) then
-      tNewModelItem = [:]
-      tNewModelItem["model"] = "000"
-      tNewModelItem["color"] = rgb("000000")
-    end if
-    if ilk(tNewModelItem) = #propList then
-      tmodel = tNewModelItem["model"]
-      tColor = tNewModelItem["color"]
-      if tColor.red + tColor.green + tColor.blue > 238 * 3 then
-        tColor = rgb("EEEEEE")
-      end if
-      if tPartDefinition.findPos(tPartId) = 0 then
-        tmodel = "000"
-      end if
-      if voidp(tmodel) then
-        tmodel = "000"
-      end if
-      tPart.changePartData(tmodel, tColor)
-      pColors[tPartId] = tColor
-    end if
-  end repeat
+  me.setPartLists(tmodels)
+  pPartOrderOld = EMPTY
+  me.arrangeParts()
   pChanges = 1
-  me.render()
+  me.render(1)
   me.reDraw()
   pInfoStruct[#image] = me.getPicture()
 end
@@ -246,13 +229,13 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
   pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
-  pMainAction = "std"
   pLocX = tX
   pLocY = tY
   pLocH = tH
   pRestingHeight = 0.0
   pDirection = tDirBody
   pHeadDir = tDirHead
+  me.resetAction()
   if pExtraObjs.count > 0 then
     call(#Refresh, pExtraObjs)
   end if
@@ -480,9 +463,9 @@ end
 
 on closeEyes me
   if pMainAction = "lay" then
-    call(#defineActMultiple, pPartList, "ley", pPartListSubSet["eye"])
+    me.definePartListAction(pPartListSubSet["eye"], "ley")
   else
-    call(#defineActMultiple, pPartList, "eyb", pPartListSubSet["eye"])
+    me.definePartListAction(pPartListSubSet["eye"], "eyb")
   end if
   pEyesClosed = 1
   pChanges = 1
@@ -490,9 +473,9 @@ end
 
 on openEyes me
   if pMainAction = "lay" then
-    call(#defineActMultiple, pPartList, "lay", pPartListSubSet["eye"])
+    me.definePartListAction(pPartListSubSet["eye"], "lay")
   else
-    call(#defineActMultiple, pPartList, "std", pPartListSubSet["eye"])
+    me.definePartListAction(pPartListSubSet["eye"], "std")
   end if
   pEyesClosed = 0
   pChanges = 1
@@ -561,9 +544,9 @@ on prepare me
   end if
   if pTalking and random(3) > 1 then
     if pMainAction = "lay" then
-      call(#defineActMultiple, pPartList, "lsp", pPartListSubSet["speak"])
+      me.definePartListAction(pPartListSubSet["speak"], "lsp")
     else
-      call(#defineActMultiple, pPartList, "spk", pPartListSubSet["speak"])
+      me.definePartListAction(pPartListSubSet["speak"], "spk")
     end if
     pChanges = 1
   end if
@@ -576,7 +559,7 @@ on prepare me
     pChanges = 1
   end if
   if pWaving and pMainAction <> "lay" then
-    call(#doHandWorkLeft, me.getDefinedPartList(pPartListSubSet["handLeft"]), "wav")
+    me.definePartListAction(pPartListSubSet["handLeft"], "wav")
     pChanges = 1
   end if
   if pDancing then
@@ -585,7 +568,7 @@ on prepare me
   end if
 end
 
-on render me
+on render me, tForceUpdate
   if not pChanges then
     return 
   end if
@@ -594,7 +577,7 @@ on render me
   else
     tSkipFreq = 5
   end if
-  if random(tSkipFreq) = 2 and not pMoving then
+  if random(tSkipFreq) = 2 and not pMoving and not tForceUpdate then
     call(#skipAnimationFrame, pPartList)
     return 1
   end if
@@ -691,9 +674,28 @@ on getSpecificClearedFigurePartList me, tmodels, tListName
 end
 
 on setPartLists me, tmodels
-  tAction = pMainAction
-  pPartList = []
   tPartDefinition = me.getClearedFigurePartList(tmodels)
+  tCurrentPartList = [:]
+  repeat with i = pPartList.count down to 1
+    tPartObj = pPartList[i]
+    tPartType = tPartObj.pPart
+    if tPartDefinition.findPos(tPartType) = 0 and pPartListFull.findPos(tPartType) then
+      pPartList.deleteAt(i)
+      next repeat
+    end if
+    tCurrentPartList.addProp(tPartType, tPartObj)
+  end repeat
+  if me.getProperty(#carrying) <> 0 then
+    if pPartListSubSet["itemRight"].count > 0 then
+      tRightItem = pPartListSubSet["itemRight"][1]
+      tItemObject = tCurrentPartList[tRightItem]
+      if voidp(tmodels[tRightItem]) and not voidp(tItemObject) then
+        tmodels[tRightItem] = ["model": tItemObject.getModel(), "color": tItemObject.getColor()]
+      end if
+    end if
+  end if
+  pPartIndex = [:]
+  pColors = [:]
   tFlipList = getVariable("human.parts.flipList")
   if ilk(tFlipList) <> #propList then
     tFlipList = [:]
@@ -716,7 +718,6 @@ on setPartLists me, tmodels
     if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and pXFactor < 33 then
       tmodels[tPartSymbol]["model"] = "001"
     end if
-    tPartObj = createObject(#temp, pPartClass)
     if stringp(tmodels[tPartSymbol]["color"]) then
       tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
     end if
@@ -729,12 +730,21 @@ on setPartLists me, tmodels
       tColor = rgb("EEEEEE")
     end if
     tFlipPart = tFlipList[tPartSymbol]
-    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, pDirection, tAction, me, tFlipPart)
-    tPartObj.setAnimations(tAnimationList[tPartSymbol])
-    pPartList.add(tPartObj)
+    tAction = pPartActionList[tPartSymbol]
+    if voidp(tAction) then
+      tAction = "std"
+      error(me, "Missing action for part" && tPartSymbol, #setPartLists, #major)
+    end if
+    if tCurrentPartList.findPos(tPartSymbol) = 0 then
+      tPartObj = createObject(#temp, pPartClass)
+      tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, pDirection, tAction, me, tFlipPart)
+      tPartObj.setAnimations(tAnimationList[tPartSymbol])
+      pPartList.add(tPartObj)
+    else
+      tCurrentPartList[tPartSymbol].changePartData(tmodels[tPartSymbol]["model"], tColor)
+    end if
     pColors.setaProp(tPartSymbol, tColor)
   end repeat
-  pPartIndex = [:]
   repeat with i = 1 to pPartList.count
     pPartIndex[pPartList[i].pPart] = i
   end repeat
@@ -808,6 +818,32 @@ on getDefinedPartList me, tPartNameList
   return tPartList
 end
 
+on definePartListAction me, tPartList, tAction
+  repeat with tPart in tPartList
+    pPartActionList[tPart] = tAction
+  end repeat
+  call(#defineAct, me.getDefinedPartList(tPartList), tAction)
+end
+
+on resetAction me
+  pMainAction = "std"
+  if voidp(pPartActionList) then
+    pPartActionList = [:]
+  end if
+  if pPartActionList.count = 0 then
+    tPartList = getVariableValue("human.parts." & pPeopleSize)
+    if tPartList.ilk = #list then
+      repeat with tPart in tPartList
+        pPartActionList[tPart] = pMainAction
+      end repeat
+    end if
+  else
+    repeat with i = 1 to pPartActionList.count
+      pPartActionList[i] = pMainAction
+    end repeat
+  end if
+end
+
 on action_mv me, tProps
   pMainAction = "wlk"
   pMoving = 1
@@ -822,7 +858,7 @@ on action_mv me, tProps
   pMoveStart = the milliSeconds
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
-  call(#defineActMultiple, pPartList, "wlk", pPartListSubSet["walk"])
+  me.definePartListAction(pPartListSubSet["walk"], "wlk")
 end
 
 on action_sld me, tProps
@@ -848,7 +884,7 @@ on action_sld me, tProps
 end
 
 on action_sit me, tProps
-  call(#defineActMultiple, pPartList, "sit", pPartListSubSet["sit"])
+  me.definePartListAction(pPartListSubSet["sit"], "sit")
   pMainAction = "sit"
   pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
@@ -888,7 +924,7 @@ on action_lay me, tProps
   else
     pLocFix = point(35, -5)
   end if
-  call(#layDown, pPartList)
+  me.definePartListAction(pPartListFull, "lay")
   if pDirection = 0 then
     pDirection = 4
     pHeadDir = 4
@@ -905,7 +941,7 @@ on action_carryd me, tProps
     else
       tCarryItm = "001"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+    me.definePartListAction(pPartListSubSet["handRight"], "crr")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
@@ -914,7 +950,7 @@ on action_carryd me, tProps
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+      me.definePartListAction(pPartListSubSet["handRight"], "crr")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -929,7 +965,7 @@ on action_cri me, tProps
     else
       tCarryItm = "075"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+    me.definePartListAction(pPartListSubSet["handRight"], "crr")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
@@ -937,7 +973,7 @@ on action_cri me, tProps
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+      me.definePartListAction(pPartListSubSet["handRight"], "crr")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -955,13 +991,13 @@ on action_usei me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+    me.definePartListAction(pPartListSubSet["handRight"], "drk")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+      me.definePartListAction(pPartListSubSet["handRight"], "drk")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -979,13 +1015,13 @@ on action_drink me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+    me.definePartListAction(pPartListSubSet["handRight"], "drk")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "001"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+      me.definePartListAction(pPartListSubSet["handRight"], "drk")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -1000,7 +1036,7 @@ on action_carryf me, tProps
     else
       tCarryItm = "001"
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+    me.definePartListAction(pPartListSubSet["handRight"], "crr")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, tItem)
@@ -1009,7 +1045,7 @@ on action_carryf me, tProps
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "004"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "crr")
+      me.definePartListAction(pPartListSubSet["handRight"], "crr")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -1027,13 +1063,13 @@ on action_eat me, tProps
     if textExists("handitem" & tCarrying) then
       pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
     end if
-    call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+    me.definePartListAction(pPartListSubSet["handRight"], "drk")
     call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
   else
     if getObject(#room_component).getRoomID() <> "private" then
       pCarrying = tProps.word[2..tProps.word.count]
       tCarryItm = "004"
-      call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "drk")
+      me.definePartListAction(pPartListSubSet["handRight"], "drk")
       call(#setModel, me.getDefinedPartList(pPartListSubSet["itemRight"]), tCarryItm)
     end if
   end if
@@ -1056,11 +1092,11 @@ on action_gest me, tProps
   end if
   if pMainAction = "lay" then
     tGesture = "l" & tGesture.char[1..2]
-    call(#defineActMultiple, pPartList, tGesture, pPartListSubSet["gesture"])
+    me.definePartListAction(pPartListSubSet["gesture"], tGesture)
   else
-    call(#defineActMultiple, pPartList, tGesture, pPartListSubSet["gesture"])
+    me.definePartListAction(pPartListSubSet["gesture"], tGesture)
     if tGesture = "ohd" then
-      call(#defineActMultiple, pPartList, "ohd", pPartListSubSet["head"])
+      me.definePartListAction(pPartListSubSet["head"], "ohd")
     end if
   end if
 end
@@ -1080,8 +1116,8 @@ on action_dance me, tProps
 end
 
 on action_ohd me
-  call(#defineActMultiple, pPartList, "ohd", pPartListSubSet["head"])
-  call(#doHandWorkRight, me.getDefinedPartList(pPartListSubSet["handRight"]), "ohd")
+  me.definePartListAction(pPartListSubSet["head"], "ohd")
+  me.definePartListAction(pPartListSubSet["handRight"], "ohd")
 end
 
 on action_trd me
@@ -1105,7 +1141,7 @@ on action_sign me, props
   if getmemnum(tSignMem) = 0 then
     return 0
   end if
-  call(#doHandWorkLeft, me.getDefinedPartList(pPartListSubSet["handLeft"]), "sig")
+  me.definePartListAction(pPartListSubSet["handLeft"], "sig")
   tSignObjID = "SIGN_EXTRA"
   if voidp(pExtraObjs[tSignObjID]) then
     pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))

@@ -100,6 +100,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
     tWindowModel = "obj_disp_actions_peer.window"
     tRoomOwner = tSessionObj.GET("room_owner")
     tAnyRoomController = tUserRights.getOne("fuse_any_room_controller")
+    tRoomController = tSessionObj.GET("room_controller")
     if threadExists(#messenger) then
       tBuddyData = getThread(#messenger).getComponent().getBuddyData()
       if tBuddyData.online.getPos(tTargetUserName) > 0 then
@@ -128,7 +129,7 @@ on createActionsHumanWindow me, tID, tTargetUserName, tShowButtons
       tButtonList["ignore"] = #hidden
       tButtonList["unignore"] = #hidden
     end if
-    if not tRoomOwner and not tAnyRoomController then
+    if not tRoomOwner and not tAnyRoomController and not tRoomController then
       tButtonList["kick"] = #hidden
     end if
     if tRoomOwner then

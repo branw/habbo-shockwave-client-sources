@@ -56,7 +56,7 @@ on resetTemplateHuman me
   me.pTrading = 0
   me.pAnimating = 0
   call(#reset, me.pPartList)
-  me.pMainAction = "std"
+  me.resetAction()
   me.arrangeParts()
   me.pChanges = 1
 end
