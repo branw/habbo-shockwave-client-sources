@@ -255,7 +255,7 @@ on showObjectInfo me, tObjType, tRefresh
           tselectedobject = tRoomComponent.getItemObject(tSelectedObj)
           if objectp(tselectedobject) then
             tClass = tselectedobject.getClass()
-            if tClass contains "post.it" then
+            if tClass contains "post_it" then
               next repeat
             end if
           end if

@@ -53,7 +53,7 @@ on define me, tProps
     "poster":
       pName = getText("poster_" & pType & "_name", "poster_" & pType & "_name")
       pCustom = getText("poster_" & pType & "_desc", "poster_" & pType & "_desc")
-    "post.it.vd", "post.it":
+    "post_it_vd", "post_it":
       tFurniData = pPersistentFurniData.getPropsByClass("i", pClass)
       if not voidp(tFurniData) then
         pName = tFurniData[#localizedName]
@@ -263,7 +263,7 @@ end
 
 on solveMembers me
   case pClass of
-    "post.it", "post.it.vd":
+    "post_it", "post_it_vd":
       tMemName = pDirection && pClass
     "poster":
       tMemName = pDirection && pClass && pType
@@ -313,14 +313,14 @@ on updateColor me, tHexstr
   end if
   tSpr = pSprList[1]
   tSpr.ink = 8
-  if pClass = "post.it" then
+  if pClass = "post_it" then
     if tHexstr = EMPTY then
       tHexstr = "#FFFF33"
     end if
     tSpr.bgColor = rgb(tHexstr)
     tSpr.color = paletteIndex(255)
   else
-    if pClass = "post.it.vd" then
+    if pClass = "post_it_vd" then
       tHexstr = "FFFFFF"
       tSpr.bgColor = rgb(tHexstr)
       tSpr.color = rgb(0, 0, 0)
@@ -363,7 +363,7 @@ on updateLocation me
               tPartTypes = [#wallright]
           end case
           tLounge = tVisualizer.getProperty(#layout)
-          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 and pDirection = "rightwall" then
+          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post_it" and pWallX > 0 and pDirection = "rightwall" then
             pWallY = 0
           end if
           tPartProps = tVisualizer.getPartAtLocation(pWallX, pWallY, tPartTypes)
@@ -408,7 +408,7 @@ on updateLocation me
           end if
         end if
       end if
-      if not (pClass contains "post.it") then
+      if not (pClass contains "post_it") then
         if not tWallObjFound and getObject(#session).GET(#room_owner) then
           tComponent = getThread(#room).getComponent()
           if not (tComponent = 0) then

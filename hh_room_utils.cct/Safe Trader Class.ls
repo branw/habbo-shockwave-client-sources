@@ -545,7 +545,7 @@ on createItemImg me, tProps, tDownloadPrevented
       tMemStr = pIconPlaceholderName
     end if
   end if
-  if tClass contains "post.it" then
+  if tClass contains "post_it" then
     tCount = integer(value(tProps[#data]) / (20.0 / 6.0))
     if tCount > 6 then
       tCount = 6

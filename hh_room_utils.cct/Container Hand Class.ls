@@ -141,7 +141,7 @@ on createStripItem me, tdata
       if tdata[#class] = "poster" then
         tIconClassStr = "poster" && tdata[#props]
       else
-        if tdata[#class] contains "post.it" then
+        if tdata[#class] contains "post_it" then
           tPostnums = integer(value(tdata[#props]) / (20.0 / 6.0))
           if tPostnums > 6 then
             tPostnums = 6
@@ -317,8 +317,8 @@ on placeItemToRoom me, tID
   else
     if tdata[#striptype] = "item" then
       case tdata[#class] of
-        "poster", "post.it", "post.it.vd", "photo":
-          if tdata[#class] = "post.it" then
+        "poster", "post_it", "post_it_vd", "photo":
+          if tdata[#class] = "post_it" then
             tdata[#type] = "#ffff33"
           end if
           tdata[#direction] = "leftwall"
@@ -326,7 +326,7 @@ on placeItemToRoom me, tID
             return 0
           end if
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
-          if not (tdata[#class] contains "post.it") then
+          if not (tdata[#class] contains "post_it") then
             me.removeStripItem(tID)
           end if
           return 1
@@ -483,7 +483,7 @@ on showContainerItems me
       tInRecycler = getThread(#recycler).getComponent().isFurniInRecycler(pItemList.getPropAt(i))
       tVisible = not (tInTrade or tInRecycler)
       if tVisible then
-        if not (tItem[#class] contains "post.it") then
+        if not (tItem[#class] contains "post_it") then
           tVisible = not (getThread(#room).getInterface().getObjectMover().pClientID = pItemList.getPropAt(i))
         end if
       end if

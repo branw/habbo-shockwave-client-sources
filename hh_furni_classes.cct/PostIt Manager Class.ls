@@ -70,7 +70,7 @@ on setItemData me, tMsg
   if tObject = 0 then
     return error(me, "Couldn't find stickie:" && pActivePostItId, #setItemData, #major)
   end if
-  if tObject.getClass() = "post.it.vd" then
+  if tObject.getClass() = "post_it_vd" then
     tWndType = "habbo_stickie_vd.window"
     ttype = "FFFFFF"
   else

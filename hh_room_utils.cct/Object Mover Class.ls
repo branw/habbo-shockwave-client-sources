@@ -326,7 +326,7 @@ on moveItem me
         tProps = tVisual.getWallPartUnderRect(tRect, 0.5)
         if tProps[#insideWall] then
           tRealPos = 0
-          if tClass <> "poster" and not (tClass contains "post.it") and tClass <> "photo" then
+          if tClass <> "poster" and not (tClass contains "post_it") and tClass <> "photo" then
             tRealPos = 1
             tRect[1] = sprite(tSp).locH
             tRect[2] = sprite(tSp).locV

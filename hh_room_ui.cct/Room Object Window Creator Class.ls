@@ -350,7 +350,7 @@ on createActionsFurniWindow me, tID, tClass, tShowButtons
   if tRoomComponent.itemObjectExists(tSelectedObjID) then
     tSelectedObj = tRoomComponent.getItemObject(tSelectedObjID)
     tClass = tSelectedObj.getClass()
-    if tClass contains "post.it" then
+    if tClass contains "post_it" then
       tButtonList["pick"] = #hidden
     end if
   end if

@@ -248,7 +248,7 @@ on detectMemberName me, tClass, tProps
   the itemDelimiter = "*"
   tClass = tClass.item[1]
   the itemDelimiter = tDelim
-  if tClass contains "post.it" then
+  if tClass contains "post_it" then
     tCount = integer(value(tProps[#props]) / (20.0 / 6.0))
     if tCount > 6 then
       tCount = 6
