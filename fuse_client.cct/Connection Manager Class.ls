@@ -21,7 +21,7 @@ on create me, tid, tHost, tPort
   if not integerp(tPort) then
     return error(me, "Integer expected:" && tPort, #create)
   end if
-  if getIntVariable("connection.log.level") = 2 then
+  if getIntVariable("connection.log.level") = 2 and the runMode contains "Author" then
     if not memberExists("connectionLog.text") then
       tLogField = member(createMember("connectionLog.text", #field))
       tLogField.boxType = #scroll

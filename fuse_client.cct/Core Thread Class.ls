@@ -5,7 +5,6 @@ on construct me
   tSession.set("client_startdate", the date)
   tSession.set("client_starttime", the long time)
   tSession.set("client_version", getVariable("system.version"))
-  tSession.set("client_url", the moviePath)
   tSession.set("client_lastclick", EMPTY)
   createObject(#headers, getClassVariable("variable.manager.class"))
   createObject(#classes, getClassVariable("variable.manager.class"))
@@ -53,14 +52,14 @@ on updateState me, tstate
           if not voidp(tParam) then
             if tParam.item.count > 1 then
               if tParam.item[1] = "external.variables.txt" then
-                getVariableManager().set("external.variables.txt", tParam.item[2..tParam.item.count])
+                getSpecialServices().setExtVarPath(tParam.item[2..tParam.item.count])
               end if
             end if
           end if
         end repeat
         the itemDelimiter = tDelim
       end if
-      tURL = getVariableManager().get("external.variables.txt")
+      tURL = getExtVarPath()
       tMemName = tURL
       if tURL contains "?" then
         tParamDelim = "&"
@@ -78,8 +77,8 @@ on updateState me, tstate
       return registerDownloadCallback(tMemNum, #updateState, me.getID(), "load_params")
     "load_params":
       pState = tstate
-      dumpVariableField(getVariable("external.variables.txt"))
-      removeMember(getVariable("external.variables.txt"))
+      dumpVariableField(getExtVarPath())
+      removeMember(getExtVarPath())
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
         the itemDelimiter = "="
@@ -97,7 +96,7 @@ on updateState me, tstate
       getStringServices().initConvList()
       puppetTempo(getIntVariable("system.tempo", 30))
       if variableExists("client.reload.url") then
-        getObject(#session).set("client_url", getVariable("client.reload.url"))
+        getObject(#session).set("client_url", obfuscate(getVariable("client.reload.url")))
       end if
       return me.updateState("load_texts")
     "load_texts":

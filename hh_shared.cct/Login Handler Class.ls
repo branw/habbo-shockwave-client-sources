@@ -12,7 +12,7 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
-  tMsg.connection.send("GET_SESSION_PARAMETERS")
+  return tMsg.connection.send("GENERATEKEY")
 end
 
 on handleSessionParameters me, tMsg
@@ -39,7 +39,7 @@ on handleSessionParameters me, tMsg
       end repeat
     end if
   end if
-  tMsg.connection.send("CHK_VERSION", [#short: getIntVariable("client.version.id")])
+  return me.sendLogin(tMsg.connection)
 end
 
 on handleSecretKey me, tMsg
@@ -47,6 +47,25 @@ on handleSecretKey me, tMsg
   tMsg.connection.setDecoder(createObject(#temp, getClassVariable("connection.decoder.class")))
   tMsg.connection.getDecoder().setKey(tKey)
   tMsg.connection.setEncryption(1)
+  tClientURL = getMoviePath() & "habbo.dcr"
+  tExtVarsURL = getExtVarPath()
+  tHost = tMsg.connection.getProperty(#host)
+  if tHost contains deobfuscate("þÓKfGNuSE¿ô@kLK‹ËKiOIgCW{\S") then
+    tClientURL = EMPTY
+  end if
+  if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
+    tClientURL = EMPTY
+  end if
+  tMsg.connection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
+  tMsg.connection.send("UNIQUEID", [#string: getMachineID()])
+  tMsg.connection.send("GET_SESSION_PARAMETERS")
+  return 1
+end
+
+on sendLogin me, tConnection
+  if tConnection = VOID then
+    return 0
+  end if
   if objectExists("nav_problem_obj") then
     removeObject("nav_problem_obj")
   end if
@@ -54,14 +73,14 @@ on handleSecretKey me, tMsg
     tUserName = getObject(#session).get(#userName)
     tPassword = getObject(#session).get(#password)
     if not stringp(tUserName) or not stringp(tPassword) then
-      return removeConnection(tMsg.connection.getID())
+      return removeConnection(tConnection.getID())
     end if
     if tUserName = EMPTY or tPassword = EMPTY then
-      return removeConnection(tMsg.connection.getID())
+      return removeConnection(tConnection.getID())
     end if
-    tMsg.connection.send("SET_UID", [#string: getMachineID()])
-    tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+    return tConnection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
   end if
+  return 1
 end
 
 on handlePing me, tMsg
@@ -77,8 +96,7 @@ on handleRegistrationOK me, tMsg
   if tUserName = EMPTY or tPassword = EMPTY then
     return removeConnection(tMsg.connection.getID())
   end if
-  tMsg.connection.send("SET_UID", [#string: getMachineID()])
-  tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+  return tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
 end
 
 on handleLoginOK me, tMsg
@@ -296,8 +314,8 @@ on regMsgList me, tBool
   tMsgs.setaProp(257, #handleSessionParameters)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
-  tCmds.setaProp("CHK_VERSION", 5)
-  tCmds.setaProp("SET_UID", 6)
+  tCmds.setaProp("VERSIONCHECK", 5)
+  tCmds.setaProp("UNIQUEID", 6)
   tCmds.setaProp("GET_INFO", 7)
   tCmds.setaProp("GET_CREDITS", 8)
   tCmds.setaProp("GET_PASSWORD", 47)
@@ -306,6 +324,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GETAVAILABLEBADGES", 157)
   tCmds.setaProp("GET_SESSION_PARAMETERS", 181)
   tCmds.setaProp("PONG", 196)
+  tCmds.setaProp("GENERATEKEY", 202)
   tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

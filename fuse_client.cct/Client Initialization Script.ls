@@ -40,10 +40,10 @@ on resetClient
     stopClient()
     startClient()
   else
-    tURL = the moviePath
+    tURL = getMoviePath() & "habbo.dcr"
     if objectExists(#session) then
       if getObject(#session).exists("client_url") then
-        tURL = getObject(#session).get("client_url")
+        tURL = deobfuscate(getObject(#session).get("client_url"))
       end if
     end if
     gotoNetPage(tURL)

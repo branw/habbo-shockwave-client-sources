@@ -1,4 +1,4 @@
-property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pDefaultURL
+property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList
 
 on construct me
   pTaskQueue = [:]
@@ -6,7 +6,6 @@ on construct me
   pReceivedTasks = []
   pCompleteTasks = []
   pTypeDefList = [:]
-  pDefaultURL = the moviePath
   return 1
 end
 
@@ -139,16 +138,13 @@ on getProperty me, tPropID
     #maxTaskCount:
       return getIntVariable("net.operation.count")
     #defaultURL:
-      return pDefaultURL
+      return getMoviePath()
   end case
   return 0
 end
 
 on setProperty me, tPropID, tValue
-  case tPropID of
-    #defaultURL:
-      return me.setDefaultURL(tValue)
-  end case
+  -- ERROR: Could not identify jmp
   return 0
 end
 
@@ -245,14 +241,6 @@ on searchTask me, tMemNameOrNum
     end if
   end if
   return error(me, "Member's name or number expected:" && tMemNameOrNum, #searchTask)
-end
-
-on setDefaultURL me, tValue
-  if not stringp(tValue) then
-    return error(me, "String expected:" && tValue, #setDefaultURL)
-  end if
-  pDefaultURL = tValue
-  return 1
 end
 
 on updateQueue me

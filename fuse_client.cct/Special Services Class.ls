@@ -141,6 +141,22 @@ on getMachineID me
   return tMachineID
 end
 
+on getMoviePath me
+  tVariableID = "system.v1"
+  if not variableExists(tVariableID) then
+    setVariable(tVariableID, obfuscate(the moviePath))
+  end if
+  return deobfuscate(getVariable(tVariableID))
+end
+
+on getExtVarPath me
+  tVariableID = "system.v2"
+  if not variableExists(tVariableID) then
+    return getVariableManager().get("external.variables.txt")
+  end if
+  return deobfuscate(getVariable(tVariableID))
+end
+
 on secretDecode me, tKey
   tLength = tKey.length
   if tLength mod 2 = 1 then
@@ -216,6 +232,10 @@ on print me, tObj, tMsg
   tObj = tObj.word[2..tObj.word.count - 2]
   tObj = tObj.char[2..length(tObj)]
   put "Print:" & RETURN & TAB && "Object: " && tObj & RETURN & TAB && "Message:" && tMsg
+end
+
+on setExtVarPath me, tURL
+  return setVariable("system.v2", obfuscate(tURL))
 end
 
 on prepareToolTip me

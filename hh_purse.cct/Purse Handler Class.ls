@@ -10,7 +10,7 @@ on handle_purse me, tMsg
   case tMsg.subject of
     6:
       tPlaySnd = getObject(#session).exists("user_walletbalance")
-      tCredits = integer(value(tMsg.content.word[1]))
+      tCredits = integer(getLocalFloat(tMsg.content.word[1]))
       getObject(#session).set("user_walletbalance", tCredits)
       me.getInterface().updateSaldoView()
       executeMessage(#updateCreditCount, tCredits)

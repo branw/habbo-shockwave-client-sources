@@ -133,6 +133,48 @@ on replaceChunks me, tString, tChunkA, tChunkB
   return tStr
 end
 
+on obfuscate me, tStr
+  tResult = EMPTY
+  repeat with i = 1 to tStr.length
+    tRandom = random(255)
+    tNumber = charToNum(tStr.char[i])
+    tRandom = [bitAnd(tRandom, 216), bitAnd(tRandom, 223), bitAnd(tRandom, 7)]
+    tNumbers = [bitAnd(tNumber, 216), bitAnd(tNumber, 32), bitAnd(tNumber, 7)]
+    tNewNumbers = [bitOr(tNumbers[3], tRandom[1]), bitOr(tNumbers[2], tRandom[2]), bitOr(tNumbers[1], tRandom[3])]
+    tResult = tResult & numToChar(tNewNumbers[2]) & numToChar(tNewNumbers[1]) & numToChar(tNewNumbers[3])
+  end repeat
+  return tResult
+end
+
+on deobfuscate me, tStr
+  tResult = EMPTY
+  repeat with i = 1 to tStr.length
+    if i >= tStr.length then
+      exit repeat
+    end if
+    tRawNumbers = [charToNum(tStr.char[i + 1]), charToNum(tStr.char[i]), charToNum(tStr.char[i + 2])]
+    tNumbers = [bitAnd(tRawNumbers[3], 216), bitAnd(tRawNumbers[2], 32), bitAnd(tRawNumbers[1], 7)]
+    tNumber = bitOr(bitOr(tNumbers[1], tNumbers[3]), tNumbers[2])
+    tResult = tResult & numToChar(tNumber)
+    i = i + 2
+  end repeat
+  return tResult
+end
+
+on getLocalFloat me, tStrFloat
+  if not stringp(tStrFloat) then
+    return float(tStrFloat)
+  end if
+  if not (tStrFloat contains ".") then
+    return float(tStrFloat)
+  end if
+  tStrFloatLocal = tStrFloat
+  if not (value("1.2") > value("1.0")) then
+    put "," into char offset(".", tStrFloat) of tStrFloatLocal
+  end if
+  return float(tStrFloatLocal)
+end
+
 on initConvList me
   if the platform contains "win" then
     tMachineType = ".win"
