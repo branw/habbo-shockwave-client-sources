@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID, pFlatRatings, pEnterDoorData, pEnterDoorLocked
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -52,6 +52,8 @@ on construct me
   registerMessage(#enterRoomDirect, me.getID(), #enterRoomDirect)
   registerMessage(#setEnterRoomAlert, me.getID(), #setEnterRoomAlert)
   registerMessage(#removeEnterRoomAlert, me.getID(), #removeEnterRoomAlert)
+  pEnterDoorData = VOID
+  pEnterDoorLocked = 0
   return 1
 end
 
@@ -113,10 +115,16 @@ end
 
 on prepare me
   if pActiveFlag then
+    pEnterDoorLocked = 1
     call(#update, pUserObjList)
     me.updateSlideObjects(the milliSeconds)
     call(#update, pActiveObjList)
     call(#update, pItemObjList)
+    pEnterDoorLocked = 0
+    if not voidp(pEnterDoorData) then
+      me.enterDoor(pEnterDoorData)
+      pEnterDoorData = VOID
+    end if
   end if
 end
 
@@ -170,6 +178,10 @@ end
 on enterDoor me, tdata
   if not listp(tdata) then
     return error(me, "Room data struct expected!", #enterDoor, #major)
+  end if
+  if pEnterDoorLocked then
+    pEnterDoorData = tdata
+    return 1
   end if
   if tdata[#id] <> pSaveData[#id] then
     me.leaveRoom(1)

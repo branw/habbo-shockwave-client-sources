@@ -38,7 +38,8 @@ end
 
 on select me
   if the doubleClick then
-    tUserObj = getThread(#room).getComponent().getOwnUser()
+    tRoom = getThread(#room).getComponent()
+    tUserObj = tRoom.getOwnUser()
     if tUserObj = 0 then
       return 1
     end if
@@ -52,12 +53,12 @@ on select me
       if me.pLocX - tUserObj.pLocX = tDelta[1] and me.pLocY - tUserObj.pLocY = tDelta[2] then
         tUserIsClose = 1
       else
-        return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX - tDelta[1], #short: me.pLocY - tDelta[2]])
+        return tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX - tDelta[1], #short: me.pLocY - tDelta[2]])
       end if
     end if
     if tUserIsClose then
-      getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-      getThread(#room).getComponent().getRoomConnection().send("INTODOOR", me.getID())
+      tRoom.getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
+      tRoom.getRoomConnection().send("INTODOOR", me.getID())
       me.tryDoor()
     end if
   end if
@@ -131,8 +132,8 @@ on update me
   end if
   if pAnimActive = pAnimTime - 1 then
     pAnimActive = 0
+    pCloseDoorTimer = 20
     if pProcessActive then
-      pCloseDoorTimer = 20
       return me.doorLogin()
     end if
   end if

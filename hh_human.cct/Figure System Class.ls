@@ -206,11 +206,16 @@ on loadFigurePartList me, tURL
       tURL = tURL & tSeparator & "graphcount=" & tMemberCount
     end if
   end if
+  sendProcessTracking(13)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partListLoaded, me.getID())
 end
 
-on partListLoaded me
+on partListLoaded me, tParams, tSuccess
+  if not tSuccess then
+    fatalError("load_failed", "part_list")
+    return error(me, "Failure while loading part list", #partListLoaded, #critical)
+  end if
   tMemName = getVariable("external.figurepartlist.txt")
   if tMemName = 0 then
     tMemName = EMPTY
@@ -287,6 +292,7 @@ on loadPartSetXML me
     return error(me, "Can't load partset XML - no URL configured", #loadPartSetXML, #critical)
   end if
   tMem = tURL
+  sendProcessTracking(14)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partSetLoaded, me.getID())
 end
@@ -302,6 +308,7 @@ on loadActionSetXML me
     return error(me, "Can't load action set XML - no URL configured", #loadActionSetXML, #critical)
   end if
   tMem = tURL
+  sendProcessTracking(16)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #actionSetLoaded, me.getID())
 end
@@ -317,11 +324,16 @@ on loadAnimationSetXML me
     return error(me, "Can't load animation XML - no URL configured", #loadAnimationSetXML, #critical)
   end if
   tMem = tURL
+  sendProcessTracking(17)
   tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #animationSetLoaded, me.getID())
 end
 
-on partSetLoaded me
+on partSetLoaded me, tParams, tSuccess
+  if not tSuccess then
+    fatalError("load_failed", "part_sets")
+    return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
+  end if
   tMemName = getVariable("figure.partsets.xml")
   if tMemName = 0 then
     return error(me, "Failure while loading partset XML", #partSetLoaded, #critical)
@@ -428,13 +440,17 @@ on partSetLoaded me
   me.checkDataLoaded()
 end
 
-on actionSetLoaded me
+on actionSetLoaded me, tParams, tSuccess
+  if not tSuccess then
+    fatalError("load_failed", "action_set")
+    return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
+  end if
   tMemName = getVariable("figure.draworder.xml")
   if tMemName = 0 then
-    return error(me, "Failure while loading actionset XML", #actionSetLoaded, #critical)
+    return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
   end if
   if not memberExists(tMemName) then
-    return error(me, "Failure while loading actionset XML", #actionSetLoaded, #critical)
+    return error(me, "Failure while loading action set XML", #actionSetLoaded, #critical)
   end if
   tdata = member(tMemName).text
   if not voidp(tdata) then
@@ -502,7 +518,11 @@ on actionSetLoaded me
   me.checkDataLoaded()
 end
 
-on animationSetLoaded me
+on animationSetLoaded me, tParams, tSuccess
+  if not tSuccess then
+    fatalError("load_failed", "animation_set")
+    return error(me, "Failure while loading animation XML", #animationSetLoaded, #critical)
+  end if
   tAnimationData = [:]
   tMemName = getVariable("figure.animation.xml")
   if tMemName = 0 then
