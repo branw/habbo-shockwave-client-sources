@@ -14,7 +14,8 @@ on construct me
   pCryWndMode = "closed"
   pButtonLocH = 5
   pStoredCryNum = 0
-  registerMessage(#userlogin, me.getID(), #showModtoolButton)
+  registerMessage(#enterRoom, me.getID(), #showModtoolButton)
+  registerMessage(#leaveRoom, me.getID(), #hideModtoolButton)
   registerMessage(#userClicked, me.getID(), #userClicked)
   return 1
 end
@@ -78,6 +79,22 @@ on showModtoolButton me
     pAlertTimer = 0
   end if
   return 1
+end
+
+on hideModtoolButton me
+  if voidp(pModtoolButtonSpr) then
+    return 0
+  end if
+  if pModtoolButtonSpr.ilk = #sprite then
+    if pModtoolButtonSpr = sprite(0) then
+      return 0
+    end if
+    pModtoolButtonSpr.setcursor(#arrow)
+    pModtoolButtonSpr.removeProcedure(#mouseUp)
+    removeEventBroker(pModtoolButtonSpr.spriteNum)
+    releaseSprite(pModtoolButtonSpr.spriteNum)
+    pModtoolButtonSpr = VOID
+  end if
 end
 
 on hideAlert me
@@ -159,6 +176,7 @@ on showModToolWnd me
   end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #mouseUp)
+  tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #keyDown)
   return 1
 end
 
@@ -198,6 +216,7 @@ on changeModtoolView me, tWndName, tAction
     tWndObj = getWindow(pModtoolWindowID)
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #mouseUp)
+    tWndObj.registerProcedure(#eventProcModToolWnd, me.getID(), #keyDown)
   end if
   tHeader = EMPTY
   case tWndName of
@@ -522,6 +541,41 @@ on eventProcModToolWnd me, tEvent, tElemID, tParam
         return me.sendModCommand()
     end case
     return 0
+  end if
+  if tEvent = #keyDown then
+    if the key = TAB then
+      if not windowExists(pModtoolWindowID) then
+        return 0
+      end if
+      tWndObj = getWindow(pModtoolWindowID)
+      if tElemID = "modtool_name" then
+        tElem = tWndObj.getElement("modtool_reason")
+        if objectp(tElem) then
+          tElem.setFocus(1)
+        end if
+      else
+        if tElemID = "modtool_reason" then
+          tElem = tWndObj.getElement("modtool_extrainfo")
+          if objectp(tElem) then
+            tElem.setFocus(1)
+          end if
+        else
+          if tElemID = "modtool_extrainfo" then
+            tElem = tWndObj.getElement("modtool_name")
+            if objectp(tElem) then
+              tElem.setFocus(1)
+            else
+              tElem = tWndObj.getElement("modtool_reason")
+              if objectp(tElem) then
+                tElem.setFocus(1)
+              end if
+            end if
+          end if
+        end if
+      end if
+    else
+      pass()
+    end if
   end if
   return 1
 end
