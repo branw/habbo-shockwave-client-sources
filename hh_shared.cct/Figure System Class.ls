@@ -466,11 +466,15 @@ on loadFigurePartList me, tURL
       tMemberCount = tMemberCount + the number of castMembers of castLib "hh_people_2"
     end if
   end if
+  tSeparator = "?"
+  if tURL contains "?" then
+    tSeparator = "&"
+  end if
   if the moviePath contains "http://" then
-    tURL = tURL & "?graphcount=" & tMemberCount
+    tURL = tURL & tSeparator & "graphcount=" & tMemberCount
   else
     if tURL contains "http://" then
-      tURL = tURL & "?graphcount=" & tMemberCount
+      tURL = tURL & tSeparator & "graphcount=" & tMemberCount
     end if
   end if
   tmember = queueDownload(tURL, tMem, #field, 1)

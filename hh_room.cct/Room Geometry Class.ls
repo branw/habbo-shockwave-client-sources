@@ -91,8 +91,9 @@ on getWorldCoordinate me, tLocX, tLocY
       tHeight = pHeightMap[tY + 1][tX + 1]
     end if
   end if
-  if tHeight = 0 then
-    return [tX, tY, tHeight]
+  tMaxHeight = 10
+  if tHeight >= 0 and tHeight <= tMaxHeight then
+    return [tX, tY, 0]
   else
     repeat with i = 1 to 9
       tX = integer((tLocX - pYFactor - pXOffset) / pXFactor + (tLocY + i * pHFactor - pYOffset) / pYFactor)
