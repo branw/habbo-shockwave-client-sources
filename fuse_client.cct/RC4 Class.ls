@@ -1,6 +1,9 @@
 property pSbox, pKey, i, j
 
 on setKey me, tMyKey, tMode
+  if _player.traceScript then
+    return 0
+  end if
   tMyKeyS = string(tMyKey)
   pSbox = []
   pKey = []
@@ -30,13 +33,9 @@ on setKey me, tMyKey, tMode
       prevKey = 0
       m = 5
       repeat with i = 0 to len - 1
-        fakeKey[i + 1] = i
-        keySkip = prevKey mod 37 - i mod 11
-        m = m * -1
-        nkey = artificialKey[abs(tOffset + i * m * keySkip + keySkip) mod count(artificialKey) + 1]
-        prevKey = nkey
-        ckey[i + 1] = nkey
-        fakeKey[i + 1] = nkey + 2 + fakeKey[i + 1]
+        tGiven = me.bitshiftright(tMyKey, i mod 32)
+        tOwn = artificialKey[abs(tOffset + i) mod artificialKey.count + 1]
+        ckey[i + 1] = bitAnd(tGiven, tOwn)
       end repeat
       repeat with i = 0 to 255
         pKey[i + 1] = ckey[i mod len + 1]
@@ -64,6 +63,11 @@ on setKey me, tMyKey, tMode
   end repeat
   i = 0
   j = 0
+end
+
+on bitshiftright me, x, n
+  t2 = bitOr(x / power(2, n), 0)
+  return t2
 end
 
 on encipher me, tdata

@@ -214,9 +214,10 @@ on forwardMsg me, tMessage
 end
 
 on log me, tMsg
+  if not (the runMode contains "Author") then
+    return 0
+  end if
   case pLogMode of
-    1:
-      put "[Connection" && me.getID() & "] :" && tMsg
     2:
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
