@@ -134,11 +134,11 @@ on getStoredCookies me, tDomain
     tDomain = pServer
   end if
   tDelim = the itemDelimiter
+  the itemDelimiter = "."
   if tDomain.item.count < 2 then
     the itemDelimiter = tDelim
     return []
   end if
-  the itemDelimiter = "."
   tDomainItemCount = tDomain.item.count
   tDomain = tDomain.item[tDomainItemCount - 1] & tDomain.item[tDomainItemCount]
   the itemDelimiter = tDelim

@@ -7,31 +7,45 @@ on deconstruct me
 end
 
 on handle_cannot_enter_bus me, tMsg
-  me.getInterface().showBusClosed(tMsg.content.line[1..tMsg.content.line.count])
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tReason = tConn.GetStrFrom()
+  me.getInterface().showBusClosed(tReason)
 end
 
 on handle_vote_question me, tMsg
-  tQuestion = tMsg.content.line[1]
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tQuestion = tConn.GetStrFrom()
   tChoices = []
-  repeat with i = 2 to tMsg.content.line.count
-    tLine = tMsg.content.line[i]
-    if length(tLine) > 2 then
-      tChoices.add(tLine.char[3..length(tLine)])
-    end if
+  tChoiceCount = tConn.GetIntFrom()
+  repeat with i = 1 to tChoiceCount
+    tChoiceIndex = tConn.GetIntFrom()
+    tChoice = tConn.GetStrFrom()
+    tChoices.add(tChoice)
   end repeat
   me.getInterface().showVoteQuestion(tQuestion, tChoices)
 end
 
 on handle_vote_results me, tMsg
-  tDelim = the itemDelimiter
-  tLine = tMsg.content.line[1]
-  the itemDelimiter = "/"
-  tTotalVotes = integer(tLine.item[2])
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tQuestion = tConn.GetStrFrom()
+  tChoiceCount = tConn.GetIntFrom()
   tChoiceVotes = []
-  repeat with i = 3 to tLine.item.count
-    tChoiceVotes.add(integer(tLine.item[i]))
+  repeat with i = 1 to tChoiceCount
+    tChoiceIndex = tConn.GetIntFrom()
+    tChoice = tConn.GetStrFrom()
+    tVotes = tConn.GetIntFrom()
+    tChoiceVotes.add(tVotes)
   end repeat
-  the itemDelimiter = tDelim
+  tTotalVotes = tConn.GetIntFrom()
   me.getInterface().showVoteResults(tTotalVotes, tChoiceVotes)
 end
 

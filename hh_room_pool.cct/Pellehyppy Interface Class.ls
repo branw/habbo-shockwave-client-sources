@@ -165,7 +165,7 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
     case tSprID of
       "ph_swimsuit_exitbutton":
         me.closeUimaKoppi()
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: EMPTY])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit_gobutton":
         me.closeUimaKoppi()
@@ -178,7 +178,7 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", tswimsuit)
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: tswimsuit])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit.left.button":
         me.changeSwimSuitColor("ch", -1)

@@ -5,10 +5,12 @@ on construct me
   pCurrentFrm = 1
   pAnimList = [1, 2, 3, 4, 5, 6, 7]
   initThread("hubu.index")
+  me.regMsgList(1)
   return receiveUpdate(me.getID())
 end
 
 on deconstruct me
+  me.regMsgList(0)
   removeUpdate(me.getID())
   closeThread(#hubu)
   return 1
@@ -22,25 +24,24 @@ on prepare me
   end repeat
 end
 
-on showprogram me, tMsg
-  if voidp(tMsg) then
-    return 0
-  end if
-  tDst = tMsg[#show_dest]
-  tCmd = tMsg[#show_command]
-  tPar = tMsg[#show_params]
-  if tDst contains "bus" then
-    me.busDoor(tDst, tCmd)
+on handle_bus_door me, tMsg
+  tConn = tMsg.connection
+  tStatus = tConn.GetIntFrom()
+  if tStatus then
+    me.busDoor("open")
+  else
+    me.busDoor("close")
   end if
 end
 
-on busDoor me, tID, tCommand
+on busDoor me, tCommand
   case tCommand of
     "open":
       tMem = member(getmemnum("park_bussioviopen"))
     "close":
       tMem = member(getmemnum("park_bussi_ovi"))
   end case
+  tID = "bus"
   tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
   if tRoomVis = 0 then
     return 0
@@ -131,4 +132,18 @@ on update me
     pAnimCounter = 0
   end if
   pAnimCounter = pAnimCounter + 1
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(503, #handle_bus_door)
+  tCmds = [:]
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  end if
+  return 1
 end

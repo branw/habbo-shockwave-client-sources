@@ -79,9 +79,12 @@ on update me
         pJumpDone = 1
         tSplashPos = getThread(#room).getInterface().getGeometry().getWorldCoordinate(me.pMyLoc.locH, me.pMyLoc.locV)
         if tSplashPos = 0 then
-          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", "21,19")
+          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", [#integer: 21, #integer: 19])
         else
-          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", tSplashPos[1] & "," & tSplashPos[2])
+          tMessage = [:]
+          tMessage.addProp(#integer, integer(tSplashPos[1]))
+          tMessage.addProp(#integer, integer(tSplashPos[2]))
+          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", tMessage)
         end if
       end if
       me.openHidePlayBackWindow()

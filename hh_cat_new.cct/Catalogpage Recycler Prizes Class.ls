@@ -73,6 +73,9 @@ on downloadFurniCasts me
       ttype = tFurniList[i][1]
       tClassID = tFurniList[i][2]
       tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+      if tFurniProps.ilk <> #propList then
+        return error(me, "Type not found in persistent furni data!" && ttype && tClassID, #downloadFurniCasts, #major)
+      end if
       tClass = me.removeColorFromClassName(tFurniProps[#class])
       pPageItemDownloader.registerDownload(#furni, tClass, [#category: tCategory[#id], #item: i])
     end repeat
@@ -102,7 +105,7 @@ on renderStripItems me
   me.setImage(pStripBg, "ctlg_productstrip")
 end
 
-on renderStripItem me, tCategoryID, tIndex, tIsSelected
+on renderStripItem me, tCategoryId, tIndex, tIsSelected
   if tIsSelected then
     tMemNum = getmemnum("stripitem.basic.bg.selected")
   else
@@ -111,16 +114,19 @@ on renderStripItem me, tCategoryID, tIndex, tIsSelected
   if tMemNum <> 0 then
     tSlotBg = member(tMemNum).image
   end if
-  tSlotRect = me.getSlotRect(tCategoryID, tIndex)
+  tSlotRect = me.getSlotRect(tCategoryId, tIndex)
   if not tSlotRect then
     return 0
   end if
   if tSlotBg.ilk = #image then
     pStripBg.copyPixels(tSlotBg, tSlotRect, tSlotBg.rect)
   end if
-  tCategoryData = pPrizes.getaProp(tCategoryID)
+  tCategoryData = pPrizes.getaProp(tCategoryId)
   tFurniList = tCategoryData.getaProp(#furniList)
   tProps = pPersistentFurniData.getProps(tFurniList[tIndex][1], tFurniList[tIndex][2])
+  if tProps.ilk <> #propList then
+    return error(me, "Type not found in persistent furni data!" && tFurniList[tIndex][1] && tFurniList[tIndex][2], #renderStripItem, #major)
+  end if
   tClass = tProps[#class]
   tColors = tProps[#partColors]
   if getThread(#dynamicdownloader).getComponent().isAssetDownloaded(tClass) then
@@ -196,20 +202,20 @@ on renderStripBg me
   me.updateStripScroll()
 end
 
-on setSlotRect me, tCategoryID, tItem, tRect
-  tCategory = pSlotRects.getaProp(tCategoryID)
+on setSlotRect me, tCategoryId, tItem, tRect
+  tCategory = pSlotRects.getaProp(tCategoryId)
   if voidp(tCategory) then
     tCategory = []
   end if
   tCategory[tItem] = tRect
-  pSlotRects.setaProp(tCategoryID, tCategory)
+  pSlotRects.setaProp(tCategoryId, tCategory)
 end
 
-on getSlotRect me, tCategoryID, tIndex
+on getSlotRect me, tCategoryId, tIndex
   if pSlotRects.ilk <> #propList then
     return 0
   end if
-  tCategory = pSlotRects.getaProp(tCategoryID)
+  tCategory = pSlotRects.getaProp(tCategoryId)
   if not listp(tCategory) then
     return 0
   end if
@@ -385,7 +391,7 @@ on handleClick me, tEvent, tSprID, tProp
     return 0
   end if
   repeat with i = 1 to pSlotRects.count
-    tCategoryID = pSlotRects.getPropAt(i)
+    tCategoryId = pSlotRects.getPropAt(i)
     tRects = pSlotRects[i]
     repeat with j = 1 to tRects.count
       tRect = tRects[j]
@@ -393,7 +399,7 @@ on handleClick me, tEvent, tSprID, tProp
         next repeat
       end if
       if tProp.inside(tRect) then
-        me.showPreview(tCategoryID, j)
+        me.showPreview(tCategoryId, j)
         exit repeat
       end if
     end repeat

@@ -395,7 +395,7 @@ on TellStreamState me, tFileName, tstate, tPercent, tID
 end
 
 on setImportedCast me, tCastNum, tCastName, tFileName, tDoIndexing
-  startProfilingTask("CastLoad Manager::setImportedCast")
+  startProfilingTask("CastLoad Manager::setImportedCast " & tCastName)
   tCastLib = castLib(tCastNum)
   if voidp(tDoIndexing) then
     tDoIndexing = 1
@@ -410,7 +410,7 @@ on setImportedCast me, tCastNum, tCastName, tFileName, tDoIndexing
     pLoadedCasts[tCastName] = string(tCastNum)
   end if
   me.verifyReset()
-  finishProfilingTask("CastLoad Manager::setImportedCast")
+  finishProfilingTask("CastLoad Manager::setImportedCast " & tCastName)
 end
 
 on getAvailableEmptyCast me

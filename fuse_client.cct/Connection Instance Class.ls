@@ -288,7 +288,10 @@ on sendNew me, tCmd, tParmArr
           tBy2 = numToChar(bitOr(64, bitAnd(63, tParm)))
           tMsg = tMsg & tBy1 & tBy2
           tLength = tLength + 2
-        #integer:
+        #integer, #boolean:
+          if ttype = #boolean then
+            tParm = tParm <> 0
+          end if
           if tParm < 0 then
             tNegMask = 4
             tParm = -tParm
@@ -306,11 +309,6 @@ on sendNew me, tCmd, tParmArr
           put numToChar(bitOr(bitOr(charToNum(char 1 of tStr), tBytes * 8), tNegMask)) after tMsg
           put chars(tStr, 2, tBytes) after tMsg
           tLength = tLength + tBytes
-        #boolean:
-          tParm = tParm <> 0
-          tBy1 = numToChar(bitOr(64, bitAnd(63, tParm)))
-          tMsg = tMsg & tBy1
-          tLength = tLength + 1
         otherwise:
           error(me, "Unsupported param type:" && ttype, #send, #major)
       end case
@@ -489,10 +487,8 @@ on GetBoolFrom me
   the traceScript = 0
   _movie.traceScript = 0
   _player.traceScript = 0
-  tByteStr = pMsgStruct.getaProp(#content)
-  tByte = bitAnd(charToNum(char 1 of tByteStr), 63)
-  pMsgStruct.setaProp(#content, tByteStr.char[2..length(tByteStr)])
-  return tByte <> 0
+  tValue = me.GetIntFrom()
+  return tValue <> 0
 end
 
 on GetByteFrom me
@@ -630,7 +626,7 @@ on xtraMsgHandler me
   tContent = tNewMsg.getaProp(#content)
   tSender = tNewMsg.getaProp(#senderID)
   tSubject = tNewMsg.getaProp(#subject)
-  if tSender = "System" and tSubject = "ConnectToNetServer" then
+  if tSender = "System" and tSubject = "ConnectToNetServer" and tErrCode = 0 then
     pConnectionEstablishing = 0
     pHelloReceived = 1
     me.forwardMsg(0, EMPTY)

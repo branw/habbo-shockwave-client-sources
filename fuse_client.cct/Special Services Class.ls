@@ -261,6 +261,9 @@ on sendProcessTracking me, tStepValue
   end if
   if the runMode contains "Author" then
   end if
+  if tStepValue > 100 then
+    return 1
+  end if
   if variableExists("processlog.url") then
     tReportURL = string(getVariable("processlog.url"))
     if tReportURL = "javascript" then

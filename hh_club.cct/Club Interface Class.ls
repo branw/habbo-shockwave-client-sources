@@ -11,13 +11,11 @@ on construct me
     pSubscribeFromHotel = 1
   end if
   registerMessage(#show_clubinfo, me.getID(), #show_clubinfo)
-  registerMessage(#notify, me.getID(), #notify)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#show_clubinfo, me.getID())
-  unregisterMessage(#notify, me.getID())
   return 1
 end
 
@@ -36,20 +34,6 @@ on show_giftinfo me
   tWndObj.getElement("club_confirm_text").setText(getText("club_confirm_gift_text"))
   tWndObj.registerProcedure(#eventProcGiftDialogMousedown, me.getID(), #mouseDown)
   return 1
-end
-
-on notify me, ttype
-  case ttype of
-    1001:
-      executeMessage(#alert, [#Msg: "epsnotify_1001"])
-      if connectionExists(pConnectionId) then
-        removeConnection(pConnectionId)
-      end if
-    551:
-      executeMessage(#alert, [#Msg: getText("club_extend_failed")])
-    552:
-      executeMessage(#alert, [#Msg: getText("Alert_no_credits")])
-  end case
 end
 
 on setupEndedWindow me

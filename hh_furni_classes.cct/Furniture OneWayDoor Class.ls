@@ -26,7 +26,7 @@ on select me
       tConnection.send("ENTER_ONEWAY_DOOR", [#integer: integer(me.getID())])
     end if
   else
-    tConnection.send("MOVE", [#short: tLocWanted[1], #short: tLocWanted[2]])
+    tConnection.send("MOVE", [#integer: tLocWanted[1], #integer: tLocWanted[2]])
   end if
   return 1
 end

@@ -241,7 +241,7 @@ on update me
   end repeat
   if pStateChangeActive and tLoopsFinished then
     pStateChangeActive = 0
-    me.setState(pPendingState)
+    me.setState(pPendingState - 1)
   end if
   return 1
 end
@@ -475,6 +475,7 @@ on setState me, tNewState
     return 0
   end if
   tNewState = integer(tNewState)
+  tNewState = tNewState + 1
   tNewIndex = 0
   repeat with tIndex = 1 to pStateSequenceList.count
     tstate = pStateSequenceList[tIndex]

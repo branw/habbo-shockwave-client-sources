@@ -93,6 +93,7 @@ on handle_catalogindex me, tMsg
 end
 
 on handle_catalogpage me, tMsg
+  sendProcessTracking(500)
   tConn = tMsg.getaProp(#connection)
   tPageData = [:]
   tPageData[#pageid] = tConn.GetIntFrom()
@@ -109,11 +110,14 @@ on handle_catalogpage me, tMsg
     tPageData[#localization][#texts].add(tText)
   end repeat
   tOfferCount = tConn.GetIntFrom()
+  sendProcessTracking(501)
   tPageData[#offers] = []
   repeat with i = 1 to tOfferCount
     tPageData[#offers].add(me.parseOffer(tMsg))
   end repeat
+  sendProcessTracking(502)
   me.getComponent().updatePageData(tPageData[#pageid], tPageData)
+  sendProcessTracking(599)
 end
 
 on handle_purchasenotallowed me, tMsg
@@ -142,7 +146,7 @@ on handle_purse me, tMsg
 end
 
 on handle_purchase_error me, tMsg
-  error(me, "Purchase error:" && tMsg, #purchaseReady, #major)
+  error(me, "Purchase error.", #handle_purchase_error, #major)
 end
 
 on handle_purchase_ok me, tMsg
@@ -186,7 +190,7 @@ on handle_recycler_prizes me, tMsg
   tCategoryCount = tConn.GetIntFrom()
   repeat with i = 1 to tCategoryCount
     tCategoryData = [:]
-    tCategoryID = tConn.GetIntFrom()
+    tCategoryId = tConn.GetIntFrom()
     tCategoryOdds = tConn.GetIntFrom()
     tFurniCount = tConn.GetIntFrom()
     tFurniList = []
@@ -195,10 +199,10 @@ on handle_recycler_prizes me, tMsg
       tFurniID = tConn.GetIntFrom()
       tFurniList.add([tFurniType, tFurniID])
     end repeat
-    tCategoryData.setaProp(#id, tCategoryID)
+    tCategoryData.setaProp(#id, tCategoryId)
     tCategoryData.setaProp(#odds, tCategoryOdds)
     tCategoryData.setaProp(#furniList, tFurniList)
-    tPrizes.setaProp(tCategoryID, tCategoryData)
+    tPrizes.setaProp(tCategoryId, tCategoryData)
   end repeat
   executeMessage(#recyclerPrizesReceived, tPrizes)
 end

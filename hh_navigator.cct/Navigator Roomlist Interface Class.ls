@@ -97,14 +97,14 @@ on handleRecommendedRoomListClicked me, tParm
 end
 
 on handleRoomListClicked me, tParm
-  tCategoryID = me.getProperty(#categoryId)
-  tNodeInfo = me.getComponent().getNodeInfo(tCategoryID)
+  tCategoryId = me.getProperty(#categoryId)
+  tNodeInfo = me.getComponent().getNodeInfo(tCategoryId)
   if not listp(tNodeInfo) then
-    return error(me, "Nodeinfo not found, id:" && tCategoryID, #handleRoomListClicked, #major)
+    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeList = tNodeInfo[#children]
   if not listp(tNodeList) then
-    return error(me, "Node content not found, id:" & tCategoryID, #handleRoomListClicked, #major)
+    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeCount = tNodeList.count
   if ilk(tParm) <> #point or tNodeCount = 0 then
@@ -138,7 +138,7 @@ on handleRoomListClicked me, tParm
     if tParm.locH > tGoLinkH then
       me.getComponent().prepareRoomEntry(tNodeInfo[#id])
     else
-      me.showNodeInfo(tNodeInfo[#id], tCategoryID)
+      me.showNodeInfo(tNodeInfo[#id], tCategoryId)
     end if
   end if
   return 1

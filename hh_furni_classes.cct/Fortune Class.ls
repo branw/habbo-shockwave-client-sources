@@ -20,7 +20,7 @@ on select me
     repeat with tX = me.pLocX - 1 to me.pLocX + 1
       repeat with tY = me.pLocY - 1 to me.pLocY + 1
         if getThread(#room).getInterface().getGeometry().emptyTile(tX, tY) then
-          getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: tX, #short: tY])
+          getThread(#room).getComponent().getRoomConnection().send("MOVE", [#integer: tX, #integer: tY])
           return 1
         end if
       end repeat

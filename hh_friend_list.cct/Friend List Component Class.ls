@@ -101,9 +101,9 @@ on removeFriend me, tFriendID
   if tFriendData = 0 then
     return 0
   end if
-  tCategoryID = tFriendData[#categoryId]
+  tCategoryId = tFriendData[#categoryId]
   pFriendDataContainer.removeFriend(tFriendID)
-  me.getInterface().removeFriend(tFriendID, tCategoryID)
+  me.getInterface().removeFriend(tFriendID, tCategoryId)
 end
 
 on addFriendRequest me, tRequestData
@@ -242,8 +242,8 @@ on getFriendByName me, tName
   end if
 end
 
-on getFriendsInCategory me, tCategoryID
-  tFriends = pFriendDataContainer.getFriendsInCategory(tCategoryID)
+on getFriendsInCategory me, tCategoryId
+  tFriends = pFriendDataContainer.getFriendsInCategory(tCategoryId)
   if ilk(tFriends) = #propList then
     return tFriends.duplicate()
   else
@@ -264,14 +264,14 @@ on getCategoryName me, tID
   return pFriendDataContainer.getCategoryName(tID)
 end
 
-on getItemCountForcategory me, tCategoryID
-  if tCategoryID >= -1 then
-    tList = pFriendDataContainer.getFriendsInCategory(tCategoryID)
+on getItemCountForcategory me, tCategoryId
+  if tCategoryId >= -1 then
+    tList = pFriendDataContainer.getFriendsInCategory(tCategoryId)
   else
-    if tCategoryID = -2 then
+    if tCategoryId = -2 then
       tList = pFriendRequestContainer.getPendingRequests()
     else
-      if tCategoryID = -3 then
+      if tCategoryId = -3 then
         return pHabboSearchResults[#friends].count + pHabboSearchResults[#habbos].count
       end if
     end if

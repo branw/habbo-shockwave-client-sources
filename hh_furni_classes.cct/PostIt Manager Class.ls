@@ -21,7 +21,7 @@ on open me, tID, tColor, tLocX, tLocY
     removeWindow(pWindowID)
   end if
   registerMessage(symbol("itemdata_received" & tID), #postit_manager, #setItemData)
-  getThread(#room).getComponent().getRoomConnection().send("G_IDATA", tID)
+  getThread(#room).getComponent().getRoomConnection().send("G_IDATA", [#integer: integer(tID)])
   pIsController = getObject(#session).GET("room_controller")
   if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
     pIsController = 1

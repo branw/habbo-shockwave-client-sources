@@ -30,6 +30,9 @@ on createWithContent me, tWindow, tTargetRect, tPreferSide
     return error(me, "Could not create window", #createWithContent, #minor)
   end if
   pWndObj = getWindow(tWindowName)
+  if pWndObj = 0 then
+    return 0
+  end if
   pWndObj.merge(tWindow)
   me.shapeAndPosition(tTargetRect, tPreferSide)
 end
@@ -52,6 +55,9 @@ on getWindowObj me
 end
 
 on shapeAndPosition me, atargetRect, aPreferSide
+  if pWndObj = 0 then
+    return 0
+  end if
   tWidth = pWndObj.getProperty(#width)
   tHeight = pWndObj.getProperty(#height)
   tLockPos = me.getLockPos(atargetRect, aPreferSide)
@@ -102,7 +108,7 @@ on getLockPos me, atargetRect, aPreferSide
   case aPreferSide of
     #left:
       tLockPos = point(atargetRect.left, (atargetRect.top + atargetRect.bottom) / 2)
-    #right:
+    otherwise:
       tLockPos = point(atargetRect.right, (atargetRect.top + atargetRect.bottom) / 2)
   end case
   return tLockPos

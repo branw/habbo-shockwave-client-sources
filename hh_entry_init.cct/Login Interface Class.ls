@@ -76,11 +76,13 @@ on showDisconnect me
   end if
   createWindow(#error, "error.window", 0, 0, #modalcorner)
   tWndObj = getWindow(#error)
-  tWndObj.getElement("error_title").setText(getText("Alert_ConnectionFailure"))
-  tWndObj.getElement("error_text").setText(getText("Alert_ConnectionDisconnected"))
-  tWndObj.registerClient(me.getID())
-  tWndObj.registerProcedure(#eventProcDisconnect, me.getID(), #mouseUp)
-  the keyboardFocusSprite = 0
+  if tWndObj <> 0 then
+    tWndObj.getElement("error_title").setText(getText("Alert_ConnectionFailure"))
+    tWndObj.getElement("error_text").setText(getText("Alert_ConnectionDisconnected"))
+    tWndObj.registerClient(me.getID())
+    tWndObj.registerProcedure(#eventProcDisconnect, me.getID(), #mouseUp)
+    the keyboardFocusSprite = 0
+  end if
 end
 
 on tryLogin me

@@ -25,14 +25,25 @@ on deconstruct me
 end
 
 on feedData me, tdata, tWidth
-  pData = tdata
-  if tdata[#navigateable] then
-    pRenderer = createObject(#random, "Treeview Node Renderer Class")
-    pRenderer.define(me, [#width: tWidth])
+  sendProcessTracking(700)
+  if ilk(tdata) <> #propList then
+    return error(me, "Node data was not a proplist", #feedData, #major)
   end if
+  pData = tdata
+  if tdata.getaProp(#navigateable) then
+    tRenderer = createObject(#random, "Treeview Node Renderer Class")
+    if tRenderer = 0 then
+      return error(me, "Unable to create node renderer", #feedData, #major)
+    else
+      pRenderer = tRenderer
+      pRenderer.define(me, [#width: tWidth])
+    end if
+  end if
+  return 1
 end
 
 on getData me, tKey
+  sendProcessTracking(710)
   if ilk(pData) <> #propList then
     return VOID
   end if
@@ -40,14 +51,17 @@ on getData me, tKey
 end
 
 on addChild me, tChild
+  sendProcessTracking(720)
   pChildren.add(tChild)
 end
 
 on getChildren me
+  sendProcessTracking(730)
   return pChildren
 end
 
 on hasChildren me
+  sendProcessTracking(740)
   if pChildren.count < 0 then
     return 0
   end if
@@ -61,6 +75,7 @@ on hasChildren me
 end
 
 on setState me, tstate
+  sendProcessTracking(750)
   if pState <> tstate then
     pState = tstate
     if not voidp(pRenderer) then
@@ -70,6 +85,7 @@ on setState me, tstate
 end
 
 on select me, tstate
+  sendProcessTracking(760)
   if pSelected <> tstate then
     pSelected = tstate
     if not voidp(pRenderer) then
@@ -79,17 +95,19 @@ on select me, tstate
 end
 
 on getState me
+  sendProcessTracking(770)
   return pState
 end
 
 on getSelected me
+  sendProcessTracking(780)
   return pSelected
 end
 
 on getImage me
-  if voidp(pRenderer) then
+  sendProcessTracking(790)
+  if voidp(pRenderer) or pRenderer = 0 then
     return VOID
-  else
-    return pRenderer.getImage()
   end if
+  return pRenderer.getImage()
 end

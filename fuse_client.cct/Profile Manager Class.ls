@@ -166,6 +166,15 @@ on printToUrl me
   gotoNetPage("http://localhost/?profile=" & tText, "_new")
 end
 
+on printToClipBoard me
+  tText = me.printToText(EMPTY)
+  tMemberName = getUniqueID()
+  tmember = member(createMember(tMemberName, #field))
+  tmember.text = tText
+  tmember.copyToClipboard()
+  removeMember(tMemberName)
+end
+
 on eventProcProfileDialog me, tEvent, tElemID
   if tEvent = #mouseUp then
     case tElemID of
@@ -182,6 +191,8 @@ on eventProcProfileDialog me, tEvent, tElemID
         removeWriter(tWriterId)
       "printtourl":
         me.printToUrl()
+      "copytoclipboard":
+        me.printToClipBoard()
     end case
   end if
 end

@@ -512,7 +512,6 @@ on getState me
 end
 
 on createItemImg me, tProps, tDownloadPrevented
-  sendProcessTracking(920)
   if voidp(tProps) then
     error(me, "Invalid props!", #createItemImg, #major)
     return image(1, 1, 8)
@@ -546,7 +545,6 @@ on createItemImg me, tProps, tDownloadPrevented
       tMemStr = pIconPlaceholderName
     end if
   end if
-  sendProcessTracking(921)
   if tClass contains "post.it" then
     tCount = integer(value(tProps[#data]) / (20.0 / 6.0))
     if tCount > 6 then
@@ -583,7 +581,6 @@ on createItemImg me, tProps, tDownloadPrevented
       end if
     end if
   end if
-  sendProcessTracking(922)
   tImage = getObject("Preview_renderer").renderPreviewImage(tMemStr, VOID, tProps[#colors], tProps[#class])
   if voidp(tImage) then
     return image(1, 18, 8)
@@ -591,7 +588,6 @@ on createItemImg me, tProps, tDownloadPrevented
   tImgProps[#maskImage] = tImage.createMatte()
   tNewImg = image(tImage.width, tImage.height, 32)
   tNewImg.copyPixels(tImage, tImage.rect, tImage.rect, tImgProps)
-  sendProcessTracking(923)
   return me.cropToFit(tNewImg)
 end
 
@@ -599,7 +595,6 @@ on traderItemDownloadCallback me, tDownloadedId, tSuccess, tCallbackParams
   if not tSuccess then
     return 0
   end if
-  sendProcessTracking(930)
   if pRequiredDownloadsToTrade.getPos(tDownloadedId) > 0 then
     pRequiredDownloadsToTrade.deleteOne(tDownloadedId)
   end if
@@ -607,16 +602,29 @@ on traderItemDownloadCallback me, tDownloadedId, tSuccess, tCallbackParams
   if tWndObj = 0 then
     return 0
   end if
+  if not listp(pItemListHe) then
+    return 0
+  end if
   repeat with i = 1 to pItemListHe.count
-    tClass = pItemListHe[i][#class]
-    tItemProps = pItemListHe[i][#data]
-    if not voidp(tItemProps) and tItemProps <> EMPTY then
-      tClass = tClass & "_" & tItemProps
+    tItemData = pItemListHe[i]
+    if tItemData.ilk <> #propList then
+      next repeat
     end if
-    if tClass = "song_disk" then
-      tClass = tClass & pItemListHe[i][#songID]
+    tClass = tItemData[#class]
+    case tClass of
+      "poster":
+        tSlotID = tClass & "_" & tItemData[#data]
+      "song_disk":
+        tSlotID = tClass & "_" & tItemData[#songID]
+      "ecotron_box":
+        tSlotID = tClass & "_" & tItemData[#id]
+      otherwise:
+        tSlotID = tClass
+    end case
+    if pHerSlotProps.ilk <> #propList then
+      next repeat
     end if
-    tSlotProps = pHerSlotProps[tClass]
+    tSlotProps = pHerSlotProps[tSlotID]
     if voidp(tSlotProps) then
       next repeat
       next repeat
@@ -633,7 +641,6 @@ on traderItemDownloadCallback me, tDownloadedId, tSuccess, tCallbackParams
       end if
     end if
   end repeat
-  sendProcessTracking(931)
 end
 
 on cropToFit me, tImage
@@ -668,7 +675,6 @@ on showInfo me, tText
 end
 
 on updateDetailsBubble me, towner, tSlotNumber
-  sendProcessTracking(940)
   case towner of
     #me:
       tElemPrefix = "trading_mystuff_"
@@ -705,7 +711,6 @@ on updateDetailsBubble me, towner, tSlotNumber
     createObject(pProductPreviewObjId, ["Product Preview Class"])
   end if
   tPreviewObj = getObject(pProductPreviewObjId)
-  sendProcessTracking(941)
   tClass = tSlotProps[tSlotNumber].getaProp("class")
   tSlotID = tSlotProps.getPropAt(tSlotNumber)
   repeat with tItem in tItemList
@@ -765,7 +770,6 @@ on updateDetailsBubble me, towner, tSlotNumber
   tBubbleWindow.resizeBy(tOffsetX, tOffsetY)
   tBubbleObj.updateBubble()
   tBubbleWindow.getElement("trading_details_image").draw(rgb(0, 0, 0))
-  sendProcessTracking(942)
 end
 
 on removeDetailsBubble me
@@ -912,7 +916,7 @@ on eventProcTrading me, tEvent, tSprID, tParam
       if tSprID contains "trading_herstuff" then
         if integer(tSprID.char[length(tSprID)]) <= pHerSlotProps.count then
           tSongID = pHerSlotProps[integer(tSprID.char[length(tSprID)])][#songID]
-          if not voidp(tSongID) then
+          if tSongID > 0 then
             executeMessage(#listen_song, value(tSongID))
           end if
         end if
@@ -925,7 +929,15 @@ on eventProcTrading me, tEvent, tSprID, tParam
       if tSprID contains "trading_mystuff" then
         tSlotIndex = integer(tSprID.char[length(tSprID)])
         if tSlotIndex > pMySlotProps.count and tObjMover.getProperty(#clientID) <> EMPTY then
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(200, 200, 200))
+          tWndObj = getWindow(pTraderWndID)
+          if tWndObj = 0 then
+            return 0
+          end if
+          tElement = tWndObj.getElement(tSprID)
+          if tElement = 0 then
+            return 0
+          end if
+          tElement.draw(rgb(200, 200, 200))
         else
           me.updateDetailsBubble(#me, tSlotIndex)
         end if
@@ -937,8 +949,16 @@ on eventProcTrading me, tEvent, tSprID, tParam
             if tSlotIndex <= pHerSlotProps.count then
               tImage = pHerSlotProps[tSlotIndex][#hiliteImage]
               if not voidp(tImage) then
-                getWindow(pTraderWndID).getElement(tSprID).feedImage(tImage)
-                getWindow(pTraderWndID).getElement(tSprID).draw(rgb(200, 200, 200))
+                tWndObj = getWindow(pTraderWndID)
+                if tWndObj = 0 then
+                  return 0
+                end if
+                tElement = tWndObj.getElement(tSprID)
+                if tElement = 0 then
+                  return 0
+                end if
+                tElement.feedImage(tImage)
+                tElement.draw(rgb(200, 200, 200))
               end if
             end if
           end if
@@ -950,10 +970,18 @@ on eventProcTrading me, tEvent, tSprID, tParam
         if tObjMover <> 0 then
           tObjMover.moveTrade()
         end if
+        tWndObj = getWindow(pTraderWndID)
+        if tWndObj = 0 then
+          return 0
+        end if
+        tElement = tWndObj.getElement(tSprID)
+        if tElement = 0 then
+          return 0
+        end if
         if integer(tSprID.char[length(tSprID)]) <= pMySlotProps.count then
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(50, 50, 50))
+          tElement.draw(rgb(50, 50, 50))
         else
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(100, 100, 100))
+          tElement.draw(rgb(100, 100, 100))
         end if
         me.removeDetailsBubble()
       else
@@ -965,15 +993,24 @@ on eventProcTrading me, tEvent, tSprID, tParam
             if not voidp(tSongID) then
               executeMessage(#do_not_listen_song, value(tSongID))
             end if
+            tWndObj = getWindow(pTraderWndID)
+            if tWndObj = 0 then
+              return 0
+            end if
+            tElement = tWndObj.getElement(tSprID)
+            if tElement = 0 then
+              return 0
+            end if
             tImage = pHerSlotProps[tSlotIndex][#image]
             if not voidp(tImage) then
-              getWindow(pTraderWndID).getElement(tSprID).feedImage(tImage)
-              getWindow(pTraderWndID).getElement(tSprID).draw(rgb(200, 200, 200))
+              tElement.feedImage(tImage)
+              tElement.draw(rgb(200, 200, 200))
             end if
           end if
         end if
       end if
   end case
+  sendProcessTracking(951)
 end
 
 on eventProcTradingWarning me, tEvent, tElement, arg3, tWndName

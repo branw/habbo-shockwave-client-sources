@@ -6,6 +6,7 @@ on construct me
   pwidth = 0
   pheight = 0
   pClickAreas = []
+  sendProcessTracking(600)
 end
 
 on deconstruct me
@@ -13,8 +14,15 @@ on deconstruct me
 end
 
 on feedData me, tdata
-  pData = tdata
-  pData.getRootNode().setState(#open)
+  sendProcessTracking(601)
+  if tdata <> 0 and not voidp(tdata) then
+    pData = tdata
+    tRootNode = pData.getRootNode()
+    if tRootNode <> 0 and not voidp(tRootNode) then
+      tRootNode.setState(#open)
+    end if
+  end if
+  sendProcessTracking(602)
 end
 
 on define me, tProps
@@ -43,31 +51,50 @@ on appendRenderToImage me, tImageDest, tImageSrc, tRectDest, tRectSrc
 end
 
 on renderNode me, tNode, tOffsetY
+  sendProcessTracking(603)
+  if pData = 0 or voidp(pData) then
+    return 0
+  end if
+  if tNode = 0 or voidp(tNode) then
+    return 0
+  end if
+  sendProcessTracking(604)
   if not (tNode = pData.getRootNode()) and not tNode.getData(#navigateable) then
     return tOffsetY
   end if
+  sendProcessTracking(605)
   if tNode.getData(#navigateable) then
     tNodeImage = tNode.getImage()
     me.pimage = me.appendRenderToImage(me.pimage, tNodeImage, tNodeImage.rect + rect(0, tOffsetY, 0, tOffsetY), tNodeImage.rect)
     pClickAreas.add([#min: tOffsetY, #max: tOffsetY + tNodeImage.height, #data: tNode])
     tOffsetY = tOffsetY + tNodeImage.height
   end if
-  if tNode.getState() = #open and tNode.getChildren().count > 0 then
-    repeat with tChild in tNode.getChildren()
-      tOffsetY = me.renderNode(tChild, tOffsetY)
-    end repeat
+  sendProcessTracking(606)
+  tChildren = tNode.getChildren()
+  if ilk(tChildren) = #list then
+    if tNode.getState() = #open and tChildren.count > 0 then
+      repeat with tChild in tChildren
+        tOffsetY = me.renderNode(tChild, tOffsetY)
+      end repeat
+    end if
   end if
+  sendProcessTracking(607)
   return tOffsetY
 end
 
 on render me
+  sendProcessTracking(610)
   pimage = image(pwidth, pheight, 32)
   pClickAreas = []
   tOffsetY = 0
+  if pData = 0 or voidp(pData) then
+    return 0
+  end if
   me.renderNode(pData.getRootNode(), tOffsetY)
 end
 
 on selectNode me, tNode, tSelectedNode
+  sendProcessTracking(620)
   if tNode = tSelectedNode then
     tNode.select(1)
   else
@@ -79,10 +106,15 @@ on selectNode me, tNode, tSelectedNode
 end
 
 on select me, tNodeObj
+  sendProcessTracking(630)
+  if pData = 0 or voidp(pData) then
+    return 0
+  end if
   me.selectNode(pData.getRootNode(), tNodeObj)
 end
 
 on simulateClickByName me, tNodeName
+  sendProcessTracking(640)
   if ilk(pClickAreas) <> #list then
     return 0
   end if
@@ -101,6 +133,10 @@ on simulateClickByName me, tNodeName
 end
 
 on handleClick me, tloc
+  sendProcessTracking(650)
+  if pData = 0 or voidp(pData) then
+    return 0
+  end if
   if ilk(tloc) <> #point then
     return 
   end if

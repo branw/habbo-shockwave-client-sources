@@ -341,11 +341,18 @@ on alignWindows me
   if pWindowList.count = 0 then
     return 0
   end if
+  if ilk(pBaseWindowIds) <> #propList then
+    return 0
+  end if
   tDefLeftPos = getVariable("object.display.pos.left")
   tDefBottomPos = getVariable("object.display.pos.bottom")
   tAlignments = getVariableValue("object.displayer.window.align", [:])
+  if ilk(tAlignments) <> #propList then
+    return 0
+  end if
   tStageWidth = the stageRight - the stageLeft
   tDefLeftPos = tDefLeftPos + (tStageWidth - 720)
+  sendProcessTracking(742)
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     if not windowExists(tWindowID) then
@@ -359,8 +366,10 @@ on alignWindows me
       tAlignment = #left
     end if
     tLeft = tDefLeftPos
-    if tIndex = pWindowList.count then
-      tNextWindowID = pWindowList[tIndex - 1]
+    sendProcessTracking(743)
+    if tIndex >= pWindowList.count then
+      sendProcessTracking(744)
+      tNextWindowID = pWindowList[pWindowList.count - 1]
       if windowExists(tNextWindowID) then
         tNextWindow = getWindow(tNextWindowID)
         if tAlignment = #right then
@@ -369,6 +378,7 @@ on alignWindows me
         tTop = tDefBottomPos - tWindowObj.getProperty(#height)
       end if
     else
+      sendProcessTracking(745)
       tPrevWindowID = pWindowList[tIndex + 1]
       if windowExists(tPrevWindowID) then
         tPrevWindow = getWindow(tPrevWindowID)
@@ -601,39 +611,31 @@ on eventProc me, tEvent, tSprID, tParam
         return tInterface.showConfirmDelete()
       "kick.button":
         if tComponent.userObjectExists(tSelectedObj) then
-          tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+          tUserID = tComponent.getUserObject(tSelectedObj).getWebID()
+          tComponent.getRoomConnection().send("KICKUSER", [#integer: integer(tUserID)])
         end if
-        tComponent.getRoomConnection().send("KICKUSER", tUserName)
         return me.clearWindowDisplayList()
       "ban.button":
         if tComponent.userObjectExists(tSelectedObj) then
-          tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+          tUserID = tComponent.getUserObject(tSelectedObj).getWebID()
+          tComponent.getRoomConnection().send("BANUSER", [#integer: integer(tUserID)])
         end if
-        tComponent.getRoomConnection().send("BANUSER", tUserName)
         return me.clearWindowDisplayList()
       "give_rights.button":
         if tComponent.userObjectExists(tSelectedObj) then
-          tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+          tUserID = tComponent.getUserObject(tSelectedObj).getWebID()
+          tComponent.getRoomConnection().send("ASSIGNRIGHTS", [#integer: integer(tUserID)])
+          tSelectedObj = EMPTY
         end if
-        tComponent.getRoomConnection().send("ASSIGNRIGHTS", tUserName)
-        tSelectedObj = EMPTY
         me.clearWindowDisplayList()
         tInterface.hideArrowHiliter()
         return 1
       "take_rights.button":
         if tComponent.userObjectExists(tSelectedObj) then
-          tUserName = tComponent.getUserObject(tSelectedObj).getName()
-        else
-          tUserName = EMPTY
+          tUserID = tComponent.getUserObject(tSelectedObj).getWebID()
+          tComponent.getRoomConnection().send("REMOVERIGHTS", [#integer: integer(tUserID)])
+          tSelectedObj = EMPTY
         end if
-        tComponent.getRoomConnection().send("REMOVERIGHTS", tUserName)
-        tSelectedObj = EMPTY
         me.clearWindowDisplayList()
         tInterface.hideArrowHiliter()
         return 1

@@ -96,11 +96,11 @@ on leaveRoom me
   return me.showNavigator()
 end
 
-on getNodeInfo me, tNodeId, tCategoryID
+on getNodeInfo me, tNodeId, tCategoryId
   if tNodeId = VOID then
     return 0
   end if
-  if tCategoryID = #recom or voidp(tCategoryID) and not voidp(pRecomNodeInfo) then
+  if tCategoryId = #recom or voidp(tCategoryId) and not voidp(pRecomNodeInfo) then
     if voidp(pRecomNodeInfo[#children]) then
       return 0
     end if
@@ -108,30 +108,30 @@ on getNodeInfo me, tNodeId, tCategoryID
     if not voidp(tNodeInfo) then
       return tNodeInfo
     else
-      if tCategoryID = #recom then
+      if tCategoryId = #recom then
         return 0
       end if
     end if
   end if
   tNodeId = string(tNodeId)
   if not (tNodeId contains "/") then
-    tTestInfo = me.getNodeInfo(tNodeId & "/" & me.getCurrentNodeMask(), tCategoryID)
+    tTestInfo = me.getNodeInfo(tNodeId & "/" & me.getCurrentNodeMask(), tCategoryId)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
-    tTestInfo = me.getNodeInfo(tNodeId & "/0", tCategoryID)
+    tTestInfo = me.getNodeInfo(tNodeId & "/0", tCategoryId)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
-    tTestInfo = me.getNodeInfo(tNodeId & "/1", tCategoryID)
+    tTestInfo = me.getNodeInfo(tNodeId & "/1", tCategoryId)
     if tTestInfo <> 0 then
       return tTestInfo
     end if
   end if
-  if tCategoryID <> VOID then
-    if pNodeCache[tCategoryID] <> VOID then
-      if not voidp(pNodeCache[tCategoryID][#children][tNodeId]) then
-        return pNodeCache[tCategoryID][#children][tNodeId]
+  if tCategoryId <> VOID then
+    if pNodeCache[tCategoryId] <> VOID then
+      if not voidp(pNodeCache[tCategoryId][#children][tNodeId]) then
+        return pNodeCache[tCategoryId][#children][tNodeId]
       end if
     end if
   end if
@@ -164,8 +164,14 @@ end
 
 on setNodeProperty me, tNodeId, tProp, tValue
   repeat with myList in pNodeCache
-    if myList[#children][tNodeId] <> VOID then
-      myList[#children][tNodeId].setaProp(tProp, tValue)
+    if myList.ilk = #propList then
+      tChildren = myList.getaProp(#children)
+      if tChildren.ilk = #propList then
+        tNode = tChildren.getaProp(tNodeId)
+        if tNode.ilk = #propList then
+          tNode.setaProp(tProp, tValue)
+        end if
+      end if
     end if
   end repeat
   return 1
@@ -311,14 +317,14 @@ on expandHistoryItem me, tClickedItem
   end if
 end
 
-on createNaviHistory me, tCategoryID
+on createNaviHistory me, tCategoryId
   pNaviHistory = []
   tText = EMPTY
-  if tCategoryID = VOID then
+  if tCategoryId = VOID then
     return 0
   end if
-  tParentInfo = me.getTreeInfoFor(tCategoryID)
-  if tCategoryID = pRootUnitCatId or tCategoryID = pRootFlatCatId then
+  tParentInfo = me.getTreeInfoFor(tCategoryId)
+  if tCategoryId = pRootUnitCatId or tCategoryId = pRootFlatCatId then
     tParentInfo = 0
   end if
   if listp(tParentInfo) then
@@ -355,7 +361,7 @@ on createNaviHistory me, tCategoryID
       end if
     end if
   end if
-  me.getInterface().renderHistory(tCategoryID, tText, tShowRecoms)
+  me.getInterface().renderHistory(tCategoryId, tText, tShowRecoms)
   return 1
 end
 
@@ -627,7 +633,7 @@ on sendGetFlatInfo me, tFlatID
     if voidp(tFlatID) then
       return error(me, "Flat ID expected!", #sendGetFlatInfo, #major)
     else
-      return getConnection(pConnectionId).send("GETFLATINFO", tFlatID)
+      return getConnection(pConnectionId).send("GETFLATINFO", [#integer: integer(tFlatID)])
     end if
   else
     return 0
@@ -640,7 +646,7 @@ on sendSearchFlats me, tQuery
       return error(me, "Search query is void!", #sendSearchFlats, #minor)
     end if
     tQuery = convertSpecialChars(tQuery, 1)
-    return getConnection(pConnectionId).send("SRCHF", tQuery)
+    return getConnection(pConnectionId).send("SRCHF", [#string: string(tQuery)])
   else
     return 0
   end if
@@ -682,13 +688,13 @@ on sendGetFlatCategory me, tNodeId
   end if
 end
 
-on sendSetFlatCategory me, tNodeId, tCategoryID
+on sendSetFlatCategory me, tNodeId, tCategoryId
   tFlatID = me.getNodeProperty(tNodeId, #flatId)
   if connectionExists(pConnectionId) then
     if voidp(tFlatID) then
       return error(me, "Flat ID expected!", #sendSetFlatCategory, #major)
     end if
-    getConnection(pConnectionId).send("SETFLATCAT", [#integer: integer(tFlatID), #integer: integer(tCategoryID)])
+    getConnection(pConnectionId).send("SETFLATCAT", [#integer: integer(tFlatID), #integer: integer(tCategoryId)])
   else
     return 0
   end if

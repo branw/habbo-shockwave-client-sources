@@ -25,7 +25,19 @@ on deconstruct me
 end
 
 on updatePageData me, tPageID, tdata
-  pPageCache.setaProp(tPageID, me.createOfferGroups(tdata.duplicate()))
+  if ilk(tdata) <> #propList then
+    return 0
+  end if
+  tGroups = me.createOfferGroups(tdata.duplicate())
+  sendProcessTracking(503)
+  if ilk(tGroups) <> #propList then
+    return 0
+  end if
+  if ilk(pPageCache) <> #propList then
+    return 0
+  end if
+  pPageCache.setaProp(tPageID, tGroups)
+  sendProcessTracking(504)
   if tPageID = pWaitingForData then
     me.getInterface().displayPage(tPageID)
   end if
@@ -71,8 +83,8 @@ on updateCatalogIndex me, tdata
 end
 
 on preparePage me, tPageID
-  me.initCatalogData()
   if voidp(pPageCache.getaProp(tPageID)) then
+    me.initCatalogData()
     me.getHandler().requestPage(tPageID)
     pWaitingForData = tPageID
   else
@@ -124,6 +136,9 @@ on preparePixelsInfoPage me
 end
 
 on getPageData me, tPageID
+  if ilk(pPageCache) <> #propList then
+    return 0
+  end if
   return pPageCache.getaProp(tPageID)
 end
 
@@ -200,7 +215,15 @@ on initCatalogData me
 end
 
 on createOfferGroups me, tPageData
+  if ilk(tPageData) <> #propList then
+    error(me, "Page data was not a property list", #createOfferGroups, #major)
+    return 0
+  end if
   tGroupedOffers = [:]
+  if ilk(tPageData[#offers]) <> #list then
+    error(me, "Offers was not a list", #createOfferGroups, #major)
+    return 0
+  end if
   repeat with tOffer in tPageData[#offers]
     tProductCode = tOffer[#offername]
     if voidp(tGroupedOffers.getaProp(tProductCode)) then
@@ -242,14 +265,14 @@ on checkProductOrder me, tSelectedProduct
   if voidp(tOffer) then
     return error(me, "Could not reference an offer by selected product", #checkProductOrder, #major)
   end if
-  if not objectp(pPurchaseProcessor) then
+  if not objectp(pPurchaseProcessor) or pPurchaseProcessor = 0 then
     pPurchaseProcessor = createObject(getUniqueID(), "Purchase Processor Class")
   end if
   pPurchaseProcessor.startPurchase([#offerType: #credits, #pageid: tPageID, #item: tOffer, #method: #sendPurchaseFromCatalog])
 end
 
 on requestPurchase me, tOfferType, tPageID, tSelectedItem, tMethod, tExtraProps
-  if not objectp(pPurchaseProcessor) then
+  if not objectp(pPurchaseProcessor) or pPurchaseProcessor = 0 then
     pPurchaseProcessor = createObject(getUniqueID(), "Purchase Processor Class")
   end if
   tProps = [#offerType: tOfferType, #pageid: tPageID, #item: tSelectedItem, #method: tMethod]

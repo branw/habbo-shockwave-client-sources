@@ -15,15 +15,13 @@ on handle_closeuimakoppi me, tMsg
 end
 
 on handle_jumpdata me, tMsg
-  me.getComponent().jumpPlayPack([#index: tMsg.content.line[1], #jumpdata: tMsg.content.line[2]])
-end
-
-on handle_jumpliftdoor_open me, tMsg
-  put "TODO:" && tMsg.getaProp(#subject)
-end
-
-on handle_jumpliftdoor_close me, tMsg
-  put "TODO:" && tMsg.getaProp(#subject)
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tRoomIndex = tConn.GetIntFrom()
+  tJumpData = tConn.GetStrFrom()
+  me.getComponent().jumpPlayPack([#index: tRoomIndex, #jumpdata: tJumpData])
 end
 
 on handle_jumpingplace_ok me, tMsg
@@ -35,8 +33,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(74, #handle_jumpdata)
   tMsgs.setaProp(96, #handle_openuimakoppi)
   tMsgs.setaProp(97, #handle_closeuimakoppi)
-  tMsgs.setaProp(122, #handle_jumpliftdoor_open)
-  tMsgs.setaProp(123, #handle_jumpliftdoor_close)
   tMsgs.setaProp(125, #handle_jumpingplace_ok)
   tCmds = [:]
   tCmds.setaProp("JUMPSTART", 103)

@@ -26,6 +26,6 @@ on select me
 end
 
 on giveItem me
-  getThread(#room).getComponent().getRoomConnection().send("LOOKTO", me.pLocX && me.pLocY)
-  getThread(#room).getComponent().getRoomConnection().send("CARRYDRINK", pTokenList[random(pTokenList.count)])
+  getThread(#room).getComponent().getRoomConnection().send("LOOKTO", [#integer: integer(me.pLocX), #integer: integer(me.pLocY)])
+  getThread(#room).getComponent().getRoomConnection().send("CARRYOBJECT", [#integer: integer(pTokenList[random(pTokenList.count)])])
 end

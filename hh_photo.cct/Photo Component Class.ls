@@ -91,7 +91,7 @@ on openPhoto me, tItemID, tLocX, tLocY
   pLocX = tLocX
   pLocY = tLocY
   registerMessage(symbol("itemdata_received" & tItemID), me.getID(), #setItemData)
-  getConnection(getVariable("connection.room.id")).send("G_IDATA", tItemID)
+  getConnection(getVariable("connection.room.id")).send("G_IDATA", [#integer: integer(tItemID)])
 end
 
 on countCS me, tImg

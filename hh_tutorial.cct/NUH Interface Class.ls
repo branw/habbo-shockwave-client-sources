@@ -261,9 +261,12 @@ on getHighlighterList me
     pHighlighterList = [:]
     tKeys = getStructVariable("NUH.ids")
     repeat with i = 1 to tKeys.count
-      tElementName = getStringVariable("NUH." & tKeys.getPropAt(i) & ".highlighter")
-      if tRoomBar.elementExists(tElementName) then
-        pHighlighterList.setaProp(tKeys.getPropAt(i), tElementName)
+      tVarName = "NUH." & tKeys.getPropAt(i) & ".highlighter"
+      if variableExists(tVarName) then
+        tElementName = getStringVariable(tVarName)
+        if tRoomBar.elementExists(tElementName) then
+          pHighlighterList.setaProp(tKeys.getPropAt(i), tElementName)
+        end if
       end if
     end repeat
   end if

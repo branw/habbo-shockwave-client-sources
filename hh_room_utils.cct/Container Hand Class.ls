@@ -177,11 +177,11 @@ on createStripItem me, tdata
   if not voidp(tdata[#member]) then
     nothing()
   else
-    if memberExists(tIconClassStr & "_small") then
-      tdata[#member] = tIconClassStr & "_small"
+    if memberExists(tdata[#class] & "_small") then
+      tdata[#member] = tdata[#class] & "_small"
     else
-      if memberExists(tdata[#class] & "_small") then
-        tdata[#member] = tdata[#class] & "_small"
+      if memberExists(tIconClassStr & "_small") then
+        tdata[#member] = tIconClassStr & "_small"
       else
         tdata[#member] = pIconPlaceholderName
         tdata[#truemember] = tIconClassStr & "_small"

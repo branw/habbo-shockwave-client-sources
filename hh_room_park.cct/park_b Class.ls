@@ -33,6 +33,6 @@ on busTeleport me, tEvent, tSprID, tParm
   end if
   case tSprID of
     "goawaybus":
-      tConnection.send("CHANGEWORLD", "0")
+      tConnection.send("CHANGEWORLD", [#integer: 0])
   end case
 end

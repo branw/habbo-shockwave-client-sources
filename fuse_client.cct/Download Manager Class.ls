@@ -304,7 +304,6 @@ on updateQueue me
 end
 
 on removeActiveTask me, tMemName, tCallback, tSuccess
-  startProfilingTask("Download Manager::removeActiveTask")
   if voidp(tSuccess) then
     tSuccess = 1
   end if
@@ -325,7 +324,6 @@ on removeActiveTask me, tMemName, tCallback, tSuccess
       call(tCallback[#method], getObject(tCallback[#client]), tCallback[#argument], tSuccess)
     end if
   end if
-  finishProfilingTask("Download Manager::removeActiveTask")
   return 0
 end
 

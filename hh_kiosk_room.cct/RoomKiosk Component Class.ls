@@ -44,15 +44,15 @@ on sendSetFlatInfo me, tFlatID, tDesc, tPassword, tAbleToMoveFurniture, tMaxVisi
   end if
 end
 
-on sendFlatCategory me, tNodeId, tCategoryID
+on sendFlatCategory me, tNodeId, tCategoryId
   if voidp(tNodeId) then
     return error(me, "Node ID expected!", #sendFlatCategory, #major)
   end if
-  if voidp(tCategoryID) then
+  if voidp(tCategoryId) then
     return error(me, "Category ID expected!", #sendFlatCategory, #major)
   end if
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryID)])
+    return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryId)])
   else
     return 0
   end if

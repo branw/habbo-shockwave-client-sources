@@ -83,7 +83,7 @@ on removeMember me, tMemName
 end
 
 on getMember me, tMemName
-  tMemNum = pAllMemNumList[tMemName]
+  tMemNum = pAllMemNumList.getaProp(tMemName)
   if voidp(tMemNum) then
     tMemNum = 0
   end if

@@ -95,7 +95,7 @@ on update me
     else
       tErrorID = netError(pNetId)
       tError = getDownloadManager().solveNetErrorMsg(tErrorID)
-      error(me, "Download error:" & RETURN & pMemName & RETURN & tErrorID & "-" & tError & "-" & pPercent & "percent", #update, #minor)
+      error(me, "Download error:" & RETURN & pMemName & RETURN & tErrorID & "-" & tError & "-" & pPercent & "percent", #update, #major)
       case netError(pNetId) of
         6, 4159, 4165:
           if not (pURL contains getDownloadManager().getProperty(#defaultURL)) then
@@ -114,7 +114,7 @@ on update me
       ptryCount = ptryCount + 1
       if ptryCount > getIntVariable("download.retry.count", 10) then
         getDownloadManager().removeActiveTask(pMemName, pCallBack, 0)
-        return error(me, "Download failed too many times:" & RETURN & pURL & "-" & tErrorID & "-" & pPercent & "percent", #update, #major)
+        return error(me, "Download failed:" & RETURN & pURL & "-" & tErrorID & "-" & pPercent & "percent", #update, #major)
       else
         tTriesBeforeRAndParams = 2
         if ptryCount > tTriesBeforeRAndParams then
@@ -127,7 +127,7 @@ on update me
 end
 
 on importFileToCast me
-  startProfilingTask("Download Instance::importFileToCast")
+  startProfilingTask("Download Instance::importFileToCast " & pURL)
   tmember = member(pMemNum)
   case pType of
     #text, #field:
@@ -138,7 +138,7 @@ on importFileToCast me
       importFileInto(tmember, pURL)
   end case
   tmember.name = pMemName
-  finishProfilingTask("Download Instance::importFileToCast")
+  finishProfilingTask("Download Instance::importFileToCast " & pURL)
   return 1
 end
 

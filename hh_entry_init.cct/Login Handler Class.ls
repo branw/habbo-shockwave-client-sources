@@ -184,36 +184,19 @@ on handleUserObj me, tMsg
 end
 
 on handleUserBanned me, tMsg
-  tBanMsg = getText("Alert_YouAreBanned") & RETURN & tMsg.content
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tBanID = tConn.GetIntFrom()
+  tBanReason = tConn.GetStrFrom()
+  tBanMsg = getText("Alert_YouAreBanned") & RETURN & tBanReason
   executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #Msg: tBanMsg, #modal: 1])
-  removeConnection(tMsg.connection.getID())
+  removeConnection(tConn.getID())
 end
 
-on handleEPSnotify me, tMsg
-  ttype = EMPTY
-  tdata = EMPTY
-  tDelim = the itemDelimiter
-  the itemDelimiter = "="
-  repeat with f = 1 to tMsg.content.line.count
-    tProp = tMsg.content.line[f].item[1]
-    tDesc = tMsg.content.line[f].item[2]
-    case tProp of
-      "t":
-        ttype = integer(tDesc)
-      "p":
-        tdata = tDesc
-    end case
-  end repeat
-  the itemDelimiter = tDelim
-  case ttype of
-    580:
-      if not createObject("lang_test", "CLangTest") then
-        return error(me, "Failed to init lang tester!", #handleEPSnotify, #minor)
-      else
-        return getObject("lang_test").setWord(tdata)
-      end if
-  end case
-  executeMessage(#notify, ttype, tdata, tMsg.connection.getID())
+on handleNoLoginPermission me, tMsg
+  return 1
 end
 
 on handleSystemBroadcast me, tMsg
@@ -572,10 +555,10 @@ on regMsgList me, tBool
   tMsgs.setaProp(2, #handleRights)
   tMsgs.setaProp(3, #handleLoginOK)
   tMsgs.setaProp(5, #handleUserObj)
+  tMsgs.setaProp(20, #handleNoLoginPermission)
   tMsgs.setaProp(33, #handleError)
   tMsgs.setaProp(35, #handleUserBanned)
   tMsgs.setaProp(50, #handlePing)
-  tMsgs.setaProp(52, #handleEPSnotify)
   tMsgs.setaProp(139, #handleSystemBroadcast)
   tMsgs.setaProp(141, #handleCheckSum)
   tMsgs.setaProp(161, #handleModAlert)

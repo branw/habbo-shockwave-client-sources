@@ -287,7 +287,11 @@ on handle_showprogram me, tMsg
 end
 
 on handle_no_user_for_gift me, tMsg
-  tUserName = tMsg.content
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tUserName = tConn.GetStrFrom()
   tAlertString = getText("no_user_for_gift")
   tAlertString = replaceChunks(tAlertString, "%user%", tUserName)
   executeMessage(#alert, [#Msg: tAlertString])
@@ -302,7 +306,12 @@ on handle_floor_map me, tMsg
 end
 
 on handle_heightmapupdate me, tMsg
-  me.getComponent().updateHeightMap(tMsg.content)
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tMapData = tConn.GetStrFrom()
+  me.getComponent().updateHeightMap(tMapData)
 end
 
 on handle_OBJECTS me, tMsg
@@ -602,6 +611,7 @@ on handle_presentopen me, tMsg
   end if
   ttype = tConn.GetStrFrom()
   tClassID = tConn.GetIntFrom()
+  tCode = tConn.GetStrFrom()
   tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
   if voidp(tFurniProps) then
     error(me, "Persistent properties missing for item classid " & tClassID, #handle_presentopen, #major)
@@ -612,7 +622,7 @@ on handle_presentopen me, tMsg
   tName = tFurniProps[#localizedName]
   tCard = "PackageCardObj"
   if objectExists(tCard) then
-    getObject(tCard).showContent([#type: tClass, #code: tClass, #color: tColor, #name: tName])
+    getObject(tCard).showContent([#type: tClass, #code: tCode, #color: tColor, #name: tName])
   else
     error(me, "Package card obj not found!", #handle_presentopen, #major)
   end if
@@ -927,6 +937,7 @@ end
 
 on handle_doorflat me, tMsg
   tConn = tMsg.connection
+  tSourceTeleId = tConn.GetIntFrom()
   tTeleId = tConn.GetIntFrom()
   tFlatID = tConn.GetIntFrom()
   if not (tTeleId and tFlatID) then
@@ -1426,6 +1437,32 @@ on handle_stop_playing_song me, tMsg
   executeMessage(#do_not_listen_song)
 end
 
+on handle_item_not_tradeable me, tMsg
+  executeMessage(#alert, [#Msg: "room_cant_trade"])
+end
+
+on handle_cannot_place_stuff_from_strip me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
+  tError = tConn.GetIntFrom()
+  case tError of
+    1, 11:
+      executeMessage(#alert, [#Msg: "room_cant_set_item"])
+    12:
+      executeMessage(#alert, [#Msg: "wallitem_post.it.limit"])
+    20:
+      executeMessage(#alert, [#Msg: "room_alert_furni_limit", #id: "roomfullfurni", #modal: 1])
+    21:
+      executeMessage(#alert, [#Msg: "room_max_pet_limit"])
+    22:
+      executeMessage(#alert, [#Msg: "queue_tile_limit"])
+    23:
+      executeMessage(#alert, [#Msg: "room_sound_furni_limit"])
+  end case
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -1516,8 +1553,10 @@ on regMsgList me, tBool
   tMsgs.setaProp(492, #handle_close_performer_gui)
   tMsgs.setaProp(493, #handle_start_playing_song)
   tMsgs.setaProp(494, #handle_stop_playing_song)
+  tMsgs.setaProp(515, #handle_item_not_tradeable)
+  tMsgs.setaProp(516, #handle_cannot_place_stuff_from_strip)
   tCmds = [:]
-  tCmds.setaProp(#room_directory, 2)
+  tCmds.setaProp("ROOM_DIRECTORY", 2)
   tCmds.setaProp("GETDOORFLAT", 28)
   tCmds.setaProp("CHAT", 52)
   tCmds.setaProp("SHOUT", 55)
@@ -1605,118 +1644,4 @@ on regMsgList me, tBool
     unregisterCommands(getVariable("connection.room.id"), me.getID(), tCmds)
   end if
   return 1
-end
-
-on handle_old_stripinfo me, tMsg, tItemDeLim
-  if voidp(tItemDeLim) then
-    tItemDeLim = numToChar(30)
-  end if
-  if voidp(pPersistentFurniData) then
-    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
-  end if
-  tProps = [#objects: [], #count: 0]
-  tDelim = the itemDelimiter
-  tProps[#count] = integer(tMsg.content.line[tMsg.content.line.count])
-  the itemDelimiter = "/"
-  tCount = tMsg.content.item.count
-  tStripMax = 0
-  tTotalItemCount = 0
-  repeat with i = 1 to tCount
-    the itemDelimiter = "/"
-    tItem = tMsg.content.item[i]
-    if tItem = EMPTY then
-      exit repeat
-    end if
-    the itemDelimiter = tItemDeLim
-    if tItem.item.count < 2 then
-      tTotalItemCount = integer(tItem - 1)
-      exit repeat
-    end if
-    tObj = [:]
-    tObj[#stripId] = tItem.item[2]
-    tObjectPos = integer(tItem.item[3])
-    tObj[#striptype] = tItem.item[4]
-    tObj[#id] = tItem.item[5]
-    tClassID = integer(tItem.item[6])
-    if not integerp(tClassID) then
-      tClassID = tItem.item[6]
-    end if
-    case tObj[#striptype] of
-      "S":
-        tFurniProps = pPersistentFurniData.getProps("s", tClassID)
-        if voidp(tFurniProps) then
-          error(me, "Persistent properties missing for furni classid " & tClassID, #handle_stripinfo, #major)
-          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
-        end if
-        tObj[#class] = tFurniProps[#class]
-        tObj[#name] = tFurniProps[#localizedName]
-        tObj[#custom] = tFurniProps[#localizedDesc]
-        tObj[#dimensions] = [tFurniProps[#xdim], tFurniProps[#ydim]]
-        tObj[#colors] = tFurniProps[#partColors]
-        tObj[#striptype] = "active"
-        tObj[#stuffdata] = tItem.item[7]
-        tObj[#isRecyclable] = tItem.item[8]
-        tObj[#isTradeable] = tItem.item[9]
-        if tItem.item.count >= 10 then
-          tObj[#expire] = tItem.item[10]
-        end if
-        if tItem.item[11] <> EMPTY and tItem.item.count >= 11 then
-          tObj[#slotID] = tItem.item[11]
-        end if
-        if tItem.item[12] <> EMPTY and tItem.item.count >= 12 then
-          tObj[#songID] = tItem.item[12]
-        end if
-        the itemDelimiter = ","
-        if tObj[#colors].char[1] = "#" then
-          if tObj[#colors].item.count > 1 then
-            tObj[#stripColor] = rgb(tObj[#colors].item[tObj[#colors].item.count])
-          else
-            tObj[#stripColor] = rgb(tObj[#colors])
-          end if
-        else
-          tObj[#stripColor] = 0
-        end if
-      "I":
-        tFurniProps = pPersistentFurniData.getProps("i", tClassID)
-        if voidp(tFurniProps) then
-          error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
-          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
-        end if
-        tObj[#class] = tFurniProps[#class]
-        tObj[#striptype] = "item"
-        tObj[#props] = tItem.item[7]
-        tObj[#isRecyclable] = tItem.item[8]
-        tObj[#isTradeable] = tItem.item[9]
-        if tItem.item.count >= 10 then
-          tObj[#expire] = tItem.item[10]
-        end if
-        case tObj[#class] of
-          "poster":
-            tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")
-          otherwise:
-            tObj[#name] = tFurniProps[#localizedName]
-        end case
-    end case
-    tProps[#objects].add(tObj)
-    if tObjectPos > tStripMax then
-      tStripMax = tObjectPos
-    end if
-  end repeat
-  the itemDelimiter = tDelim
-  tInventory = me.getInterface().getContainer()
-  tInventory.setHandButton("next", tTotalItemCount > integer(tStripMax))
-  tInventory.setHandButton("prev", integer(tStripMax) > 8)
-  case tMsg.subject of
-    140:
-      tInventory.updateStripItems(tProps[#objects])
-      tInventory.setStripItemCount(tProps[#count])
-      tInventory.open(1)
-      tInventory.Refresh()
-    98:
-      tInventory.appendStripItem(tProps[#objects][1])
-      tInventory.open(1)
-      tInventory.Refresh()
-    108:
-      return tProps
-  end case
 end

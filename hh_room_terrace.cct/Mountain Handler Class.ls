@@ -15,7 +15,6 @@ on handle_close_uimakoppi me, tMsg
 end
 
 on handle_md_exit me, tMsg
-  me.getInterface().doTheDew(tMsg.content)
 end
 
 on regMsgList me, tBool

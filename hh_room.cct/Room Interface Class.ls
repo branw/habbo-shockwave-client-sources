@@ -46,7 +46,6 @@ on construct me
   createObject(pIgnoreListID, "Ignore List Class")
   createObject(pRespectMgrID, "Respect Manager Class")
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
-  registerMessage(#notify, me.getID(), #notify)
   registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   me.updateScreenOffset()
   return 1
@@ -54,7 +53,6 @@ end
 
 on deconstruct me
   unregisterMessage(#objectFinalized, me.getID())
-  unregisterMessage(#notify, me.getID())
   pClickAction = #null
   removeObject(pGeometryId)
   removeObject(pContainerID)
@@ -616,25 +614,6 @@ on getKeywords me
   return [deobfuscate("$cMgMXLrlJM|OI-9"), deobfuscate("%bl&-ym3Lj-|.I-)"), deobfuscate("EBLFM9M2,KM|oH/h")]
 end
 
-on notify me, ttype
-  case ttype of
-    400:
-      executeMessage(#alert, [#Msg: "room_cant_trade"])
-    401:
-      executeMessage(#alert, [#Msg: "room_max_pet_limit"])
-    402:
-      executeMessage(#alert, [#Msg: "room_cant_set_item"])
-    403:
-      executeMessage(#alert, [#Msg: "wallitem_post.it.limit"])
-    404:
-      executeMessage(#alert, [#Msg: "queue_tile_limit"])
-    405:
-      executeMessage(#alert, [#Msg: "room_alert_furni_limit", #id: "roomfullfurni", #modal: 1])
-    406:
-      executeMessage(#alert, [#Msg: "room_sound_furni_limit"])
-  end case
-end
-
 on getIgnoreStatus me, tUserID, tName
   tIgnoreListObj = me.getIgnoreListObject()
   if not objectp(tIgnoreListObj) then
@@ -787,7 +766,7 @@ on placeFurniture me, tObjID, tObjType
       tStripID = integer(tObj.getaProp(#stripId))
       tMsg = tStripID && tloc[1] && tloc[2] && tObj.pDirection[1]
       me.getComponent().removeActiveObject(tObj[#id])
-      me.getComponent().getRoomConnection().send("PLACESTUFF", tMsg)
+      me.getComponent().getRoomConnection().send("PLACESTUFF", [#string: tMsg])
       return 1
     "item":
       tloc = getObject(pObjMoverID).getProperty(#itemLocStr)
@@ -801,7 +780,7 @@ on placeFurniture me, tObjID, tObjType
       tStripID = integer(tObj.getaProp(#stripId))
       tMsg = tStripID && tloc
       me.getComponent().removeItemObject(tObj[#id])
-      me.getComponent().getRoomConnection().send("PLACESTUFF", tMsg)
+      me.getComponent().getRoomConnection().send("PLACESTUFF", [#string: tMsg])
       return 1
   end case
   return 0
@@ -957,7 +936,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
     tPrm = [:]
     case tCmd of
       "MOVE":
-        tPrm = [#short: integer(tSprID.word[3]), #short: integer(tSprID.word[4])]
+        tPrm = [#integer: integer(tSprID.word[3]), #integer: integer(tSprID.word[4])]
       "GOAWAY":
         tPrm = [:]
       otherwise:
@@ -976,7 +955,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
         tloc = me.getGeometry().getFloorCoordinate(the mouseH, the mouseV)
         if listp(tloc) then
-          return me.getComponent().getRoomConnection().send("MOVE", [#short: tloc[1], #short: tloc[2]])
+          return me.getComponent().getRoomConnection().send("MOVE", [#integer: tloc[1], #integer: tloc[2]])
         end if
       "moveActive":
         tloc = getObject(pObjMoverID).getProperty(#loc)
@@ -1072,7 +1051,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     me.showArrowHiliter(tSprID)
     tloc = tObject.getLocation()
     if tObject <> me.getComponent().getOwnUser() or tObject.getProperty(#moving) then
-      me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
+      me.getComponent().getRoomConnection().send("LOOKTO", [#integer: integer(tloc[1]), #integer: integer(tloc[2])])
     end if
   else
     pSelectedObj = EMPTY

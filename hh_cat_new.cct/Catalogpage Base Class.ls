@@ -131,7 +131,7 @@ on getOfferTypeList me, tItemGroup
 end
 
 on getOfferByType me, tItemGroup, tOfferType
-  if not objectp(tItemGroup) then
+  if not objectp(tItemGroup) or tItemGroup = 0 then
     return error(me, "Invalid input format", #getOfferByType, #major)
   end if
   if tItemGroup.getCount() < 1 then
@@ -158,7 +158,7 @@ on getOfferByType me, tItemGroup, tOfferType
 end
 
 on getOfferPriceTextByType me, tItemGroup, tOfferType
-  if not objectp(tItemGroup) then
+  if not objectp(tItemGroup) or tItemGroup = 0 then
     return error(me, "Invalid input format", #getOfferPriceTextByType, #major)
   end if
   if tItemGroup.getCount() < 1 then
@@ -186,7 +186,7 @@ on centerRectInRect me, tSmallrect, tLargeRect
 end
 
 on centerBlitImageToElement me, tImage, tElement
-  if not objectp(tElement) then
+  if not objectp(tElement) or tElement = 0 then
     return error(me, "Image element was invalid", #centerBlitImageToElement, #minor)
   end if
   tElement.clearBuffer()

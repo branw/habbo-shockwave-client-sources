@@ -1,7 +1,7 @@
 property pTokenList, pDoorTimer
 
 on prepare me
-  pTokenList = [getText("handitem2", "handitem2"), getText("handitem5", "handitem5"), getText("handitem7", "handitem7")]
+  pTokenList = [2, 5, 7]
   return 1
 end
 
@@ -14,6 +14,7 @@ on updateStuffdata me, tProp, tValue
 end
 
 on select me
+  return 1
   if the doubleClick then
     tUserObj = getThread(#room).getComponent().getOwnUser()
     if tUserObj = 0 then
@@ -53,10 +54,10 @@ on giveDrink me
   tConnection = getThread(#room).getComponent().getRoomConnection()
   tConnection.send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
   tConnection.send("LOOKTO", me.pLocX && me.pLocY)
-  tConnection.send("CARRYDRINK", me.getDrinkname())
+  tConnection.send("CARRYOBJECT", [#integer: me.getDrinkId()])
 end
 
-on getDrinkname me
+on getDrinkId me
   return pTokenList[random(pTokenList.count)]
 end
 

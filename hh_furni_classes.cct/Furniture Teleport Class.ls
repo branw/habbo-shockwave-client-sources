@@ -49,7 +49,7 @@ on select me
       if me.pLocX - tUserObj.pLocX = tDelta[1] and me.pLocY - tUserObj.pLocY = tDelta[2] then
         tUserIsClose = 1
       else
-        return tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX - tDelta[1], #short: me.pLocY - tDelta[2]])
+        return tRoom.getRoomConnection().send("MOVE", [#integer: me.pLocX - tDelta[1], #integer: me.pLocY - tDelta[2]])
       end if
     end if
     if tUserIsClose then
@@ -105,7 +105,7 @@ on kickOut me
     tCloseList = ["0": [0, -1], "2": [1, 0], "4": [0, 1], "6": [-1, 0]]
     tDelta = tCloseList[string(me.pDirection[1])]
     if not voidp(tDelta) then
-      tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + tDelta[1], #short: me.pLocY + tDelta[2]])
+      tRoom.getRoomConnection().send("MOVE", [#integer: me.pLocX + tDelta[1], #integer: me.pLocY + tDelta[2]])
     end if
   end if
 end

@@ -149,7 +149,10 @@ on eventProcHubu me, tEvent, tSprID, tParam
         if tSprID contains "button_" then
           if getWindow(pHubuWndID).getElement(tSprID).getProperty(#blend) = 100 then
             me.showVoteWait()
-            getThread(#room).getComponent().getRoomConnection().send("VOTE", tSprID.char[length(tSprID)])
+            tChoice = integer(tSprID.char[length(tSprID)])
+            if integerp(tChoice) then
+              getThread(#room).getComponent().getRoomConnection().send("VOTE", [#integer: tChoice])
+            end if
           end if
         end if
       end if

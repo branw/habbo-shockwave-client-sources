@@ -46,44 +46,46 @@ on handle_flatinfo me, tMsg
   return 1
 end
 
-on handle_flat_results me, tMsg
-  tResult = [:]
+on handle_user_flat_results me, tMsg
+  tFlatList = me.parseFlatResults(tMsg)
+  if tFlatList.ilk <> #propList then
+    return 0
+  end if
+  tNodeInfo = [#id: #own, #children: tFlatList]
+  me.getComponent().saveNodeInfo(tNodeInfo)
+end
+
+on handle_search_flat_results me, tMsg
+  tFlatList = me.parseFlatResults(tMsg)
+  if tFlatList.ilk <> #propList then
+    return 0
+  end if
+  tNodeInfo = [#id: #src, #children: tFlatList]
+  me.getComponent().saveNodeInfo(tNodeInfo)
+end
+
+on parseFlatResults me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  if not tConn then
+    return 0
+  end if
   tList = [:]
-  tDelim = the itemDelimiter
-  the itemDelimiter = TAB
-  tContent = tMsg.content
-  repeat with i = 1 to tContent.line.count
-    tLine = tContent.line[i]
-    if tLine.item.count > 0 and tLine.item.count < 9 then
-      nothing()
-      next repeat
-    end if
-    if tLine = EMPTY then
-      exit repeat
-    end if
+  tFlatCount = tConn.GetIntFrom()
+  repeat with i = 1 to tFlatCount
     tFlat = [:]
-    tFlat[#id] = "f_" & tLine.item[1]
-    tFlat[#flatId] = tLine.item[1]
-    tFlat[#name] = tLine.item[2]
-    tFlat[#owner] = tLine.item[3]
-    tFlat[#door] = tLine.item[4]
-    tFlat[#port] = tLine.item[5]
-    tFlat[#usercount] = tLine.item[6]
-    tFlat[#maxUsers] = tLine.item[7]
-    tFlat[#Filter] = tLine.item[8]
-    tFlat[#description] = tLine.item[9]
+    tID = tConn.GetIntFrom()
+    tFlat[#id] = "f_" & tID
+    tFlat[#flatId] = tID
+    tFlat[#name] = tConn.GetStrFrom()
+    tFlat[#owner] = tConn.GetStrFrom()
+    tFlat[#door] = tConn.GetStrFrom()
+    tFlat[#usercount] = tConn.GetIntFrom()
+    tFlat[#maxUsers] = tConn.GetIntFrom()
+    tFlat[#description] = tConn.GetStrFrom()
     tFlat[#nodeType] = 2
     tList[tFlat[#id]] = tFlat
   end repeat
-  tResult.addProp(#children, tList)
-  case tMsg.subject of
-    16:
-      tResult[#id] = #own
-    55:
-      tResult[#id] = #src
-  end case
-  the itemDelimiter = tDelim
-  me.getComponent().saveNodeInfo(tResult)
+  return tList
 end
 
 on handle_favouriteroomresults me, tMsg
@@ -128,8 +130,8 @@ on handle_navnodeinfo me, tMsg
     return 0
   end if
   tNodeInfo.addProp(#nodeMask, tNodeMask)
-  tCategoryID = tNodeInfo[#id]
-  tCategoryIndex.setaProp(tCategoryID, [#name: tNodeInfo[#name], #parentid: tNodeInfo[#parentid], #children: []])
+  tCategoryId = tNodeInfo[#id]
+  tCategoryIndex.setaProp(tCategoryId, [#name: tNodeInfo[#name], #parentid: tNodeInfo[#parentid], #children: []])
   repeat while tConn <> VOID
     tNode = me.parseNode(tMsg)
     if tNode = 0 then
@@ -137,7 +139,7 @@ on handle_navnodeinfo me, tMsg
     end if
     tNodeId = tNode[#id]
     tParentId = tNode[#parentid]
-    if tParentId = tCategoryID then
+    if tParentId = tCategoryId then
       tNodeInfo[#children].setaProp(tNodeId, tNode)
     end if
     if tCategoryIndex[tParentId] <> 0 then
@@ -237,9 +239,9 @@ end
 on handle_flatcat me, tMsg
   tConn = tMsg.getaProp(#connection)
   tFlatID = tConn.GetIntFrom()
-  tCategoryID = tConn.GetIntFrom()
-  me.getComponent().setNodeProperty("f_" & tFlatID, #parentid, tCategoryID)
-  executeMessage(#flatcat_received, [#flatId: tFlatID, #id: "f_" & tFlatID, #parentid: tCategoryID])
+  tCategoryId = tConn.GetIntFrom()
+  me.getComponent().setNodeProperty("f_" & tFlatID, #parentid, tCategoryId)
+  executeMessage(#flatcat_received, [#flatId: tFlatID, #id: "f_" & tFlatID, #parentid: tCategoryId])
   return 1
 end
 
@@ -358,12 +360,15 @@ on handle_navigatorsettings me, tMsg
   return 1
 end
 
+on handle_c_favourites me
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
-  tMsgs.setaProp(16, #handle_flat_results)
+  tMsgs.setaProp(16, #handle_user_flat_results)
   tMsgs.setaProp(33, #handle_error)
   tMsgs.setaProp(54, #handle_flatinfo)
-  tMsgs.setaProp(55, #handle_flat_results)
+  tMsgs.setaProp(55, #handle_search_flat_results)
   tMsgs.setaProp(57, #handle_noflatsforuser)
   tMsgs.setaProp(58, #handle_noflats)
   tMsgs.setaProp(61, #handle_favouriteroomresults)
@@ -379,6 +384,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(286, #handle_roomforward)
   tMsgs.setaProp(351, #handle_recommended_room_list)
   tMsgs.setaProp(455, #handle_navigatorsettings)
+  tMsgs.setaProp(458, #handle_c_favourites)
   tCmds = [:]
   tCmds.setaProp("SBUSYF", 13)
   tCmds.setaProp("SUSERF", 16)

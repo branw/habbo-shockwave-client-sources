@@ -76,7 +76,7 @@ on Execute me, tMessage, tArgA, tArgB, tArgC
       next repeat
     end if
     if tMethod <> #invalidateCrapFixer then
-      pLastExecutedMessage = tMethod
+      pLastExecutedMessage = tMessage & "-" & tMethod
     end if
     call(tMethod, [tObject], tArgA, tArgB, tArgC)
   end repeat

@@ -85,7 +85,7 @@ on select me
           me.setAnimation()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY + 1])
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#integer: me.pLocX, #integer: me.pLocY + 1])
       end if
     0:
       if me.pLocX = tLocX and me.pLocY - tLocY = 1 then
@@ -93,7 +93,7 @@ on select me
           me.setAnimation()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY - 1])
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#integer: me.pLocX, #integer: me.pLocY - 1])
       end if
     2:
       if me.pLocY = tLocY and me.pLocX - tLocX = -1 then
@@ -101,7 +101,7 @@ on select me
           me.setAnimation()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX + 1, #short: me.pLocY])
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#integer: me.pLocX + 1, #integer: me.pLocY])
       end if
     6:
       if me.pLocY = tLocY and me.pLocX - tLocX = 1 then
@@ -109,7 +109,7 @@ on select me
           me.setAnimation()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX - 1, #short: me.pLocY])
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#integer: me.pLocX - 1, #integer: me.pLocY])
       end if
   end case
   return 1

@@ -34,7 +34,9 @@ on deconstruct me
 end
 
 on displayPage me, tPageID
+  sendProcessTracking(505)
   tPageData = me.getComponent().getPageData(tPageID)
+  sendProcessTracking(510)
   me.showWindow()
   me.showPage(tPageData)
   me.updateTreeView()
@@ -43,20 +45,36 @@ end
 
 on updateTreeView me
   if not (windowExists(pWndID) and objectp(pWndObj)) then
-    return error(me, "Catalogue Window does not exist!", #updateTreweView, #major)
+    return error(me, "Catalogue Window does not exist!", #updateTreeView, #major)
+  end if
+  if not objectp(pTreeView) then
+    return 0
   end if
   tTreeviewImage = pTreeView.getInterface().getImage()
+  if ilk(tTreeviewImage) <> #image then
+    return 0
+  end if
   tDestElement = pWndObj.getElement("ctlg_pages")
   if voidp(tDestElement) or tDestElement = 0 then
     return error(me, "ctlg_pages element missing from window!", #updateTreeView, #major)
   end if
   if tTreeviewImage.height > tDestElement.getProperty(#height) then
-    pWndObj.getElement("back_hide").show()
-    pWndObj.getElement("ctlg_pages_scroll").show()
+    if pWndObj.elementExists("back_hide") then
+      pWndObj.getElement("back_hide").show()
+    end if
+    if pWndObj.elementExists("ctlg_pages_scroll") then
+      pWndObj.getElement("ctlg_pages_scroll").show()
+    end if
   else
-    pWndObj.getElement("ctlg_pages_scroll").setScrollOffset(0)
-    pWndObj.getElement("back_hide").hide()
-    pWndObj.getElement("ctlg_pages_scroll").hide()
+    if pWndObj.elementExists("ctlg_pages_scroll") then
+      pWndObj.getElement("ctlg_pages_scroll").setScrollOffset(0)
+    end if
+    if pWndObj.elementExists("back_hide") then
+      pWndObj.getElement("back_hide").hide()
+    end if
+    if pWndObj.elementExists("ctlg_pages_scroll") then
+      pWndObj.getElement("ctlg_pages_scroll").hide()
+    end if
   end if
   tDestElement.feedImage(tTreeviewImage)
 end
@@ -200,7 +218,7 @@ on followLink me, tLinkContent
 end
 
 on showWindow me
-  if voidp(pWndObj) then
+  if voidp(pWndObj) or pWndObj = 0 then
     if not createWindow(pWndID, "habbo_catalogue.window") then
       return error(me, "Unable to create catalogue window.", #showWindow, #major)
     end if
@@ -213,24 +231,32 @@ on showWindow me
     pWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #keyUp)
     pWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #keyDown)
   end if
+  sendProcessTracking(511)
   if not objectp(pWndObj) then
     return error(me, "No window object in catalogue!", #showWindow, #critical)
   end if
-  if voidp(pTreeView) then
+  if voidp(pTreeView) or pTreeView = 0 then
+    sendProcessTracking(512)
     pTreeView = createObject(getUniqueID(), ["Treeview Class"])
+    if voidp(pTreeView) or pTreeView = 0 then
+      return error(me, "Could not create tree view", #showWindow, #critical)
+    end if
     tDestElement = pWndObj.getElement("ctlg_pages")
-    if not objectp(tDestElement) then
+    if tDestElement = 0 then
       return error(me, "No destination element for treeview", #showWindow, #critical)
     end if
-    if not voidp(me.getComponent().getCatalogIndex()) then
+    tIndex = me.getComponent().getCatalogIndex()
+    if not voidp(tIndex) and tIndex <> 0 then
       pTreeView.define(me.getComponent().getCatalogIndex(), tDestElement.getProperty(#width), tDestElement.getProperty(#height))
     end if
+    sendProcessTracking(513)
   end if
   if not me.getComponent().getArePixelsEnabled() then
     pWndObj.getElement("pixel_icon").hide()
     pWndObj.getElement("catalog_pixels_bottom").hide()
     pWndObj.getElement("catalog_get_pixels_bottom").hide()
   end if
+  sendProcessTracking(514)
   me.updatePurseSaldo()
 end
 
@@ -269,7 +295,7 @@ on showPage me, tPageData
     tClass = getClassVariable("layout.class.default")
   end if
   pCurrentPageObj = createObject("Current Catalog Page", tClass)
-  if not objectp(pCurrentPageObj) then
+  if not objectp(pCurrentPageObj) or pCurrentPageObj = 0 then
     return error(me, "Unable to create catalogpage object for page " & tPageData[#layout])
   end if
   pCurrentPageObj.define(tPageData)

@@ -72,6 +72,9 @@ on define me, tPageProps
     repeat with tItemNo = 1 to tProdList.count
       tProp = tProdList[tItemNo]
       tClass = tProp["class"]
+      if tClass = VOID then
+        next repeat
+      end if
       tClassPrefix = tClass.word[1]
       tClassPostfix = tClass.word[2]
       if tClassPrefix = "wallpaper" and tClassPostfix <> EMPTY then
@@ -153,6 +156,9 @@ on setWallPaper me, ttype, tChange
     pWallModel = 1
     tElemPrev = tWndObj.getElement("ctlg_wall_color_prev")
     tElemNext = tWndObj.getElement("ctlg_wall_color_next")
+    if ilk(pWallPatterns.getaProp(pWallPattern)) <> #propList then
+      return 0
+    end if
     if pWallPatterns[pWallPattern].count < 2 then
       tElemPrev.deactivate()
       tElemNext.deactivate()

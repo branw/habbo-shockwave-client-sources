@@ -83,35 +83,6 @@ on openTicketWindow me
   return 1
 end
 
-on doTheDew me, tUserName
-  return 0
-  if not getThread(#room).getComponent().userObjectExists(tUserName) then
-    return error(me, "User not found:" && tUserName, #doTheDew)
-  end if
-  tUserObj = getThread(#room).getComponent().getUserObject(tUserName)
-  tUserSpr = tUserObj.getSprites()[1]
-  if voidp(tUserSpr) then
-    return error(me, "Couldn't extract sprites from user object:" && tUserName, #doTheDew)
-  end if
-  pUserName = tUserName
-  tUserObj.Refresh(12, 21, tUserObj.pLocH, 4, 4)
-  tUserObj.fuseAction_wave()
-  call(#doHandWorkRight, tUserObj.pPartList, "wav")
-  tUserObj.prepare()
-  tUserObj.render()
-  pUserMem.image = tUserSpr.member.image
-  pUserMem.regPoint = tUserSpr.member.regPoint
-  pUserSpr.loc = tUserSpr.loc + [-2, -3]
-  pUserSpr.locZ = tUserSpr.locZ
-  pUserSpr.flipH = tUserSpr.flipH
-  pUserSpr.visible = 1
-  getThread(#room).getComponent().removeUserObject(pUserName)
-  receivePrepare(me.getID())
-  if pState = #ready then
-    pState = #action
-  end if
-end
-
 on prepare me
   case pState of
     #ready:

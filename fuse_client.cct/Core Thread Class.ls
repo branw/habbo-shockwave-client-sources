@@ -174,6 +174,7 @@ on assetDownloadCallbacks me, tAssetId, tSuccess
 end
 
 on updateState me, tstate
+  global gLogVarUrl
   case tstate of
     "load_variables":
       pState = tstate
@@ -235,6 +236,7 @@ on updateState me, tstate
       end if
       tURL = getExtVarPath()
       tMemName = tURL
+      gLogVarUrl = tURL
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
       sendProcessTracking(9)
       if tMemNum = 0 then
@@ -288,6 +290,7 @@ on updateState me, tstate
       if tMemName = EMPTY then
         return me.updateState("load_casts")
       end if
+      gLogVarUrl = tURL
       tMemNum = queueDownload(tURL, tMemName, #field)
       sendProcessTracking(12)
       if tMemNum = 0 then
@@ -356,6 +359,7 @@ on updateState me, tstate
         return me.updateState("init_threads")
       end if
     "init_threads":
+      gLogVarUrl = VOID
       sendProcessTracking(24)
       pState = tstate
       cursor(0)

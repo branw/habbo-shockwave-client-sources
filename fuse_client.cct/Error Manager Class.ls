@@ -192,6 +192,7 @@ on makeErrorId me
 end
 
 on handleFatalError me, tErrorData
+  global gLogVarUrl
   tErrorUrl = EMPTY
   tParams = EMPTY
   if ilk(tErrorData) <> #propList then
@@ -212,6 +213,9 @@ on handleFatalError me, tErrorData
   tErrorData["client_process_list"] = string(getProcessTrackingList())
   tErrorData["client_errors"] = getClientErrors() & "T=" & the long time
   tErrorData["server_errors"] = getServerErrors() & "-" & tErrorData["server_errors"]
+  if stringp(gLogVarUrl) then
+    tErrorData["server_errors"] = gLogVarUrl & "x"
+  end if
   if tErrorUrl contains "?" then
     tParams = "&"
   else

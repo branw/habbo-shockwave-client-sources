@@ -15,11 +15,12 @@ on deconstruct me
 end
 
 on define me, tNodeObj, tProps
+  sendProcessTracking(800)
   if not objectp(tNodeObj) then
-    return 0
+    return error(me, "NodeObj was not object", #define, #major)
   end if
   if ilk(tProps) <> #propList then
-    return 0
+    return error(me, "Props was not propList", #define, #major)
   end if
   pData = tNodeObj
   if tNodeObj.getData(#icon) > 0 and variableExists("treeview.node.icon." & tNodeObj.getData(#icon)) then
@@ -37,17 +38,29 @@ on define me, tNodeObj, tProps
   end if
   pBackground = getMember(tBgMemberName)
   pSelectedBg = getMember(tSelMemberName)
+  sendProcessTracking(801)
   if ilk(pBackground) <> #member then
     return error(me, "Unable to create renderer, invalid background image.", #define, #major)
   end if
   if ilk(pSelectedBg) <> #member then
     return error(me, "Unable to create renderer, invalid selected image.", #define, #major)
   end if
+  if pBackground.type <> #bitmap then
+    return error(me, "Invalid background type.", #define, #major)
+  end if
+  if pSelectedBg.type <> #bitmap then
+    return error(me, "Invalid background selected type", #define, #major)
+  end if
+  sendProcessTracking(802)
   pwidth = tProps[#width]
   pheight = pBackground.image.height
   if not writerExists(pTextRendererId) then
     createWriter(pTextRendererId, getStructVariable("struct.font.bold"))
   end if
+  if not writerExists(pTextRendererId) then
+    return error(me, "Unable to create writer.", #define, #major)
+  end if
+  sendProcessTracking(803)
   if textExists(tNodeObj.getData(#nodename)) then
     pText = getText(tNodeObj.getData(#nodename))
   else
@@ -56,14 +69,17 @@ on define me, tNodeObj, tProps
 end
 
 on setState me, tstate
+  sendProcessTracking(810)
   me.render()
 end
 
 on select me, tSelected
+  sendProcessTracking(820)
   me.render()
 end
 
 on getImage me
+  sendProcessTracking(830)
   if voidp(pimage) then
     me.render()
   end if
@@ -71,6 +87,7 @@ on getImage me
 end
 
 on render me
+  sendProcessTracking(840)
   pimage = image(pwidth, pheight, 32)
   tLevel = integer(pData.getData(#level)) - 1
   tOffsetX = getIntVariable("treeview.node.start.offset") + getIntVariable("treeview.node.item.offset") * max([tLevel, 0])
@@ -102,5 +119,6 @@ on render me
 end
 
 on getCenteredOfs me, tDest, tSource
+  sendProcessTracking(850)
   return (tDest - tSource) / 2
 end

@@ -294,7 +294,7 @@ on enterRoomDirect me, tdata
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
+  return getConnection(pRoomConnID).send("ROOM_DIRECTORY", [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
 end
 
 on createUserObject me, tdata
@@ -794,7 +794,7 @@ on roomPrePartFinished me
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
+  return getConnection(pRoomConnID).send("ROOM_DIRECTORY", [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
   return 1
 end
 
