@@ -1,15 +1,17 @@
-property pPrefs, pAnimFrame, pInitDelayCounter, pAnimDelayCounter, pMemberClass, pPaletteClass, pCurrentFrame, pFrameList, pAnimLoopCounter
+property pPrefs, pAnimFrame, pInitDelayCounter, pAnimDelayCounter, pMemberClass, pPaletteClass, pCurrentFrame, pFrameList, pAnimLoopCounter, pAnimStopped
 
 on construct me
   pFrameList = []
   pPrefs = []
   pCurrentFrame = 0
   pAnimLoopCounter = 1
+  pAnimStopped = 1
   return 1
 end
 
 on deconstruct me
   removeUpdate(me.getID())
+  pAnimStopped = 1
   return 1
 end
 
@@ -46,6 +48,7 @@ on define me, tPrefs
       tIndex = tIndex + 1
     end repeat
   end if
+  pAnimStopped = 0
   receiveUpdate(me.getID())
   return 1
 end
@@ -67,6 +70,9 @@ on setAnimDelay me
 end
 
 on update me
+  if pAnimStopped then
+    return 0
+  end if
   pInitDelayCounter = pInitDelayCounter - 1
   if pInitDelayCounter < 0 then
     pAnimDelayCounter = pAnimDelayCounter - 1
@@ -78,6 +84,9 @@ on update me
 end
 
 on advanceAnimFrame me
+  if pAnimStopped then
+    return 0
+  end if
   pCurrentFrame = pCurrentFrame + 1
   if pCurrentFrame > pFrameList.count then
     if pPrefs[#animLoopCount] > 0 then
@@ -97,14 +106,18 @@ on advanceAnimFrame me
   if ilk(pFrameList) = #list then
     if pFrameList.count > 0 then
       tAnimFrame = value(pFrameList[pCurrentFrame])
-      if not voidp(pMemberClass) then
-        tMem = pMemberClass & tAnimFrame
-        pPrefs[#sprite].member = tMem
-        pPrefs[#sprite].width = member(tMem).width
-        pPrefs[#sprite].height = member(tMem).height
+      if pAnimStopped then
+        nothing()
       else
-        tMem = pPaletteClass & tAnimFrame
-        pPrefs[#sprite].member.paletteRef = member(tMem)
+        if not voidp(pMemberClass) then
+          tMem = pMemberClass & tAnimFrame
+          pPrefs[#sprite].member = tMem
+          pPrefs[#sprite].width = member(tMem).width
+          pPrefs[#sprite].height = member(tMem).height
+        else
+          tMem = pPaletteClass & tAnimFrame
+          pPrefs[#sprite].member.paletteRef = member(tMem)
+        end if
       end if
     end if
   end if

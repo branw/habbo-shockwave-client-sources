@@ -2,7 +2,7 @@ property pHotelClosingID, pLoginFailedID
 
 on construct me
   pHotelClosingID = getText("opening_hours_title")
-  pLoginFailedID = getText("opening_hours_login_failed")
+  pLoginFailedID = "opening_hours_login_failed"
   return 1
 end
 

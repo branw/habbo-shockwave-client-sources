@@ -102,7 +102,7 @@ on define me, tdata
   the itemDelimiter = tDelim
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
-  pInfoStruct[#Custom] = pCustom
+  pInfoStruct[#custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   return 1
 end

@@ -123,11 +123,13 @@ on executeGameObjectEvent me, tEvent, tdata
       if pIsOwnPlayer then
         me.getGameSystem().sendGameSystemEvent(#statusbar_health_update, me.pGameObjectSyncValues[#hit_points])
       end if
-    #reset_hit_points:
+    #player_resurrected:
       me.pGameObjectSyncValues[#hit_points] = getIntVariable("snowwar.health.maximum")
       if pIsOwnPlayer then
         me.getGameSystem().sendGameSystemEvent(#statusbar_health_update, me.pGameObjectSyncValues[#hit_points])
+        me.getGameSystem().sendGameSystemEvent(#update_game_visuals)
       end if
+      me.startInvincibleAnimation()
     #set_target:
       if not me.getStateAllowsMoving() then
         return 1
@@ -179,6 +181,7 @@ on executeGameObjectEvent me, tEvent, tdata
     #start_stunned:
       if pIsOwnPlayer then
         me.getGameSystem().sendGameSystemEvent(#statusbar_health_update, 0)
+        me.getGameSystem().sendGameSystemEvent(#statusbar_disable_buttons)
       end if
       me.pGameObjectSyncValues[#activity_state] = 2
       me.pGameObjectSyncValues[#activity_timer] = getIntVariable("ACTIVITY_TIMER_STUNNED", 125)
@@ -258,8 +261,7 @@ end
 on activityTimerTriggered me
   tActivityState = me.pGameObjectSyncValues[#activity_state]
   if tActivityState = getIntVariable("ACTIVITY_STATE_STUNNED") then
-    me.executeGameObjectEvent(#reset_hit_points)
-    me.startInvincibleAnimation()
+    me.executeGameObjectEvent(#player_resurrected)
     me.pGameObjectSyncValues[#activity_timer] = getIntVariable("ACTIVITY_TIMER_INVINCIBLE_AFTER_STUN")
     me.pGameObjectSyncValues[#activity_state] = getIntVariable("ACTIVITY_STATE_INVINCIBLE_AFTER_STUN")
     return 1

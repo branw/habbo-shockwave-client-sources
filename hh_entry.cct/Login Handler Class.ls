@@ -300,6 +300,8 @@ on handleHotelLogout me, tMsg
       openNetPage(getText("url_logged_out"), "self")
     2:
       openNetPage(getText("url_logout_concurrent"), "self")
+    3:
+      openNetPage(getText("url_logout_timeout"), "self")
   end case
 end
 

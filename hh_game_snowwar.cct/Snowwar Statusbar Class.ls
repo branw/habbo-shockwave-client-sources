@@ -1,4 +1,4 @@
-property pBottomBarId, pMaxHealth, pMaxHealthBarHeight, pOrigHealthBarLoc, pLastBallcount, pMaxBallcount, pBallCountAnimTimer, pBallCreateAnimTimer
+property pBottomBarId, pMaxHealth, pMaxHealthBarHeight, pOrigHealthBarLoc, pLastHealth, pLastBallcount, pMaxBallcount, pBallCountAnimTimer, pBallCreateAnimTimer
 
 on construct me
   pBallCountAnimTimer = 0
@@ -11,6 +11,7 @@ on construct me
   registerMessage(#roomReady, me.getID(), #replaceRoomBar)
   pMaxHealth = getIntVariable("snowwar.health.maximum")
   pMaxBallcount = getIntVariable("snowwar.snowball.maximum")
+  pLastHealth = pMaxHealth
   return 1
 end
 
@@ -36,6 +37,8 @@ on Refresh me, tTopic, tdata
       return me.animateBallCreateStarted()
     #statusbar_createball_stopped:
       return me.updateBallCount(pLastBallcount)
+    #statusbar_disable_buttons:
+      return me.setCreateButtonState("_off")
   end case
   return 1
 end
@@ -65,6 +68,7 @@ on updateHealth me, tValue
   if pMaxHealth = VOID then
     return 0
   end if
+  pLastHealth = tValue
   tWndObj = getWindow(pBottomBarId)
   if tWndObj = 0 then
     return 0
@@ -120,6 +124,9 @@ on updateBallCount me, tValue
     pMaxBallcount:
       return me.setCreateButtonState("_off")
     0:
+      if pLastHealth = 0 then
+        return 1
+      end if
       return me.animateBallCountFlashing()
   end case
   return me.setCreateButtonState(EMPTY)
@@ -188,6 +195,14 @@ on setCreateButtonState me, tstate
   tMemNum = getmemnum(tMemName)
   if tMemNum = 0 then
     return 0
+  end if
+  tsprite = tElem.getProperty(#sprite)
+  if tsprite <> 0 then
+    if tstate = "_off" then
+      tsprite.setcursor(0)
+    else
+      tsprite.setcursor("cursor.finger")
+    end if
   end if
   tElem.setProperty(#member, member(tMemNum))
   return 1

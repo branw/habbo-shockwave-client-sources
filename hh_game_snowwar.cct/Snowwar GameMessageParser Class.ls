@@ -140,16 +140,7 @@ on handle_msgstruct_gameinstance me, tMsg
           end if
           tList[#players].addAt(tPlayerPos, tPlayer)
         end repeat
-        tTeamPos = 1
-        if tTeams.count > 0 then
-          repeat while tTeams[tTeamPos][#score] > tList[#score]
-            tTeamPos = tTeamPos + 1
-            if tTeamPos > tTeams.count then
-              exit repeat
-            end if
-          end repeat
-        end if
-        tTeams.addAt(tTeamPos, tList)
+        tTeams.add(tList)
       end repeat
       tPlayerPos = 1
       tResult.addProp(#teams, tTeams)
