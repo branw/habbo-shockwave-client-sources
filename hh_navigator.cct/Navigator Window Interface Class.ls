@@ -696,14 +696,17 @@ on renderRoomListItem me, ttype, tNum, tTargetImg, tUserStatus, tNodeType
   tdestrect = tBackImg.rect + rect(0, tLocV, 0, tLocV)
   tTargetImg.copyPixels(tBackImg, tdestrect, tBackImg.rect)
   if ttype = #room then
+    tAddOffset = 0
     if tBackImgId = 5 then
       tLinkImage = me.pFullLinkTextImg
+      if variableExists("nav_full_link_voffset") then
+        tAddOffset = getVariable("nav_full_link_voffset")
+      end if
     else
       tLinkImage = me.pGoLinkTextImg
-    end if
-    tAddOffset = 0
-    if variableExists("nav_golink_voffset") then
-      tAddOffset = getVariable("nav_golink_voffset")
+      if variableExists("nav_go_link_voffset") then
+        tAddOffset = getVariable("nav_go_link_voffset")
+      end if
     end if
     tX1 = tBackImg.width - tLinkImage.width - 12
     tX2 = tX1 + tLinkImage.width
@@ -712,9 +715,13 @@ on renderRoomListItem me, ttype, tNum, tTargetImg, tUserStatus, tNodeType
     tdestrect = rect(tX1, tY1, tX2, tY2)
     tTargetImg.copyPixels(tLinkImage, tdestrect, tLinkImage.rect, [#bgColor: rgb("#DDDDDD"), #ink: 36])
   else
+    tAddOffset = 0
+    if variableExists("nav_open_link_voffset") then
+      tAddOffset = getVariable("nav_open_link_voffset")
+    end if
     tX1 = tBackImg.width - me.pOpenLinkTextImg.width - 27
     tX2 = tX1 + me.pOpenLinkTextImg.width
-    tY1 = tLocV + (me.pListItemHeight - me.pGoLinkTextImg.height) / 2 - 1
+    tY1 = 3 + tLocV + tAddOffset
     tY2 = tY1 + me.pOpenLinkTextImg.height
     tdestrect = rect(tX1, tY1, tX2, tY2)
     tTargetImg.copyPixels(me.pOpenLinkTextImg, tdestrect, me.pOpenLinkTextImg.rect, [#bgColor: rgb("#DDDDDD"), #ink: 36])
@@ -738,8 +745,12 @@ on setHideFullRoomsLink me
     tImage = pHideFullLinkImages[#hide]
   end if
   tOffX = tImage.width - tElem.getProperty(#width)
+  tOffY = 0
+  if variableExists("nav_showhide_full_voffset") then
+    tOffY = tOffY + getVariable("nav_showhide_full_voffset")
+  end if
   tElem.feedImage(tImage)
-  tElem.adjustOffsetTo(tOffX, 0)
+  tElem.adjustOffsetTo(tOffX, tOffY)
   return 1
 end
 

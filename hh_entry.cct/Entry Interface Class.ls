@@ -26,6 +26,10 @@ end
 on deconstruct me
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#messenger_ready, me.getID())
+  repeat with tAnimation in pSwapAnimations
+    tAnimation.deconstruct()
+  end repeat
+  pSwapAnimations = []
   return me.hideAll()
 end
 
@@ -44,7 +48,7 @@ on showHotel me
       repeat with tAnimation in tAnimations
         tObj = createObject(#random, getVariableValue("swap.animation.class"))
         if tObj = 0 then
-          error(me, "Error creating swwap animation", #showHotel)
+          error(me, "Error creating swap animation", #showHotel)
           next repeat
         end if
         pSwapAnimations.add(tObj)

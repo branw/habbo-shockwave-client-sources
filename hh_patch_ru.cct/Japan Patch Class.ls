@@ -6,13 +6,19 @@ on construct me
     tSize = getIntVariable("win.font.size", 11)
     tLine = getIntVariable("win.font.line", 11)
   else
-    tFont = getVariable("mac.font.name", "Lucida Grande CY")
+    tFont = getVariable("mac.font.name", "Arial")
     tSize = getIntVariable("mac.font.size", 11)
     tLine = getIntVariable("mac.font.line", 11)
   end if
   tui = (the environment).uiLanguage
   tos = (the environment).osLanguage
-  setVariable("writer.instance.class", string(["Writer Class", "Writer Patch A"]))
+  if 1 then
+    setVariable("writer.instance.class", string(["Writer Class", "Writer Patch A"]))
+  else
+    if tos = "Japanese" then
+      setVariable("writer.instance.class", string(["Writer Class", "Writer Patch A", "Writer Patch B"]))
+    end if
+  end if
   tPlain = getStructVariable("struct.font.plain")
   tPlain.setaProp(#font, tFont)
   tPlain.setaProp(#fontSize, tSize)
@@ -44,16 +50,10 @@ on construct me
   createObject(#layout_parser, getClassVariable("layout.parser.class"))
   createObject(#string_validator, "String Validator Cls")
   registerMessage(#Initialize, me.getID(), #delayedPatch)
-  registerMessage(#BalloonManagerCreated, me.getID(), #patchBalloonText)
   return 1
 end
 
 on delayedPatch me
   replaceMember("matik_upp", "matik_upp_jp")
   unregisterMessage(#Initialize, me.getID())
-end
-
-on patchBalloonText me, tProps
-  tManagerID = tProps[#objectPointer]
-  tManagerID.setProperty("SHOUT", #color, rgb(255, 0, 0))
 end

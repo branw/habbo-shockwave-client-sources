@@ -95,6 +95,9 @@ on setEncryption me, tBoolean
 end
 
 on send me, tCmd, tMsg
+  if pConnectionShouldBeKilled then
+    return 0
+  end if
   if tMsg.ilk = #propList then
     return me.sendNew(tCmd, tMsg)
   end if

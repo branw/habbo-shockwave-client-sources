@@ -1,6 +1,6 @@
 on construct me
   the romanLingo = 1
-  the inlineImeEnabled = 1
+  the inlineImeEnabled = 0
   if the platform contains "windows" then
     tLine = getIntVariable("win.font.line", 14)
     tFontMember = member("win_font_chinese")
@@ -55,14 +55,14 @@ on construct me
   end if
   createObject(#layout_parser, getClassVariable("layout.parser.class"))
   createObject(#string_validator, "String Validator Cls")
-  registerMessage(#Initialize, me.getID(), #delayedPatch)
+  registerMessage(#initialize, me.getID(), #delayedPatch)
   registerMessage(#BalloonManagerCreated, me.getID(), #patchBalloonText)
   return 1
 end
 
 on delayedPatch me
   replaceMember("matik_upp", "matik_upp_jp")
-  unregisterMessage(#Initialize, me.getID())
+  unregisterMessage(#initialize, me.getID())
 end
 
 on patchBalloonText me, tProps

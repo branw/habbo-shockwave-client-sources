@@ -325,6 +325,9 @@ on send_DeclineBuddy me, ttype
 end
 
 on send_RequestBuddy me, tBuddyName
+  if tBuddyName = VOID or tBuddyName = EMPTY then
+    return 1
+  end if
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("MESSENGER_REQUESTBUDDY", [#string: tBuddyName])
   end if

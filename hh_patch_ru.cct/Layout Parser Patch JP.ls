@@ -66,12 +66,6 @@ on parse_window me, tFieldName
     if tElem[#type] = "text" then
       tStructPlain = getStructVariable("struct.font.plain")
       tStructBold = getStructVariable("struct.font.bold")
-      if tElem[#height] < 12 then
-        tElem[#height] = 12
-      end if
-      if tElem[#editable] then
-        tElem[#locV] = tElem[#locV] - 3
-      end if
       if voidp(tElem[#wordWrap]) then
         tElem[#wordWrap] = 1
       end if
@@ -92,14 +86,6 @@ on parse_window me, tFieldName
       end if
       if voidp(tElem[#txtBgColor]) then
         tElem[#txtBgColor] = rgb(255, 255, 255)
-      end if
-      if the platform contains "windows" then
-        tElem[#fixedLineSpace] = getVariable("win.fixedLineSpace")
-        if tElem[#fontSize] > tElem[#fixedLineSpace] then
-          tElem[#fixedLineSpace] = tElem[#fontSize] + 3
-        end if
-      else
-        tElem[#fixedLineSpace] = getVariable("mac.fixedLineSpace")
       end if
       tSizeMultiplier = tElem[#fontSize] / 9
       case tElem[#media] of
