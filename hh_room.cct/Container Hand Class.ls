@@ -75,7 +75,7 @@ on openClose me
   end if
 end
 
-on refresh me
+on Refresh me
   me.hideContainerItems()
   me.showContainerItems()
   return 1
@@ -414,14 +414,14 @@ on eventProcContainer me, tEvent, tSprID, tParam
       getThread(#room).getInterface().pSelectedType = EMPTY
       getThread(#room).getInterface().setProperty(#clickAction, "moveHuman")
     end if
-    me.refresh()
+    me.Refresh()
   end if
 end
 
 on startItemPlacing me, tdata
   if me.placeItemToRoom(tdata[#stripId]) then
     me.setItemPlacingMode(tdata)
-    me.refresh()
+    me.Refresh()
   end if
 end
 

@@ -178,7 +178,7 @@ on leaveRoom me, tJumpingToSubUnit
     removeObject(pRoomPrgID)
   end if
   if not pCacheFlag then
-    getObject(#cache).remove(pCacheKey)
+    getObject(#cache).Remove(pCacheKey)
   end if
   if objectp(me.getInterface().pIgnoreListObj) then
     me.getInterface().pIgnoreListObj.reset()
@@ -227,18 +227,18 @@ on enterRoomDirect me, tdata
   pSaveData = tdata
   getObject(#session).set("lastroom", pSaveData)
   if pSaveData[#type] = #private then
-    tRoomID = integer(pSaveData[#id])
+    tRoomId = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomID = integer(pSaveData[#port])
+    tRoomId = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
 end
 
 on createUserObject me, tdata
@@ -377,11 +377,11 @@ on getShadowManager me
   end if
 end
 
-on roomExists me, tRoomID
-  if voidp(tRoomID) then
+on roomExists me, tRoomId
+  if voidp(tRoomId) then
     return pActiveFlag
   else
-    return pRoomId = tRoomID
+    return pRoomId = tRoomId
   end if
 end
 
@@ -555,18 +555,18 @@ on roomPrePartFinished me
     return 0
   end if
   if pSaveData[#type] = #private then
-    tRoomID = integer(pSaveData[#id])
+    tRoomId = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomID = integer(pSaveData[#port])
+    tRoomId = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
   return 1
 end
 
@@ -1005,7 +1005,7 @@ on processTeleportStruct me, tFlatStruct
   unregisterMessage(symbol("receivedFlatStructf_" & getObject(#session).get("target_flat_ID")))
   tFlatStruct[#id] = tFlatStruct[#flatId]
   tFlatStruct.addProp(#teleport, getObject(#session).get("target_door_ID"))
-  getObject(#session).remove("target_flat_id")
+  getObject(#session).Remove("target_flat_id")
   if getObject(#session).exists("current_door_ID") then
     tDoorID = getObject(#session).get("current_door_ID")
     tDoorObj = me.getComponent().getActiveObject(tDoorID)
@@ -1029,7 +1029,7 @@ end
 
 on executeEnterRoomAlert me
   if pEnterRoomAlert.length > 0 then
-    executeMessage(#alert, [#msg: pEnterRoomAlert])
+    executeMessage(#alert, [#Msg: pEnterRoomAlert])
     pEnterRoomAlert = EMPTY
   end if
 end

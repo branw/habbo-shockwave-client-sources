@@ -27,6 +27,6 @@ on showCard me
   if not objectExists(pCardObj) then
     createObject(pCardObj, "Package Card Class")
   end if
-  getObject(pCardObj).define([#id: me.getID(), #msg: pMessage, #loc: me.pSprList[1].loc])
+  getObject(pCardObj).define([#id: me.getID(), #Msg: pMessage, #loc: me.pSprList[1].loc])
   return 1
 end

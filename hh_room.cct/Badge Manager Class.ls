@@ -90,10 +90,10 @@ end
 
 on hideBadgeBrowseButtons me, tWndObj
   if tWndObj.elementExists("badge.next.button") then
-    tWndObj.getElement("badge.next.button").hide()
+    tWndObj.getElement("badge.next.button").Hide()
   end if
   if tWndObj.elementExists("badge.prev.button") then
-    tWndObj.getElement("badge.prev.button").hide()
+    tWndObj.getElement("badge.prev.button").Hide()
   end if
 end
 

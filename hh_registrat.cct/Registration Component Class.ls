@@ -44,13 +44,13 @@ end
 on setBlockTime me, tdata
   setPref("blocktime", tdata)
   me.closeFigureCreator()
-  executeMessage(#alert, [#title: "alert_win_coppa", #msg: "alert_reg_age", #id: "underage", #modal: 1])
+  executeMessage(#alert, [#title: "alert_win_coppa", #Msg: "alert_reg_age", #id: "underage", #modal: 1])
   return removeConnection(getVariable("connection.info.id"))
 end
 
 on continueBlocking me
   me.closeFigureCreator()
-  executeMessage(#alert, [#title: "alert_win_coppa", #msg: "alert_reg_blocked", #id: "underage", #modal: 1])
+  executeMessage(#alert, [#title: "alert_win_coppa", #Msg: "alert_reg_blocked", #id: "underage", #modal: 1])
   return removeConnection(getVariable("connection.info.id"))
 end
 
@@ -93,13 +93,13 @@ on checkUserName me, tNameStr
     if not getObject(#string_validator).validateString(tNameStr) then
       tFailed = getObject(#string_validator).getFailedChar()
       setText("alert_InvalidChar", replaceChunks(getText("alert_InvalidUserName"), "\x", tFailed))
-      executeMessage(#alert, [#msg: "alert_InvalidChar", #id: "nameinvalid"])
+      executeMessage(#alert, [#Msg: "alert_InvalidChar", #id: "nameinvalid"])
       return 0
     end if
   end if
   pCheckingName = tNameStr
-  if connectionExists(getVariable("connection.info.id", #info)) then
-    getConnection(getVariable("connection.info.id", #info)).send("APPROVENAME", [#string: tNameStr, #integer: 0])
+  if connectionExists(getVariable("connection.info.id", #Info)) then
+    getConnection(getVariable("connection.info.id", #Info)).send("APPROVENAME", [#string: tNameStr, #integer: 0])
   end if
   return 1
 end
