@@ -17,7 +17,7 @@ on construct me
   pTimeOutID = #messenger_msg_poller
   pReadyFlag = 0
   pBuddyList = getStructVariable("struct.pointer")
-  pItemList = [#messages: [:], #msgCount: [:], #newBuddyRequest: [], #persistenMsg: EMPTY]
+  pItemList = [#messages: [:], #msgCount: [:], #newBuddyRequest: [], #pendingBuddyAccept: EMPTY, #persistenMsg: EMPTY]
   pUpdateBuddiesInterval = getIntVariable("messenger.updatetime.buddylist", 120000)
   pLastBuddiesUpdateTime = 0
   pBuddyList.setProp(#value, [#buddies: [:], #online: [], #offline: [], #render: []])
@@ -83,12 +83,15 @@ on receive_MessengerReady me, tMsg
 end
 
 on receive_BuddyList me, ttype, tList
+  me.getInterface().setMessengerActive()
   case ttype of
     #new:
       pBuddyList.setaProp(#value, tList)
       me.getInterface().createBuddyList(pBuddyList)
-      me.getInterface().setMessengerActive()
     #update:
+      if tList.buddies = VOID then
+        return 0
+      end if
       if tList.buddies.count = 0 then
         return 0
       end if
@@ -98,10 +101,10 @@ on receive_BuddyList me, ttype, tList
         tCurrData = tTheBuddyList.buddies.getaProp(tBuddy.id)
         if voidp(tCurrData) then
           error(me, "Buddy not found:" & tBuddy[#name] & "Creating new struct.", #receive_BLUpdate)
-          me.receive_AppendBuddy([#buddies: [tBuddy]])
+          me.receive_AppendBuddy([#buddies: tBuddy])
           next repeat
         end if
-        repeat with j = 1 to tCurrData.count
+        repeat with j = 1 to tBuddy.count
           tKey = tBuddy.getPropAt(j)
           tValue = tBuddy[j]
           tCurrData[tKey] = tValue
@@ -294,6 +297,7 @@ end
 on send_AcceptBuddy me
   if pItemList[#newBuddyRequest].count > 0 then
     tBuddyID = pItemList[#newBuddyRequest][1][#id]
+    pItemList[#pendingBuddyAccept] = pItemList[#newBuddyRequest][1]
     pItemList[#newBuddyRequest].deleteAt(1)
     me.tellRequestCount()
     if connectionExists(getVariable("connection.info.id")) then
@@ -358,6 +362,12 @@ on send_BuddylistUpdate me
     if connectionExists(getVariable("connection.info.id")) then
       getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE")
     end if
+  end if
+end
+
+on send_AskForMessages me
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_GETMESSAGES", [#integer: 1])
   end if
 end
 

@@ -1,4 +1,4 @@
-property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH
+property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH, pStoredCryNum
 
 on construct me
   pCryWindowID = getText("hobba_alert")
@@ -13,6 +13,7 @@ on construct me
   pModToolMode = "closed"
   pCryWndMode = "closed"
   pButtonLocH = 5
+  pStoredCryNum = 0
   registerMessage(#userlogin, me.getID(), #showModtoolButton)
   registerMessage(#userClicked, me.getID(), #userClicked)
   return 1
@@ -105,7 +106,13 @@ on showCryWnd me
   if getObject(#session).get("user_rights").getOne("fuse_see_chat_log_link") = 0 then
     tWndObj.getElement("hobba_seelog").hide()
   end if
-  return me.fillCryData(tCryID)
+  if pStoredCryNum = 0 then
+    tCryToShow = tCryID
+  else
+    tCryToShow = min(tCryID, pStoredCryNum)
+    pStoredCryNum = 0
+  end if
+  return me.fillCryData(tCryToShow)
 end
 
 on hideCryWnd me
@@ -242,6 +249,7 @@ on openCryReplyWindow me
   tMsg = pCurrCryData[#msg]
   tWndObj.getElement("hobba_reply_header").setText(getText("hobba_reply_cfh") && tName)
   tWndObj.getElement("hobba_reply_text").setText(tMsg)
+  pStoredCryNum = pCurrCryNum
   return 1
 end
 
@@ -477,9 +485,11 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
       "hobba_reply_button":
         tText = getWindow(pCryWindowID).getElement("hobba_reply_field").getText()
         me.getComponent().send_CfhReply(pCurrCryID, tText)
-        return me.hideCryWnd()
+        me.hideCryWnd()
+        return me.showCryWnd()
       "hobba_reply_cancel":
-        return me.hideCryWnd()
+        me.hideCryWnd()
+        return me.showCryWnd()
       "hobba_change_cfh_type":
         return me.getComponent().send_changeCfhType(pCurrCryID, pCurrCryData[#category])
     end case

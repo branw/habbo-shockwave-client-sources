@@ -85,7 +85,8 @@ on registerListener me, tid, tObjID, tMsgList
     tMsg = tMsgList.getPropAt(i)
     tMethod = tMsgList[i]
     if not tObject.handler(tMethod) then
-      return error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener)
+      error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener)
+      next repeat
     end if
     if voidp(tPtr.getaProp(#value).getaProp(tMsg)) then
       tPtr.getaProp(#value).setaProp(tMsg, [])

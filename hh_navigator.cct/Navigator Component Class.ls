@@ -646,6 +646,7 @@ on updateState me, tstate, tProps
       executeMessage(#updateAvailableFlatCategories)
     "enterEntry":
       pState = tstate
+      executeMessage(#changeRoom)
       executeMessage(#leaveRoom)
       me.createNaviHistory(me.getInterface().getProperty(#categoryId))
       return 1

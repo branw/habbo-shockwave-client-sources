@@ -1,4 +1,4 @@
-property pData, pID, pName, pSex, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
+property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
@@ -40,7 +40,6 @@ on define me, tdata, tProps
   pID = tdata.id
   pName = tdata.name
   pOnline = tdata.online
-  pSex = tdata.sex
   pwidth = tProps.width
   pheight = tProps.height
   pCacheImage = image(pwidth, pheight, 8)
@@ -134,7 +133,7 @@ on render me, tBuffer, tPosition
       pMsgLinkRect = tDstRect
       pMsgNeedUpdate = 0
     end if
-    if pLastNeedUpdate then
+    if pLastNeedUpdate or pLocationNeedUpdate then
       if not pOnline then
         tText = getText("console_lastvisit") && pLastTime
       else
@@ -142,7 +141,7 @@ on render me, tBuffer, tPosition
         if tlocation contains "Floor1" then
           tlocation = getText("console_inprivateroom")
         end if
-        if tlocation = "ENTERPRISESERVER" then
+        if tlocation = EMPTY then
           tlocation = getText("console_onfrontpage")
         end if
         tText = getText("console_online") && tlocation

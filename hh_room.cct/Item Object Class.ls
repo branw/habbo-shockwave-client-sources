@@ -203,14 +203,27 @@ on updateLocation me
             "rightwall":
               tPartTypes = [#wallright]
           end case
+          tLounge = tVisualizer.getProperty(#layout)
+          if tLounge = "model_a.room" and pWallY = 1 and pClass contains "post.it" and pWallX > 0 then
+            pWallY = 0
+          end if
           tPartProps = tVisualizer.getPartAtLocation(pWallX, pWallY, tPartTypes)
           if ilk(tPartProps) = #propList then
+            tWallObjFound = 1
             repeat with tSpr in pSprList
               tMem = member(getmemnum(tPartProps.member))
               tSpr.locH = tPartProps.locH - tMem.regPoint[1] + pLocalX
               tSpr.locV = tPartProps.locV - tMem.regPoint[2] + pLocalY
             end repeat
             pParentWallLocZ = tPartProps[#locZ]
+          end if
+        end if
+      end if
+      if not (pClass contains "post.it") then
+        if not (tWallObjFound and getObject(#session).get(#room_owner)) then
+          tComponent = getThread(#room).getComponent()
+          if not (tComponent = 0) then
+            tComponent.getRoomConnection().send("ADDSTRIPITEM", "new item" && me.getID())
           end if
         end if
       end if

@@ -208,6 +208,16 @@ on setPartColor me, tPart, tColor
   pPartList[pPartIndex[tPart]].setColor(tColor)
 end
 
+on getProperty me, tPropID
+  case tPropID of
+    #loc:
+      return [pLocX, pLocY, pLocH]
+    #moving:
+      return me.pMoving
+  end case
+  return 0
+end
+
 on getCustom me
   return pCustom
 end
