@@ -18,7 +18,7 @@ on construct me
   pNodeCacheExpList = [:]
   pNaviHistory = []
   pHideFullRoomsFlag = 0
-  pUpdateInterval = getIntVariable("navigator.updatetime", 60000)
+  pUpdateInterval = getIntVariable("navigator.updatetime")
   pConnectionId = getVariableValue("connection.info.id", #info)
   getObject(#session).set("lastroom", "Entry")
   registerMessage(#userlogin, me.getID(), #updateState)
@@ -101,14 +101,14 @@ on getNodeInfo me, tNodeId, tCategoryId
   return 0
 end
 
-on getNodeParentId me, tid
+on getTreeInfoFor me, tid
+  if tid = VOID then
+    return 0
+  end if
   if pCategoryIndex[tid] = VOID then
     return 0
   end if
-  if tid = pRootUnitCatId or tid = pRootFlatCatId then
-    return 0
-  end if
-  return pCategoryIndex[tid][#parentid]
+  return pCategoryIndex[tid]
 end
 
 on setNodeProperty me, tNodeId, tProp, tValue
@@ -214,14 +214,21 @@ on createNaviHistory me, tCategoryId
   if tCategoryId = VOID then
     return 0
   end if
-  tParentId = me.getNodeParentId(tCategoryId)
-  tParentInfo = me.getNodeInfo(tParentId)
+  tTreeInfo = me.getTreeInfoFor(tCategoryId)
+  if listp(tTreeInfo) then
+    tParentId = tTreeInfo[#parentid]
+  end if
+  tParentInfo = me.getTreeInfoFor(tParentId)
   repeat while tParentInfo <> 0
     if pNaviHistory.getPos(tParentInfo[#parentid]) = 0 then
       pNaviHistory.addAt(1, tParentId)
       tText = tParentInfo[#name] & RETURN & tText
-      tParentId = tParentInfo[#parentid]
-      tParentInfo = me.getNodeInfo(tParentId)
+      if tParentId = pRootUnitCatId or tParentId = pRootFlatCatId then
+        tParentInfo = 0
+      else
+        tParentId = tParentInfo[#parentid]
+        tParentInfo = me.getTreeInfoFor(tParentId)
+      end if
       next repeat
     end if
     return error(me, "Category loop detected in navigation data!", #createNaviHistory)

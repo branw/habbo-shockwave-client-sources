@@ -130,13 +130,13 @@ on handle_navnodeinfo me, tMsg
     tNodeId = tNode[#id]
     tParentId = tNode[#parentid]
     if tParentId = tCategoryId then
-      tNodeInfo[#children].addProp(tNodeId, tNode)
+      tNodeInfo[#children].setaProp(tNodeId, tNode)
     end if
     if tCategoryIndex[tParentId] <> 0 then
       tCategoryIndex[tParentId][#children].add(tNodeId)
     end if
-    if tNode[#nodeType] = 0 then
-      tCategoryIndex.addProp(tNodeId, [#name: tNode[#name], #parentid: tParentId, #children: []])
+    if tNode[#nodeType] = 0 or tNode[#nodeType] = 1 and tCategoryIndex[tNodeId] = 0 then
+      tCategoryIndex.setaProp(tNodeId, [#name: tNode[#name], #parentid: tParentId, #children: []])
     end if
   end repeat
   me.getComponent().updateCategoryIndex(tCategoryIndex)

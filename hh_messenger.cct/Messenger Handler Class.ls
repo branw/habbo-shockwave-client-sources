@@ -75,7 +75,7 @@ on handle_console_info me, tMsg
   repeat with i = 1 to tLoopCount
     tdata = me.get_buddy_request(tMsg)
     if tdata <> 0 then
-      tRequestList.add(tdata)
+      me.getComponent().receive_BuddyRequest(tdata)
     end if
   end repeat
   return 1
