@@ -16,10 +16,10 @@ on define me, tProps
   pIsAnimatingList = []
   pNameBase = tProps[#class]
   tClass = tProps[#class]
-  tDataName = pNameBase & ".data"
   if getThread(#room).getInterface().getGeometry().pXFactor = 32 then
-    tDataName = "s_" & tDataName
+    pNameBase = "s_" & pNameBase
   end if
+  tDataName = pNameBase & ".data"
   if memberExists(tDataName) then
     tText = member(getmemnum(tDataName)).text
     tText = replaceChunks(tText, RETURN, EMPTY)
@@ -59,8 +59,8 @@ on define me, tProps
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
   pInitialized = 0
-  me.pName = getText(pNameBase & "_name")
-  me.pCustom = getText(pNameBase & "_desc")
+  me.pName = getText(tClass & "_name")
+  me.pCustom = getText(tClass & "_desc")
   return callAncestor(#define, [me], tProps)
 end
 
@@ -254,7 +254,11 @@ on postProcessLayer me, tLayer
 end
 
 on getMemberName me, tLayer
-  tName = me.pDirection && pNameBase
+  if offset("s_", pNameBase) = 1 then
+    tName = "s_" & me.pDirection && pNameBase.char[3..pNameBase.length]
+  else
+    tName = me.pDirection && pNameBase
+  end if
   tLayerIndex = pLayerDataList.findPos(tLayer)
   tFrameList = me.getFrameList(tLayer)
   if not voidp(tFrameList) and not voidp(tLayerIndex) then
@@ -264,9 +268,6 @@ on getMemberName me, tLayer
       tFrame = tFrameSequence[tFrameNumber]
       tName = tName & "_" & tLayer & "_" & tFrame
     end if
-  end if
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
   end if
   return tName
 end
@@ -400,9 +401,6 @@ end
 
 on solveInk me, tPart
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then
@@ -420,9 +418,6 @@ end
 
 on solveBlend me, tPart
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then
@@ -440,9 +435,6 @@ end
 
 on solveLocShift me, tPart, tdir
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if not memberExists(tName & ".props") then
     return 0
   end if
@@ -470,9 +462,6 @@ end
 
 on solveLocZ me, tPart, tdir
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if not memberExists(tName & ".props") then
     return charToNum(string(tPart)) - charToNum("a") + 1
   end if
@@ -496,9 +485,6 @@ end
 
 on solveTransparency me, tPart
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then

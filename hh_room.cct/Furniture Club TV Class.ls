@@ -5,11 +5,6 @@ on prepare me, tdata
     return 0
   end if
   pRandomEffectList = [#noise1, #lines1, #lines1]
-  removeEventBroker(me.pSprList[2].spriteNum)
-  removeEventBroker(me.pSprList[3].spriteNum)
-  removeEventBroker(me.pSprList[4].spriteNum)
-  removeEventBroker(me.pSprList[5].spriteNum)
-  removeEventBroker(me.pSprList[6].spriteNum)
   removeEventBroker(me.pSprList[7].spriteNum)
   pLineSprite1 = me.pSprList[2]
   pLineSprite2 = me.pSprList[3]
@@ -134,13 +129,25 @@ on setOff me
   getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "OFF"])
 end
 
-on select me
+on select me, tSprID
+  tSprNum = the clickOn
+  tBottompartList = [3, 4, 5]
   if the doubleClick then
-    if pActive then
-      me.setOff()
-    else
-      me.setOn()
-    end if
+    repeat with i = 1 to tBottompartList.count
+      if me.pSprList[tBottompartList[i]].spriteNum = tSprNum then
+        return 0
+      end if
+    end repeat
+    me.setOnOff()
+  end if
+  return 1
+end
+
+on setOnOff me
+  if pActive then
+    me.setOff()
+  else
+    me.setOn()
   end if
   return 1
 end
