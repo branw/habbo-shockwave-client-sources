@@ -274,6 +274,17 @@ on validateParentEmail me, tUserEmail, tParentEmail
   return 1
 end
 
+on sendValidatePassword me, tPassword
+  if voidp(tPassword) or ilk(tPassword) <> #string then
+    tPassword = EMPTY
+  end if
+  tUserName = getObject(#session).get(#userName)
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("APPROVE_PASSWORD", [#string: tUserName, #string: tPassword])
+  end if
+  return 1
+end
+
 on setAgeCheckResult me, tFlag
   pAgeCheckFlag = tFlag
   return me.getInterface().finishRegistration(tFlag)

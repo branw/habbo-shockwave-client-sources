@@ -151,7 +151,7 @@ on convertScandinavian me, tString
   if tString.length < 6 then
     return tString
   end if
-  tEncArray = ["&AUML;": "€", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
+  tEncArray = ["&AUML;": "Ä", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
   tOutputStr = EMPTY
   repeat with i = 1 to tString.length
     tChar = tString.char[i]
