@@ -118,6 +118,9 @@ on eventHandler me, tEvent, tSpriteID, tParam
     return 0
   end if
   if tSpriteID = "bubble_links" then
+    if tParam.ilk <> #point then
+      return 0
+    end if
     tLineNum = tParam[2] / 16 + 1
     tTopicID = me.pLinkList.getPropAt(tLineNum)
     getThread(#tutorial).getComponent().selectTopic(tTopicID)

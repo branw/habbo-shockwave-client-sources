@@ -274,7 +274,8 @@ on update me
         tSpaceAvailable = 1
       end if
       if not tSpaceAvailable and pMessageBuffer.count > pMaximumChatBufferSize then
-        repeat with k = 1 to pMessageBuffer.count - pMaximumChatBufferSize
+        tCount = pMessageBuffer.count
+        repeat with k = 1 to tCount - pMaximumChatBufferSize
           me.moveAllItemsUpBy(-1 * pAutoScrollAmountPx)
           if k <> 1 then
             me.showNextChatMessage()

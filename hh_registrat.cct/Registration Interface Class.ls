@@ -688,12 +688,12 @@ on createTemplateHuman me
   end repeat
 end
 
-on getSetID me, tPart
+on getSetId me, tPart
   if voidp(pPropsToServer["figure"][tPart]) then
-    return error(me, "Part missing:" && tPart, #getSetID, #major)
+    return error(me, "Part missing:" && tPart, #getSetId, #major)
   end if
   if voidp(pPropsToServer["figure"][tPart]["setid"]) then
-    return error(me, "Part setid missing:" && tPart, #getSetID, #major)
+    return error(me, "Part setid missing:" && tPart, #getSetId, #major)
   end if
   return pPropsToServer["figure"][tPart]["setid"]
 end
@@ -845,7 +845,7 @@ on changePart me, tPart, tButtonDir
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found", #changePart, #major)
   end if
-  tSetID = me.getSetID(tPart)
+  tSetID = me.getSetId(tPart)
   if tSetID = 0 then
     return error(me, "Incorrect part data", #changePart, #major)
   end if
@@ -894,7 +894,7 @@ on changePartColor me, tPart, tButtonDir
   if not objectExists("Figure_System") then
     return error(me, "Figure system object not found", #changePartColor, #major)
   end if
-  tSetID = me.getSetID(tPart)
+  tSetID = me.getSetId(tPart)
   if tSetID = 0 then
     return error(me, "Incorrect part data", #changePartColor, #major)
   end if

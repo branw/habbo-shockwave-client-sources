@@ -113,9 +113,9 @@ end
 
 on setItemData me, tMsg
   pItemId = tMsg[#id]
-  pPhotoId = tMsg[#text].line[1].word[1]
-  tAuthId = tMsg[#text].line[1].word[2]
-  pPhotoTime = tMsg[#text].line[1].word[3..4]
+  tLine1 = tMsg[#text].line[1]
+  tAuthId = tLine1.word[1]
+  pPhotoTime = tLine1.word[2..tLine1.word.count]
   pPhotoText = tMsg[#text].line[2..tMsg[#text].line.count]
   pPhotoText = me.convertScandinavian(pPhotoText)
   unregisterMessage(symbol("itemdata_received" & pItemId), me.getID())
@@ -136,7 +136,7 @@ on setItemData me, tMsg
   tWndObj.moveTo(pLocX, pLocY)
   tWndObj.registerProcedure(#eventProcPhotoMouseDown, me.getID(), #mouseDown)
   if pPhotoCache.getaProp(pPhotoId) = VOID then
-    retrieveBinaryData(pPhotoId, tAuthId, me.getID())
+    retrieveBinaryData(pItemId, tAuthId, me.getID())
   else
     me.binaryDataReceived(pPhotoCache.getaProp(pPhotoId), pPhotoId)
   end if

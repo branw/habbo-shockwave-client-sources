@@ -6,7 +6,7 @@ on construct me
     return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   pPageData = [:]
-  pSmallImg = image(32, 32, 24)
+  pSmallImg = image(32, 32, 32)
   pSelectedOrderNum = 1
   pSelectedColorNum = 1
   pLastProductNum = 0

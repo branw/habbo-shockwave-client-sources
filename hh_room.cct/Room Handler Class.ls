@@ -492,12 +492,7 @@ on handle_flatproperty me, tMsg
   tLine = tMsg.content
   tdata = [#key: tLine.item[1], #value: tLine.item[2]]
   the itemDelimiter = tDelim
-  tRoomPrg = me.getComponent().getRoomPrg()
-  if tRoomPrg <> 0 then
-    tRoomPrg.setProperty(tdata[#key], tdata[#value])
-  else
-    error(me, "Private room program not found!", #handle_flatproperty, #major)
-  end if
+  me.getComponent().setRoomProperty(tdata[#key], tdata[#value])
 end
 
 on handle_room_rights me, tMsg

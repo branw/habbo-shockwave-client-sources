@@ -226,7 +226,15 @@ on setProperty me, tProp, tValue
       pimage = tValue
       me.render()
     #buffer, #member:
-      pSprite.member = tValue
+      case ilk(tValue) of
+        #member:
+          pSprite.member = tValue
+        #string:
+          pSprite.member = getMember(tValue)
+        #integer:
+          pSprite.member = member(tValue)
+      end case
+      return error(me, "Can't set #buffer/#member to type : " & ilk(tValue), #setProperty, #minor)
       pSprite.width = pSprite.member.width
       pSprite.height = pSprite.member.height
     #palette:

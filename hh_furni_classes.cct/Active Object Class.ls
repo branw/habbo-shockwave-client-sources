@@ -111,7 +111,13 @@ on rotate me, tChange
     if tDirection[1] < 0 then
       tDirection = 8 + tDirection
     end if
-    tTryName = tName.char[1..length(tName) - 3] & tDirection[1] & "_0"
+    tNameExploded = explode(tName, "_")
+    if tNameExploded.count < 2 then
+      tTryName = EMPTY
+      exit repeat
+    end if
+    tNameExploded[tNameExploded.count - 1] = string(tDirection[1])
+    tTryName = implode(tNameExploded, "_")
     if memberExists(tTryName) then
       exit repeat
       next repeat

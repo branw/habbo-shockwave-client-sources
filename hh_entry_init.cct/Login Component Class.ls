@@ -1,4 +1,4 @@
-property pOkToLogin, pLatencyTestID, pLatencyValueList, pLatencyTestTimeStampList, pLatencyTotalValue, pLatencyValueCount, pLatencyClearedValue, pLatencyClearedCount, pLatencyReportIndex, pLatencyReported, pLatencyReportDelta, pLatencyTestInterval, pLatencyTestTimeoutID
+property pOkToLogin, pLatencyTestID, pLatencyValueList, pLatencyTestTimeStampList, pLatencyTotalValue, pLatencyValueCount, pLatencyClearedValue, pLatencyClearedCount, pLatencyReportIndex, pLatencyReported, pLatencyReportDelta, pLatencyTestInterval, pLatencyTestTimeoutID, pDisconnectErrorState
 
 on construct me
   pOkToLogin = 0
@@ -52,6 +52,7 @@ on construct me
   if not objectExists("Oneclick_Buy_Window_Manager") then
     createObject("Oneclick_Buy_Window_Manager", "Game Oneclick Buy Window Manager Class")
   end if
+  pDisconnectErrorState = "socket_init"
   registerMessage(#openConnection, me.getID(), #openConnection)
   registerMessage(#closeConnection, me.getID(), #disconnect)
   registerMessage(#performLogin, me.getID(), #sendLogin)
@@ -118,6 +119,7 @@ on initB me
 end
 
 on sendLogin me, tConnection
+  me.SetDisconnectErrorState("login")
   if voidp(tConnection) then
     tConnection = getConnection(getVariable("connection.info.id"))
   end if
@@ -245,4 +247,12 @@ on handleLatencyTest me, tID
     pLatencyValueList = []
   end if
   return 1
+end
+
+on SetDisconnectErrorState me, tError
+  pDisconnectErrorState = tError
+end
+
+on GetDisconnectErrorState me
+  return pDisconnectErrorState
 end

@@ -1,4 +1,4 @@
-property pFontData, pTextMem, pNeedFill
+property pFontData, pTextMem, pNeedFill, pTextRenderMode
 
 on prepare me
   me.pOffX = 0
@@ -37,6 +37,11 @@ on prepare me
     pNeedFill = 1
   else
     pNeedFill = 0
+  end if
+  if variableExists("text.render.compatibility.mode") then
+    pTextRenderMode = getVariable("text.render.compatibility.mode")
+  else
+    pTextRenderMode = 1
   end if
   me.initResources(pFontData)
   return me.createImgFromTxt()
@@ -113,6 +118,7 @@ on initResources me, tFontProps
   else
     pTextMem = member(tMemNum)
   end if
+  executeMessage(#invalidateCrapFixRegion)
   return 1
 end
 
@@ -158,17 +164,11 @@ on createImgFromTxt me
   if pTextMem.alignment <> pFontData[#alignment] then
     pTextMem.alignment = pFontData[#alignment]
   end if
-  if pTextMem.bgColor <> pFontData[#bgColor] then
-    pTextMem.bgColor = pFontData[#bgColor]
-  end if
   if pTextMem.font <> pFontData[#font] then
     pTextMem.font = pFontData[#font]
   end if
   if pTextMem.fontSize <> pFontData[#fontSize] then
     pTextMem.fontSize = pFontData[#fontSize]
-  end if
-  if pTextMem.color <> pFontData[#color] then
-    pTextMem.color = pFontData[#color]
   end if
   if pTextMem.fixedLineSpace <> pFontData[#fixedLineSpace] then
     pTextMem.fixedLineSpace = pFontData[#fixedLineSpace]
@@ -192,6 +192,23 @@ on createImgFromTxt me
       me.pOwnW = pTextMem.image.width
     end if
   end if
+  if pTextRenderMode = 2 then
+    tFakeAlpha = image(pTextMem.width, pTextMem.height, 8)
+    tFakeAlpha.copyPixels(pTextMem.image, pTextMem.rect, tFakeAlpha.rect, [#ink: 8])
+  end if
+  if pTextRenderMode = 1 then
+    if pTextMem.bgColor <> pFontData[#bgColor] then
+      pTextMem.bgColor = pFontData[#bgColor]
+    end if
+    if pTextMem.color <> pFontData[#color] then
+      pTextMem.color = pFontData[#color]
+    end if
+  else
+    if pTextRenderMode = 2 then
+      tFakeSrc = image(pTextMem.width, pTextMem.height, 32)
+      tFakeSrc.fill(tFakeSrc.rect, [#color: pFontData[#color], #shape: #rect])
+    end if
+  end if
   if me.pScrolls.count > 0 then
     tHeight = pTextMem.rect.height
   else
@@ -207,6 +224,13 @@ on createImgFromTxt me
   if pNeedFill then
     me.pimage.fill(me.pimage.rect, me.pFontData[#bgColor])
   end if
-  me.pimage.copyPixels(pTextMem.image, me.pimage.rect, me.pimage.rect, [#ink: 8])
+  if pTextRenderMode = 1 then
+    me.pimage.copyPixels(pTextMem.image, me.pimage.rect, me.pimage.rect, [#ink: 8])
+  else
+    if pTextRenderMode = 2 then
+      me.pimage.copyPixels(tFakeSrc, me.pimage.rect, me.pimage.rect, [#maskImage: tFakeAlpha])
+    end if
+  end if
+  executeMessage(#invalidateCrapFixRegion)
   return 1
 end

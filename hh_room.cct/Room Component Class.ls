@@ -541,6 +541,14 @@ on sendChat me, tChat
   tChat = convertSpecialChars(tChat, 1)
   if tChat.char[1] = ":" then
     case tChat.word[1] of
+      ":readytest":
+        if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
+          return callJavascriptFunction("clientReady")
+        end if
+      ":jstest":
+        if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
+          return callJavascriptFunction("hello", "JS Test")
+        end if
       ":crashme":
         if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tTemp = EMPTY
@@ -864,6 +872,66 @@ end
 on removeIconBarManager me
   if objectExists(pIconBarManagerID) then
     removeObject(pIconBarManagerID)
+  end if
+end
+
+on setRoomProperty me, tKey, tValue
+  case tKey of
+    "wallpaper", "floor":
+      tRoomPrg = me.getRoomPrg()
+      if tRoomPrg <> 0 then
+        tRoomPrg.setProperty(tKey, tValue)
+      end if
+    "landscape":
+      me.setLandscape(tValue)
+    "landscapeanim":
+      me.setLandscapeAnimation(tValue)
+  end case
+end
+
+on insertWallMaskItem me, tID, tClassID, tloc, tdir, tSize
+  if me.getRoomID() <> "private" then
+    return 0
+  end if
+  tObj = me.getRoomPrg()
+  if objectp(tObj) then
+    call(#insertWallMaskItem, [tObj], tID, tClassID, tloc, tdir, tSize)
+  end if
+end
+
+on removeWallMaskItem me, tID
+  if me.getRoomID() <> "private" then
+    return 0
+  end if
+  tObj = me.getRoomPrg()
+  if objectp(tObj) then
+    call(#removeWallMaskItem, [tObj], tID)
+  end if
+end
+
+on getRoomModel me
+  return pSaveData[#marker]
+end
+
+on setLandscape me, tID
+  if me.getRoomID() <> "private" then
+    return 0
+  end if
+  tRoomType = me.getRoomModel()
+  tObj = me.getRoomPrg()
+  if objectp(tObj) then
+    call(#setLandscape, [tObj], tID, tRoomType)
+  end if
+end
+
+on setLandscapeAnimation me, tID
+  if me.getRoomID() <> "private" then
+    return 0
+  end if
+  tRoomType = me.getRoomModel()
+  tObj = me.getRoomPrg()
+  if objectp(tObj) then
+    call(#setLandscapeAnimation, [tObj], tID, tRoomType)
   end if
 end
 

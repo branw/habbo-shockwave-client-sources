@@ -137,7 +137,7 @@ on renderDealPreviewImage me, tDealNumber, tDealList, tWidth, tHeight
 end
 
 on drawBackground me
-  tCanvas = image(pImageWidth, pImageHeight, 24)
+  tCanvas = image(pImageWidth, pImageHeight, 32)
   tFlipFlag = 0
   if memberExists("ctlg_dyndeal_background") then
     tImage = member(getmemnum("ctlg_dyndeal_background")).image
@@ -186,7 +186,7 @@ on getImage me, tClass
 end
 
 on getNumberImage me, tNumber
-  tCountImg = image(80, 20, 24)
+  tCountImg = image(80, 20, 32)
   tTemp = integer(tNumber)
   tDigit = []
   repeat with i = 1 to 2

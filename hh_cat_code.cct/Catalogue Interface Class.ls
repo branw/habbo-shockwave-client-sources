@@ -5,7 +5,7 @@ on construct me
   pPageLineHeight = 21
   pProductPerPage = 0
   pProductOffset = 0
-  pSmallImg = image(32, 32, 24)
+  pSmallImg = image(32, 32, 32)
   pInfoWindowID = "Purchase info"
   pPurchaseOkID = getText("catalog_buyingSuccesfull")
   pPageProgramID = "Catalogue_page_prg"
@@ -312,9 +312,8 @@ on ChangeWindowView me, tWindowName
     end if
   end if
   if not voidp(tWindowName) then
-    try()
     tResult = tWndObj.merge(tWindowName)
-    if catch() or tResult = 0 then
+    if tResult = 0 then
       tWndObj.close()
       return error(me, "Incorrect Window Format", #ChangeWindowView, #major)
     end if
@@ -370,6 +369,16 @@ on ChangeWindowView me, tWindowName
               tElemID = "ctlg_teaserimg_" & tProductNum
               showPreviewImage(me, tProps, tElemID)
             end repeat
+          end if
+        end if
+      end if
+    "ctlg_collectibles.window":
+      if not voidp(pCurrentPageData["textList"]) then
+        tTextList = pCurrentPageData["textList"]
+        if tTextList.ilk = #list then
+          tText = tTextList[1]
+          if tWndObj.elementExists("ctlg_collectibles_link") then
+            tWndObj.getElement("ctlg_collectibles_link").setText(tText)
           end if
         end if
       end if
@@ -1217,15 +1226,22 @@ on eventProcCatalogue me, tEvent, tSprID, tParam
                 if tSprID = "ctlg_buy_button" then
                   getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
                 else
-                  if tSprID contains "ctlg_buy_" then
-                    tItemDeLimiter = the itemDelimiter
-                    the itemDelimiter = "_"
-                    tProductOrderNum = integer(tSprID.item[tSprID.item.count])
-                    the itemDelimiter = tItemDeLimiter
-                    if me.selectProduct(tProductOrderNum, 0) then
-                      getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
+                  if tSprID = "ctlg_collectibles_link" then
+                    if variableExists("link.format.collectibles") then
+                      openNetPage(getVariable("link.format.collectibles"))
+                      executeMessage(#externalLinkClick, the mouseLoc)
                     end if
                   else
+                    if tSprID contains "ctlg_buy_" then
+                      tItemDeLimiter = the itemDelimiter
+                      the itemDelimiter = "_"
+                      tProductOrderNum = integer(tSprID.item[tSprID.item.count])
+                      the itemDelimiter = tItemDeLimiter
+                      if me.selectProduct(tProductOrderNum, 0) then
+                        getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
+                      end if
+                    else
+                    end if
                   end if
                 end if
               end if

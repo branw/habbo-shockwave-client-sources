@@ -93,10 +93,8 @@ on eventProcInvitation me, tEvent, tSprID
     "invitation_button_accept", "invitation_button_accept_text":
       executeMessage(#acceptInvitation)
       me.close()
-    "invitation_button_deny", "invitation_button_deny_text":
+    "invitation_button_deny", "invitation_button_deny_text", "popup_button_close":
       executeMessage(#rejectInvitation)
-      me.close()
-    "popup_button_close":
       me.close()
   end case
 end

@@ -1,10 +1,15 @@
-property pMember, pDefRect, pTxtRect, pFntStru
+property pMember, pDefRect, pTxtRect, pFntStru, pTextRenderMode
 
 on construct me
   pDefRect = rect(0, 0, 480, 480)
   pTxtRect = VOID
   pFntStru = VOID
   pMember = member(getResourceManager().createMember("writer_" & getUniqueID(), #text))
+  if variableExists("text.render.compatibility.mode") then
+    pTextRenderMode = getVariable("text.render.compatibility.mode")
+  else
+    pTextRenderMode = 1
+  end if
   if pMember.number = 0 then
     return 0
   else
@@ -85,6 +90,7 @@ on define me, tMetrics
       pMember.topSpacing = tTopSpacing
     end if
   end if
+  executeMessage(#invalidateCrapFixRegion)
   pTxtRect = tMetrics[#rect]
   return 1
 end
@@ -120,7 +126,14 @@ on render me, tText, tRect
       end if
     end if
   end if
-  return pMember.image
+  executeMessage(#invalidateCrapFixRegion)
+  if pTextRenderMode = 1 then
+    return pMember.image
+  else
+    if pTextRenderMode = 2 then
+      return me.fakeAlphaRender()
+    end if
+  end if
 end
 
 on renderHTML me, tHtml, tRect
@@ -156,7 +169,13 @@ on renderHTML me, tHtml, tRect
     end if
   end if
   me.setFont(tFont)
-  return pMember.image
+  if pTextRenderMode = 1 then
+    return pMember.image
+  else
+    if pTextRenderMode = 2 then
+      return me.fakeAlphaRender()
+    end if
+  end if
 end
 
 on setFont me, tStruct
@@ -182,6 +201,7 @@ on setFont me, tStruct
   if tLineHeight <> tStruct.getaProp(#lineHeight) then
     pMember.topSpacing = tStruct.getaProp(#lineHeight) - pMember.fontSize
   end if
+  executeMessage(#invalidateCrapFixRegion)
   return 1
 end
 
@@ -200,4 +220,22 @@ end
 
 on setProperty me, tKey, tValue
   return me.define([#tKey: tValue])
+end
+
+on fakeAlphaRender me
+  tColorWas = pMember.color
+  tBgColorWas = pMember.bgColor
+  pMember.color = rgb(0, 0, 0)
+  pMember.bgColor = rgb(255, 255, 255)
+  tFakeAlpha = image(pMember.width, pMember.height, 8)
+  tFakeAlpha.copyPixels(pMember.image, pMember.rect, tFakeAlpha.rect, [#ink: 8])
+  tFakeSrc = image(pMember.width, pMember.height, 32)
+  tFakeSrc.fill(tFakeSrc.rect, [#color: tColorWas, #shape: #rect])
+  tOut = image(pMember.width, pMember.height, 32)
+  tOut.copyPixels(tFakeSrc, tOut.rect, tOut.rect, [#maskImage: tFakeAlpha])
+  tOut.useAlpha = 1
+  tOut.setAlpha(tFakeAlpha)
+  pMember.color = tColorWas
+  pMember.bgColor = tBgColorWas
+  return tOut
 end

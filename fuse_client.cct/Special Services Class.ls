@@ -38,6 +38,13 @@ on catch me
   return 0
 end
 
+on callJavascriptFunction me, tCallString, tdata
+  if the runMode = "Author" then
+    return 0
+  end if
+  script("JavaScript Proxy").callJavascript(QUOTE & tCallString & QUOTE, QUOTE & tdata & QUOTE)
+end
+
 on createToolTip me, tText
   if pToolTipAct then
     if voidp(pToolTipMem) then

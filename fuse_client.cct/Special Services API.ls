@@ -89,3 +89,7 @@ end
 on printMsg tObj, tMsg
   getSpecialServices().print(tObj, tMsg)
 end
+
+on callJavascriptFunction tCallString, tdata
+  getSpecialServices().callJavascriptFunction(tCallString, tdata)
+end

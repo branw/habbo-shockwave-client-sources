@@ -201,7 +201,13 @@ on setProperty me, tProp, tValue
       pwidth = pBuffer.width
       pheight = pBuffer.height
     #buffer, #member:
-      pBuffer = tValue
+      case ilk(tValue) of
+        #string:
+          pBuffer = getMember(tValue)
+        #integer:
+          pBuffer = member(tValue)
+      end case
+      return error(me, "Can't set #buffer/#member to type : " & ilk(tValue), #setProperty, #minor)
       pwidth = pBuffer.width
       pheight = pBuffer.height
       pPalette = pBuffer.paletteRef

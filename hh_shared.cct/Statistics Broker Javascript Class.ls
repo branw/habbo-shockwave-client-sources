@@ -1,7 +1,6 @@
-property pProxy, pDefaultCallType, pDefaultCallTemplate
+property pDefaultCallType, pDefaultCallTemplate
 
 on construct me
-  pProxy = script("JavaScriptProxy").newJavaScriptProxy()
   if variableExists("stats.tracking.javascript") then
     pDefaultCallType = getVariable("stats.tracking.javascript")
   end if
@@ -23,9 +22,6 @@ on deconstruct me
 end
 
 on sendJsMessage me, tMsg, tMsgType
-  if the runMode = "Author" then
-    return 0
-  end if
   if voidp(tMsgType) then
     tMsgType = pDefaultCallType
   end if
@@ -33,8 +29,7 @@ on sendJsMessage me, tMsg, tMsgType
   if tMsgType <> "hello" and not voidp(pDefaultCallTemplate) then
     tMsgContent = replaceChunks(pDefaultCallTemplate, "\TCODE", tMsg)
   end if
-  tCallString = QUOTE & tMsgType & QUOTE & ", " & QUOTE & tMsgContent & QUOTE
-  pProxy.call(tCallString)
+  callJavascriptFunction(tMsgType, tMsgContent)
 end
 
 on sendTrackingPoint me, tPointStr

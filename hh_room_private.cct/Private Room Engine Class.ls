@@ -1,4 +1,4 @@
-property pWallPatterns, pWallDefined, pWallModel, pFloorPatterns, pFloorDefined, pFloorModel
+property pWallPatterns, pWallDefined, pWallModel, pFloorPatterns, pFloorDefined, pFloorModel, pLandscapeMngr
 
 on construct me
   pWallPatterns = field("wallpattern_patterns")
@@ -7,6 +7,7 @@ on construct me
   pFloorDefined = 0
   pWallModel = string(getVariable("room.default.wall", "201"))
   pFloorModel = string(getVariable("room.default.floor", "203"))
+  pLandscapeMngr = createObject("landscape_manager", "Landscape Manager")
   registerMessage(#colorizeRoom, me.getID(), #renderRoomBackground)
   registerMessage(#setDimmerColor, me.getID(), #setRoomDimmerColor)
   me.setRoomDimmerColor(rgb(255, 255, 255))
@@ -14,11 +15,31 @@ on construct me
 end
 
 on deconstruct me
+  if objectExists("landscape_manager") then
+    removeObject("landscape_manager")
+  end if
   unregisterMessage(#colorizeRoom, me.getID())
   unregisterMessage(#setDimmerColor, me.getID())
 end
 
 on prepare me
+  tStamp = EMPTY
+  repeat with tNo = 1 to 100
+    tChar = numToChar(random(48) + 74)
+    tStamp = tStamp & tChar
+  end repeat
+  tFuseReceipt = getSpecialServices().getReceipt(tStamp)
+  tReceipt = []
+  repeat with tCharNo = 1 to tStamp.length
+    tChar = chars(tStamp, tCharNo, tCharNo)
+    tChar = charToNum(tChar)
+    tChar = tChar * tCharNo + 309203
+    tReceipt[tCharNo] = tChar
+  end repeat
+  if tReceipt <> tFuseReceipt then
+    error(me, "Invalid build structure", #prepare, #critical)
+    createTimeout(#builddisconnect, 3000, #disconnect, getThread(#login).getComponent().getID(), VOID, 1)
+  end if
   if not pWallDefined then
     me.setWallPaper(pWallModel)
   end if
@@ -94,20 +115,17 @@ on setWallPaper me, tIndex
     end repeat
   end repeat
   the itemDelimiter = tDelim
-  tInterface = getThread(#room).getInterface()
-  if not voidp(tInterface) then
-    tViz = tInterface.getRoomVisualizer()
-    if not voidp(tViz) then
-      tWrappedWallParts = tViz.getWrappedParts([#wallleft, #wallright])
-      if tWrappedWallParts.count > 0 then
-        repeat with tWrapper in tWrappedWallParts
-          tWrapper.setPartPattern(ttype, tPalette, tColors["left"], #wallleft)
-          tWrapper.setPartPattern(ttype, tPalette, tColors["right"], #wallright)
-          tWrappedWallPartsDefined = 1
-        end repeat
-      else
-        tWrappedWallPartsDefined = 0
-      end if
+  tViz = me.getRoomVisualizer()
+  if objectp(tViz) then
+    tWrappedWallParts = tViz.getWrappedParts([#wallleft, #wallright])
+    if tWrappedWallParts.count > 0 then
+      repeat with tWrapper in tWrappedWallParts
+        tWrapper.setPartPattern(ttype, tPalette, tColors["left"], #wallleft)
+        tWrapper.setPartPattern(ttype, tPalette, tColors["right"], #wallright)
+        tWrappedWallPartsDefined = 1
+      end repeat
+    else
+      tWrappedWallPartsDefined = 0
     end if
   end if
   if tPieceList.count = 0 and not tWrappedWallPartsDefined then
@@ -142,12 +160,16 @@ on setFloorPattern me, tIndex
   tG = integer(tPattern.item[4])
   tB = integer(tPattern.item[5])
   tColor = rgb(tR, tG, tB)
-  if not getThread(#room).getInterface().getRoomVisualizer() then
+  tVisualizer = me.getRoomVisualizer()
+  if not objectp(tVisualizer) then
     pFloorModel = tIndex
     pFloorDefined = 0
     return 0
   end if
-  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+  tVisualizer = me.getRoomVisualizer()
+  if not objectp(tVisualizer) then
+    return 0
+  end if
   tPieceId = 1
   tSpr = tVisualizer.getSprById("floor" & tPieceId)
   tDelim = the itemDelimiter
@@ -181,11 +203,53 @@ on setFloorPattern me, tIndex
 end
 
 on renderRoomBackground me, tColor
-  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
-  tVisualizer.renderWrappedParts(tColor)
+  tVisualizer = me.getRoomVisualizer()
+  if objectp(tVisualizer) then
+    tVisualizer.renderWrappedParts(tColor)
+  end if
 end
 
 on setRoomDimmerColor me, tColor
-  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
-  tVisualizer.setDimmerColor(tColor)
+  tVisualizer = me.getRoomVisualizer()
+  if objectp(tVisualizer) then
+    tVisualizer.setDimmerColor(tColor)
+  end if
+end
+
+on getRoomVisualizer me
+  if threadExists(#room) then
+    tInterface = getThread(#room).getInterface()
+    tComponent = getThread(#room).getComponent()
+    if tComponent.getRoomID() = "private" then
+      tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+      if objectp(tVisualizer) then
+        return tVisualizer
+      end if
+    end if
+  end if
+  return 0
+end
+
+on insertWallMaskItem me, tID, tClassID, tloc, tdir, tSize
+  if objectp(pLandscapeMngr) then
+    pLandscapeMngr.insertWallMaskItem(tID, tClassID, tloc, tdir, tSize)
+  end if
+end
+
+on removeWallMaskItem me, tID
+  if objectp(pLandscapeMngr) then
+    pLandscapeMngr.removeWallMaskItem(tID)
+  end if
+end
+
+on setLandscape me, tID, tScale
+  if objectp(pLandscapeMngr) then
+    pLandscapeMngr.setLandscape(tID, tScale)
+  end if
+end
+
+on setLandscapeAnimation me, tID, tScale
+  if objectp(pLandscapeMngr) then
+    pLandscapeMngr.setLandscapeAnimation(tID, tScale)
+  end if
 end

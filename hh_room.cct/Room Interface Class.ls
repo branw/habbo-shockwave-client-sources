@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId, pIgnoreListID, pWideScreen
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId, pIgnoreListID, pWideScreenOffset
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -47,9 +47,9 @@ on construct me
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
   registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   if (the stage).rect.width > 800 then
-    pWideScreen = 1
+    pWideScreenOffset = getVariable("widescreen.offset.x")
   else
-    pWideScreen = 0
+    pWideScreenOffset = 0
   end if
   return 1
 end
@@ -73,26 +73,24 @@ on showRoom me, tRoomID
     activateWindow(pLoaderBarID)
   end if
   tRoomField = tRoomID & ".room"
-  tXOffset = 0
-  if pWideScreen then
-    tXOffset = 32
+  if pWideScreenOffset > 0 then
     if variableExists(tRoomID & ".wide.offset.x") then
-      tXOffset = value(getVariable(tRoomID & ".wide.offset.x"))
+      pWideScreenOffset = value(getVariable(tRoomID & ".wide.offset.x"))
     end if
   end if
   if variableExists(tRoomID & ".wide.align.right") then
     if value(getVariable(tRoomID & ".wide.align.right")) then
-      tXOffset = (the stage).rect.width - 720 - tXOffset
+      pWideScreenOffset = (the stage).rect.width - 720 - pWideScreenOffset
     end if
   end if
-  createVisualizer(pRoomSpaceId, tRoomField, tXOffset)
+  createVisualizer(pRoomSpaceId, tRoomField, pWideScreenOffset)
   tVisObj = getVisualizer(pRoomSpaceId)
   tLocX = tVisObj.getProperty(#locX)
   tLocY = tVisObj.getProperty(#locY)
   tlocz = tVisObj.getProperty(#locZ)
   tdata = getObject(#layout_parser).parse(tRoomField).roomdata[1]
   tdata[#offsetz] = tlocz
-  tdata[#offsetx] = tdata[#offsetx] + tXOffset
+  tdata[#offsetx] = tdata[#offsetx] + pWideScreenOffset
   tdata[#offsety] = tdata[#offsety]
   me.getGeometry().define(tdata)
   tSprList = tVisObj.getProperty(#spriteList)
@@ -543,6 +541,8 @@ on getProperty me, tPropID
   case tPropID of
     #clickAction:
       return pClickAction
+    #widescreenoffset:
+      return pWideScreenOffset
   end case
   return 0
 end

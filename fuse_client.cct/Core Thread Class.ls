@@ -1,4 +1,4 @@
-property pState, pLogoSpr, pFadingLogo, pLogoStartTime
+property pState, pLogoSpr, pFadingLogo, pLogoStartTime, pCrapFixing, pCrapFixSpr, pCrapFixRegionInvalidated
 
 on construct me
   tSession = createObject(#session, getClassVariable("variable.manager.class"))
@@ -12,12 +12,24 @@ on construct me
   createObject(#cache, getClassVariable("variable.manager.class"))
   createBroker(#Initialize)
   registerMessage(#requestHotelView, me.getID(), #initTransferToHotelView)
+  registerMessage(#invalidateCrapFixRegion, me.getID(), #invalidateCrapFixer)
   pFadingLogo = 0
   pLogoStartTime = 0
+  pCrapFixSpr = sprite(reserveSprite())
+  pCrapFixSpr.member = member("crap.fixer")
+  pCrapFixSpr.width = 560
+  pCrapFixSpr.height = 75
+  pCrapFixSpr.locZ = -2000000000
+  pCrapFixSpr.loc = point(-1, 0)
+  pCrapFixSpr.visible = 0
+  pCrapFixing = 0
+  pCrapFixRegionInvalidated = 1
   return me.updateState("load_variables")
 end
 
 on deconstruct me
+  unregisterMessage(#invalidateCrapFixRegion, me.getID())
+  releaseSprite(pCrapFixSpr.spriteNum)
   return me.hideLogo()
 end
 
@@ -58,6 +70,10 @@ on initUpdate me
   receiveUpdate(me.getID())
 end
 
+on invalidateCrapFixer me
+  pCrapFixRegionInvalidated = 1
+end
+
 on update me
   if pFadingLogo then
     tBlend = 0
@@ -66,10 +82,27 @@ on update me
       tBlend = pLogoSpr.blend
     end if
     if tBlend <= 0 then
-      removeUpdate(me.getID())
+      if not pCrapFixing then
+        removeUpdate(me.getID())
+      end if
       pFadingLogo = 0
       me.hideLogo()
       executeMessage(#showHotelView)
+      callJavascriptFunction("clientReady")
+    end if
+  end if
+  if pCrapFixing then
+    if pCrapFixRegionInvalidated then
+      pCrapFixSpr.visible = 1
+      case pCrapFixSpr.loc.locH of
+        0:
+          pCrapFixSpr.loc = point(-1, 0)
+        -1:
+          pCrapFixSpr.loc = point(0, 0)
+        otherwise:
+          pCrapFixSpr.loc = point(0, 0)
+      end case
+      pCrapFixRegionInvalidated = 0
     end if
   end if
 end
@@ -164,6 +197,9 @@ on updateState me, tstate
       pState = tstate
       dumpVariableField(getExtVarPath())
       removeMember(getExtVarPath())
+      if variableExists("text.crap.fixing") then
+        pCrapFixing = getVariableValue("text.crap.fixing")
+      end if
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
         repeat with i = 1 to 9

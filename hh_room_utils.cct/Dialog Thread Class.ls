@@ -81,7 +81,7 @@ on ShowAlert me, tProps
   end if
   if stringp(tProps[#title]) then
     tTitle = getText(tProps[#title])
-    getWriter(pWriterBold).define([#alignment: #center, #color: rgb(0, 0, 0)])
+    getWriter(pWriterBold).define([#color: rgb(0, 0, 0)])
     tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
   end if
   if textExists(tProps[#Msg]) then
@@ -473,6 +473,9 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
   if tEvent = #mouseUp then
     case tElemID of
       "link_list":
+        if tParam.ilk <> #point then
+          return 0
+        end if
         tLineNum = tParam[2] / 14 + 1
         if textExists("url_help_" & tLineNum) then
           tSession = getObject(#session)

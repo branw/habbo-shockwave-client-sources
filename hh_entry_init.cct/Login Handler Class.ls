@@ -24,7 +24,7 @@ on handleDisconnect me, tMsg
     return me.getInterface().showDisconnect()
   else
     tErrorList = [:]
-    tErrorList["error"] = "socket_init"
+    tErrorList["error"] = me.getComponent().GetDisconnectErrorState()
     tConnection = getConnection(getVariable("connection.info.id", #Info))
     if tConnection <> VOID then
       tErrorList["host"] = tConnection.getProperty(#host)
@@ -35,6 +35,7 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
+  me.getComponent().SetDisconnectErrorState("init_crypto")
   return tMsg.connection.send("INIT_CRYPTO")
 end
 
@@ -383,6 +384,7 @@ on makeServerToClientKey me
 end
 
 on startSession me
+  me.getComponent().SetDisconnectErrorState("start_session")
   tClientURL = getMoviePath()
   tExtVarsURL = getExtVarPath()
   tConnection = getConnection(getVariable("connection.info.id"))

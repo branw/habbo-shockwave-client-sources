@@ -50,7 +50,7 @@ on getPicture me, tImg
   if pLayerProps.count < 1 then
     return error(me, "No Properties!!!", #getImage, #minor)
   end if
-  tCanvas = image(300, 300, 24)
+  tCanvas = image(300, 300, 32)
   tCanvas.fill(tCanvas.rect, rgb(255, 255, 255))
   tFlipFlag = 0
   case pObjectType of
