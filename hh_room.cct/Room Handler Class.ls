@@ -971,7 +971,7 @@ on handle_userbadge me, tMsg
   if voidp(tMsg.connection) then
     return 0
   end if
-  tUserID = tMsg.connection.GetStrFrom()
+  tUserID = string(tMsg.connection.GetIntFrom())
   tChosenBadgeCount = tMsg.connection.GetIntFrom()
   tBadges = [:]
   repeat with i = 1 to tChosenBadgeCount
