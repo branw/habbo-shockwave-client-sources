@@ -554,18 +554,6 @@ on ChangeWindowView me, tWindowName
       pComposeMsg = EMPTY
       pSendMode = "messenger"
       tWinObj = getWindow(pWindowTitle)
-      me.updateRadioButton("console_compose_radio_messenger", ["console_compose_radio_email"])
-      if pEmailSendOK then
-        tWinObj.getElement("console_compose_email_txt").setProperty(#blend, 100)
-        tWinObj.getElement("console_compose_radio_email").setProperty(#blend, 100)
-      else
-        tWinObj.getElement("console_compose_email_txt").setProperty(#blend, 30)
-        tWinObj.getElement("console_compose_radio_email").setProperty(#blend, 30)
-        if pSendMode = "email" then
-          pSendMode = "messenger"
-          me.updateRadioButton("console_compose_radio_messenger", ["console_compose_radio_email"])
-        end if
-      end if
       tSelectedBuddies = me.getSelectedBuddiesStr(#name, "," & SPACE)
       tWndObj.getElement("console_compose_recipients").setText(tSelectedBuddies)
     "console_removefriend.window":
@@ -634,15 +622,6 @@ on eventProcMessenger me, tEvent, tElemID, tParm
         else
           me.ChangeWindowView("console_compose.window")
         end if
-      "console_compose_radio_messenger":
-        pSendMode = "messenger"
-        me.updateRadioButton("console_compose_radio_messenger", ["console_compose_radio_email"])
-      "console_compose_radio_email":
-        if getWindow(pWindowTitle).getElement("console_compose_radio_email").getProperty(#blend) < 100 then
-          return 0
-        end if
-        pSendMode = "email"
-        me.updateRadioButton("console_compose_radio_email", ["console_compose_radio_messenger"])
     end case
   else
     if tEvent = #mouseUp then

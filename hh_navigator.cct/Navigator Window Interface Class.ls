@@ -226,6 +226,7 @@ on updateRoomList me, tNodeId, tRoomList
     return 0
   end if
   tLstElement.feedImage(tImage)
+  me.showNodeInfo(me.getProperty(#viewedNodeId))
   tBarElement = tWndObj.getElement("nav_scrollbar")
   if tBarElement = 0 then
     return 1

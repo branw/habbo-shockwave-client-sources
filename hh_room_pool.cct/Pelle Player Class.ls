@@ -10,7 +10,9 @@ on deconstruct me
   if windowExists(pReplayAnimWnd) then
     removeWindow(pReplayAnimWnd)
   end if
-  releaseSprite(me.pSpr.spriteNum)
+  if ilk(me.pSpr) = #sprite then
+    releaseSprite(me.pSpr.spriteNum)
+  end if
   removeUpdate(me.getID())
   return 1
 end

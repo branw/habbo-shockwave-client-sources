@@ -199,7 +199,7 @@ on refresh me, tX, tY, tH
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
   end if
-  if pDancing > 0 then
+  if pDancing > 0 or pMainAction = "lay" then
     pHeadDir = pDirection
   end if
   call(#defineDir, pPartList, pDirection)

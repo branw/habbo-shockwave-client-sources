@@ -33,6 +33,7 @@ on refresh me, tTopic, tdata
     #gamestatus_tiles:
       repeat with tTileProps in tdata
         pPriorityTaskList.add(tTileProps)
+        me.removeSecondaryTask(tTileProps)
       end repeat
     #gamestatus_flood:
       repeat with tTileProps in tdata
@@ -59,6 +60,19 @@ on update me
       end if
     end repeat
   end if
+  return 1
+end
+
+on removeSecondaryTask me, tProps
+  tLocX = tProps[#locX]
+  tLocY = tProps[#locY]
+  repeat with i = 1 to pSecondaryTaskList.count
+    tItem = pSecondaryTaskList[i]
+    if tItem[#locX] = tLocX and tItem[#locY] = tLocY then
+      pSecondaryTaskList.deleteAt(i)
+      return 1
+    end if
+  end repeat
   return 1
 end
 
