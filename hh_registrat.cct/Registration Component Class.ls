@@ -245,9 +245,17 @@ on checkAge me, tAge
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("AC", tAge)
   end if
+  return 1
 end
 
-on parentEmailNeedGuery me, tBirthday, tHabboID
+on checkEmailAddress me, tEmail
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("APPROVEEMAIL", [#string: tEmail])
+  end if
+  return 1
+end
+
+on parentEmailNeedQuery me, tBirthday, tHabboID
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("PARENT_EMAIL_REQUIRED", [#string: tBirthday, #string: tHabboID])
   end if
@@ -278,7 +286,7 @@ on getAgeCheckResult me
   return pAgeCheckFlag
 end
 
-on parentEmailNeedGueryResult me, tFlag
+on parentEmailNeedQueryResult me, tFlag
   pParentEmailNeededFlag = tFlag
   me.getInterface().parentEmailQueryStatus(tFlag)
 end
@@ -480,7 +488,7 @@ on updateState me, tstate, tProps
           the itemDelimiter = tDelim
         end if
         tHabboID = getObject(#session).get("user_name")
-        me.parentEmailNeedGuery(tBirthday, tHabboID)
+        me.parentEmailNeedQuery(tBirthday, tHabboID)
       end if
       return 1
   end case
