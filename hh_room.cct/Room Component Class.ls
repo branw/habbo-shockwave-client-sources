@@ -479,7 +479,10 @@ on sendChat me, tChat
   end if
   if pChatProps["hobbaCmds"].getOne(tChat.word[1..2]) then
     tMode = "CHAT"
-    if tChat.word[2] = "x" and tSelected <> EMPTY then
+    if tChat.word[2] = "x" then
+      if tSelected = EMPTY then
+        return 1
+      end if
       tOffsetX = offset("x", tChat)
       tChat = tChat.char[1..tOffsetX - 1] & tSelected & tChat.char[tOffsetX + 1..tChat.length]
     end if

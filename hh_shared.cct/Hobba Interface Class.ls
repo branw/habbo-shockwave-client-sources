@@ -1,4 +1,4 @@
-property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH, pStoredCryNum
+property pCryWindowID, pAlertSpr, pAlertTimer, pCurrCryID, pCurrCryNum, pCurrCryData, pModtoolButtonSpr, pModtoolWindowID, pModToolCheckBoxes, pModToolMode, pCryWndMode, pButtonLocH
 
 on construct me
   pCryWindowID = getText("hobba_alert")
@@ -13,7 +13,6 @@ on construct me
   pModToolMode = "closed"
   pCryWndMode = "closed"
   pButtonLocH = 5
-  pStoredCryNum = 0
   registerMessage(#enterRoom, me.getID(), #showModtoolButton)
   registerMessage(#leaveRoom, me.getID(), #hideModtoolButton)
   registerMessage(#userClicked, me.getID(), #userClicked)
@@ -107,34 +106,27 @@ end
 on showCryWnd me
   if windowExists(pCryWindowID) then
     tWndObj = getWindow(pCryWindowID)
+    tCryDB = me.getComponent().getCryDataBase()
+    pCurrCryNum = tCryDB.count
   else
     createWindow(pCryWindowID, "habbo_basic.window")
     tWndObj = getWindow(pCryWindowID)
     tWndObj.merge("habbo_hobba_alert.window")
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcCryWnd, me.getID(), #mouseUp)
+    tCryDB = me.getComponent().getCryDataBase()
+    if pCurrCryNum < 1 or pCurrCryNum > tCryDB.count then
+      pCurrCryNum = tCryDB.count
+    end if
   end if
-  tCryDB = me.getComponent().getCryDataBase()
-  if tCryDB.count = 0 then
-    return 1
-  end if
-  tCryID = tCryDB.getPropAt(tCryDB.count)
   pCryWndMode = "browse"
   if getObject(#session).get("user_rights").getOne("fuse_see_chat_log_link") = 0 then
     tWndObj.getElement("hobba_seelog").hide()
   end if
-  if pStoredCryNum = 0 then
-    tCryToShow = tCryID
-  else
-    tCryToShow = min(tCryID, pStoredCryNum)
-    pStoredCryNum = 0
-  end if
-  return me.fillCryData(tCryToShow)
+  return me.fillCryData(pCurrCryNum)
 end
 
 on hideCryWnd me
-  pCurrCryID = EMPTY
-  pCurrCryNum = 0
   pCurrCryData = [:]
   me.hideAlert()
   if windowExists(pCryWindowID) then
@@ -270,7 +262,6 @@ on openCryReplyWindow me
   tMsg = pCurrCryData[#msg]
   tWndObj.getElement("hobba_reply_header").setText(getText("hobba_reply_cfh") && tName)
   tWndObj.getElement("hobba_reply_text").setText(tMsg)
-  pStoredCryNum = pCurrCryNum
   return 1
 end
 
