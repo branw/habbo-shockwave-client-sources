@@ -140,6 +140,7 @@ on handleFriendListUpdate me, tMsg
   end repeat
   if tFriendCount > 0 or tCategoryCount > 0 then
     me.getInterface().updateCategoryCounts()
+    callJavaScriptFunction("friendListUpdate")
   end if
 end
 
@@ -237,26 +238,6 @@ on handleFollowFailed me, tMsg
   return 1
 end
 
-on handleInvitation me, tMsg
-  tConn = tMsg.connection
-  if tConn = 0 then
-    return 0
-  end if
-  tInvitationData = [:]
-  tInvitationData.setaProp(#userID, tConn.GetStrFrom())
-  tInvitationData.setaProp(#name, tConn.GetStrFrom())
-  executeMessage(#showInvitation, tInvitationData)
-  return 1
-end
-
-on handleInvitationFollowFailed me, tMsg
-  executeMessage(#alert, "invitation_follow_failed")
-end
-
-on handleInvitationExpired me, tMsg
-  executeMessage(#hideInvitation)
-end
-
 on handleMailNotification me, tMsg
   tConn = tMsg.connection
   tUserID = tConn.GetStrFrom()
@@ -315,9 +296,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(314, #handleFriendRequestList)
   tMsgs.setaProp(315, #handleFriendRequestResult)
   tMsgs.setaProp(349, #handleFollowFailed)
-  tMsgs.setaProp(355, #handleInvitation)
-  tMsgs.setaProp(359, #handleInvitationFollowFailed)
-  tMsgs.setaProp(360, #handleInvitationExpired)
   tMsgs.setaProp(363, #handleMailNotification)
   tMsgs.setaProp(364, #handleMailCountNotification)
   tCmds = [:]
@@ -329,8 +307,6 @@ on regMsgList me, tBool
   tCmds.setaProp("FRIENDLIST_FRIENDREQUEST", 39)
   tCmds.setaProp("FRIENDLIST_GETFRIENDREQUESTS", 233)
   tCmds.setaProp("FOLLOW_FRIEND", 262)
-  tCmds.setaProp("MSG_ACCEPT_TUTOR_INVITATION", 357)
-  tCmds.setaProp("MSG_REJECT_TUTOR_INVITATION", 358)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

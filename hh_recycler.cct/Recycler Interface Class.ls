@@ -163,6 +163,7 @@ on eventProc me, tEvent, tSprID, tProp
         "rec_cancel_text", "rec_cancel_btn":
           me.getComponent().cancelRecycling()
         "rec_moreinfo_link":
+          executeMessage(#externalLinkClick, the mouseLoc)
           openNetPage("recycler_info_link_url")
       end case
     end if

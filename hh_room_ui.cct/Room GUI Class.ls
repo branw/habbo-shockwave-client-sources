@@ -14,14 +14,14 @@ on deconstruct me
   return 1
 end
 
-on showRoomBar me
+on showRoomBar me, tLayout
   tRoomInfoObj = getObject(pRoomInfoID)
   if not voidp(tRoomInfoObj) and not tRoomInfoObj = 0 then
     tRoomInfoObj.showRoomInfo()
   end if
   tRoomBarObj = getObject(pRoomBarID)
   if not voidp(tRoomBarObj) and not tRoomBarObj = 0 then
-    tRoomBarObj.showRoomBar()
+    tRoomBarObj.showRoomBar(tLayout)
   end if
   if threadExists("new_user_help") then
     tComponent = getThread("new_user_help").getComponent()

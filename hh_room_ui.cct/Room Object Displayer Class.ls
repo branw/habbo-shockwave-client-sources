@@ -114,7 +114,7 @@ on showObjectInfo me, tObjType, tRefresh
       "human":
         tID = pBaseWindowIds[#avatar]
         pWindowCreator.createHumanWindow(tID, tProps, tSelectedObj, pBadgeObjID, pShowUserTags)
-        me.updateInfoStandGroup(tProps[#groupid])
+        me.updateInfoStandGroup(tProps[#groupID])
         me.pushWindowToDisplayList(tID)
       "bot":
         tID = pBaseWindowIds[#avatar]
@@ -145,6 +145,13 @@ on showObjectInfo me, tObjType, tRefresh
           end if
           tTagListImage = pTagListObj.createTagList(tTagList)
           tTagsElem.feedImage(tTagListImage)
+        end if
+      "xp_user":
+        tXP = tProps.getaProp(#xp)
+        if not (voidp(tXP) or tXP = 0) then
+          tID = pBaseWindowIds[#xp]
+          pWindowCreator.createUserXpWindow(tID, tXP)
+          me.pushWindowToDisplayList(tID)
         end if
       "links_human":
         tID = pBaseWindowIds[#links]
@@ -293,7 +300,7 @@ on groupLogoDownloaded me, tGroupId
   if tObj = 0 then
     return 0
   end if
-  tUsersGroup = tObj.getProperty(#groupid)
+  tUsersGroup = tObj.getProperty(#groupID)
   if tUsersGroup = tGroupId then
     me.updateInfoStandGroup(tGroupId)
   end if
@@ -448,6 +455,7 @@ on eventProc me, tEvent, tSprID, tParam
           tWebID = tComponent.getUserObject(tSelectedObj).getWebID()
           if not voidp(tWebID) then
             tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(tWebID))
+            executeMessage(#externalLinkClick, the mouseLoc)
             openNetPage(tDestURL)
           end if
         end if
@@ -489,12 +497,14 @@ on eventProc me, tEvent, tSprID, tParam
             getThread(#registration).getComponent().openFigureUpdate()
           end if
         else
+          executeMessage(#externalLinkClick, the mouseLoc)
           openNetPage(getText("url_figure_editor"))
         end if
       "room_obj_disp_tags":
         tTag = pTagListObj.getTagAt(tParam)
         if stringp(tTag) then
           tDestURL = replaceChunks(getVariable("link.format.tag.search"), "%tag%", tTag)
+          executeMessage(#externalLinkClick, the mouseLoc)
           openNetPage(tDestURL)
         end if
       "room_obj_disp_bg":

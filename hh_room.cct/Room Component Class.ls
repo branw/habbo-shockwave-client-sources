@@ -57,6 +57,8 @@ on construct me
   registerMessage(#removeEnterRoomAlert, me.getID(), #removeEnterRoomAlert)
   registerMessage(#show_hide_roomevents, me.getID(), #showHideRoomevents)
   registerMessage(#editRoomevent, me.getID(), #editRoomevent)
+  registerMessage(#releaseSpritesLevel1, me.getID(), #releaseShadowSpritesFromUsers)
+  registerMessage(#releaseSpritesLevel2, me.getID(), #releaseSpritesFromActiveObjects)
   pEnterDoorData = VOID
   pEnterDoorLocked = 0
   return 1
@@ -352,14 +354,21 @@ on activeObjectExists me, tID
   return me.roomObjectExists(tID, pActiveObjList)
 end
 
+on releaseShadowSpritesFromUsers me
+  call(#releaseShadowSprite, pUserObjList)
+end
+
 on releaseSpritesFromActiveObjects me
-  tRemoveCountMax = 100
+  tRemoveCountMax = 10
   tActiveObjCount = pActiveObjList.count - 1
   tRemoveCount = min([tRemoveCountMax, tActiveObjCount])
   repeat with tNo = 1 to tRemoveCount
-    tObject = pActiveObjList[tNo].deconstruct()
+    tID = pActiveObjList[1].getID()
+    me.removeActiveObject(tID)
   end repeat
-  createTimeout(#releaseactivetimeout, 3000, #releaseActiveTimeoutCallback, me.getID(), VOID, 1)
+  if not timeoutExists(#releaseactivetimeout) then
+    createTimeout(#releaseactivetimeout, 3000, #releaseActiveTimeoutCallback, me.getID(), VOID, 1)
+  end if
 end
 
 on releaseActiveTimeoutCallback me
@@ -428,7 +437,7 @@ on setRoomEventList me, ttype, tEvents
 end
 
 on getRoomEventList me, ttype
-  if ttype = 0 then
+  if not integerp(ttype) then
     return 0
   end if
   tEventList = pRoomEventList.getaProp(ttype)

@@ -19,7 +19,11 @@ on deconstruct me
 end
 
 on showRoomInfo me
-  if getThread(#room).getComponent().getRoomData().type = #private then
+  tRoomData = getThread(#room).getComponent().getRoomData()
+  if listp(tRoomData) then
+    tRoomType = tRoomData.getaProp(#type)
+  end if
+  if tRoomType = #private then
     tWndObj = me.createInfoWindow()
     if tWndObj = 0 then
       return 0

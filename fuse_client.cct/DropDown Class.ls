@@ -285,6 +285,9 @@ on chooseFromMenu me
     me.pimage = pDropActiveBtnImg
     me.pSprite.loc = pLoc
     me.render()
+    if pTextKeys.count < 1 then
+      return EMPTY
+    end if
     if not voidp(pTextKeys[pShowOrder[pSelectedItemNum]]) then
       return pTextKeys[pShowOrder[pSelectedItemNum]]
     end if

@@ -64,11 +64,11 @@ on update me
   pObjList.sort()
   tObjList = getThread(#room).getComponent().getUserObject(#list)
   repeat with tObj in tObjList
-    pObjList.setaProp(tObj.getName(), tObj.getID())
+    pObjList.setaProp(convertToLowerCase(tObj.getName()), [#id: tObj.getID(), #name: tObj.getName()])
   end repeat
   tObjStr = EMPTY
   repeat with i = 1 to pObjList.count
-    tObjStr = tObjStr && pObjList.getPropAt(i) & RETURN
+    tObjStr = tObjStr && pObjList[i].getaProp(#name) & RETURN
   end repeat
   delete char -30003 of tObjStr
   tImg = pWriterObj.render(tObjStr)
@@ -104,7 +104,7 @@ on eventProcChooser me, tEvent, tSprID, tParam
       if not threadExists(#room) then
         return removeObject(me.getID())
       end if
-      tObjID = pObjList[tLineNum]
+      tObjID = pObjList[tLineNum].getaProp(#id)
       getThread(#room).getInterface().eventProcUserObj(#mouseUp, tObjID)
       getThread(#room).getInterface().getArrowHiliter().show(tObjID, 1)
   end case

@@ -17,6 +17,7 @@ on construct me
   registerMessage(#leaveRoom, me.getID(), #updateActionIconsState)
   registerMessage(#changeRoom, me.getID(), #updateActionIconsState)
   registerMessage(#enterRoomDirect, me.getID(), #updateActionIconsState)
+  registerMessage(#gamesystem_constructed, me.getID(), #closeFriendList)
   return 1
 end
 
@@ -28,7 +29,12 @@ on deconstruct me
   if windowExists(pFriendListWindowID) then
     removeWindow(pFriendListWindowID)
   end if
-  unregisterMessage(#toggle_friend_list)
+  unregisterMessage(#toggle_friend_list, me.getID())
+  unregisterMessage(#enterRoom, me.getID())
+  unregisterMessage(#leaveRoom, me.getID())
+  unregisterMessage(#changeRoom, me.getID())
+  unregisterMessage(#enterRoomDirect, me.getID())
+  unregisterMessage(#gamesystem_constructed, me.getID())
   return 1
 end
 
@@ -321,6 +327,10 @@ on showCategoryTitle me, tID, tLocV, tName, tItemCount
         tmember = getMember(getVariable("fr.category.background.requests"))
         tElemBase.setProperty(#member, tmember)
         tElemBase.setProperty(#width, getVariable("fr.category.width"))
+        tTextColor = rgb(string(getVariable("fr.category.text.color.requests")))
+        tFont = tElemText.getFont()
+        tFont[#color] = tTextColor
+        tElemText.setFont(tFont)
       end if
     end if
   end if
@@ -659,16 +669,24 @@ end
 
 on eventProc me, tEvent, tElemID, tParam
   tWndObj = getWindow(pFriendListWindowID)
+  if tWndObj = 0 then
+    return 0
+  end if
   if tEvent = #mouseUp then
+    tloc = the mouseLoc
     case tElemID of
       "friends_btn_close":
         me.closeFriendList()
       "friends_btn_minimize":
         me.minimizedView()
       "list_panel":
+        if ilk(tParam) <> #point then
+          return 0
+        end if
         me.handleListPanelEvent(tEvent, tParam[1], tParam[2])
       "preferences_icon":
         openNetPage(getVariable("link.format.friendlist.pref"))
+        executeMessage(#externalLinkClick, tloc)
       "home_icon":
         tViewObj = me.getViewListObject(pCurrentCategoryID)
         tSelectedFriends = tViewObj.getSelectedFriends()
@@ -680,6 +698,7 @@ on eventProc me, tEvent, tElemID, tParam
           tWebID = tSelectedFriendData.getaProp(#id)
           tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(tWebID))
           openNetPage(tDestURL)
+          executeMessage(#externalLinkClick, tloc)
         end if
       "mail_compose_icon":
         tViewObj = me.getViewListObject(pCurrentCategoryID)
@@ -695,6 +714,7 @@ on eventProc me, tEvent, tElemID, tParam
         if variableExists("link.format.mail.compose") then
           tDestURL = replaceChunks(getVariable("link.format.mail.compose"), "%recipientid%", tRecipients)
           openNetPage(tDestURL)
+          executeMessage(#externalLinkClick, tloc)
         end if
       "invite_icon":
         tViewObj = me.getViewListObject(pCurrentCategoryID)
@@ -715,11 +735,13 @@ on eventProc me, tEvent, tElemID, tParam
         if variableExists("link.format.mail.inbox") then
           tDestURL = getVariable("link.format.mail.inbox")
           openNetPage(tDestURL)
+          executeMessage(#externalLinkClick, tloc)
         end if
       "search_icon":
         if variableExists("link.format.user.search") then
           tDestURL = getVariable("link.format.user.search")
           openNetPage(tDestURL)
+          executeMessage(#externalLinkClick, tloc)
         end if
       "remove_icon":
         tViewObj = me.getViewListObject(pCurrentCategoryID)
@@ -783,6 +805,9 @@ on eventProc me, tEvent, tElemID, tParam
           "mail_inbox_icon":
             me.setTipText(getText("friend_tip_inbox"))
           "list_panel":
+            if ilk(tParam) <> #point then
+              return 0
+            end if
             me.handleListPanelEvent(tEvent, tParam[1], tParam[2])
           otherwise:
             me.setTipText(EMPTY)

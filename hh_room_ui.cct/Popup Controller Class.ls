@@ -22,9 +22,11 @@ on deconstruct me
 end
 
 on handleEvent me, tEvent, tSprID, tParam
-  if tSprID <> "int_nav_image" then
-    return 0
-  end if
+  case tSprID of
+    "int_nav_image", "int_controller_image":
+      nothing()
+  end case
+  return 0
   case tEvent of
     #mouseEnter:
       me.timeoutShow(tSprID)
@@ -37,7 +39,11 @@ on timeoutShow me, tPopupID
   if voidp(tPopupID) then
     return 0
   end if
-  me.getPopup(tPopupID).Init(tPopupID)
+  tObject = me.getPopup(tPopupID)
+  if not objectp(tObject) then
+    return 0
+  end if
+  tObject.Init(tPopupID)
   if timeoutExists(pHideTimeoutID) then
     removeTimeout(pHideTimeoutID)
   end if
@@ -60,18 +66,37 @@ end
 
 on showPopup me, tPopupID
   tPopup = me.getPopup(tPopupID)
+  if not objectp(tPopup) then
+    return 0
+  end if
   tPopup.show()
 end
 
 on hidePopup me, tPopupID
   tPopup = me.getPopup(tPopupID)
+  if not objectp(tPopup) then
+    return 0
+  end if
   tPopup.hide()
 end
 
 on getPopup me, tPopupID
   if voidp(pPopupList.getaProp(tPopupID)) then
-    tPopupClass = "Navigator Popup Class"
-    pPopupList.setaProp(tPopupID, createObject(#random, tPopupClass))
+    case tPopupID of
+      "int_nav_image":
+        tPopupClass = "Navigator Popup Class"
+      "int_controller_image":
+        tPopupClass = "IG Popup Class"
+    end case
+    return 0
+    if not memberExists(tPopupClass) then
+      return 0
+    end if
+    tObject = createObject(#random, tPopupClass)
+    if tObject = 0 then
+      return 0
+    end if
+    pPopupList.setaProp(tPopupID, tObject)
   end if
   return pPopupList.getaProp(tPopupID)
 end

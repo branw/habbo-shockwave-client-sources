@@ -206,8 +206,8 @@ on loadFigurePartList me, tURL
       tURL = tURL & tSeparator & "graphcount=" & tMemberCount
     end if
   end if
-  tmember = queueDownload(tURL, tMem, #field, 1)
   sendProcessTracking(13)
+  tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partListLoaded, me.getID())
 end
 
@@ -292,8 +292,8 @@ on loadPartSetXML me
     return error(me, "Can't load partset XML - no URL configured", #loadPartSetXML, #critical)
   end if
   tMem = tURL
-  tmember = queueDownload(tURL, tMem, #field, 1)
   sendProcessTracking(14)
+  tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #partSetLoaded, me.getID())
 end
 
@@ -308,8 +308,8 @@ on loadActionSetXML me
     return error(me, "Can't load action set XML - no URL configured", #loadActionSetXML, #critical)
   end if
   tMem = tURL
-  tmember = queueDownload(tURL, tMem, #field, 1)
   sendProcessTracking(16)
+  tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #actionSetLoaded, me.getID())
 end
 
@@ -324,8 +324,8 @@ on loadAnimationSetXML me
     return error(me, "Can't load animation XML - no URL configured", #loadAnimationSetXML, #critical)
   end if
   tMem = tURL
-  tmember = queueDownload(tURL, tMem, #field, 1)
   sendProcessTracking(17)
+  tmember = queueDownload(tURL, tMem, #field, 1)
   return registerDownloadCallback(tmember, #animationSetLoaded, me.getID())
 end
 

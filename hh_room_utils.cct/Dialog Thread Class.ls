@@ -355,7 +355,9 @@ on helpChoiceMade me
   tAction = getText("help_pointer_" & pChosenHelpRadio)
   if tAction starts "http" then
     openNetPage(tAction)
-    return me.removeDialog(getText("win_callforhelp"), pWindowList)
+    tValue = me.removeDialog(getText("win_callforhelp"), pWindowList)
+    executeMessage(#externalLinkClick, the mouseLoc)
+    return tValue
   end if
   if tAction = "hotel_help" then
     pCfhType = #habbo_helpers
@@ -443,6 +445,7 @@ on eventProcAlert me, tEvent, tElemID, tParam, tWndID
         return me.removeDialog(tWndID, pAlertList)
       "alert_link":
         tURL = pUrlList.getaProp(tWndID)
+        executeMessage(#externalLinkClick, the mouseLoc)
         return openNetPage(tURL)
     end case
   end if
@@ -464,6 +467,7 @@ on eventProcPurse me, tEvent, tElemID, tParam, tWndID
         if tSession.exists("user_checksum") then
           tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
         end if
+        executeMessage(#externalLinkClick, the mouseLoc)
         openNetPage(tURL)
     end case
   end if
@@ -490,12 +494,14 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
               tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
             end if
           end if
+          executeMessage(#externalLinkClick, the mouseLoc)
           openNetPage(tURL)
         end if
         return 1
       "close", "help_ok", "help_choise_cancel":
         return me.removeDialog(tWndID, pWindowList)
       "help_tutorial_link":
+        executeMessage(#externalLinkClick, the mouseLoc)
         openNetPage(getText("reg_tutorial_url"))
       "help_callforhelp_textlink":
         me.openHelpChoiceWindow()
@@ -544,6 +550,7 @@ on eventProcBan me, tEvent, tElemID, tParam, tWndID
           end if
         end if
         me.removeDialog(tWndID, pAlertList)
+        resetClient()
     end case
   end if
 end

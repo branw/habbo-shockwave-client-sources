@@ -337,6 +337,21 @@ on createUserTagsWindow me, tID
   return tID
 end
 
+on createUserXpWindow me, tID, tXP
+  tWindowModel = "obj_disp_xp.window"
+  tWndObj = me.initWindow(tID, tWindowModel)
+  if tWndObj = 0 then
+    return 0
+  end if
+  tWndObj.lock()
+  tElem = tWndObj.getElement("room_obj_disp_xp")
+  if tElem = 0 then
+    return 0
+  end if
+  tElem.setText(replaceChunks(getText("object_displayer_xp"), "\xp", tXP))
+  return tID
+end
+
 on createBottomWindow me, tID
   tWndObj = me.initWindow(tID, "obj_disp_bottom.window")
   tWndObj.lock()

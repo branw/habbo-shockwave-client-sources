@@ -1,21 +1,17 @@
-property pChatImage, pListLine, pWriter, pChatWidth, pBgColors, pHighlightUserID, pMaxHeight
+property pChatImage, pListLine, pWriter, pChatWidth, pHighlightUserID, pMaxHeight, pMargin
 
 on construct me
   pChatData = []
-  pChatWidth = 200
-  pBgColors = []
-  pBgColors.add(rgb(getVariable("im.color.receiver")))
-  pBgColors.add(rgb(getVariable("im.color.sender")))
-  pBgColors.add(rgb(getVariable("im.color.error")))
-  pBgColors.add(rgb(getVariable("im.color.notification")))
+  pChatWidth = 185
+  pMargin = 3
   pMaxHeight = getIntVariable("im.chat.length.max")
   me.clearImage()
-  tID = getUniqueID()
-  createWriter(tID)
-  pWriter = getWriter(tID)
   tFont = getStructVariable("struct.font.plain")
   tFont.setaProp(#wordWrap, 1)
-  tFont.setaProp(#rect, rect(0, 0, 180, 0))
+  tFont.setaProp(#rect, rect(0, 0, pChatWidth - 2 * pMargin, 0))
+  tID = getUniqueID()
+  createWriter(tID, tFont)
+  pWriter = getWriter(tID)
   pWriter.define(tFont)
   pHighlightUserID = getObject(#session).GET("user_user_id")
   return 1
@@ -31,26 +27,33 @@ on setWidth me, tWidth
 end
 
 on renderChatEntry me, tEntry, tPos
+  ttype = tEntry.getaProp(#type)
   tUserID = tEntry.getaProp(#userID)
-  case tUserID of
-    #notification:
-      tBgColor = pBgColors[4]
-    #error:
-      tBgColor = pBgColors[3]
-    pHighlightUserID:
-      tBgColor = pBgColors[2]
-    otherwise:
-      tBgColor = pBgColors[1]
-  end case
-  tMargin = 3
   tText = tEntry.getaProp(#Msg)
-  if stringp(tUserID) then
+  tUseTime = ttype = #message or ttype = #invitation
+  if tUseTime then
     tText = tEntry.getaProp(#time) && tText
   end if
+  case ttype of
+    #invitation:
+      tColor = getVariable("im.color.invitation", "FFFFFF")
+    #notification:
+      tColor = getVariable("im.color.notification", "FFFFFF")
+    #error:
+      tColor = getVariable("im.color.error", "FFFFFF")
+    #message:
+      if tUserID = pHighlightUserID then
+        tColor = getVariable("im.color.sender", "FFFFFF")
+      else
+        tColor = getVariable("im.color.receiver", "FFFFFF")
+      end if
+    #otherwise:
+      tColor = "FFFFFF"
+  end case
   tTextImage = pWriter.render(tText).duplicate()
-  tEntryImage = image(pChatWidth, tTextImage.height + 2 * tMargin, 8)
-  tEntryImage.fill(tEntryImage.rect, tBgColor)
-  tTargetRect = tTextImage.rect + rect(tMargin, tMargin, tMargin, tMargin)
+  tEntryImage = image(pChatWidth, tTextImage.height + 2 * pMargin, 8)
+  tEntryImage.fill(tEntryImage.rect, rgb(tColor))
+  tTargetRect = tTextImage.rect + rect(pMargin, pMargin, pMargin, pMargin)
   tEntryImage.copyPixels(tTextImage, tTargetRect, tTextImage.rect)
   tNewHeight = pChatImage.height + tEntryImage.height
   if tNewHeight > pMaxHeight then

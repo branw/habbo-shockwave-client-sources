@@ -191,6 +191,7 @@ on eventProcDisconnect me, tEvent, tElemID, tParam
   if tEvent = #mouseUp then
     if tElemID = "error_close" then
       removeWindow(#error)
+      resetClient()
     end if
   end if
 end

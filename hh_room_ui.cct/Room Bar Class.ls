@@ -20,6 +20,7 @@ on construct me
   registerMessage(#updateFriendListIcon, me.getID(), #updateFriendListIcon)
   registerMessage(#soundSettingChanged, me.getID(), #updateSoundButton)
   registerMessage(#IMStateChanged, me.getID(), #updateIMIcon)
+  registerMessage(#setRollOverInfo, me.getID(), #setRollOverInfo)
   return 1
 end
 
@@ -33,10 +34,11 @@ on deconstruct me
   unregisterMessage(#updateFriendListIcon, me.getID())
   unregisterMessage(#soundSettingChanged, me.getID())
   unregisterMessage(#IMStateChanged, me.getID())
+  unregisterMessage(#setRollOverInfo, me.getID())
   return 1
 end
 
-on showRoomBar me
+on showRoomBar me, tLayout
   if not windowExists(pBottomBarId) then
     createWindow(pBottomBarId, "empty.window", 0, 487)
   end if
@@ -48,10 +50,12 @@ on showRoomBar me
   end if
   tWndObj.lock(1)
   tWndObj.unmerge()
-  if getThread(#room).getComponent().getSpectatorMode() then
-    tLayout = "room_bar_spectator.window"
-  else
-    tLayout = "room_bar.window"
+  if not stringp(tLayout) then
+    if getThread(#room).getComponent().getSpectatorMode() then
+      tLayout = "room_bar_spectator.window"
+    else
+      tLayout = "room_bar.window"
+    end if
   end if
   if not tWndObj.merge(tLayout) then
     return 0
@@ -118,6 +122,9 @@ end
 
 on setRollOverInfo me, tInfo
   tWndObj = getWindow(pBottomBarId)
+  if tWndObj = 0 then
+    return 0
+  end if
   if tWndObj.elementExists("room_tooltip_text") then
     tWndObj.getElement("room_tooltip_text").setText(tInfo)
   end if
@@ -217,6 +224,9 @@ end
 
 on showVote me
   tWndObj = getWindow(pBottomBarId)
+  if tWndObj = 0 then
+    return 0
+  end if
   tWidthLong = tWndObj.getElement("chat_field_bg_long").getProperty(#width)
   tWidthShort = tWndObj.getElement("chat_field_bg_short").getProperty(#width)
   tWndObj.getElement("chat_field").resizeBy(tWidthShort - tWidthLong, 0, 1)
@@ -356,10 +366,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           end if
         end if
         getThread(#room).getComponent().sendChat(tChatField.getText())
-        if threadExists("new_user_help") then
-          tComponent = getThread("new_user_help").getComponent()
-          tComponent.setHelpItemClosed("chat")
-        end if
+        executeMessage(#NUH_close, "chat")
         if timeoutExists(pTypingTimeoutName) then
           removeTimeout(pTypingTimeoutName)
         end if
@@ -397,6 +404,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         end if
       "int_hand_image":
         if tEvent = #mouseUp then
+          executeMessage(#NUH_close, "hand")
           getThread(#room).getInterface().getContainer().openClose()
         end if
         if tEvent = #mouseEnter then
@@ -431,11 +439,25 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
             me.setRollOverInfo(EMPTY)
           end if
         end if
-      "int_event_image":
-        if pDisableRoomevents then
-          return 1
-        end if
+      "int_controller_image":
         if tEvent = #mouseUp then
+          executeMessage(#NUH_close, "games")
+          executeMessage(#toggle_ig)
+        end if
+        if tEvent = #mouseEnter then
+          tInfo = getText("interface_icon_ig")
+          me.setRollOverInfo(tInfo)
+        else
+          if tEvent = #mouseLeave then
+            me.setRollOverInfo(EMPTY)
+          end if
+        end if
+      "int_event_image":
+        if tEvent = #mouseUp then
+          executeMessage(#NUH_close, "events")
+          if pDisableRoomevents then
+            return 1
+          end if
           executeMessage(#show_hide_roomevents)
         end if
         if tEvent = #mouseEnter then
@@ -457,10 +479,6 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           if tEvent = #mouseLeave then
             me.setRollOverInfo(EMPTY)
           end if
-        end if
-      "int_hand_image":
-        if tEvent = #mouseUp then
-          getThread(#room).getInterface().getContainer().openClose()
         end if
       "get_credit_text":
         if tEvent = #mouseUp then
@@ -510,6 +528,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
       "friend_list_icon":
         if tEvent = #mouseUp then
           executeMessage(#toggle_friend_list)
+          executeMessage(#NUH_close, "friends")
         else
           if tEvent = #mouseEnter then
             tInfo = getText("friend_list_title")

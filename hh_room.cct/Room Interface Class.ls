@@ -128,10 +128,10 @@ on hideRoom me
   return 1
 end
 
-on showRoomBar me
+on showRoomBar me, tLayout
   tGUI = getObject(pRoomGuiID)
   if not voidp(tGUI) and not tGUI = 0 then
-    tGUI.showRoomBar()
+    tGUI.showRoomBar(tLayout)
   end if
 end
 
@@ -763,24 +763,6 @@ on showCfhSenderDelayed me, tID
   return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tID, 1)
 end
 
-on updateScreenOffset me, tRoomID
-  if (the stage).rect.width > 800 then
-    pWideScreenOffset = getVariable("widescreen.offset.x")
-  else
-    pWideScreenOffset = 0
-  end if
-  if pWideScreenOffset <> 0 and not voidp(tRoomID) then
-    if variableExists(tRoomID & ".wide.offset.x") then
-      pWideScreenOffset = value(getVariable(tRoomID & ".wide.offset.x"))
-    end if
-  end if
-  if variableExists(tRoomID & ".wide.align.right") then
-    if value(getVariable(tRoomID & ".wide.align.right")) then
-      pWideScreenOffset = (the stage).rect.width - 720 - pWideScreenOffset
-    end if
-  end if
-end
-
 on highLightCfhSender me, tID
   if not voidp(tID) then
     me.showArrowHiliter(tID)
@@ -821,6 +803,24 @@ end
 
 on showRemoveSpecsNotice me
   executeMessage(#alert, [#Msg: "room_remove_specs", #modal: 1])
+end
+
+on updateScreenOffset me, tRoomID
+  if (the stage).rect.width > 800 then
+    pWideScreenOffset = getVariable("widescreen.offset.x")
+  else
+    pWideScreenOffset = 0
+  end if
+  if pWideScreenOffset <> 0 and not voidp(tRoomID) then
+    if variableExists(tRoomID & ".wide.offset.x") then
+      pWideScreenOffset = value(getVariable(tRoomID & ".wide.offset.x"))
+    end if
+  end if
+  if variableExists(tRoomID & ".wide.align.right") then
+    if value(getVariable(tRoomID & ".wide.align.right")) then
+      pWideScreenOffset = (the stage).rect.width - 720 - pWideScreenOffset
+    end if
+  end if
 end
 
 on eventProcActiveRollOver me, tEvent, tSprID, tProp
@@ -1163,6 +1163,7 @@ on eventProcBanner me, tEvent, tSprID, tParam
         if connectionExists(pInfoConnID) and getObject(#session).exists("ad_id") then
           getConnection(pInfoConnID).send("ADCLICK", getObject(#session).GET("ad_id"))
         end if
+        executeMessage(#externalLinkClick, the mouseLoc)
         openNetPage(pBannerLink)
       end if
     "room_cancel":

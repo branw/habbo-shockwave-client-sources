@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
 
 on construct me
   pFrozenAnimFrame = 0
@@ -39,9 +39,11 @@ on construct me
   pColors = [:]
   pModState = 0
   pExtraObjs = [:]
+  pExtraObjsActive = [:]
   pDefShadowMem = member(0)
   pInfoStruct = [:]
   pQueuesWithObj = 0
+  pXP = 0
   pGeometry = getThread(#room).getInterface().getGeometry()
   pXFactor = pGeometry.pXFactor
   pYFactor = pGeometry.pYFactor
@@ -98,6 +100,7 @@ on deconstruct me
     removeMember(me.getCanvasName())
   end if
   call(#deconstruct, pExtraObjs)
+  pExtraObjsActive = [:]
   pExtraObjs = VOID
   pShadowSpr = VOID
   pMatteSpr = VOID
@@ -124,9 +127,6 @@ on define me, tdata
   pMatteSpr.castNum = pMember.number
   pMatteSpr.ink = 8
   pMatteSpr.blend = 0
-  pShadowSpr = sprite(reserveSprite(me.getID()))
-  pShadowSpr.blend = 16
-  pShadowSpr.ink = 8
   pShadowFix = 0
   pDefShadowMem = member(getmemnum(pPeopleSize & "_std_sd_1_0_0"))
   tTargetID = getThread(#room).getInterface().getID()
@@ -134,8 +134,13 @@ on define me, tdata
   pMatteSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   pMatteSpr.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseEnter)
   pMatteSpr.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseLeave)
-  setEventBroker(pShadowSpr.spriteNum, me.getID())
-  pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
+  pShadowSpr = sprite(reserveSprite(me.getID()))
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.blend = 16
+    pShadowSpr.ink = 8
+    setEventBroker(pShadowSpr.spriteNum, me.getID())
+    pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
+  end if
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
   pInfoStruct[#custom] = pCustom
@@ -186,8 +191,9 @@ on setup me, tdata
   pLocY = tdata[#y]
   pLocH = tdata[#h]
   pBadge = tdata[#badge]
-  pGroupId = tdata[#groupid]
+  pGroupId = tdata[#groupID]
   pStatusInGroup = tdata[#groupstatus]
+  pXP = tdata.getaProp(#xp)
   if not voidp(tdata.getaProp(#webID)) then
     pWebID = tdata[#webID]
   end if
@@ -239,6 +245,9 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pModState = 0
   pSleeping = 0
   pQueuesWithObj = 0
+  repeat with i = 1 to pExtraObjsActive.count
+    pExtraObjsActive[i] = 0
+  end repeat
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
   if pGeometry <> VOID then
@@ -266,6 +275,16 @@ on Refresh me, tX, tY, tH
   call(#defineDir, pPartList, pDirection)
   call(#defineDirMultiple, pPartList, pHeadDir, pPartListSubSet["head"])
   me.arrangeParts()
+  i = 1
+  repeat while i <= pExtraObjsActive.count
+    if pExtraObjsActive[i] = 0 then
+      pExtraObjs[i].deconstruct()
+      pExtraObjs.deleteAt(i)
+      pExtraObjsActive.deleteAt(i)
+      next repeat
+    end if
+    i = i + 1
+  end repeat
   pChanges = 1
 end
 
@@ -389,7 +408,7 @@ on getInfo me
     pInfoStruct[#ctrl] = pCtrlType
   end if
   pInfoStruct[#badge] = me.pBadge
-  pInfoStruct[#groupid] = me.pGroupId
+  pInfoStruct[#groupID] = me.pGroupId
   if pTrading then
     pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
@@ -399,6 +418,7 @@ on getInfo me
       pInfoStruct[#custom] = pCustom
     end if
   end if
+  pInfoStruct.setaProp(#xp, pXP)
   return pInfoStruct
 end
 
@@ -407,7 +427,11 @@ on getWebID me
 end
 
 on getSprites me
-  return [pSprite, pShadowSpr, pMatteSpr]
+  if ilk(pShadowSpr) = #sprite then
+    return [pSprite, pShadowSpr, pMatteSpr]
+  else
+    return [pSprite, pMatteSpr]
+  end if
 end
 
 on getProperty me, tPropID
@@ -426,7 +450,7 @@ on getProperty me, tPropID
       return me.pBadge
     #swimming:
       return me.pSwim
-    #groupid:
+    #groupID:
       return pGroupId
     #groupstatus:
       return pStatusInGroup
@@ -434,13 +458,17 @@ on getProperty me, tPropID
       return pUserIsTyping
     #peoplesize:
       return pPeopleSize
+    #locZ:
+      if pSprite.ilk = #sprite then
+        return pSprite.locZ
+      end if
   end case
   return 0
 end
 
 on setProperty me, tPropID, tValue
   case tPropID of
-    #groupid:
+    #groupID:
       pGroupId = tValue
     #groupstatus:
       pStatusInGroup = tValue
@@ -555,14 +583,18 @@ end
 on show me
   pSprite.visible = 1
   pMatteSpr.visible = 1
-  pShadowSpr.visible = 1
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.visible = 1
+  end if
   me.updateTypingSpriteLoc()
 end
 
 on hide me
   pSprite.visible = 0
   pMatteSpr.visible = 0
-  pShadowSpr.visible = 0
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.visible = 0
+  end if
   me.updateTypingSpriteLoc()
 end
 
@@ -619,6 +651,7 @@ on prepare me
 end
 
 on render me, tForceUpdate
+  call(#update, pExtraObjs)
   if not pChanges then
     return 
   end if
@@ -632,18 +665,22 @@ on render me, tForceUpdate
     return 1
   end if
   pChanges = 0
-  if pMainAction = "sit" then
-    tSize = pCanvasSize[#std]
-    pShadowSpr.castNum = getmemnum(pPeopleSize & "_sit_sd_1_" & pFlipList[pDirection + 1] & "_0")
+  if pMainAction = "lay" then
+    tSize = pCanvasSize[#lay]
   else
-    if pMainAction = "lay" then
-      tSize = pCanvasSize[#lay]
-      pShadowSpr.castNum = 0
-      pShadowFix = 0
+    tSize = pCanvasSize[#std]
+  end if
+  if ilk(pShadowSpr) = #sprite then
+    if pMainAction = "sit" then
+      pShadowSpr.castNum = getmemnum(pPeopleSize & "_sit_sd_1_" & pFlipList[pDirection + 1] & "_0")
     else
-      tSize = pCanvasSize[#std]
-      if pShadowSpr.member <> pDefShadowMem then
-        pShadowSpr.member = pDefShadowMem
+      if pMainAction = "lay" then
+        pShadowSpr.castNum = 0
+        pShadowFix = 0
+      else
+        if pShadowSpr.member <> pDefShadowMem then
+          pShadowSpr.member = pDefShadowMem
+        end if
       end if
     end if
   end if
@@ -661,6 +698,8 @@ on render me, tForceUpdate
   if pSprite.flipH then
     pSprite.flipH = 0
     pMatteSpr.flipH = 0
+  end if
+  if ilk(pShadowSpr) = #sprite then
     pShadowSpr.flipH = 0
   end if
   if pCorrectLocZ then
@@ -671,14 +710,18 @@ on render me, tForceUpdate
   pSprite.locH = pScreenLoc[1]
   pSprite.locV = pScreenLoc[2]
   pMatteSpr.loc = pSprite.loc
-  pShadowSpr.loc = pSprite.loc + [pShadowFix, 0]
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.loc = pSprite.loc + [pShadowFix, 0]
+  end if
   if pBaseLocZ <> 0 then
     pSprite.locZ = pBaseLocZ
   else
     pSprite.locZ = pScreenLoc[3] + tOffZ + pBaseLocZ
   end if
   pMatteSpr.locZ = pSprite.locZ + 1
-  pShadowSpr.locZ = pSprite.locZ - 3
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.locZ = pSprite.locZ - 3
+  end if
   me.updateTypingSpriteLoc()
   pBuffer.fill(pBuffer.rect, pAlphaColor)
   repeat with tPart in pPartList
@@ -933,6 +976,13 @@ on getPartListNameBase me
   return "human.parts"
 end
 
+on releaseShadowSprite me
+  if ilk(pShadowSpr) = #sprite then
+    releaseSprite(pShadowSpr.spriteNum)
+    pShadowSpr = VOID
+  end if
+end
+
 on action_mv me, tProps
   pMainAction = "wlk"
   pMoving = 1
@@ -1166,9 +1216,26 @@ on action_sign me, props
   end if
   me.definePartListAction(pPartListSubSet["handLeft"], "sig")
   tSignObjID = "SIGN_EXTRA"
+  pExtraObjsActive.setaProp(tSignObjID, 1)
   if voidp(pExtraObjs[tSignObjID]) then
     pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))
   end if
   call(#show_sign, pExtraObjs, ["sprite": pSprite, "direction": pDirection, "signmember": tSignMem])
   pLeftHandUp = 1
+end
+
+on action_joingame me, tProps
+  if tProps.word.count < 3 then
+    return 0
+  end if
+  tSignObjID = "IG_ICON"
+  pExtraObjsActive.setaProp(tSignObjID, 1)
+  if pExtraObjs.findPos(tSignObjID) = 0 then
+    tObject = createObject(#temp, "IG HumanIcon Class")
+    if tObject = 0 then
+      return 0
+    end if
+    pExtraObjs.setaProp(tSignObjID, tObject)
+  end if
+  call(#show_ig_icon, pExtraObjs, ["userid": me.getID(), "gameid": tProps.word[2], "gametype": tProps.word[3], "locz": pSprite.locZ])
 end

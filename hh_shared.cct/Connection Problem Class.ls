@@ -53,6 +53,7 @@ on eventProc me, tEvent, tElemID
       "close", "alert_ok":
         return removeObject(me.getID())
       "alert_link":
+        executeMessage(#externalLinkClick, the mouseLoc)
         return openNetPage(getText("log_problem_url"))
     end case
   end if

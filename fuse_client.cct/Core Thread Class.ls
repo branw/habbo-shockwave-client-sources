@@ -181,18 +181,6 @@ on updateState me, tstate
       end if
       tURL = getExtVarPath()
       tMemName = tURL
-      if tURL contains "?" then
-        tParamDelim = "&"
-      else
-        tParamDelim = "?"
-      end if
-      if the moviePath contains "http://" then
-        tURL = tURL & tParamDelim & the milliSeconds
-      else
-        if tURL contains "http://" then
-          tURL = tURL & tParamDelim & the milliSeconds
-        end if
-      end if
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
       sendProcessTracking(9)
       if tMemNum = 0 then
@@ -239,18 +227,6 @@ on updateState me, tstate
       tMemName = tURL
       if tMemName = EMPTY then
         return me.updateState("load_casts")
-      end if
-      if tURL contains "?" then
-        tParamDelim = "&"
-      else
-        tParamDelim = "?"
-      end if
-      if the moviePath contains "http://" then
-        tURL = tURL & tParamDelim & the milliSeconds
-      else
-        if tURL contains "http://" then
-          tURL = tURL & tParamDelim & the milliSeconds
-        end if
       end if
       tMemNum = queueDownload(tURL, tMemName, #field)
       sendProcessTracking(12)

@@ -88,7 +88,6 @@ on showHotelClosedDisconnectNotice me, tOpenHour, tOpenMinute
     tText = replaceChunks(tText, "%m%", tMinute)
     tWndObj.getElement("error_title").setText(getText("Alert_ConnectionFailure"))
     tWndObj.getElement("error_text").setText(tText)
-    tWndObj.getElement("error_close").hide()
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcLoginFailed, me.getID(), #mouseUp)
   end if

@@ -236,6 +236,7 @@ on openBuyInHabboWeb me
   if getText("club_buy_url") = "club_buy_url" then
     return error(me, "key club_buy_url not defined!", #eventProcDialogMousedown, #major)
   else
+    executeMessage(#externalLinkClick, the mouseLoc)
     openNetPage("club_buy_url")
   end if
   return 1
@@ -268,8 +269,10 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
       if tSession.exists("user_checksum") then
         tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
+      executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL)
     "club_intro_link", "club_general_infolink":
+      executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage("club_info_url")
     "club_isp_buy":
       tSession = getObject(#session)
@@ -278,6 +281,7 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
       if tSession.exists("user_checksum") then
         tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
+      executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL, "_new")
     "club_button_1_period":
       tWndObj = getWindow(pDialogId)

@@ -63,6 +63,7 @@ on sendCreditRedeem me
 end
 
 on openHelpURL me
+  executeMessage(#externalLinkClick, the mouseLoc)
   openNetPage("credit_redeem_url")
   return 1
 end

@@ -17,6 +17,8 @@ on construct me
   registerMessage(#enterRoom, me.getID(), #showModtoolButton)
   registerMessage(#leaveRoom, me.getID(), #hideModtoolButton)
   registerMessage(#userClicked, me.getID(), #userClicked)
+  registerMessage(#gamesystem_constructed, me.getID(), #hideModtoolButton)
+  registerMessage(#gamesystem_deconstructed, me.getID(), #hideModtoolButton)
   return 1
 end
 
@@ -36,6 +38,8 @@ on deconstruct me
   pCurrCryData = [:]
   unregisterMessage(#userlogin, me.getID())
   unregisterMessage(#userClicked, me.getID())
+  unregisterMessage(#gamesystem_constructed, me.getID())
+  unregisterMessage(#gamesystem_deconstructed, me.getID())
   return 1
 end
 
@@ -185,10 +189,10 @@ end
 
 on buttonLocH me, tPos
   if tPos = 1 then
-    return 40
+    return 75
   else
     if tPos = 2 then
-      return 70
+      return 105
     end if
   end if
   return 5
@@ -377,11 +381,19 @@ on redrawCryWindow me
     tWndObj.getElement("hobba_header").setText(getText("hobba_emergency_help") && tName)
     tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_normal"))
   else
-    tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
-    tWndObj.getElement("hobba_header").setText(getText("hobba_cryforhelp") && tName)
-    tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
+    if tCategory = 3 then
+      tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
+      tWndObj.getElement("hobba_header").setText(getText("hobba_cryforhelp") && tName)
+      tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
+    else
+      if tCategory = 4 then
+        tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
+        tWndObj.getElement("hobba_header").setText(getText("hobba_im_cryforhelp") && tName)
+        tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
+      end if
+    end if
   end if
-  if tCategory = 3 then
+  if tCategory = 3 or tCategory = 4 then
     tWndObj.getElement("hobba_change_cfh_type").deactivate()
   else
     tWndObj.getElement("hobba_change_cfh_type").Activate()
@@ -566,6 +578,7 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
       "hobba_seelog":
         tUrlPrefix = getText("chatlog.url")
         if tUrlPrefix contains "http" then
+          executeMessage(#externalLinkClick, the mouseLoc)
           return openNetPage(tUrlPrefix & pCurrCryData[#url_id], "_new")
         else
           return error(me, "CFH log url prefix not defined or illegal:" && tUrlPrefix, #eventProcCryWnd, #minor)

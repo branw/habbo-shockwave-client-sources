@@ -71,6 +71,9 @@ end
 on feedHumanPreview me, tWindowTitle, tElemID, tTempPartImg
   if windowExists(tWindowTitle) then
     tElem = getWindow(tWindowTitle).getElement(tElemID)
+    if tElem = 0 then
+      return 0
+    end if
     tPrewImg = image(tElem.getProperty(#width), tElem.getProperty(#height), 16)
     tdestrect = tPrewImg.rect - tTempPartImg.rect
     tMargins = rect(0, 0, 0, 0)

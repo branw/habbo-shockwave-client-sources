@@ -161,7 +161,7 @@ on updateFriendRequest me, tRequestData, tstate
   end if
   case tstate of
     #rejected:
-      tMsg = [#integer: 1, #integer: integer(tRequestData[#id])]
+      tMsg = [#integer: 0, #integer: 1, #integer: integer(tRequestData[#id])]
       tConn = getConnection(getVariable("connection.info.id"))
       tConn.send("FRIENDLIST_DECLINEFRIEND", tMsg)
     #accepted:
@@ -178,19 +178,21 @@ on handleAllRequests me, tstate
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
-  tMsgList = [#integer: 0]
   tRequests = me.getPendingFriendRequests()
   if tRequests.count = 0 then
     return 1
   end if
+  tMsgList = [:]
+  tMsgList.addProp(#integer, 0)
+  tMsgList.addProp(#integer, tRequests.count)
   repeat with tRequest in tRequests
     tID = tRequest.getaProp(#id)
     tMsgList.addProp(#integer, integer(tID))
     tRequest[#state] = tstate
     pFriendRequestContainer.updateRequest(tRequest)
   end repeat
-  tMsgList[1] = tMsgList.count - 1
   if tstate = #accepted then
+    tMsgList.deleteAt(1)
     getConnection(getVariable("connection.info.id")).send("FRIENDLIST_ACCEPTFRIEND", tMsgList)
   else
     getConnection(getVariable("connection.info.id")).send("FRIENDLIST_DECLINEFRIEND", tMsgList)
@@ -272,6 +274,10 @@ on requestFriendListUpdate me
 end
 
 on externalFriendRequest me, tTargetUserName
+  if isFriendListFull() then
+    executeMessage(#alert, "console_fr_limit_exceeded_error")
+    return 0
+  end if
   if tTargetUserName = VOID or tTargetUserName = EMPTY then
     return 1
   end if

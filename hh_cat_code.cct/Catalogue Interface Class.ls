@@ -311,6 +311,7 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseLeave)
     end if
   end if
+  me.updatePurseSaldo()
   if not voidp(tWindowName) then
     tResult = tWndObj.merge(tWindowName)
     if tResult = 0 then
@@ -1175,7 +1176,24 @@ on hideAllWindows me
   me.hidePurchaseOk()
 end
 
+on updatePurseSaldo me
+  tWndObj = me.getCatalogWindow()
+  if objectp(tWndObj) then
+    if tWndObj.elementExists("catalog_credits_bottom") then
+      if getObject(#session).exists("user_walletbalance") then
+        tSaldo = getObject(#session).GET("user_walletbalance")
+      else
+        tSaldo = "-"
+      end if
+      tText = getText("catalog_coins_amount")
+      tText = replaceChunks(tText, "%amount%", tSaldo)
+      tWndObj.getElement("catalog_credits_bottom").setText(tText)
+    end if
+  end if
+end
+
 on eventProcCatalogue me, tEvent, tSprID, tParam
+  tloc = the mouseLoc
   if tSprID <> "close" and pLoadingFlag then
     return 0
   end if
@@ -1241,6 +1259,12 @@ on eventProcCatalogue me, tEvent, tSprID, tParam
                         getThread(#catalogue).getComponent().checkProductOrder(pSelectedProduct)
                       end if
                     else
+                      if tSprID contains "catalog_get_credits_bottom" then
+                        executeMessage(#externalLinkClick, tloc)
+                        openNetPage(getText("url_purselink"))
+                      else
+                        nothing()
+                      end if
                     end if
                   end if
                 end if
@@ -1297,6 +1321,7 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
       if tSession.exists("user_checksum") then
         tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
+      executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL)
       me.hideOrderInfo()
       pActiveOrderCode = EMPTY
@@ -1308,6 +1333,7 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
       if tSession.exists("user_checksum") then
         tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
+      executeMessage(#externalLinkClick, the mouseLoc)
       openNetPage(tURL, "_new")
       me.hideOrderInfo()
   end case

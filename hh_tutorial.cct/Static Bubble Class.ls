@@ -82,11 +82,18 @@ on selectPointerAndPosition me, tPointerIndex
   end case
 end
 
+on hideCloseButton me
+  tWndObj = getWindow(me.pWindowID)
+  if objectp(tWndObj) then
+    if tWndObj.elementExists("bubble_close") then
+      tElem = tWndObj.getElement("bubble_close")
+      tElem.setProperty(#visible, 0)
+    end if
+  end if
+end
+
 on eventHandler me, tEvent, tSpriteID, tParam
   if tSpriteID = "bubble_close" then
-    me.hide()
-    if threadExists("new_user_help") then
-      getThread("new_user_help").getComponent().setHelpItemClosed(pBubbleId)
-    end if
+    executeMessage(#NUH_close, pBubbleId)
   end if
 end

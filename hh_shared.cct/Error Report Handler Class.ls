@@ -24,7 +24,6 @@ on handle_error_report me, tMsg
   tErrorList[#errorId] = "SERVER-" & tErrorList[#errorId]
   me.getComponent().storeErrorReport(tErrorList)
   me.getInterface().showErrors()
-  serverError(tErrorList)
 end
 
 on regMsgList me, tBool

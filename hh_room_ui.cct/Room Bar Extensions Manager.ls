@@ -8,20 +8,12 @@ on construct me
   pFriendRequestData = [:]
   pVisibleItem = VOID
   pShowInstantFriendRequests = 1
-  registerMessage(#showInvitation, me.getID(), #registerInvitation)
-  registerMessage(#hideInvitation, me.getID(), #hideInvitation)
-  registerMessage(#acceptInvitation, me.getID(), #acceptInvitation)
-  registerMessage(#rejectInvitation, me.getID(), #rejectInvitation)
   registerMessage(#FriendRequestListOpened, me.getID(), #clearFriendRequestsFromStack)
   registerMessage(#updateFriendRequestCount, me.getID(), #viewNextItemInStack)
   return 1
 end
 
 on deconstruct me
-  unregisterMessage(#acceptInvitation, me.getID())
-  unregisterMessage(#rejectInvitation, me.getID())
-  unregisterMessage(#showInvitation, me.getID())
-  unregisterMessage(#hideInvitation, me.getID())
   unregisterMessage(#FriendRequestListOpened, me.getID())
   unregisterMessage(#updateFriendRequestCount, me.getID())
   return 1

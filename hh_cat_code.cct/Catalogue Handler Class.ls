@@ -145,8 +145,21 @@ on handle_purchasenotallowed me, tMsg
   return 0
 end
 
+on handle_purse me, tMsg
+  tPlaySnd = getObject(#session).exists("user_walletbalance")
+  tCredits = integer(getLocalFloat(tMsg.content.word[1]))
+  getObject(#session).set("user_walletbalance", tCredits)
+  me.getInterface().updatePurseSaldo()
+  executeMessage(#updateCreditCount, tCredits)
+  if tPlaySnd then
+    playSound("naw_snd_cash_cat", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
+  end if
+  return 1
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
+  tMsgs.setaProp(6, #handle_purse)
   tMsgs.setaProp(67, #handle_purchase_ok)
   tMsgs.setaProp(65, #handle_purchase_error)
   tMsgs.setaProp(68, #handle_purchase_nobalance)

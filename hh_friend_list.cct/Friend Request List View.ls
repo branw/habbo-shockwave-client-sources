@@ -179,10 +179,9 @@ on relayEvent me, tEvent, tLocX, tLocY
     else
       if tLocX > integer(getVariable("fr.requests.accept.offset.h")) and tRequest[#state] = #pending then
         if threadExists(#friend_list) then
-          tFriendListComponent = getThread(#friend_list).getComponent()
-          if tFriendListComponent.isFriendListFull() then
+          tComponent = getThread(#friend_list).getComponent()
+          if tComponent.isFriendListFull() then
             executeMessage(#alert, "console_fr_limit_exceeded_error")
-            me.hideFriendRequest()
             return 0
           end if
           tEventResult[#element] = #request_accept

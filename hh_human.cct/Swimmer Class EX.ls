@@ -56,6 +56,9 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   me.pSleeping = 0
   pSwim = 0
   pSwimAndStay = 0
+  repeat with i = 1 to me.pExtraObjsActive.count
+    me.pExtraObjsActive[i] = 0
+  end repeat
   me.pLocFix = point(0, 0)
   call(#reset, me.pPartList)
   if me.pMainAction = "sit" then
@@ -82,6 +85,16 @@ on Refresh me, tX, tY, tH
   me.arrangeParts()
   me.pSync = 0
   me.pChanges = 1
+  i = 1
+  repeat while i <= me.pExtraObjsActive.count
+    if me.pExtraObjsActive[i] = 0 then
+      me.pExtraObjs[i].deconstruct()
+      me.pExtraObjs.deleteAt(i)
+      me.pExtraObjsActive.deleteAt(i)
+      next repeat
+    end if
+    i = i + 1
+  end repeat
 end
 
 on getPartListNameBase me
@@ -197,6 +210,7 @@ on prepare me
 end
 
 on render me
+  call(#update, me.pExtraObjs)
   if not me.pChanges then
     return 
   end if

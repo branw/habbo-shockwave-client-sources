@@ -500,11 +500,16 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
           getThread(#registration).getComponent().openFigureUpdate()
         end if
       else
+        executeMessage(#externalLinkClick, the mouseLoc)
         openNetPage(getText("url_figure_editor"))
       end if
     "club_icon_image", "club_bottombar_text2":
       return executeMessage(#show_clubinfo)
     "im_icon":
       return executeMessage(#toggle_im)
+    "int_controller_image":
+      return executeMessage(#toggle_ig)
+    "int_brochure_image":
+      return executeMessage(#show_hide_catalogue)
   end case
 end

@@ -29,7 +29,13 @@ end
 
 on reserveSprite me, tClientID
   if pFreeSprList.count = 0 then
-    return error(me, "Out of free sprite channels!", #reserveSprite, #major)
+    executeMessage(#releaseSpritesLevel1)
+    if pFreeSprList.count = 0 then
+      executeMessage(#releaseSpritesLevel2)
+      if pFreeSprList.count = 0 then
+        fatalError(["error": "Out of free sprites"])
+      end if
+    end if
   end if
   tSprNum = pFreeSprList[1]
   tsprite = sprite(tSprNum)
@@ -58,6 +64,8 @@ on releaseSprite me, tSprNum
   tsprite.castNum = 0
   tsprite.cursor = 0
   tsprite.blend = 100
+  tsprite.skew = 0
+  tsprite.rotation = 0
   puppetSprite(tSprNum, 0)
   tsprite.locZ = VOID
   pFreeSprList.append(tSprNum)

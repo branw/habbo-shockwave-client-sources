@@ -23,7 +23,7 @@ on construct me
       end if
     end if
   end if
-  pFatalReportParamOrder = ["error", "version", "build", "os", "host", "port", "client_version", "mus_errorcode"]
+  pFatalReportParamOrder = ["error", "version", "build", "os", "host", "port", "client_version", "mus_errorcode", "error_id"]
   return 1
 end
 
@@ -163,6 +163,23 @@ on alertHook me, tErr, tMsgA, tMsgB
   return 1
 end
 
+on makeErrorId me
+  tSrc = chars(the date, 1, 5) & the milliSeconds
+  tDst = EMPTY
+  tAllowedChars = "0123456789"
+  tLength = 12
+  repeat with i = 1 to tSrc.length
+    tChar = tSrc.char[i]
+    if tAllowedChars contains tChar then
+      tDst = tDst & tChar
+    end if
+    if tDst.length >= tLength then
+      exit repeat
+    end if
+  end repeat
+  return tDst
+end
+
 on handleFatalError me, tErrorData
   tErrorUrl = EMPTY
   tParams = EMPTY
@@ -203,6 +220,7 @@ on handleFatalError me, tErrorData
   tErrorData["neterr_cast"] = getCastLoadManager().GetLastError()
   tErrorData["neterr_res"] = getDownloadManager().GetLastError()
   tErrorData["client_uptime"] = getClientUpTime()
+  tErrorData["error_id"] = makeErrorId()
   if variableExists("account_id") then
     tAccountID = getVariable("account_id")
     tAccoutnID = tAccountID mod 9999

@@ -1,4 +1,4 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector, pLastError
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector, pLastError, pConnectionEstablishing, pConnectionRetryDelay, pConnectionRetryCount, pConnectionTries
 
 on construct me
   if value(_player.productVersion) >= 11 then
@@ -18,6 +18,12 @@ on construct me
   pListenersPntr = getStructVariable("struct.pointer")
   me.setLogMode(getIntVariable("connection.log.level", 0))
   pLastError = 0
+  pConnectionEstablishing = 1
+  pConnectionRetryDelay = getIntVariable("connection.retry.delay", 2000)
+  pConnectionRetryCount = getIntVariable("connection.retry.count", 5)
+  pConnectionTries = 0
+  pHost = VOID
+  pPort = VOID
   return 1
 end
 
@@ -26,9 +32,15 @@ on deconstruct me
 end
 
 on connect me, tHost, tPort
-  sendProcessTracking(30)
-  pHost = tHost
-  pPort = tPort
+  if voidp(pHost) and voidp(pPort) then
+    sendProcessTracking(30)
+    pHost = tHost
+    pPort = tPort
+  end if
+  pConnectionTries = pConnectionTries + 1
+  if timeoutExists("RetryConnection") then
+    removeTimeout("RetryConnection")
+  end if
   if not checkForXtra("Multiusr") then
     return fatalError(["error": "mus_xtra_not_found"])
   end if
@@ -393,18 +405,36 @@ on xtraMsgHandler me
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
   if tErrCode <> 0 then
-    if pLogMode > 0 then
-      me.log("Connection" && me.getID() && "was disconnected")
-      me.log("host = " & pHost && ", port = " & pPort)
-      me.log(tNewMsg)
-    end if
     pLastError = tErrCode
     if ilk(tNewMsg) = #propList then
       pLastError = pLastError & "_" & tNewMsg[#subject]
     end if
-    me.disconnect()
-    return 0
+    if not pConnectionEstablishing then
+      if pLogMode > 0 then
+        me.log("Connection" && me.getID() && "was disconnected")
+        me.log("host = " & pHost && ", port = " & pPort)
+        me.log(tNewMsg)
+      end if
+      me.disconnect()
+      return 0
+    else
+      if pConnectionTries > pConnectionRetryCount then
+        if pLogMode > 0 then
+          me.log("Connection" && me.getID() && "was disconnected")
+          me.log("host = " & pHost && ", port = " & pPort)
+          me.log(tNewMsg)
+        end if
+        error(me, "Failed connection retry" && pConnectionTries && "times.", #xtraMsgHandler, #critical)
+        me.disconnect()
+        return 0
+      else
+        pConnectionOk = 0
+        createTimeout("RetryConnection", pConnectionRetryDelay, #connect, me.getID(), VOID, 1)
+        return 1
+      end if
+    end if
   end if
+  pConnectionEstablishing = 0
   if pEncryptionOn and pDecipherOn then
     tContent = pDecoder.decipher(tContent)
   end if

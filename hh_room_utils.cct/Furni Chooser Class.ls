@@ -89,12 +89,39 @@ on update me
     end if
     pObjList.setaProp("i" & tObj.getID(), tObj.getInfo().name)
   end repeat
+  tImgArray = []
   tObjStr = EMPTY
   repeat with i = 1 to pObjList.count
     tObjStr = tObjStr && i & "." && pObjList[i] & RETURN
+    if i >= 100 then
+      delete char -30003 of tObjStr
+      tImgArray.append(pWriterObj.render(tObjStr))
+      tObjStr = EMPTY
+    end if
   end repeat
-  delete char -30003 of tObjStr
-  tImg = pWriterObj.render(tObjStr)
+  if not (tObjStr = EMPTY) then
+    delete char -30003 of tObjStr
+    tImgArray.append(pWriterObj.render(tObjStr))
+  end if
+  tTotalHeight = 0
+  tMaxWidth = 0
+  repeat with i = 1 to tImgArray.count
+    tTotalHeight = tTotalHeight + tImgArray[i].height
+    if tImgArray[i].width > tMaxWidth then
+      tMaxWidth = tImgArray[i].width
+    end if
+  end repeat
+  if tImgArray.count = 0 then
+    tImg = image(1, 1, 8)
+  else
+    tImg = image(tMaxWidth, tTotalHeight, tImgArray[1].depth)
+    tYOffset = 0
+    repeat with i = 1 to tImgArray.count
+      tOffsetRect = tImgArray[i].rect + rect(0, tYOffset, 0, tYOffset)
+      tImg.copyPixels(tImgArray[i], tOffsetRect, tImgArray[i].rect)
+      tYOffset = tYOffset + tImgArray[i].height
+    end repeat
+  end if
   tElem = getWindow(pWndID).getElement("list")
   tElem.feedImage(tImg)
   pListHeight = tImg.height
@@ -146,6 +173,7 @@ on eventProcChooser me, tEvent, tSprID, tParam
           tItemObj = tRoomComponent.getItemObject(tObjID)
         end if
       end if
+      tSelectedObjIdWas = tRoomInt.getSelectedObject()
       if not (objectp(tActiveObj) or objectp(tItemObj)) then
         return 0
       end if
@@ -160,5 +188,8 @@ on eventProcChooser me, tEvent, tSprID, tParam
       tRoomInt.pSelectedType = ttype
       executeMessage(#showObjectInfo, ttype)
       tRoomInt.hideArrowHiliter()
+      if ttype = "item" and not (tSelectedObjIdWas = tObjID) then
+        tRoomComponent.getItemObject(tObjID).select()
+      end if
   end case
 end

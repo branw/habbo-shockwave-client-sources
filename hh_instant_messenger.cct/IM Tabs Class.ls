@@ -35,7 +35,7 @@ on getImage me
   return pTabsImage
 end
 
-on addTab me, tTabID, tFriend
+on addTab me, tTabID
   if pTabData.findPos(tTabID) > 0 then
     return 0
   end if
@@ -47,7 +47,7 @@ end
 
 on activateTab me, tTabID
   if voidp(pTabData.getaProp(tTabID)) then
-    return 0
+    me.addTab(tTabID)
   end if
   repeat with tTab in pTabData
     if tTab[#state] = #Active then
@@ -61,6 +61,9 @@ on activateTab me, tTabID
 end
 
 on highlightTab me, tTabID
+  if voidp(pTabData.findPos(tTabID)) then
+    me.addTab(tTabID)
+  end if
   tTab = pTabData.getaProp(tTabID)
   if tTab[#state] = #Active then
     return 1
@@ -210,25 +213,26 @@ on getHeadImage me, tUserID
   if voidp(tHeadImage) then
     tFriend = getObject(#friend_list_component).getFriendByID(tUserID)
     tFigure = tFriend.getaProp(#figure)
-    tHeadImage = me.renderHeadImage(tFigure)
+    tGender = tFriend.getaProp(#sex)
+    tHeadImage = me.renderHeadImage(tFigure, tGender)
     pHeadImages.setaProp(tUserID, tHeadImage)
   end if
   return tHeadImage
 end
 
-on updateHeadImage me, tTabID, tFigure
-  tHeadImage = me.renderHeadImage(tFigure)
+on updateHeadImage me, tTabID, tFigure, tGender
+  tHeadImage = me.renderHeadImage(tFigure, tGender)
   pHeadImages.setaProp(tTabID, tHeadImage)
   me.renderTabs()
 end
 
-on renderHeadImage me, tFigure
+on renderHeadImage me, tFigure, tGender
   if voidp(tFigure) or tFigure = EMPTY then
     return pTabPieces.getaProp(#tempHead)
   end if
   tFigureParser = getObject("Figure_System")
-  tParsedFigure = tFigureParser.parseFigure(tFigure)
-  tPartList = ["hd", "fc", "ey", "hr", "hrb", "ea", "fa", "ha", "he"]
-  tHeadImage = getObject("Figure_Preview").getHumanPartImg(tPartList, tParsedFigure, 2, "sh")
+  tPreviewObj = getObject("Figure_Preview")
+  tParsedFigure = tFigureParser.parseFigure(tFigure, tGender, "user")
+  tHeadImage = tPreviewObj.getHumanPartImg(#head, tParsedFigure, 2, "sh")
   return tHeadImage
 end

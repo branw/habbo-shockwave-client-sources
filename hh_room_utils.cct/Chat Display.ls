@@ -191,7 +191,8 @@ on getCustomItem me, tMessage
   if tChatItem = 0 then
     return 0
   end if
-  tItemID = "c_" & pActiveItemList.count + 1
+  pChatItemCount = pChatItemCount + 1
+  tItemID = pChatItemCount
   tMode = tMessage[#mode]
   tSourceLoc = tMessage.getaProp(#loc)
   tBalloonColor = tMessage.getaProp(#color)
@@ -224,8 +225,12 @@ on moveAllItemsUpBy me, tAmount
       if tItem.handler(#getType) then
         if tItem.getType() = "NORMAL" then
           pFreeChatItemList.add(tItem)
+        else
+          tItem.deconstruct()
         end if
+        next repeat
       end if
+      tItem.deconstruct()
     end if
   end repeat
 end

@@ -34,7 +34,12 @@ on prepare me, tdata
     the itemDelimiter = tDelim
     if me.pPartColors.ilk = #list then
       if me.pPartColors.count = 5 then
-        if me.pPartColors[3] = "#ffffff" then
+        tSilverDetected = 0
+        tCol = me.pPartColors[3]
+        if chars(tCol, 2, 3) = chars(tCol, 4, 5) and chars(tCol, 2, 3) = chars(tCol, 6, 7) then
+          tSilverDetected = 1
+        end if
+        if tSilverDetected then
           pWindowName = "plate_silver.window"
         else
           if me.pPartColors[3] = "#996600" then

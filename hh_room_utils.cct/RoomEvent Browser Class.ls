@@ -1,11 +1,11 @@
-property pWindowID, pDetailsWindowID, pEventListObj, pLineHeight, pEventID, pTypeCount, pTypeTextKeyBody, pSelectedType, pEditedEventData
+property pWindowID, pDetailsWindowID, pEventListObj, pLineHeight, pEventID, pTypeCount, pTypeTextKeyBody, pSelectedType, pEditedEventData, pView
 
 on construct me
   pWindowID = #eventBrowserWindow
   pDetailsWindowID = #eventBrowserDetailsWindow
   pEventListObj = createObject(#temp, "RoomEvent List Class")
   pTypeTextKeyBody = "roomevent_type_"
-  pSelectedType = 1
+  pSelectedType = 0
   me.ChangeWindowView(#browse)
   registerMessage(#allowRoomeventCreation, me.getID(), #enableCreateButton)
   registerMessage(#roomEventTypeCountUpdated, me.getID(), #updateDropMenu)
@@ -44,6 +44,7 @@ on ChangeWindowView me, tView
   end if
   createWindow(pWindowID, "habbo_basic_red.window")
   tWnd = getWindow(pWindowID)
+  pView = tView
   case tView of
     #browse:
       tWnd.merge("roomevent_browser.window")
@@ -107,7 +108,12 @@ on updateDropMenu me
   end if
   tTextList = []
   tTextKeys = []
-  repeat with tIndex = 1 to pTypeCount
+  if pView = #browse then
+    tStartIndex = 0
+  else
+    tStartIndex = 1
+  end if
+  repeat with tIndex = tStartIndex to pTypeCount
     tKey = pTypeTextKeyBody & tIndex
     tTextKeys.add(tKey)
     tTextList.add(getText(tKey))
@@ -154,20 +160,15 @@ on updateDetailsBubble me, tpoint
   tListRect = tListElem.getProperty(#rect)
   tScrollElem = tWnd.getElement("roomevent.browser.scroll")
   tScrollOffset = tScrollElem.getScrollOffset()
-  tLocY = tListRect[2] + tEventRect[2] - tScrollOffset
-  tLocX = tListRect[1] + 3
-  if not windowExists(pDetailsWindowID) then
-    createWindow(pDetailsWindowID, "roomevent_info.window")
-    tDetailsWindow = getWindow(pDetailsWindowID)
-    tSpriteList = tDetailsWindow.getProperty(#spriteList)
-    repeat with tsprite in tSpriteList
-      removeEventBroker(tsprite.spriteNum)
-    end repeat
-  else
-    tDetailsWindow = getWindow(pDetailsWindowID)
+  tLocY = tListRect[2] - tScrollOffset
+  tLocX = tListRect[1]
+  tTargetRect = tEventRect + rect(tLocX, tLocY, tLocX, tLocY)
+  if objectExists(pDetailsWindowID) then
+    removeObject(pDetailsWindowID)
   end if
-  tLocY = tLocY - tDetailsWindow.getProperty(#height) + 3
-  tDetailsWindow.moveTo(tLocX, tLocY)
+  tDetailsBubble = createObject(pDetailsWindowID, "Details Bubble Class")
+  tDetailsBubble.createWithContent("roomevent_info.window", tTargetRect, #right)
+  tDetailsWindow = tDetailsBubble.getWindowObj()
   tHost = getText("roomevent_host") && tEventData.getaProp(#hostName)
   tDetailsWindow.getElement("roomevent.info.host").setText(tHost)
   tText = QUOTE & tEventData.getaProp(#desc) & QUOTE
@@ -177,8 +178,8 @@ on updateDetailsBubble me, tpoint
 end
 
 on removeDetailsBubble me
-  if windowExists(pDetailsWindowID) then
-    removeWindow(pDetailsWindowID)
+  if objectExists(pDetailsWindowID) then
+    removeObject(pDetailsWindowID)
   end if
   pEventID = VOID
 end

@@ -12,23 +12,9 @@ on handleHelpItems me, tMsg
   tIdCount = tConn.GetIntFrom()
   tdata = [:]
   repeat with tNo = 1 to tIdCount
-    tID = tConn.GetIntFrom()
-    tKey = EMPTY
-    case tID of
-      1:
-        tKey = "own_user"
-      2:
-        tKey = "messenger"
-      3:
-        tKey = "navigator"
-      4:
-        tKey = "chat"
-      5:
-        tKey = "hand"
-      6:
-        tKey = "invite"
-    end case
-    if tKey <> EMPTY then
+    tKeyId = tConn.GetIntFrom()
+    tKey = me.getComponent().getHelpItemName(tKeyId)
+    if tKey <> 0 then
       tdata[tKey] = 1
     end if
   end repeat
@@ -45,24 +31,44 @@ on handleTutorsAvailable me, tMsg
   return 1
 end
 
-on handleInvitationExpired me, tMsg
-  me.getComponent().invitationExpired()
+on handleInvitingCompleted me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tAcceptCount = tConn.GetIntFrom()
+  me.getComponent().invitingCompleted(tAcceptCount)
 end
 
 on handleInvitationExists me, tMsg
   me.getComponent().invitationExists()
 end
 
+on handleInvitationSent me
+  me.getComponent().invitingStarted()
+end
+
+on handleGuideFound me
+  me.getComponent().guideFound()
+end
+
+on handleInviterLeftRoom me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tRoomID = tConn.GetIntFrom()
+  me.getComponent().inviterLeftRoom(string(tRoomID))
+end
+
 on registerServerMessages me, tBool
   tMsgs = [:]
   tMsgs.setaProp(352, #handleHelpItems)
   tMsgs.setaProp(356, #handleTutorsAvailable)
-  tMsgs.setaProp(357, #handleInvitationExpired)
+  tMsgs.setaProp(357, #handleInvitingCompleted)
   tMsgs.setaProp(358, #handleInvitationExists)
+  tMsgs.setaProp(421, #handleInvitationSent)
+  tMsgs.setaProp(423, #handleGuideFound)
+  tMsgs.setaProp(424, #handleInviterLeftRoom)
   tCmds = [:]
   tCmds.setaProp("MSG_REMOVE_ACCOUNT_HELP_TEXT", 313)
   tCmds.setaProp("MSG_GET_TUTORS_AVAILABLE", 355)
   tCmds.setaProp("MSG_INVITE_TUTORS", 356)
+  tCmds.setaProp("MSG_CANCEL_TUTOR_INVITATIONS", 359)
   if tBool then
     registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)

@@ -55,6 +55,11 @@ on setKey me, tMyKey, tMode
       repeat with i = 0 to 255
         pSbox[i + 1] = i
       end repeat
+    #initPremix:
+      repeat with i = 0 to 255
+        pKey[i + 1] = charToNum(tMyKeyS.char[i mod length(tMyKeyS) + 1])
+        pSbox[i + 1] = i
+      end repeat
   end case
   j = 0
   repeat with i = 0 to 255
@@ -65,6 +70,9 @@ on setKey me, tMyKey, tMode
   end repeat
   i = 0
   j = 0
+  if tMode = #initPremix then
+    me.preMixEncodeSbox("1wz8rzgiv87708l9oi7ot8l9smdqv5yvzz8tavkyuoi9p3kgrrq7r5p53kchnb5hly8jkfx5hsoo6imx8o5ktczwdst8dooa7r331wkrw8zi8789io89mq5vztvyo93gr755khbhyjf5soixokcws8oar3wr", 17)
+  end if
 end
 
 on encipher me, tdata

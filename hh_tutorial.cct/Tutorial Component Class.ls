@@ -163,6 +163,7 @@ on selectTopic me, tTopicID
   tURLKey = tTopicName & "_url"
   if textExists(tURLKey) then
     tURL = getText(tURLKey)
+    executeMessage(#externalLinkClick, the mouseLoc)
     openNetPage(tURL)
   end if
   me.pCurrentTopicID = tTopicID
