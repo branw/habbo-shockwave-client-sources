@@ -17,22 +17,22 @@ end
 
 on create me, tid, tTime, tHandler, tClientID, tArgument, tIterations
   if me.exists(tid) then
-    return error(me, "Timeout already registered:" && tid, #create, #major)
+    return error(me, "Timeout already registered:" && tid, #create)
   end if
   if not integerp(tTime) then
-    return error(me, "Integer expected:" && tTime, #create, #major)
+    return error(me, "Integer expected:" && tTime, #create)
   end if
   if not symbolp(tHandler) then
-    return error(me, "Symbol expected:" && tHandler, #create, #major)
+    return error(me, "Symbol expected:" && tHandler, #create)
   end if
   tObjMngr = getObjectManager()
   if tObjMngr.exists(tClientID) then
     if not tObjMngr.GET(tClientID).handler(tHandler) then
-      return error(me, "Handler not found in object:" && tHandler && tClientID, #create, #major)
+      return error(me, "Handler not found in object:" && tHandler && tClientID, #create)
     end if
   else
     if not voidp(tClientID) then
-      return error(me, "Object ID or VOID expected:" && tClientID, #create, #major)
+      return error(me, "Object ID or VOID expected:" && tClientID, #create)
     end if
   end if
   tUniqueId = "Timeout" && getUniqueID()
@@ -50,7 +50,7 @@ end
 
 on GET me, tid
   if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #GET, #minor)
+    return error(me, "Item not found:" && tid, #GET)
   end if
   tTask = me.pItemList[tid]
   if voidp(tTask[#client]) then
@@ -67,7 +67,7 @@ end
 
 on Remove me, tid
   if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #Remove, #minor)
+    return error(me, "Item not found:" && tid, #Remove)
   end if
   tObjMngr = getObjectManager()
   tObject = tObjMngr.GET(me.pItemList[tid][#uniqueid])

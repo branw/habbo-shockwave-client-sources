@@ -195,7 +195,7 @@ on checkLoopData me
   end if
   tSoundChannel = sound(pSongChannels[tChannel])
   if ilk(tSoundChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pSongChannels[tChannel], #checkLoopData, #major)
+    return error(me, "Sound channel bug:" && pSongChannels[tChannel], #checkLoopData)
   end if
   tPlayList = tSoundChannel.getPlaylist()
   tLength = 0
@@ -211,7 +211,7 @@ end
 on startSamplePreview me, tParams
   tSuccess = playSoundInChannel(tParams.name, pPreviewChannel)
   if not tSuccess then
-    return error(me, "Sound could not be started", #startSamplePreview, #minor)
+    return error(me, "Sound could not be started", #startSamplePreview)
   end if
   return 1
 end
@@ -219,7 +219,7 @@ end
 on stopSamplePreview me
   tSuccess = stopSoundChannel(pPreviewChannel)
   if not tSuccess then
-    return error(me, "Sound could not be stopped", #stopSamplePreview, #minor)
+    return error(me, "Sound could not be stopped", #stopSamplePreview)
   end if
   return 1
 end

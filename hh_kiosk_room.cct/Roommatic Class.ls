@@ -1,17 +1,17 @@
 on select me
   if not threadExists(#room) then
-    return error(me, "Room thread not found!!!", #select, #major)
+    return error(me, "Room thread not found!!!", #select)
   end if
   if not threadExists(#roomkiosk) then
     if FindCastNumber("habbo_kiosk_room") > 0 then
       initThread(FindCastNumber("habbo_kiosk_room"))
     else
-      return error(me, "Room kiosk cast not found!!!", #select, #major)
+      return error(me, "Room kiosk cast not found!!!", #select)
     end if
   end if
   tUserObj = getThread(#room).getComponent().getOwnUser()
   if not tUserObj then
-    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select, #major)
+    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select)
   end if
   case me.pDirection[1] of
     4:

@@ -29,8 +29,8 @@ on getErrorManager
   return gError
 end
 
-on error tObject, tMsg, tMethod, tErrorLevel
-  return getErrorManager().error(tObject, tMsg, tMethod, tErrorLevel)
+on error tObject, tMsg, tMethod
+  return getErrorManager().error(tObject, tMsg, tMethod)
 end
 
 on SystemAlert tObject, tMsg, tMethod

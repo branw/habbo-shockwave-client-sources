@@ -13,13 +13,13 @@ end
 
 on create me, tid, tHost, tPort
   if not symbolp(tid) and not stringp(tid) then
-    return error(me, "Symbol or string expected:" && tid, #create, #major)
+    return error(me, "Symbol or string expected:" && tid, #create)
   end if
   if not stringp(tHost) then
-    return error(me, "String expected:" && tHost, #create, #major)
+    return error(me, "String expected:" && tHost, #create)
   end if
   if not integerp(tPort) then
-    return error(me, "Integer expected:" && tPort, #create, #major)
+    return error(me, "Integer expected:" && tPort, #create)
   end if
   if getIntVariable("connection.log.level") = 2 and the runMode contains "Author" then
     if not memberExists("connectionLog.text") then
@@ -33,7 +33,7 @@ on create me, tid, tHost, tPort
   end if
   if not me.exists(tid) then
     if not createObject(tid, getClassVariable(pClassString)) then
-      return error(me, "Failed to initialize connection:" && tid, #create, #major)
+      return error(me, "Failed to initialize connection:" && tid, #create)
     end if
     me.pItemList.add(tid)
   end if
@@ -68,11 +68,11 @@ end
 
 on registerListener me, tid, tObjID, tMsgList
   if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener, #major)
+    return error(me, "Invalid message header ID:" && tid, #registerListener)
   end if
   tObject = getObject(tObjID)
   if tObject = 0 then
-    return error(me, "Object not found:" && tObjID, #registerListener, #major)
+    return error(me, "Object not found:" && tObjID, #registerListener)
   end if
   if voidp(pListenerList[tid]) then
     tPtr = getStructVariable("struct.pointer")
@@ -85,7 +85,7 @@ on registerListener me, tid, tObjID, tMsgList
     tMsg = tMsgList.getPropAt(i)
     tMethod = tMsgList[i]
     if not tObject.handler(tMethod) then
-      error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener, #major)
+      error(me, "Method not found:" && tMethod & "/" & tObjID, #registerListener)
       next repeat
     end if
     if voidp(tPtr.getaProp(#value).getaProp(tMsg)) then
@@ -98,7 +98,7 @@ end
 
 on unregisterListener me, tid, tObjID, tMsgList
   if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener, #major)
+    return error(me, "Invalid message header ID:" && tid, #registerListener)
   end if
   tPtr = pListenerList[tid]
   if voidp(tPtr) then
@@ -109,8 +109,7 @@ on unregisterListener me, tid, tObjID, tMsgList
     tMsg = tMsgList.getPropAt(i)
     tMethod = tMsgList[i]
     if voidp(tList.getaProp(tMsg)) then
-      error(me, "No listeners for message:" && tMsg && "/" && tid, #unregisterListener, #minor)
-      next repeat
+      return error(me, "No listeners for message:" && tMsg && "/" && tid, #unregisterListener)
     end if
     repeat with j = 1 to tList.getaProp(tMsg).count
       tCallback = tList.getaProp(tMsg)[j]
@@ -125,7 +124,7 @@ end
 
 on registerCommands me, tid, tObjID, tCmdList
   if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener, #major)
+    return error(me, "Invalid message header ID:" && tid, #registerListener)
   end if
   if voidp(pCommandsList[tid]) then
     tPtr = getStructVariable("struct.pointer")
@@ -143,7 +142,7 @@ on registerCommands me, tid, tObjID, tCmdList
     tNew = tBy1 & tBy2
     if tOld <> VOID then
       if tOld <> tNew then
-        error(me, "Registered command override:" && tCmd && "/" && tOld && "->" && tNew, #minor)
+        error(me, "Registered command override:" && tCmd && "/" && tOld && "->" && tNew)
       end if
     end if
     tPtr.getaProp(#value).setaProp(tCmd, tNew)
@@ -153,7 +152,7 @@ end
 
 on unregisterCommands me, tid, tObjID, tCmdList
   if tid.ilk <> #symbol and tid.ilk <> #string then
-    return error(me, "Invalid message header ID:" && tid, #registerListener, #major)
+    return error(me, "Invalid message header ID:" && tid, #registerListener)
   end if
   tPtr = pCommandsList[tid]
   if voidp(tPtr) then

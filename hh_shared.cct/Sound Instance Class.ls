@@ -4,7 +4,7 @@ on define me, tMemName, tPriority, tProps
   pMemName = tMemName
   pMember = member(getmemnum(tMemName))
   if pMember.type <> #sound then
-    return error(me, "Sound member not found or not a sound:" && tMemName, #define, #minor)
+    return error(me, "Sound member not found or not a sound:" && tMemName, #define)
   end if
   pPriority = tPriority
   if listp(tProps) then

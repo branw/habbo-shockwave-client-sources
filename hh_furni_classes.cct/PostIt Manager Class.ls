@@ -68,7 +68,7 @@ on setItemData me, tMsg
   pText = tText
   tObject = getThread(#room).getComponent().getItemObject(string(pActivePostItId))
   if tObject = 0 then
-    return error(me, "Couldn't find stickie:" && pActivePostItId, #setItemData, #major)
+    return error(me, "Couldn't find stickie:" && pActivePostItId, #setItemData)
   end if
   if tObject.getClass() = "post.it.vd" then
     tWndType = "habbo_stickie_vd.window"
@@ -91,7 +91,7 @@ on setItemData me, tMsg
   tWindow.moveTo(pLocX, pLocY)
   tWindow.getElement("stickies_text_field").getProperty(#sprite).ink = 36
   tWindow.getElement("stickies_text_field").setText(pText)
-  tWindow.registerProcedure(#eventProcMouseUp, me.getID(), #mouseUp)
+  tWindow.registerProcedure(#eventProcMouseDown, me.getID(), #mouseDown)
   tWindow.registerProcedure(#eventProcKeyDown, me.getID(), #keyDown)
   if tWndType = "habbo_stickies.window" then
     if pIsOwner or pCanRemoveStickies then
@@ -138,7 +138,7 @@ on setColor me, tColor, tByUser
   end if
 end
 
-on eventProcMouseUp me, tEvent, tElemID, tParam, tWndID
+on eventProcMouseDown me, tEvent, tElemID, tParam, tWndID
   if getWindow(tWndID).getElement(tElemID).getProperty(#blend) = 100 then
     case tElemID of
       "stickies_close_button":
@@ -171,7 +171,7 @@ end
 on eventProcKeyDown me, tEvent, tSprID, tParam
   if tSprID = "stickies_text_field" then
     if the selStart < length(pText) and pIsController = 0 then
-      error(me, "Cannot edit postIts - only add!", #eventProcKeyDown, #minor)
+      error(me, "Cannot edit postIts - only add!", #eventProcKeyDown)
       return 1
     end if
     pChanged = 1

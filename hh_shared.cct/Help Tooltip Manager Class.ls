@@ -17,7 +17,7 @@ end
 
 on createHelpTooltip me, tParams
   if tParams.count < 2 then
-    return error(me, "Wrong param count", #createHelpTooltip, #major)
+    return error(me, "Wrong param count", #createHelpTooltip)
   end if
   tMsg = getProp(tParams, #Msg)
   if textExists(tMsg) then
@@ -41,7 +41,7 @@ on createTooltipToRect me, tMsg, tRect
     return 0
   end if
   if ilk(tRect) <> #rect then
-    return error(me, "No rect", #createTooltipToRect, #major)
+    return error(me, "No rect", #createTooltipToRect)
   end if
   tSpacing = 7
   tStageWidth = the stageRight - the stageLeft
@@ -61,7 +61,7 @@ end
 
 on createTooltipToPoint me, tMsg, tloc
   if ilk(tloc) <> #point then
-    return error(me, "No point", #createTooltipToPoint, #major)
+    return error(me, "No point", #createTooltipToPoint)
   end if
   tLayout = "help_tooltip.window"
   tLineWidth = pTipWidth

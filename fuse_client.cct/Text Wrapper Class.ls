@@ -142,7 +142,7 @@ on createImgFromTxt me
         if textExists(pFontData[#key]) then
           pTextMem.text = getTextManager().GET(pFontData[#key])
         else
-          error(me, "Text not found:" && pFontData[#key], #createImgFromTxt, #minor)
+          error(me, "Text not found:" && pFontData[#key], #createImgFromTxt)
           pTextMem.text = pFontData[#key]
         end if
       end if

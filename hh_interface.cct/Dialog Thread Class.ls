@@ -1,9 +1,8 @@
-property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag, pChosenHelpRadio, pHelpChoiceCount, pCfhType, pUrlList
+property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag, pChosenHelpRadio, pHelpChoiceCount, pCfhType
 
 on construct me
   pWindowList = []
   pAlertList = []
-  pUrlList = [:]
   pDefWndType = "habbo_basic.window"
   pReadyFlag = 0
   registerMessage(#openGeneralDialog, me.getID(), #showDialog)
@@ -38,7 +37,6 @@ on deconstruct me
   end if
   pWindowList = []
   pAlertList = []
-  pUrlList = [:]
   pReadyFlag = 0
   unregisterMessage(#openGeneralDialog, me.getID())
   unregisterMessage(#alert, me.getID())
@@ -47,7 +45,7 @@ end
 
 on countHelpChoices me
   if not textExists("help_pointer_1") then
-    error(me, "No help choices defined. All go to emergency help.", #countHelpChoices, #minor)
+    error(me, "No help choices defined. All go to emergency help.", #countHelpChoices)
     return 0
   end if
   repeat with i = 2 to 7
@@ -63,11 +61,14 @@ on ShowAlert me, tProps
     me.buildResources()
   end if
   if voidp(tProps) then
-    return error(me, "Properties for window expected!", #showHideWindow, #minor)
+    return error(me, "Properties for window expected!", #showHideWindow)
   end if
   if stringp(tProps) then
     tProps = [#Msg: tProps]
   end if
+  tText = getText(tProps[#Msg])
+  tWndTitle = getText("win_error", "Notice!")
+  tTextImg = getWriter(pWriterPlain).render(tText).duplicate()
   if voidp(tProps[#id]) then
     tActualID = "alert" && the milliSeconds
   else
@@ -78,86 +79,61 @@ on ShowAlert me, tProps
   else
     tSpecial = VOID
   end if
-  if stringp(tProps[#title]) then
-    tTitle = getText(tProps[#title])
-    getWriter(pWriterBold).define([#alignment: #center, #color: rgb(0, 0, 0)])
-    tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
-  end if
-  if textExists(tProps[#Msg]) then
-    tText = getText(tProps[#Msg])
-  else
-    tText = tProps[#Msg]
-  end if
-  tTextImg = getWriter(pWriterPlain).render(tText).duplicate()
-  tURL = me.retrieveURL(tProps)
-  if not voidp(tURL) then
-    pUrlList.setaProp(tActualID, tURL)
-    tLinkLabel = getText("more_info_link")
-    tLinkImg = getWriter(pWriterLink).render(tLinkLabel).duplicate()
-  end if
   if pAlertList.getOne(tActualID) then
     me.removeDialog(tActualID, pAlertList)
   end if
   if not createWindow(tActualID, VOID, VOID, VOID, tSpecial) then
     return 0
   end if
-  tWndTitle = getText("win_error", "Notice!")
   tWndObj = getWindow(tActualID)
   tWndObj.setProperty(#title, tWndTitle)
   tWndObj.merge(pDefWndType)
-  tWndObj.merge("habbo_alert_a.window")
-  tTitleElem = tWndObj.getElement("alert_title")
-  tTextElem = tWndObj.getElement("alert_text")
-  tLinkElem = tWndObj.getElement("alert_link")
-  tOffsetH = 0
-  tOffsetW = 0
-  if voidp(tTitle) then
-    tTitleElem.hide()
-  else
+  if stringp(tProps[#title]) then
+    tWndObj.merge("habbo_alert_a.window")
+    tTitle = getText(tProps[#title])
+    getWriter(pWriterBold).define([#alignment: #center, #color: rgb(0, 0, 0)])
+    tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
+    tTitleElem = tWndObj.getElement("alert_title")
     tTitleElem.feedImage(tTitleImg)
-    tOffsetH = tOffsetH + tTitleImg.height - tTitleElem.getProperty(#height)
-    tWidth = tTitleImg.width - tTitleElem.getProperty(#width)
-    if tWidth > 0 and tWidth > tOffsetW then
-      tOffsetW = tWidth
-    end if
-  end if
-  if voidp(tText) then
-    tTextElem.hide()
+    tTitleWidth = tTitleImg.width
+    tTitleHeight = tTitleImg.height
   else
-    tTextElem.feedImage(tTextImg)
-    tTextElem.moveBy(0, tOffsetH)
-    tOffsetH = tOffsetH + tTextImg.height - tTextElem.getProperty(#height)
-    tWidth = tTextImg.width - tTextElem.getProperty(#width)
-    if tWidth > 0 and tWidth > tOffsetW then
-      tOffsetW = tWidth
-    end if
+    tTitleWidth = 0
+    tTitleHeight = 0
+    tWndObj.merge("habbo_alert_b.window")
+    tTitle = EMPTY
   end if
-  if voidp(tURL) then
-    tLinkElem.hide()
+  tTextElem = tWndObj.getElement("alert_text")
+  tWidth = tTextElem.getProperty(#width)
+  tHeight = tTextElem.getProperty(#height)
+  ttextimgwidth = tTextImg.width
+  if ttextimgwidth < tWidth then
+    tTextElem.setProperty(#width, ttextimgwidth)
+    ttextv = tTextElem.getProperty(#locV)
+    ttexth = tTextElem.getProperty(#locH)
+    tTextElem.moveTo(tWndObj.getProperty(#width) / 2 - ttextimgwidth / 2 - ttexth, ttextv)
+  end if
+  tTextElem.moveBy(0, tTitleHeight)
+  tOffW = 0
+  tOffH = 0
+  tTextElem.feedImage(tTextImg)
+  if tTitleWidth > tTextImg.width then
+    if tWidth < tTitleWidth then
+      tOffW = tTitleWidth - tWidth
+    end if
   else
-    tLinkElem.feedImage(tLinkImg)
-    tLinkElem.moveBy(0, tOffsetH)
-    tOffsetH = tOffsetH + tLinkImg.height - tLinkElem.getProperty(#height)
-    tWidth = tLinkImg.width - tLinkElem.getProperty(#width)
-    if tWidth > 0 and tWidth > tOffsetW then
-      tOffsetW = tWidth
+    if tWidth < tTextImg.width then
+      tOffW = tTextImg.width - tWidth
     end if
   end if
-  tWndObj.resizeBy(tOffsetW, tOffsetH)
-  if not voidp(tTitle) then
-    tLocV = tTitleElem.getProperty(#locV)
-    tLocH = tTitleElem.getProperty(#locH)
-    tTitleElem.moveTo((tWndObj.getProperty(#width) - tTitleImg.width) / 2 - tLocH, tLocV)
+  if tHeight < tTextImg.height + tTitleHeight then
+    tOffH = tTextImg.height + tTitleHeight - tHeight
   end if
-  if not voidp(tText) then
-    tLocV = tTextElem.getProperty(#locV)
-    tLocH = tTextElem.getProperty(#locH)
-    tTextElem.moveTo((tWndObj.getProperty(#width) - tTextImg.width) / 2 - tLocH, tLocV)
-  end if
-  if not voidp(tURL) then
-    tLocV = tLinkElem.getProperty(#locV)
-    tLocH = tLinkElem.getProperty(#locH)
-    tLinkElem.moveTo((tWndObj.getProperty(#width) - tLinkImg.width) / 2 - tLocH, tLocV)
+  tWndObj.resizeBy(tOffW, tOffH)
+  if tTitle <> EMPTY then
+    tTitleV = tTitleElem.getProperty(#locV)
+    tTitleH = tTitleElem.getProperty(#locH)
+    tTitleElem.moveTo(tWndObj.getProperty(#width) / 2 - tTitleWidth / 2 - tTitleH, tTitleV)
   end if
   tWndObj.center()
   tLocOff = pAlertList.count * 10
@@ -224,24 +200,6 @@ on showDialog me, tWndID, tProps
   end case
 end
 
-on retrieveURL me, tProps
-  if not voidp(tProps.getaProp(#url)) then
-    tURL = tProps.getaProp(#url)
-  end if
-  tPostfixList = ["_url", "_URL", "_Url"]
-  repeat with tPostfix in tPostfixList
-    tKey = tProps[#Msg] & tPostfix
-    if textExists(tKey) then
-      tURL = getText(tKey)
-      exit repeat
-    end if
-  end repeat
-  if tURL starts "http://" or tURL starts "https://" then
-    return tURL
-  end if
-  return VOID
-end
-
 on buildResources me
   pWriterPlain = "dialog_writer_plain"
   pWriterLink = "dialog_writer_link"
@@ -275,12 +233,9 @@ end
 on removeDialog me, tWndTitle, tWndList
   if tWndList.getOne(tWndTitle) then
     tWndList.deleteOne(tWndTitle)
-    if not voidp(pUrlList.getaProp(tWndTitle)) then
-      pUrlList.deleteProp(tWndTitle)
-    end if
     return removeWindow(tWndTitle)
   else
-    return error(me, "Attempted to remove unknown dialog:" && tWndTitle, #removeDialog, #minor)
+    return error(me, "Attempted to remove unknown dialog:" && tWndTitle, #removeDialog)
   end if
 end
 
@@ -365,7 +320,7 @@ on helpChoiceMade me
       return me.showDialog("call_for_help")
     end if
   end if
-  return error(me, "Help pointer " & pChosenHelpRadio & " not working, check syntax.", #helpChoiceMade, #major)
+  return error(me, "Help pointer " & pChosenHelpRadio & " not working, check syntax.", #helpChoiceMade)
 end
 
 on helpRadioClicked me, tChoiceNum, tWndID
@@ -396,9 +351,6 @@ on eventProcAlert me, tEvent, tElemID, tParam, tWndID
     case tElemID of
       "alert_ok", "close":
         return me.removeDialog(tWndID, pAlertList)
-      "alert_link":
-        tURL = pUrlList.getaProp(tWndID)
-        return openNetPage(tURL)
     end case
   end if
 end

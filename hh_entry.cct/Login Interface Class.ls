@@ -94,7 +94,7 @@ end
 
 on tryLogin me
   if not windowExists(#login_b) then
-    return error(me, "Window not found:" && #login_b, #tryLogin, #major)
+    return error(me, "Window not found:" && #login_b, #eventProcLogin)
   end if
   tWndObj = getWindow(#login_b)
   tUserName = tWndObj.getElement("login_username").getText()

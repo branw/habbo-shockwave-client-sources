@@ -158,7 +158,7 @@ end
 
 on handle_error me, tMsg
   tErr = tMsg.content
-  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error, #dummy)
+  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
   case tErr of
     "Only 10 favorite rooms allowed!", "nav_error_toomanyfavrooms":
       executeMessage(#alert, [#Msg: getText("nav_error_toomanyfavrooms")])

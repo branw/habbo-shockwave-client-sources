@@ -4,7 +4,7 @@ on define me, tChannelNum
   pChannelNum = tChannelNum
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Invalid sound channel:" && pChannelNum, #define, #major)
+    return error(me, "Invalid sound channel:" && pChannelNum, #define)
   end if
   pCounter = 0
   pEndTime = 0
@@ -17,7 +17,7 @@ end
 on setSoundState me, tstate
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #setSoundState, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #setSoundState)
   end if
   if tstate then
     tChannel.volume = pVolume
@@ -32,7 +32,7 @@ on reset me
   pEndTime = 0
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #reset, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #reset)
   end if
   tChannel.setPlayList([])
   tChannel.stop()
@@ -47,7 +47,7 @@ on play me, tSoundObj
   end if
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #play, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #play)
   end if
   if tSoundObj.getProperty(#infiniteloop) then
     tLoopCount = 0
@@ -81,7 +81,7 @@ on queue me, tSoundObj
   pVolume = tProps[#volume]
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #queue, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #queue)
   end if
   tChannel.queue(tProps)
   return 1
@@ -90,7 +90,7 @@ end
 on startPlaying me
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #startPlaying, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #startPlaying)
   end if
   tChannel.play()
   return 1
@@ -99,7 +99,7 @@ end
 on getTimeRemaining me
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #getTimeRemaining, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #getTimeRemaining)
   end if
   if not tChannel.isBusy() and not pReserved then
     return 0
@@ -128,7 +128,7 @@ end
 on dump me
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Sound channel bug:" && pChannelNum, #dump, #major)
+    return error(me, "Sound channel bug:" && pChannelNum, #dump)
   end if
   tName = "<none>"
   if tChannel.isBusy() then

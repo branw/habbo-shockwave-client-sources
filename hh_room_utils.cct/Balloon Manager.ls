@@ -222,7 +222,7 @@ on createBalloon me, tMsg
     if pAvailableBalloons.count > 0 then
       tUserObj = getThread(#room).getComponent().getUserObject(tMsg[#id])
       if not tUserObj then
-        return error(me, "User object not found:" && tMsg[#id], #createBalloon, #major)
+        return error(me, "User object not found:" && tMsg[#id], #createBalloon)
       end if
       pBalloonColor = tUserObj.getPartColor("ch")
       if ilk(pBalloonColor) <> #color then

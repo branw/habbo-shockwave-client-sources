@@ -3,7 +3,7 @@ property pTrackingURL
 on construct me
   pTrackingURL = getVariable("stats.tracking.url")
   if pTrackingURL = 0 or pTrackingURL = EMPTY then
-    error(me, "Stats tracking URL not found!", #construct, #minor)
+    error(me, "Stats tracking URL not found!", #construct)
   end if
   registerListener(getVariable("connection.info.id", #Info), me.getID(), [166: #updateStats])
   registerMessage(#sendTrackingData, me.getID(), #updateStats)

@@ -15,7 +15,7 @@ end
 
 on create me, tid, tMetrics
   if not voidp(pItemList[tid]) then
-    return error(me, "Writer already exists:" && tid, #create, #major)
+    return error(me, "Writer already exists:" && tid, #create)
   end if
   tObj = getObjectManager().create(#temp, pWriterClass)
   if not tObj then
@@ -36,7 +36,7 @@ end
 on Remove me, tid
   tObj = pItemList[tid]
   if voidp(tObj) then
-    return error(me, "Writer not found:" && tid, #Remove, #minor)
+    return error(me, "Writer not found:" && tid, #Remove)
   end if
   tObj.deconstruct()
   return pItemList.deleteProp(tid)

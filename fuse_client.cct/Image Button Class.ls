@@ -44,7 +44,7 @@ on UpdateImageObjects me, tPalette, tstate, tMemName
   end if
   tMemNum = getmemnum(tMemName)
   if tMemNum = 0 then
-    return error(me, "Member not found:" && tMemName, #UpdateImageObjects, #minor)
+    return error(me, "Member not found:" && tMemName, #UpdateImageObjects)
   end if
   tmember = member(tMemNum)
   tImage = tmember.image.duplicate()

@@ -7,7 +7,7 @@ on prepare me, tdata
   pDate = EMPTY
   pWindowName = "plate_gold.window"
   if tdata.ilk <> #propList then
-    return error(me, "Incorrect data", #prepare, #major)
+    return error(me, "Incorrect data", #prepare)
   end if
   if voidp(tdata[#stuffdata]) then
     return 1
@@ -28,7 +28,7 @@ on prepare me, tdata
         pName = EMPTY
         pDate = EMPTY
         pMsg = EMPTY
-        error(me, "Name and date missing", #prepare, #minor)
+        error(me, "Name and date missing", #prepare)
       end if
     end if
     the itemDelimiter = tDelim

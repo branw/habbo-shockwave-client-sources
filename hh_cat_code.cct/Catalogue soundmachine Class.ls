@@ -19,7 +19,7 @@ on setPreviewState me, tstate
   tWindowObj = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tWindowObj then
     tWindowObj = VOID
-    return error(me, "Couldn't access catalogue window!", #setPreviewState, #major)
+    return error(me, "Couldn't access catalogue window!", #construct)
   end if
   tPreviewTextElem = "play_preview_text"
   tPreviewIconElem = "play_preview_icon"
@@ -60,10 +60,9 @@ on prepareItemPreview me, tItem
   tPreviewPackage = pSoundPackagePreviewPrefix & tSoundSetNo
   if not memberExists(tPreviewPackage) then
     if threadExists(#dynamicdownloader) then
-      tParentId = "sound_set_" & tSoundSetNo
-      getThread(#dynamicdownloader).getComponent().downloadCastDynamically(tPreviewPackage, #sound, me.getID(), #soundDownloadCompleted, VOID, VOID, tParentId)
+      getThread(#dynamicdownloader).getComponent().downloadCastDynamically(tPreviewPackage, #sound, me.getID(), #soundDownloadCompleted)
     else
-      return error(me, "Dynamic downloader does not exist, cannot download sound.", #startSampleDownload, #major)
+      return error(me, "Dynamic downloader does not exist, cannot download sound.", #startSampleDownload)
     end if
     me.setPreviewState(#download)
   else

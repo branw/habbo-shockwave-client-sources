@@ -40,7 +40,7 @@ end
 
 on checkProductOrder me, tProductProps
   if tProductProps.ilk <> #propList then
-    return error(me, "Incorrect SelectedProduct proplist", #checkProductOrder, #major)
+    return error(me, "Incorrect SelectedProduct proplist", #buySelectedProduct)
   end if
   if not voidp(tProductProps["purchaseCode"]) then
     tProps = [:]
@@ -74,25 +74,25 @@ end
 
 on purchaseProduct me, tGiftProps
   if pProductOrderData.ilk <> #propList then
-    return error(me, "Incorrect Product data", #purchaseProduct, #major)
+    return error(me, "Incorrect Product data", #purchaseProduct)
   end if
   if tGiftProps.ilk <> #propList then
-    return error(me, "Incorrect Gift Props", #purchaseProduct, #major)
+    return error(me, "Incorrect Gift Props", #purchaseProduct)
   end if
   if voidp(pProductOrderData["name"]) then
-    return error(me, "Product name not found", #purchaseProduct, #major)
+    return error(me, "Product name not found", #purchaseProduct)
   end if
   if voidp(pProductOrderData["purchaseCode"]) then
-    return error(me, "PurchaseCode name not found", #purchaseProduct, #major)
+    return error(me, "PurchaseCode name not found", #purchaseProduct)
   end if
   if voidp(pProductOrderData["extra_parm"]) then
     pProductOrderData["extra_parm"] = "-"
   end if
   if voidp(pCatalogProps["editmode"]) then
-    return error(me, "Catalogue mode not found", #purchaseProduct, #major)
+    return error(me, "Catalogue mode not found", #purchaseProduct)
   end if
   if voidp(pCatalogProps["lastPageID"]) then
-    return error(me, "Catalogue page id missing", #purchaseProduct, #major)
+    return error(me, "Catalogue page id missing", #purchaseProduct)
   end if
   if not voidp(tGiftProps["gift"]) then
     tGift = tGiftProps["gift"] & RETURN
@@ -173,16 +173,16 @@ on purchaseReady me, tStatus, tMsg
     "NOBALANCE":
       me.getInterface().showNoBalance(VOID, 1)
     "ERROR":
-      error(me, "Purchase error:" && tMsg, #purchaseReady, #major)
+      error(me, "Purchase error:" && tMsg, #purchaseReady)
     otherwise:
-      error(me, "Unsupported purchase result:" && tStatus && tMsg, #purchaseReady, #major)
+      error(me, "Unsupported purchase result:" && tStatus && tMsg, #purchaseReady)
   end case
   return 1
 end
 
 on saveCatalogueIndex me, tdata
   if tdata.ilk <> #propList then
-    return error(me, "Incorrect Catalogue Format", #saveCatalogueIndex, #major)
+    return error(me, "Incorrect Catalogue Format", #saveCatalogueIndex)
   end if
   if tdata.count = 0 then
     return 0
@@ -193,7 +193,7 @@ end
 
 on saveCataloguePage me, tdata
   if tdata.ilk <> #propList then
-    return error(me, "Incorrect Catalogue Page Format", #saveCataloguePage, #major)
+    return error(me, "Incorrect Catalogue Page Format", #saveCataloguePage)
   end if
   if tdata.count = 0 then
     return 0
@@ -207,7 +207,7 @@ on saveCataloguePage me, tdata
       me.getInterface().cataloguePageData(tdata)
     end if
   else
-    return error(me, "Catalogue Page ID missing", #saveCataloguePage, #major)
+    return error(me, "Catalogue Page ID missing", #saveCataloguePage)
   end if
 end
 

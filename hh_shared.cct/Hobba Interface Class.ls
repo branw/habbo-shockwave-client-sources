@@ -287,7 +287,7 @@ on fillCryData me, tCryNumOrID
   tCryDB = me.getComponent().getCryDataBase()
   tCryCount = tCryDB.count
   if tCryCount = 0 then
-    return error(me, "Hobba alerts not found!", #fillCryData, #minor)
+    return error(me, "Hobba alerts not found!", #fillCryData)
   end if
   if stringp(tCryNumOrID) then
     tCryID = tCryNumOrID
@@ -307,7 +307,7 @@ on fillCryData me, tCryNumOrID
       pCurrCryData = tCryDB[tCryID]
       pCurrCryNum = tCryNumOrID
     else
-      return error(me, "String or integer expected:" && tCryNumOrID, #fillCryData, #major)
+      return error(me, "String or integer expected:" && tCryNumOrID, #fillCryData)
     end if
   end if
   if voidp(pCurrCryData) then
@@ -490,7 +490,7 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
         if tUrlPrefix contains "http" then
           return openNetPage(tUrlPrefix & pCurrCryData[#url_id], "_new")
         else
-          return error(me, "CFH log url prefix not defined or illegal:" && tUrlPrefix, #eventProcCryWnd, #minor)
+          return error(me, "CFH log url prefix not defined or illegal:" && tUrlPrefix, #eventProcCryWnd)
         end if
       "hobba_pickup":
         return me.getComponent().send_cryPick(pCurrCryID, 0)

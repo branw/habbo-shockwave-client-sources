@@ -244,11 +244,11 @@ end
 
 on DoneCurrentDownLoad me, tFile, tURL, tid, tstate
   if voidp(pCurrentDownLoads[tFile]) then
-    return error(me, "CastLoad task was lost!" && tFile && tid, #DoneCurrentDownLoad, #major)
+    return error(me, "CastLoad task was lost!" && tFile && tid, #DoneCurrentDownLoad)
   end if
   tTask = pTaskList[tid]
   if tTask = VOID then
-    return error(me, "Task list item was lost!" && tFile && tid, #DoneCurrentDownLoad, #major)
+    return error(me, "Task list item was lost!" && tFile && tid, #DoneCurrentDownLoad)
   end if
   if tstate <> #error then
     tCastNumber = me.getAvailableEmptyCast()
@@ -271,7 +271,7 @@ on removeCastLoadInstance me, tFile
     return 0
   end if
   if voidp(pCurrentDownLoads[tFile]) then
-    return error(me, "CastLoad instance was lost!" && tFile, #removeCastLoadInstance, #minor)
+    return error(me, "CastLoad instance was lost!" && tFile, #removeCastLoadInstance)
   else
     return pCurrentDownLoads.deleteProp(tFile)
   end if
@@ -293,7 +293,7 @@ on TellStreamState me, tFileName, tstate, tPercent, tid
   if tObject <> VOID then
     call(#UpdateTaskPercent, tObject, tPercent, tFileName)
   else
-    return error(me, "Task list instance was lost!" && tFileName && tid, #TellStreamState, #major)
+    return error(me, "Task list instance was lost!" && tFileName && tid, #TellStreamState)
   end if
 end
 
@@ -339,7 +339,7 @@ on removeTemporaryCast me, tNewLoadListOfcasts
           pCastLibCount = the number of castLibs
           tError = "CastLib count was changed!!!" & RETURN
           tError = tError & "CastLib with problems:" && castLib(pCastLibCount).name
-          error(me, tError, #removeTemporaryCast, #minor)
+          error(me, tError, #removeTemporaryCast)
         end if
       end if
     end if
@@ -367,7 +367,7 @@ on ResetOneDynamicCast me, tCastNum
   if pLoadedCasts.getOne(string(tCastNum)) <> 0 then
     pLoadedCasts.deleteProp(pLoadedCasts.getOne(string(tCastNum)))
   else
-    error(me, "Couldn't remove cast:" && tCastNum, #ResetOneDynamicCast, #minor)
+    error(me, "Couldn't remove cast:" && tCastNum, #ResetOneDynamicCast)
   end if
   getThreadManager().closeThread(tCastNum)
   getResourceManager().unregisterMembers(tCastNum)

@@ -27,7 +27,7 @@ end
 
 on feedImage me, tImage
   if not (ilk(tImage) = #image) then
-    return error(me, "Image object expected!" && tImage, #feedImage, #minor)
+    return error(me, "Image object expected!" && tImage, #feedImage)
   end if
   tTargetRect = rect(pOwnX, pOwnY, pOwnX + pOwnW, pOwnY + pOwnH)
   me.pBuffer.image.fill(tTargetRect, me.pProps[#bgColor])
@@ -180,9 +180,5 @@ on mouseDown me
 end
 
 on mouseUp me
-  return point(the mouseH - me.pSprite.locH + pOwnX + pOffX, the mouseV - me.pSprite.locV + pOwnY + pOffY)
-end
-
-on mouseWithin me
   return point(the mouseH - me.pSprite.locH + pOwnX + pOffX, the mouseV - me.pSprite.locV + pOwnY + pOffY)
 end

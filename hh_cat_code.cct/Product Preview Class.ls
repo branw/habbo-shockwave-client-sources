@@ -45,10 +45,10 @@ end
 
 on getPicture me, tImg
   if pLayerProps.ilk <> #list then
-    return error(me, "Properties not found!!!", #getImage, #minor)
+    return error(me, "Properties not found!!!", #getImage)
   end if
   if pLayerProps.count < 1 then
-    return error(me, "No Properties!!!", #getImage, #minor)
+    return error(me, "No Properties!!!", #getImage)
   end if
   tCanvas = image(300, 300, 24)
   tCanvas.fill(tCanvas.rect, rgb(255, 255, 255))
@@ -144,7 +144,7 @@ on solveInk me, tPart
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveInk, #minor)
+    error(me, pClass & ".props is not valid!", #solveInk)
     return 8
   else
     if tPropList[tPart] = VOID then
@@ -163,7 +163,7 @@ on solveBlend me, tPart
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveBlend, #minor)
+    error(me, pClass & ".props is not valid!", #solveBlend)
     return 100
   else
     if tPropList[tPart] = VOID then
@@ -212,7 +212,7 @@ on solveStuffMembers me
             pDirection[tdir] = integer(pDirection[tdir] + 1)
           end repeat
           if pDirection[1] = 8 then
-            error(me, "Couldn't define members:" && pClass, #solveMembers, #minor)
+            error(me, "Couldn't define members:" && pClass, #solveMembers)
             tMemNum = getmemnum("room_object_placeholder")
             pDirection = [0, 0, 0]
             tFound = 1
@@ -258,7 +258,7 @@ on solveStuffMembers me
   if pLayerProps.count > 0 then
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveStuffMembers, #minor)
+    return error(me, "Couldn't define members:" && pClass, #solveStuffMembers)
   end if
 end
 
@@ -277,7 +277,7 @@ on solveItemMembers me
     return 1
   else
     if not me.solveAnimatedItemMembers() then
-      return error(me, "Couldn't define members:" && pClass, #solveItemMembers, #minor)
+      return error(me, "Couldn't define members:" && pClass, #solveItemMembers)
     end if
   end if
 end
@@ -336,7 +336,7 @@ on solveAnimatedItemMembers me
     pObjectType = "s"
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveAnimatedItemMembers, #minor)
+    return error(me, "Couldn't define members:" && pClass, #solveAnimatedItemMembers)
   end if
 end
 
@@ -346,7 +346,7 @@ on solveLocZ me, tPart, tdir
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveLocZ, #minor)
+    error(me, pClass & ".props is not valid!", #solveLocZ)
     return 0
   else
     if tPropList[tPart] = VOID then
@@ -368,7 +368,7 @@ on solveLocShift me, tPart, tdir
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveLocShift, #minor)
+    error(me, pClass & ".props is not valid!", #solveLocShift)
     return 0
   else
     if voidp(tPropList[tPart]) then

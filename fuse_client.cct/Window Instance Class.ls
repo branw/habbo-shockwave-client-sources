@@ -73,7 +73,7 @@ end
 
 on unmerge me
   if pGroupData.count = 0 then
-    return error(me, "Cant't unmerge window without content!", #unmerge, #minor)
+    return error(me, "Cant't unmerge window without content!", #unmerge)
   end if
   tGroupData = pGroupData.getLast()
   call(#deconstruct, tGroupData[#items])
@@ -145,7 +145,7 @@ end
 
 on moveZ me, tZ
   if not integerp(tZ) then
-    return error(me, "Integer expected:" && tZ, #moveZ, #minor)
+    return error(me, "Integer expected:" && tZ, #moveZ)
   end if
   repeat with i = 1 to pSpriteList.count
     pSpriteList[i].locZ = tZ + i - 1
@@ -213,7 +213,7 @@ end
 
 on registerClient me, tClientID
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #registerClient, #major)
+    return error(me, "Object not found:" && tClientID, #registerClient)
   end if
   pClientID = tClientID
   return 1
@@ -226,10 +226,10 @@ end
 
 on registerProcedure me, tMethod, tClientID, tEvent
   if not symbolp(tMethod) then
-    return error(me, "Symbol expected:" && tMethod, #registerProcedure, #major)
+    return error(me, "Symbol expected:" && tMethod, #registerProcedure)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #registerProcedure, #major)
+    return error(me, "Object not found:" && tClientID, #registerProcedure)
   end if
   if voidp(tEvent) then
     repeat with i = 1 to pProcedures.count
@@ -390,7 +390,7 @@ on redirectEvent me, tEvent, tSprID
   tMethod = pProcedures[tEvent][1]
   tTarget = pProcedures[tEvent][2]
   tParam = call(tEvent, [pElemList[tSprID]], tSprID)
-  if tParam = 0 and ilk(tParam) = #integer then
+  if tParam = 0 and ilk(tParam) <> #string then
     return 0
   end if
   tClient = getObject(tTarget)
@@ -404,7 +404,7 @@ end
 on buildVisual me, tLayout
   tLayout = getObject(#layout_parser).parse(tLayout)
   if not listp(tLayout) then
-    return error(me, "Invalid window definition:" && tLayout, #buildVisual, #major)
+    return error(me, "Invalid window definition:" && tLayout, #buildVisual)
   end if
   tGroupNum = pGroupData.count
   tElemList = [:]
@@ -429,7 +429,7 @@ on buildVisual me, tLayout
         removeMember(t_rMem.name)
       end repeat
       tmemberlist = [:]
-      return error(me, "Failed to build window. System out of sprites!", #buildVisual, #major)
+      return error(me, "Failed to build window. System out of sprites!", #buildVisual)
     end if
     tmemberlist[tid] = tmember
     tSpriteList[tid] = tsprite
@@ -616,7 +616,7 @@ on CreateElement me, tProps
     tElement = createObject(#temp, tTemplate, tClsStruct)
   end if
   if not tElement then
-    return error(me, "Illegal element type:" && tProps[#id] && tClass, #CreateElement, #major)
+    return error(me, "Illegal element type:" && tProps[#id] && tClass, #CreateElement)
   end if
   tElement.setID(tProps[#id])
   tElement.define(tProps)

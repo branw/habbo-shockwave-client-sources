@@ -32,7 +32,7 @@ end
 
 on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
   if not ilk(tURL, #string) then
-    return error(me, "Missing or invalid URL:" && tURL, #queue, #major)
+    return error(me, "Missing or invalid URL:" && tURL, #queue)
   end if
   if not ilk(tMemName, #string) then
     tMemName = tURL
@@ -41,7 +41,7 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
     ttype = me.recognizeMemberType(tURL)
   end if
   if not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName]) then
-    return error(me, "File already downloading:" && tMemName, #queue, #minor)
+    return error(me, "File already downloading:" && tMemName, #queue)
   end if
   if memberExists(tMemName) then
     if tForceFlag then
@@ -53,7 +53,7 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
     tMemNum = createMember(tMemName, ttype)
   end if
   if tMemNum < 1 then
-    return error(me, "Failed to create member!", #queue, #major)
+    return error(me, "Failed to create member!", #queue)
   else
     if member(tMemNum).type = #bitmap then
       member(tMemNum).image = image(1, 1, 8)
@@ -73,27 +73,27 @@ on registerCallback me, tMemNameOrNum, tMethod, tClientID, tArgument
   if not tTaskData then
     if stringp(tMemNameOrNum) then
       if getmemnum(tMemNameOrNum) = 0 then
-        return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback, #major)
+        return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback)
       end if
     else
       if integerp(tMemNameOrNum) then
         if member(tMemNameOrNum).type = #empty then
-          return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback, #major)
+          return error(me, "Task doesn't exist:" && tMemNameOrNum, #registerCallback)
         end if
       else
-        return error(me, "Member's name or number expected:" && tMemNameOrNum, #registerCallback, #major)
+        return error(me, "Member's name or number expected:" && tMemNameOrNum, #registerCallback)
       end if
     end if
     tTaskData = [#status: #complete]
   end if
   if not symbolp(tMethod) then
-    return error(me, "Symbol referring to a handler expected:" && tMethod, #registerCallback, #major)
+    return error(me, "Symbol referring to a handler expected:" && tMethod, #registerCallback)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #registerCallback, #major)
+    return error(me, "Object not found:" && tClientID, #registerCallback)
   end if
   if not getObject(tClientID).handler(tMethod) then
-    return error(me, "Handler not found in object:" && tMethod, tClientID, #registerCallback, #major)
+    return error(me, "Handler not found in object:" && tMethod, tClientID, #registerCallback)
   end if
   case tTaskData[#status] of
     #complete:
@@ -113,11 +113,11 @@ on getLoadPercent me, tMemNameOrNum
     if stringp(tMemNameOrNum) then
       tMemName = tMemNameOrNum
     else
-      return error(me, "Member's name or number expected:" && tMemNameOrNum, #getLoadPercent, #minor)
+      return error(me, "Member's name or number expected:" && tMemNameOrNum, #getLoadPercent)
     end if
   end if
   if pReceivedTasks.getOne(tMemName) = 0 then
-    return error(me, "Downloaded file not found:" && tMemName, #getLoadPercent, #minor)
+    return error(me, "Downloaded file not found:" && tMemName, #getLoadPercent)
   end if
   if not voidp(pActiveTasks[tMemName]) then
     return pActiveTasks[tMemName].getProperty(#Percent)
@@ -238,13 +238,13 @@ on searchTask me, tMemNameOrNum
     if tTaskData[#status] <> VOID then
       return tTaskData
     end if
-    return error(me, "Referred task not found:" && tMemNameOrNum, #searchTask, #minor)
+    return error(me, "Referred task not found:" && tMemNameOrNum, #searchTask)
   else
     if integerp(tMemNameOrNum) then
       return searchTask(me, member(tMemNameOrNum).name)
     end if
   end if
-  return error(me, "Member's name or number expected:" && tMemNameOrNum, #searchTask, #minor)
+  return error(me, "Member's name or number expected:" && tMemNameOrNum, #searchTask)
 end
 
 on updateQueue me
@@ -301,7 +301,7 @@ on recognizeMemberType me, tURL
   tFileType = tFileType.char[offset(".", tFileType) + 1..length(tFileType)]
   tFileType = pTypeDefList[tFileType]
   if not symbolp(tFileType) then
-    error(me, "Couldn't recognize member's type:" && tURL, #recognizeMemberType, #minor)
+    error(me, "Couldn't recognize member's type:" && tURL, #recognizeMemberType)
     return #field
   else
     return tFileType

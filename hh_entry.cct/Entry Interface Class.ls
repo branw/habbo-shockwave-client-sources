@@ -48,7 +48,7 @@ on showHotel me
       repeat with tAnimation in tAnimations
         tObj = createObject(#random, getVariableValue("swap.animation.class"))
         if tObj = 0 then
-          error(me, "Error creating swap animation", #showHotel, #minor)
+          error(me, "Error creating swap animation", #showHotel)
           next repeat
         end if
         pSwapAnimations.add(tObj)
@@ -68,7 +68,7 @@ on showHotel me
             tObj.define(tSpr, j)
             pItemObjList.add(tObj)
           else
-            error(me, "Error creating object:" && tAnimationType, #showHotel, #minor)
+            error(me, "Error creating object:" && tAnimationType, #showHotel)
           end if
         else
           exit repeat

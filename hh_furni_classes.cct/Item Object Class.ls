@@ -140,7 +140,7 @@ on solveInk me, tPart, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveInk, #minor)
+    error(me, tClass & ".props is not valid!", #solveInk)
     return 8
   else
     if voidp(tPropList[tPart]) then
@@ -162,7 +162,7 @@ on solveBlend me, tPart, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveBlend, #minor)
+    error(me, tClass & ".props is not valid!", #solveBlend)
     return 100
   else
     if voidp(tPropList[tPart]) then
@@ -184,7 +184,7 @@ on solveLocZ me, tPart, tdir, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveLocZ, #minor)
+    error(me, tClass & ".props is not valid!", #solveLocZ)
     return 0
   else
     if voidp(tPropList[tPart]) then
@@ -209,7 +209,7 @@ on solveLocShift me, tPart, tdir, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveLocShift, #minor)
+    error(me, tClass & ".props is not valid!", #solveLocShift)
     return 0
   else
     if voidp(tPropList[tPart]) then
@@ -238,7 +238,7 @@ on solveMembers me
     "photo":
       tMemName = pDirection && pClass
   end case
-  return error(me, "Unknown item class:" && pClass, #solveMembers, #minor)
+  return error(me, "Unknown item class:" && pClass, #solveMembers)
   if pXFactor = 32 then
     tMemName = "s_" & tMemName
   end if
@@ -393,7 +393,7 @@ on updateLocation me
   else
     repeat with tSpr in pSprList
       if tSpr.member = member(0, 0) then
-        return error(me, "Spritelist contains empty sprite!", #updateLocation, #minor)
+        return error(me, "Spritelist contains empty sprite!", #updateLocation)
       end if
       tItemRp = tSpr.member.regPoint
       tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])

@@ -425,7 +425,7 @@ end
 
 on setActiveItemTo me, tItem
   if voidp(pTextKeys.findPos(tItem)) then
-    return error(me, "Cannot activate the item of dropmenu:" && tItem, #minor)
+    return error(me, "Cannot activate the item of dropmenu:" && tItem)
   end if
   pSelectedItemNum = pTextKeys.findPos(tItem)
   pDropActiveBtnImg = me.createDropImg([pMenuItems[pSelectedItemNum]], 0, #up)

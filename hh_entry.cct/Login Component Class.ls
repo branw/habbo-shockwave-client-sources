@@ -3,7 +3,7 @@ property pOkToLogin
 on construct me
   pOkToLogin = 0
   if variableExists("stats.tracking.javascript") then
-    createObject(#statsBrokerJs, "Statistics Broker Javascript Class")
+    createObject(#statsBroker, "Statistics Broker Javascript Class")
   end if
   if variableExists("stats.tracking.url") then
     createObject(#statsBroker, "Statistics Broker Class")
@@ -63,9 +63,6 @@ on deconstruct me
   end if
   if objectExists(#statsBroker) then
     removeObject(#statsBroker)
-  end if
-  if objectExists(#statsBrokerJs) then
-    removeObject(#statsBrokerJs)
   end if
   if objectExists(#getServerDate) then
     removeObject(#getServerDate)
@@ -147,10 +144,10 @@ on connect me
   tPort = getIntVariable("connection.info.port")
   tConn = getVariable("connection.info.id", #Info)
   if voidp(tHost) or voidp(tPort) then
-    return error(me, "Server port/host data not found!", #connect, #major)
+    return error(me, "Server port/host data not found!", #connect)
   end if
   if not createConnection(tConn, tHost, tPort) then
-    return error(me, "Failed to create connection!", #connect, #major)
+    return error(me, "Failed to create connection!", #connect)
   end if
   if not objectExists(#getServerDate) then
     createObject(#getServerDate, "Server Date Class")
@@ -169,7 +166,7 @@ on disconnect me
   if connectionExists(tConn) then
     return removeConnection(tConn)
   else
-    return error(me, "Connection not found!", #disconnect, #minor)
+    return error(me, "Connection not found!", #disconnect)
   end if
 end
 

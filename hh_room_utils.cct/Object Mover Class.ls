@@ -40,7 +40,7 @@ end
 
 on define me, tClientID, tStripID, tObjType, tProps
   if pClientID <> EMPTY then
-    return error(me, "Already moving active object:" && pClientID, #define, #minor)
+    return error(me, "Already moving active object:" && pClientID, #define)
   end if
   pClientID = tClientID
   if stringp(tStripID) then
@@ -49,7 +49,7 @@ on define me, tClientID, tStripID, tObjType, tProps
   pObjType = tObjType
   pObjProps = tProps
   if pSprList.count > 0 then
-    error(me, "Sprites hanging in object mover! Clearing them out...", #define, #minor)
+    error(me, "Sprites hanging in object mover! Clearing them out...", #define)
     repeat with i = 1 to pSprList.count
       if ilk(pSprList[i], #sprite) then
         releaseSprite(pSprList[i].spriteNum)
@@ -75,17 +75,17 @@ on define me, tClientID, tStripID, tObjType, tProps
       tClientObj = getThread(#room).getComponent().getItemObject(tClientID)
       pLoczList = []
     otherwise:
-      error(me, "Invalid object type:" && tObjType, #define, #major)
+      error(me, "Invalid object type:" && tObjType, #define)
       tClientObj = 0
   end case
   pClientObj = tClientObj
   if not tClientObj then
     pClientID = EMPTY
-    return error(me, "Couldn't find object to move:" && tClientID, #define, #major)
+    return error(me, "Couldn't find object to move:" && tClientID, #define)
   end if
   tOrigSprList = tClientObj.getSprites()
   if not listp(tOrigSprList) then
-    error(me, "List with sprites expected:" && tOrigSprList, #define, #major)
+    error(me, "List with sprites expected:" && tOrigSprList, #define)
     tOrigSprList = []
   end if
   pOrigCoord = [tClientObj.pLocX, tClientObj.pLocY, tClientObj.pLocH]
@@ -96,7 +96,7 @@ on define me, tClientID, tStripID, tObjType, tProps
     if tConnection <> 0 then
       tConnection.send("GETSTRIP", "new")
     end if
-    return error(me, "No sprites found for drawing object for moving.", #define, #major)
+    return error(me, "No sprites found for drawing object for moving.", #define)
   end if
   if getSpriteManager().getProperty(#freeSprCount) < tOrigSprList.count + 1 then
     return 0
@@ -121,7 +121,7 @@ on define me, tClientID, tStripID, tObjType, tProps
   tMemNum = getObject("Preview_renderer").getPreviewMember(tInfo[#image])
   if tMemNum = 0 then
     me.close()
-    return error(me, "Preview member missing.", #define, #major)
+    return error(me, "Preview member missing.", #define)
   end if
   tSmallMem = member(tMemNum)
   pSmallSpr = sprite(reserveSprite(me.getID()))

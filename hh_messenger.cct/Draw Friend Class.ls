@@ -1,4 +1,4 @@
-property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pWebLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pCacheWebLinkImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
+property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pCacheWebLinkImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
@@ -107,23 +107,12 @@ on clickAt me, locX, locY
   tY1 = 4
   tY2 = tY1 + pCacheWebLinkImg.height
   tDstRect = rect(tX1, tY1, tX2, tY2)
-  if point(locX, locY).inside(pWebLinkRect) then
+  if point(locX, locY).inside(tDstRect) then
     if not voidp(pID) then
       tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(pID))
       openNetPage(tDestURL)
     end if
   end if
-end
-
-on atWebLinkIcon me, tpoint
-  return tpoint.inside(pWebLinkRect)
-end
-
-on atMessageCount me, tpoint
-  if pMsgCount = 0 then
-    return 0
-  end if
-  return tpoint.inside(pMsgLinkRect)
 end
 
 on render me, tBuffer, tPosition
@@ -198,7 +187,6 @@ on render me, tBuffer, tPosition
       tY1 = 3
       tY2 = tY1 + pCacheWebLinkImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
-      pWebLinkRect = tDstRect
       pCacheImage.copyPixels(pCacheWebLinkImg, tDstRect, pCacheWebLinkImg.rect)
     end if
     if pMissNeedUpdate then

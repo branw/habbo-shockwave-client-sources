@@ -1,4 +1,4 @@
-property pListenerList, pAssetId, pDownloadURL, pAllowindexing, pAssetType, pParentId
+property pListenerList, pAssetId, pDownloadURL, pAllowindexing, pAssetType
 
 on construct me
   pListenerList = []
@@ -22,7 +22,7 @@ on purgeCallbacks me, tSuccess
     if tObject <> 0 and symbolp(tHandler) then
       createTimeout(tTimeoutName & tCounter, 10, #sendTimeoutCallbacks, me.getID(), [tHandler, tObject, pAssetId, tSuccess, tCallbackParams], 1)
     else
-      error(me, "Object or handler invalid:" && tObject && tHandler, #purgeCallbacks, #minor)
+      error(me, "Object or handler invalid:" && tObject && tHandler, #purgeCallbacks)
     end if
     tCounter = tCounter + 1
   end repeat
@@ -65,14 +65,6 @@ end
 
 on getIndexing me
   return pAllowindexing
-end
-
-on setParentId me, tParentId
-  pParentId = tParentId
-end
-
-on getParentId me
-  return pParentId
 end
 
 on sendTimeoutCallbacks me, tArguments

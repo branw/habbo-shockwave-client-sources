@@ -37,7 +37,7 @@ end
 on showSoundMachine me
   if not windowExists(pSoundMachineWindowID) then
     if not createWindow(pSoundMachineWindowID, "sound_machine_window.window", VOID, VOID, #modal) then
-      return error(me, "Failed to open Sound Machine window!!!", #showSoundMachine, #major)
+      return error(me, "Failed to open Sound Machine window!!!", #showSoundMachine)
     else
       tWndObj = getWindow(pSoundMachineWindowID)
       tWndObj.registerClient(me.getID())
@@ -85,7 +85,7 @@ on confirmAction me, tAction, tParameter
   if tResult then
     if not windowExists(pSoundMachineConfirmWindowID) then
       if not createWindow(pSoundMachineConfirmWindowID, "habbo_full.window", VOID, VOID, #modal) then
-        return error(me, "Failed to open Sound Machine confirm window!!!", #confirmAction, #major)
+        return error(me, "Failed to open Sound Machine confirm window!!!", #confirmAction)
       else
         tWndObj = getWindow(pSoundMachineConfirmWindowID)
         tWndObj.registerClient(me.getID())
@@ -130,7 +130,7 @@ end
 on showSelectAction me, tIsOn
   if not windowExists(pSoundMachineWindowID) then
     if not createWindow(pSoundMachineWindowID, "habbo_full.window") then
-      return error(me, "Failed to open Sound Machine window!!!", #showSoundMachine, #major)
+      return error(me, "Failed to open Sound Machine window!!!", #showSoundMachine)
     else
       tWndObj = getWindow(pSoundMachineWindowID)
       tWndObj.registerClient(me.getID())

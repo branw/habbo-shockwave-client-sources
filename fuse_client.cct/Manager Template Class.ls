@@ -19,7 +19,7 @@ end
 
 on create me, tid, tClass
   if getObjectManager().exists(tid) then
-    return error(me, "Object already exists:" && tid, #create, #major)
+    return error(me, "Object already exists:" && tid, #create)
   end if
   if not getObjectManager().create(tid, tClass) then
     return 0

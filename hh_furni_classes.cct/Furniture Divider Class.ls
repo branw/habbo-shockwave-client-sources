@@ -108,7 +108,7 @@ on solveTransparency me, tPart
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then
-      error(me, tName & ".props is not valid!", #solveInk, #minor)
+      error(me, tName & ".props is not valid!", #solveInk)
     else
       if tPropList[tPart] <> VOID then
         if tPropList[tPart][#transparent] <> VOID then

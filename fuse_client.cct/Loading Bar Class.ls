@@ -28,7 +28,7 @@ end
 
 on define me, tLoadID, tProps
   if not stringp(tLoadID) and not symbolp(tLoadID) then
-    return error(me, "Invalid castload task ID:" && tLoadID, #define, #major)
+    return error(me, "Invalid castload task ID:" && tLoadID, #define)
   end if
   pTaskId = tLoadID
   pPercent = 0.0

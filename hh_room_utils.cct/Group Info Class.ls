@@ -104,7 +104,7 @@ on requestLogoDownload me, tGroupId
   tGroupId = string(tGroupId)
   tGroupData = pGroupData.getaProp(tGroupId)
   if ilk(tGroupData) <> #propList then
-    return error(me, "No group found: " & tGroupId, me.getID(), #requestLogoDownload, #minor)
+    return error(me, "No group found: " & tGroupId, me.getID(), #requestLogoDownload)
   end if
   tDownloadStatus = tGroupData[#download]
   if not (voidp(tDownloadStatus) or tDownloadStatus = #invalid) then

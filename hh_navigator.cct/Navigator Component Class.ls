@@ -165,7 +165,7 @@ on prepareRoomEntry me, tRoomInfoOrId, tRoomType
     tRoomInfo = me.getComponent().getNodeInfo(tRoomID)
     if tRoomInfo = 0 then
       if tRoomType = VOID then
-        return error(me, "No roomdata found and no roomType specified!", #prepareRoomEntry, #major)
+        return error(me, "No roomdata found and no roomType specified!", #prepareRoomEntry)
       end if
       return me.getInfoBroker().requestRoomData(tRoomID, tRoomType, [me.getID(), #prepareRoomEntry])
     else
@@ -178,7 +178,7 @@ on prepareRoomEntry me, tRoomInfoOrId, tRoomType
       tRoomInfo = tRoomInfoOrId
       me.getComponent().updateSingleSubNodeInfo(tRoomInfo)
     else
-      return error(me, "No room info or id given as parameter:" && tRoomInfoOrId, #prepareRoomEntry, #major)
+      return error(me, "No room info or id given as parameter:" && tRoomInfoOrId, #prepareRoomEntry)
     end if
   end if
   if tRoomInfo[#nodeType] = 1 then
@@ -206,7 +206,7 @@ on executeRoomEntry me, tNodeId
     tRoomDataStruct = me.convertNodeInfoToEntryStruct(tRoomInfo)
     getObject(#session).set("lastroom", tRoomDataStruct)
     if not (getObject(#session).GET("lastroom").ilk = #propList) then
-      error(me, "Target room data unavailable!", #executeRoomEntry, #major)
+      error(me, "Target room data unavailable!", #executeRoomEntry)
       return me.updateState("enterEntry")
     end if
     return executeMessage(#enterRoom, tRoomDataStruct)
@@ -255,7 +255,7 @@ on createNaviHistory me, tCategoryId
   repeat while tParentInfo <> 0
     if pNaviHistory.getPos(tParentInfo[#parentid]) > 0 then
       tParentInfo = 0
-      error(me, "Category loop detected in navigation data!", #createNaviHistory, #minor)
+      error(me, "Category loop detected in navigation data!", #createNaviHistory)
       next repeat
     end if
     pNaviHistory.addAt(1, tParentId)
@@ -308,7 +308,7 @@ end
 on getFlatPassword me, tFlatID
   tFlatInfo = me.getNodeInfo("f_" & tFlatID)
   if tFlatInfo = 0 then
-    return error(me, "Flat info is VOID", #getFlatPassword, #minor)
+    return error(me, "Flat info is VOID", #getFlatPassword)
   end if
   if tFlatInfo[#door] <> "password" then
     return 0
@@ -377,10 +377,10 @@ end
 
 on sendNavigate me, tNodeId, tDepth, tNodeMask
   if not connectionExists(pConnectionId) then
-    return error(me, "Connection not found:" && pConnectionId, #sendNavigate, #major)
+    return error(me, "Connection not found:" && pConnectionId, #sendNavigate)
   end if
   if tNodeId = VOID then
-    return error(me, "Node id is VOID", #sendNavigate, #major)
+    return error(me, "Node id is VOID", #sendNavigate)
   end if
   if tDepth = VOID then
     tDepth = 1
@@ -432,7 +432,7 @@ on updateSingleSubNodeInfo me, tdata
       return me.saveNodeInfo(tNewNode)
     end if
   else
-    return error(me, "Flat info parsing failed!", #updateSingleSubNodeInfo, #major)
+    return error(me, "Flat info parsing failed!", #updateSingleSubNodeInfo)
   end if
 end
 
@@ -441,7 +441,7 @@ on sendGetUserFlatCats me
     pRoomCatagoriesReady = 1
     return getConnection(pConnectionId).send("GETUSERFLATCATS")
   else
-    return error(me, "Connection not found:" && pConnectionId, #sendGetUserFlatCats, #major)
+    return error(me, "Connection not found:" && pConnectionId, #sendGetUserFlatCats)
   end if
 end
 
@@ -479,7 +479,7 @@ on sendAddFavoriteFlat me, tNodeId
   tRoomID = integer(tRoomID)
   if connectionExists(pConnectionId) then
     if voidp(tRoomID) then
-      return error(me, "Room ID expected!", #sendAddFavoriteFlat, #major)
+      return error(me, "Room ID expected!", #sendAddFavoriteFlat)
     end if
     return getConnection(pConnectionId).send("ADD_FAVORITE_ROOM", [#integer: tRoomType, #integer: tRoomID])
   else
@@ -497,7 +497,7 @@ on sendRemoveFavoriteFlat me, tNodeId
   tRoomID = integer(tRoomID)
   if connectionExists(pConnectionId) then
     if voidp(tRoomID) then
-      return error(me, "Flat ID expected!", #sendRemoveFavoriteFlat, #major)
+      return error(me, "Flat ID expected!", #sendRemoveFavoriteFlat)
     end if
     return getConnection(pConnectionId).send("DEL_FAVORITE_ROOM", [#integer: tRoomType, #integer: tRoomID])
   else
@@ -511,7 +511,7 @@ on sendGetFlatInfo me, tFlatID
   end if
   if connectionExists(pConnectionId) then
     if voidp(tFlatID) then
-      return error(me, "Flat ID expected!", #sendGetFlatInfo, #major)
+      return error(me, "Flat ID expected!", #sendGetFlatInfo)
     else
       return getConnection(pConnectionId).send("GETFLATINFO", tFlatID)
     end if
@@ -523,7 +523,7 @@ end
 on sendSearchFlats me, tQuery
   if connectionExists(pConnectionId) then
     if voidp(tQuery) then
-      return error(me, "Search query is void!", #sendSearchFlats, #minor)
+      return error(me, "Search query is void!", #sendSearchFlats)
     end if
     tQuery = convertSpecialChars(tQuery, 1)
     return getConnection(pConnectionId).send("SRCHF", "%" & tQuery & "%")
@@ -560,7 +560,7 @@ on sendGetFlatCategory me, tNodeId
   tFlatID = me.getNodeProperty(tNodeId, #flatId)
   if connectionExists(pConnectionId) then
     if voidp(tFlatID) then
-      return error(me, "Flat ID expected!", #sendGetFlatCategory, #major)
+      return error(me, "Flat ID expected!", #sendGetFlatCategory)
     end if
     getConnection(pConnectionId).send("GETFLATCAT", [#integer: integer(tFlatID)])
   else
@@ -572,7 +572,7 @@ on sendSetFlatCategory me, tNodeId, tCategoryId
   tFlatID = me.getNodeProperty(tNodeId, #flatId)
   if connectionExists(pConnectionId) then
     if voidp(tFlatID) then
-      return error(me, "Flat ID expected!", #sendSetFlatCategory, #major)
+      return error(me, "Flat ID expected!", #sendSetFlatCategory)
     end if
     getConnection(pConnectionId).send("SETFLATCAT", [#integer: integer(tFlatID), #integer: integer(tCategoryId)])
   else
@@ -582,7 +582,7 @@ end
 
 on sendupdateFlatInfo me, tPropList
   if tPropList.ilk <> #propList or voidp(tPropList[#flatId]) then
-    return error(me, "Cant send updateFlatInfo", #sendupdateFlatInfo, #major)
+    return error(me, "Cant send updateFlatInfo", #sendupdateFlatInfo)
   end if
   tFlatMsg = EMPTY
   repeat with tProp in [#flatId, #name, #door, #showownername]
@@ -620,7 +620,7 @@ end
 
 on convertNodeInfoToEntryStruct me, tProps
   if ilk(tProps) <> #propList then
-    return error(me, "Invalid property list as parameter!", #convertNodeInfoToEntryStruct, #major)
+    return error(me, "Invalid property list as parameter!", #convertNodeInfoToEntryStruct)
   end if
   if tProps[#nodeType] <> 1 then
     tStruct = tProps.duplicate()
@@ -681,7 +681,7 @@ on updateState me, tstate, tProps
       me.createNaviHistory(me.getInterface().getProperty(#categoryId))
       return 1
   end case
-  return error(me, "Unknown state:" && tstate, #updateState, #minor)
+  return error(me, "Unknown state:" && tstate, #updateState)
 end
 
 on goStraightToRoom me

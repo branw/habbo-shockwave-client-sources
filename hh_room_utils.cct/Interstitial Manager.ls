@@ -56,7 +56,7 @@ on Init me, tSourceURL, tClickURL
   tAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
   if tAdMemNum < 1 then
     me.adFinished()
-    return error(me, "Member not found", #Init, #major)
+    return error(me, "Member not found", #Init)
   end if
   createTimeout(pDownloadTimeOutID, 15000, #adDownloadError, me.getID(), #error, 1)
   registerDownloadCallback(tAdMemNum, #adLoaded, me.getID())
@@ -122,7 +122,7 @@ on adLoaded me
 end
 
 on adDownloadError me
-  error(me, "Interstitial download timeout", #adDownloadError, #minor)
+  error(me, "Interstitial download timeout", #adFinished)
   pAdError = 1
   me.adFinished()
 end

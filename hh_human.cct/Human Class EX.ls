@@ -162,17 +162,17 @@ on setup me, tdata
   end if
   pPeopleSize = getVariable("human.size." & integer(pXFactor))
   if not pPeopleSize then
-    error(me, "People size not found, using default!", #setup, #minor)
+    error(me, "People size not found, using default!", #setup)
     pPeopleSize = "h"
   end if
   pCorrectLocZ = pPeopleSize = "h"
   pCanvasSize = value(getVariable("human.canvas." & pPeopleSize))
   if not pCanvasSize then
-    error(me, "Canvas size not found, using default!", #setup, #minor)
+    error(me, "Canvas size not found, using default!", #setup)
     pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
   end if
   if not me.setPartLists(tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #setup, #major)
+    return error(me, "Couldn't create part lists!", #setup)
   end if
   me.resetValues(pLocX, pLocY, pLocH, pHeadDir, pDirection)
   me.Refresh(pLocX, pLocY, pLocH, pDirection)

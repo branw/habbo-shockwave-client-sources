@@ -1,9 +1,8 @@
-property pWindowID, pCurrentErrorIndex, pErrorLock
+property pWindowID, pCurrentErrorIndex
 
 on construct me
   pWindowID = getText("error_report")
   pCurrentErrorIndex = 1
-  pErrorLock = 0
   return 1
 end
 
@@ -12,13 +11,8 @@ on deconstruct me
 end
 
 on showErrors me
-  if pErrorLock then
-    return 1
-  end if
-  pErrorLock = 1
   tReportLists = me.getComponent().getErrorLists()
   if tReportLists.count = 0 then
-    pErrorLock = 0
     return 0
   end if
   if not windowExists(pWindowID) then
@@ -32,7 +26,6 @@ on showErrors me
     tWndObj.getElement("error_report_next").setText(">>>")
   end if
   me.updateErrorView()
-  pErrorLock = 0
 end
 
 on showPreviousError me
@@ -61,23 +54,12 @@ on updateErrorView me
   tReportList = me.getComponent().getErrorLists()
   tErrorReport = tReportList[tIndexOfCurrentReport]
   tCounts = pCurrentErrorIndex & "/" & tReportList.count
-  tElement = tWndObj.getElement("error_report_count")
-  if tElement <> 0 then
-    tElement.setText(tCounts)
-  end if
+  tWndObj.getElement("error_report_count").setText(tCounts)
   tTexts = [:]
   tTexts["error_report_errorid"] = "ID:" && tErrorReport[#errorId]
   tExplainText = EMPTY
-  if not voidp(tErrorReport[#time]) then
-    tExplainText = tErrorReport[#time] & RETURN
-  end if
-  if not voidp(tErrorReport[#errorMsgId]) then
-    tExplainText = tExplainText & getText("error_report_trigger_message") & ":" && tErrorReport[#errorMsgId]
-  else
-    if not voidp(tErrorReport[#errorMsg]) then
-      tExplainText = tExplainText & tErrorReport[#errorMsg]
-    end if
-  end if
+  tExplainText = tErrorReport[#time] & RETURN
+  tExplainText = tExplainText & getText("error_report_trigger_message") & ":" && tErrorReport[#errorMsgId]
   tTexts["error_report_details"] = tExplainText
   repeat with tIndex = 1 to tTexts.count
     tElementName = tTexts.getPropAt(tIndex)
@@ -93,8 +75,6 @@ on hideErrorReportWindow me
   if not windowExists(pWindowID) then
     return 0
   end if
-  me.getComponent().clearErrorLists(pCurrentErrorIndex)
-  pCurrentErrorIndex = 1
   tWndObj = getWindow(pWindowID)
   tWndObj.close()
 end

@@ -148,12 +148,9 @@ end
 
 on showLoadingBar me, tLoadID, tProps
   tObj = createObject(#random, getClassVariable("loading.bar.class"))
-  if tObj = 0 then
-    return error(me, "Couldn't create loading bar instance!", #showLoadingBar, #major)
-  end if
   if not tObj.define(tLoadID, tProps) then
     removeObject(tObj.getID())
-    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar, #major)
+    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar)
   end if
   return tObj.getID()
 end
@@ -198,7 +195,7 @@ on getPredefinedURL me, tURL
       end if
       tURL = replaceChunks(tURL, tReplace, tPrefix)
     else
-      return error(me, "URL prefix not defined, invalid link.", #getPredefinedURL, #minor)
+      return error(me, "URL prefix not defined, invalid link.", #openNetPage)
     end if
   end if
   return tURL

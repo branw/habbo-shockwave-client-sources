@@ -52,7 +52,7 @@ on showObjectInfo me, tObjType
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       pCurrentlySelectedUserIdId = VOID
     otherwise:
-      error(me, "Unsupported object type:" && tObjType, #showObjectInfo, #minor)
+      error(me, "Unsupported object type:" && tObjType, #showObjectInfo)
       pCurrentlySelectedUserIdId = VOID
       tObj = 0
   end case

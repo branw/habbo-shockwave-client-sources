@@ -24,7 +24,7 @@ end
 
 on define me, tProps
   if ilk(tProps) <> #propList then
-    return error(me, "Not a proplist" && tProps, #define, #major)
+    return error(me, "Not a proplist" && tProps, #define)
   end if
   if not voidp(tProps[#palette]) then
     pSpriteProps[#palette] = tProps[#palette]
@@ -42,14 +42,14 @@ end
 
 on addPart me, tProps
   if ilk(tProps) <> #propList then
-    return error(me, "Not a proplist" && tProps, #addPart, #major)
+    return error(me, "Not a proplist" && tProps, #addPart)
   end if
   if not memberExists(tProps[#member]) then
     tpartNum = member(abs(getmemnum(tProps[#member])))
     if tpartNum > 0 then
       tPartMember = member(tpartNum)
     else
-      return error(me, "No member found:" && tProps[#member], #addPart, #major)
+      return error(me, "No member found:" && tProps[#member], #addPart)
     end if
   else
     tPartMember = member(abs(getmemnum(tProps[#member])))

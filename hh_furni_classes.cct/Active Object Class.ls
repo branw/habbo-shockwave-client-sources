@@ -134,7 +134,7 @@ on rotate me, tChange
     end if
   end repeat
   if not memberExists(tTryName) then
-    return error(me, "Direction for object not found:" && pClass && tDirection[1], #rotate, #minor)
+    return error(me, "Direction for object not found:" && pClass && tDirection[1], #rotate)
   end if
   getThread(#room).getComponent().getRoomConnection().send("MOVESTUFF", me.getID() && me.pLocX && me.pLocY && tDirection[1])
 end
@@ -230,7 +230,7 @@ on solveInk me, tPart, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveInk, #minor)
+    error(me, tClass & ".props is not valid!", #solveInk)
     return 8
   else
     if voidp(tPropList[tPart]) then
@@ -252,7 +252,7 @@ on solveBlend me, tPart, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveBlend, #minor)
+    error(me, tClass & ".props is not valid!", #solveBlend)
     return 100
   else
     if voidp(tPropList[tPart]) then
@@ -274,7 +274,7 @@ on solveLocZ me, tPart, tdir, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveLocZ, #minor)
+    error(me, tClass & ".props is not valid!", #solveLocZ)
     return 0
   else
     if voidp(tPropList[tPart]) then
@@ -299,7 +299,7 @@ on solveLocShift me, tPart, tdir, tClass
   end if
   tPropList = value(field(getmemnum(tClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, tClass & ".props is not valid!", #solveLocShift, #minor)
+    error(me, tClass & ".props is not valid!", #solveLocShift)
     return 0
   else
     if voidp(tPropList[tPart]) then
@@ -373,7 +373,7 @@ on solveMembers me
             pDirection[tdir] = integer(pDirection[tdir] + 1)
           end repeat
           if pDirection[1] = 8 then
-            error(me, "Couldn't define members:" && tClass, #solveMembers, #minor)
+            error(me, "Couldn't define members:" && tClass, #solveMembers)
             if pXFactor = 32 then
               tMemNum = getmemnum("s_room_object_placeholder")
             else
@@ -398,7 +398,7 @@ on solveMembers me
           if not voidp(tRoomThread) then
             tRoomThread.getComponent().releaseSpritesFromActiveObjects()
           end if
-          return error(me, "Could not reserve sprite for: " && tClass, #solveMembers, #major)
+          return error(me, "Could not reserve sprite for: " && tClass, #solveMembers)
         end if
         pSprList.add(tSpr)
         setEventBroker(tSpr.spriteNum, me.getID())
@@ -436,7 +436,7 @@ on solveMembers me
           end if
         end if
       else
-        return error(me, "Out of sprites!!!", #solveMembers, #major)
+        return error(me, "Out of sprites!!!", #solveMembers)
       end if
     end if
     i = i + 1
@@ -508,7 +508,7 @@ on solveMembers me
   if pSprList.count > 0 then
     return 1
   else
-    return error(me, "Couldn't define members:" && tClass, #solveMembers, #major)
+    return error(me, "Couldn't define members:" && tClass, #solveMembers)
   end if
 end
 

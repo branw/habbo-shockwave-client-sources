@@ -70,7 +70,7 @@ on update me
       return 1
     else
       tError = getDownloadManager().solveNetErrorMsg(netError(pNetId))
-      error(me, "Download error:" & RETURN & pMemName & RETURN & tError, #update, #minor)
+      error(me, "Download error:" & RETURN & pMemName & RETURN & tError, #update)
       case netError(pNetId) of
         6, 4159, 4165:
           if not (pURL contains getDownloadManager().getProperty(#defaultURL)) then
@@ -87,7 +87,7 @@ on update me
       ptryCount = ptryCount + 1
       if ptryCount > getIntVariable("download.retry.count", 10) then
         getDownloadManager().removeActiveTask(pMemName, pCallBack)
-        return error(me, "Download failed too many times:" & RETURN & pURL, #update, #minor)
+        return error(me, "Download failed too many times:" & RETURN & pURL, #update)
       else
         pURL = getSpecialServices().addRandomParamToURL(pURL)
         me.Activate()

@@ -29,7 +29,7 @@ end
 
 on reserveSprite me, tClientID
   if pFreeSprList.count = 0 then
-    return error(me, "Out of free sprite channels!", #reserveSprite, #major)
+    return error(me, "Out of free sprite channels!", #reserveSprite)
   end if
   tSprNum = pFreeSprList[1]
   tsprite = sprite(tSprNum)
@@ -44,10 +44,10 @@ end
 
 on releaseSprite me, tSprNum
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #releaseSprite, #minor)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #releaseSprite)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempting to release free sprite!", #releaseSprite, #minor)
+    return error(me, "Attempting to release free sprite!", #releaseSprite)
   end if
   tsprite = sprite(tSprNum)
   tsprite.member = member(0)
@@ -75,10 +75,10 @@ end
 
 on setEventBroker me, tSprNum, tid
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #setEventBroker, #major)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #setEventBroker)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempted to modify non-reserved sprite!", #setEventBroker, #major)
+    return error(me, "Attempted to modify non-reserved sprite!", #setEventBroker)
   end if
   tsprite = sprite(tSprNum)
   tsprite.scriptInstanceList = [new(pEventBroker)]
@@ -88,10 +88,10 @@ end
 
 on removeEventBroker me, tSprNum
   if pTotalSprList.getPos(tSprNum) < 1 then
-    return error(me, "Sprite not marked as usable:" && tSprNum, #removeEventBroker, #minor)
+    return error(me, "Sprite not marked as usable:" && tSprNum, #removeEventBroker)
   end if
   if pFreeSprList.getPos(tSprNum) > 0 then
-    return error(me, "Attempted to modify non reserved sprite!", #removeEventBroker, #minor)
+    return error(me, "Attempted to modify non reserved sprite!", #removeEventBroker)
   end if
   sprite(tSprNum).scriptInstanceList = []
   return 1

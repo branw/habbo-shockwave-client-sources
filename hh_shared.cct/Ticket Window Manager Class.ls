@@ -37,7 +37,7 @@ on showTicketWindow me
   createWindow(pWndID, "habbo_basic.window")
   tWndObj = getWindow(pWndID)
   if tWndObj = 0 then
-    return error(me, "Cannot open tickets window", #showTicketWindow, #major)
+    return error(me, "Cannot open tickets window", #showTicketWindow)
   end if
   if not me.ChangeWindowView("habbo_ph_tickets.window") then
     return 0
@@ -56,7 +56,7 @@ on ChangeWindowView me, tView
   tWndObj = getWindow(pWndID)
   tWndObj.unmerge()
   if not tWndObj.merge(tView) then
-    return error(me, "Cannot open tickets window", #ChangeWindowView, #major)
+    return error(me, "Cannot open tickets window", #ChangeWindowView)
   end if
   tTickets = getObject(#session).GET("user_ph_tickets")
   tText = replaceChunks(getText("ph_tickets_txt"), "\x1", tTickets)

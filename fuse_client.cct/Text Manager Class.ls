@@ -8,14 +8,14 @@ on GET me, tKey, tDefault
     else
       tText = tKey
     end if
-    error(me, tError, #GET, #minor)
+    error(me, tError, #GET)
   end if
   return tText
 end
 
 on dump me, tField, tDelimiter
   if not memberExists(tField) then
-    return error(me, "Field member expected:" && tField, #dump, #major)
+    return error(me, "Field member expected:" && tField, #dump)
   end if
   tStr = field(tField)
   tStrServices = getStringServices()

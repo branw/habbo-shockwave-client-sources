@@ -22,7 +22,7 @@ on define me, tPrefs
     pMemberClass = chars(tMem, 1, tMem.length - 1)
   else
     if ilk(pPrefs[#sprite].member.paletteRef) <> #member then
-      return error(me, "Palette must be a cast member for palette animations!", #define, #major)
+      return error(me, "Palette must be a cast member for palette animations!", #define)
     end if
     tMem = pPrefs[#sprite].member.paletteRef.name
     pPaletteClass = chars(tMem, 1, tMem.length - 1)

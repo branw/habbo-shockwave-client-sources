@@ -2,7 +2,7 @@ on construct me
   tWindowObj = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tWindowObj then
     tWindowObj = VOID
-    return error(me, "Couldn't access catalogue window!", #construct, #major)
+    return error(me, "Couldn't access catalogue window!", #construct)
   end if
   tHeaderImageNo = getThread(#catalogue).getComponent().pCatalogProps["Recycler"]["headerImage"]
   getThread(#recycler).getInterface().setHeaderImage(tHeaderImageNo)

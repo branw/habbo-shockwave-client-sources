@@ -13,7 +13,7 @@ on deconstruct me
 end
 
 on handleDisconnect me, tMsg
-  error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleDisconnect, #dummy)
+  error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleMsg)
   return me.getInterface().showDisconnect()
 end
 
@@ -166,7 +166,7 @@ on handleEPSnotify me, tMsg
   case ttype of
     580:
       if not createObject("lang_test", "CLangTest") then
-        return error(me, "Failed to init lang tester!", #handleEPSnotify, #minor)
+        return error(me, "Failed to init lang tester!", #handle_eps_notify)
       else
         return getObject("lang_test").setWord(tdata)
       end if
@@ -221,7 +221,7 @@ on handleRights me, tMsg
 end
 
 on handleErr me, tMsg
-  error(me, "Error from server:" && tMsg.content, #handleErr, #dummy)
+  error(me, "Error from server:" && tMsg.content, #handle_error)
   case 1 of
     tMsg.content contains "login incorrect":
       removeConnection(tMsg.connection.getID())
@@ -253,18 +253,11 @@ on handleErr me, tMsg
 end
 
 on handleModAlert me, tMsg
-  tTest = tMsg.getaProp(#content)
-  tConn = tMsg.connection
-  if not tConn then
-    error(me, "Error in moderation alert.", #handleModerationAlert, #minor)
-    return 0
+  if not voidp(tMsg.content) then
+    executeMessage(#alert, [#title: "alert_warning", #Msg: tMsg.content])
+  else
+    error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
-  tMessageText = tConn.GetStrFrom()
-  tURL = tConn.GetStrFrom()
-  if tURL = EMPTY then
-    tURL = VOID
-  end if
-  executeMessage(#alert, [#title: "alert_warning", #Msg: tMessageText, #modal: 1, #url: tURL])
 end
 
 on handleCryptoParameters me, tMsg
@@ -275,7 +268,7 @@ on handleCryptoParameters me, tMsg
     tMsg.connection.send("GENERATEKEY")
   else
     if tServerToClient then
-      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters, #minor)
+      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters)
       return tMsg.connection.disconnect(1)
     end if
     me.startSession()

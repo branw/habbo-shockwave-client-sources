@@ -30,12 +30,11 @@ on openRemoveWindow me, tFriendListCopy, tListLimitsPntr
     return 1
   end if
   if not createWindow(pWindowTitle, "habbo_full.window", 0, 0, #modal) then
-    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow, #major)
+    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow)
   end if
   tWndObj = getWindow(pWindowTitle)
   if not tWndObj.merge("console_buddylistfull.window") then
-    tWndObj.close()
-    return error(me, "Failed to open Messenger window!!!", #openRemoveWindow, #major)
+    return tWndObj.close()
   end if
   tElem = tWndObj.getElement("console_friendremove_list_full")
   tText = getText("buddyremove_list_full")

@@ -138,7 +138,7 @@ on ChangeWindowView me, tWindowName
     tWndObj.unmerge()
   else
     if not createWindow(pWindowTitle, "habbo_basic.window", 345, 20) then
-      return error(me, "Failed to create window for Navigator!", #ChangeWindowView, #major)
+      return error(me, "Failed to create window for Navigator!", #ChangeWindowView)
     end if
     tWndObj = getWindow(pWindowTitle)
     tWndObj.registerClient(me.getID())
@@ -856,7 +856,7 @@ end
 on sendTrackingCall me
   tTrackingHeader = getObject(#session).GET("tracking_header")
   if tTrackingHeader = 0 then
-    return error(me, "Tracking header not in session.", #sendTrackingCall, #minor)
+    return error(me, "Tracking header not in session.", #sendTrackingCall)
   end if
   executeMessage(#sendTrackingData, [#content: tTrackingHeader & "/navigator"])
 end

@@ -5,7 +5,7 @@ on createTemplateHuman me, tSize, tdir, tAction, tActionProps
   tObjectName = "temp_humanobj"
   if not objectExists(tObjectName) then
     if not createObject(tObjectName, "Human Template Class") then
-      return error(me, "Failed to init temporary human object!", #createTemplateHuman, #major)
+      return error(me, "Failed to init temporary human object!", #createTemplateHuman)
     end if
     tProps[#userName] = "temp_human_figurecreator"
     tProps[#figure] = getObject(#session).GET("user_figure").duplicate()
@@ -46,7 +46,7 @@ on createHumanPartPreview me, tWindowTitle, tElement, tPartList, tFigure
     if tFigure.ilk = #propList then
       tFigure = tFigure.duplicate()
     else
-      return error(me, "Figure data not found!", #createHumanPartPreview, #major)
+      return error(me, "Figure data not found!", #createHumanPartPreview)
     end if
   end if
   me.createTemplateParts(tFigure, tPartList, 3)

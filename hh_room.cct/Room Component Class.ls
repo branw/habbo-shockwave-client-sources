@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID, pOneWayDoorManagerID
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady, pGroupInfoID
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -42,8 +42,6 @@ on construct me
   pCurrentSlidingObjects = [:]
   createObject(pShadowManagerID, "Shadow Manager")
   createObject(pGroupInfoID, "Group Info Class")
-  pOneWayDoorManagerID = "One Way Door Manager"
-  createObject(pOneWayDoorManagerID, "OneWayDoor Manager Class")
   registerMessage(#pickAndGoCFH, me.getID(), #pickAndGoCFH)
   registerMessage(#enterRoom, me.getID(), #enterRoom)
   registerMessage(#leaveRoom, me.getID(), #leaveRoom)
@@ -97,9 +95,6 @@ on deconstruct me
   if objectExists(pGroupInfoID) then
     removeObject(pGroupInfoID)
   end if
-  if objectExists(pOneWayDoorManagerID) then
-    removeObject(pOneWayDoorManagerID)
-  end if
   pRoomId = EMPTY
   pUserObjList = [:]
   pActiveObjList = [:]
@@ -121,14 +116,14 @@ end
 
 on enterRoom me, tRoomDataStruct
   if not listp(tRoomDataStruct) then
-    error(me, "Invalid room data struct!", #enterRoom, #major)
+    error(me, "Invalid room data struct!", #enterRoom)
     return executeMessage(#leaveRoom)
   end if
   getInterstitial().adRequested()
   me.getRoomConnection().send("GETINTERST", "general")
   tdata = tRoomDataStruct.duplicate()
   if voidp(tdata[#id]) then
-    error(me, "Missing ID in room data struct!", #enterRoom, #major)
+    error(me, "Missing ID in room data struct!", #enterRoom)
     return executeMessage(#leaveRoom)
   end if
   if pRoomId <> EMPTY then
@@ -151,7 +146,7 @@ end
 
 on enterDoor me, tdata
   if not listp(tdata) then
-    return error(me, "Room data struct expected!", #enterDoor, #major)
+    return error(me, "Room data struct expected!", #enterDoor)
   end if
   if tdata[#id] <> pSaveData[#id] then
     me.leaveRoom(1)
@@ -397,7 +392,7 @@ on getInterstitial me
   if objectExists(pInterstitialSystemID) then
     return getObject(pInterstitialSystemID)
   else
-    return error(me, "Interstitial manager not found", #getInterstitial, #major)
+    return error(me, "Interstitial manager not found", #getInterstitial)
   end if
 end
 
@@ -423,7 +418,7 @@ on getShadowManager me
   if objectExists(pShadowManagerID) then
     return getObject(pShadowManagerID)
   else
-    return error(me, "Shadow manager not found", #getShadowManager, #major)
+    return error(me, "Shadow manager not found", #getShadowManager)
   end if
 end
 
@@ -577,7 +572,7 @@ end
 
 on addSlideObject me, tid, tFromLoc, tToLoc, tTimeNow, tHasCharacter
   if the paramCount < 4 then
-    return error(me, "Wrong parameter count", #addSlideObject, #major)
+    return error(me, "Wrong parameter count", #addSlideObject)
   end if
   tid = tid.string
   if voidp(tTimeNow) then
@@ -624,7 +619,7 @@ end
 on getSpectatorMode me
   tModeMgrObj = getObject(pSpectatorSystemID)
   if tModeMgrObj = 0 then
-    return error(me, "Spectator System missing!", #getSpectatorMode, #major)
+    return error(me, "Spectator System missing!", #getSpectatorMode)
   end if
   return tModeMgrObj.getSpectatorMode()
 end
@@ -632,7 +627,7 @@ end
 on setSpectatorMode me, tstate
   tModeMgrObj = getObject(pSpectatorSystemID)
   if tModeMgrObj = 0 then
-    return error(me, "Spectator System missing!", #setSpectatorMode, #major)
+    return error(me, "Spectator System missing!", #setSpectatorMode)
   end if
   if tstate then
     getObject(#session).set("user_index", -1000)
@@ -706,7 +701,7 @@ end
 on updateSpectatorCount me, tSpectatorCount, tSpectatorMax
   tModeMgrObj = getObject(pSpectatorSystemID)
   if tModeMgrObj = 0 then
-    return error(me, "Spectator System missing!", #updateSpectatorCount, #major)
+    return error(me, "Spectator System missing!", #setSpectatorMode)
   end if
   tModeMgrObj.updateSpectatorCount(tSpectatorCount, tSpectatorMax)
 end
@@ -737,7 +732,7 @@ on loadRoomCasts me
     pSaveData[#casts] = []
   end if
   if pSaveData[#casts].count < 1 then
-    error(me, "Cast for room not defined:" && pRoomId, #loadRoomCasts, #major)
+    error(me, "Cast for room not defined:" && pRoomId, #loadRoomCasts)
     me.getInterface().hideLoaderBar()
     executeMessage(#leaveRoom)
   end if
@@ -751,7 +746,7 @@ on roomCastLoaded me
   if pRoomId = EMPTY then
     pRoomId = "null"
     executeMessage(#leaveRoom)
-    return error(me, "Room building process is aborted!", #roomCastLoaded, #major)
+    return error(me, "Room building process is aborted!", #roomCastLoaded)
   end if
   if voidp(pTrgDoorID) then
     tTxt = getText("room_preparing", "...preparing room.")
@@ -766,7 +761,7 @@ on roomCastLoaded me
     tRoomCasts = pSaveData[#casts]
     repeat with tCast in tRoomCasts
       if not castExists(tCast) then
-        error(me, "Cast required by room not found:" && tCast, #roomCastLoaded, #major)
+        error(me, "Cast required by room not found:" && tCast, #roomCastLoaded)
         return executeMessage(#leaveRoom)
       end if
     end repeat
@@ -779,7 +774,7 @@ on roomConnected me, tMarker, tstate
   if pRoomId = EMPTY then
     pRoomId = "null"
     executeMessage(#leaveRoom)
-    return error(me, "Room building process is aborted!", #roomConnected, #major)
+    return error(me, "Room building process is aborted!", #roomCastLoaded)
   end if
   if not voidp(pTrgDoorID) then
     if tstate = "OPC_OK" then
@@ -805,7 +800,7 @@ on roomConnected me, tMarker, tstate
     end if
   end if
   if voidp(tMarker) then
-    error(me, "Missing room marker!!!", #roomConnected, #major)
+    error(me, "Missing room marker!!!", #roomConnected)
   end if
   pSaveData[#marker] = tMarker
   me.leaveRoom(1)
@@ -885,7 +880,7 @@ end
 
 on validateHeightMap me, tdata
   if not getObject(#cache).exists(pCacheKey) then
-    return error(me, "Data not expected yet!", #validateHeightMap, #major)
+    return error(me, "Data not expected yet!", #validateHeightMap)
   end if
   me.getInterface().getGeometry().loadHeightMap(tdata)
   me.pHeightMapData = tdata
@@ -899,7 +894,7 @@ end
 on updateHeightMap me, tdata
   tHeightMapData = pHeightMapData
   if voidp(tHeightMapData) then
-    return error(me, "Height map update data sent but heightmap data not cached!", #updateHeightMap, #major)
+    return error(me, "Height map update data sent but heightmap data not cached!")
   else
     a = 1
     repeat with i = 1 to tdata.length
@@ -917,7 +912,7 @@ end
 
 on validateUserObjects me, tdata
   if not getObject(#cache).exists(pCacheKey) then
-    return error(me, "Data not expected yet!", #validateUserObjects, #major)
+    return error(me, "Data not expected yet!", #validateUserObjects)
   end if
   if tdata <> 0 then
     getObject(#cache).GET(pCacheKey).getaProp(#users).add(tdata)
@@ -932,7 +927,7 @@ end
 
 on validateActiveObjects me, tdata
   if not getObject(#cache).exists(pCacheKey) then
-    return error(me, "Data not expected yet!", #validateActiveObjects, #major)
+    return error(me, "Data not expected yet!", #validateActiveObjects)
   end if
   if tdata <> 0 then
     getObject(#cache).GET(pCacheKey).getaProp(#Active).add(tdata)
@@ -947,7 +942,7 @@ end
 
 on validatePassiveObjects me, tdata
   if not getObject(#cache).exists(pCacheKey) then
-    return error(me, "Data not expected yet!", #validatePassiveObjects, #major)
+    return error(me, "Data not expected yet!", #validatePassiveObjects)
   end if
   if tdata <> 0 then
     getObject(#cache).GET(pCacheKey).getaProp(#passive).add(tdata)
@@ -962,7 +957,7 @@ end
 
 on validateItemObjects me, tdata
   if not getObject(#cache).exists(pCacheKey) then
-    return error(me, "Data not expected yet!", #validateItemObjects, #major)
+    return error(me, "Data not expected yet!", #validateItemObjects)
   end if
   if tdata <> 0 then
     getObject(#cache).GET(pCacheKey).getaProp(#items).add(tdata)
@@ -986,7 +981,7 @@ end
 
 on updateProcess me, tKey, tValue
   if pActiveFlag then
-    return error(me, "Attempted to remake room!", #updateProcess, #major)
+    return error(me, "Attempted to remake room!", #updateProcess)
   end if
   if pProcessList[tKey] = 0 then
     pProcessList[tKey] = tValue
@@ -1039,10 +1034,10 @@ on createRoomObject me, tdata, tList, tClass
     return 0
   end if
   if voidp(tdata[#id]) or not listp(tList) then
-    return error(me, "Invalid arguments in object creation!", #createRoomObject, #major)
+    return error(me, "Invalid arguments in object creation!", #createRoomObject)
   end if
   if not voidp(tList[tdata[#id]]) then
-    return error(me, "Object already exists:" && tdata[#id], #createRoomObject, #major)
+    return error(me, "Object already exists:" && tdata[#id], #createRoomObject)
   end if
   if voidp(tClass) then
     tClass = "passive"
@@ -1067,13 +1062,13 @@ on createRoomObject me, tdata, tList, tClass
   end if
   tObject = createObject(#temp, tClasses)
   if not objectp(tObject) then
-    return error(me, "Failed to create room object:" && tdata, #createRoomObject, #major)
+    return error(me, "Failed to create room object:" && tdata, #createRoomObject)
   end if
   tObject.setID(tdata[#id])
   tSuccess = tObject.define(tdata.duplicate())
   if not tSuccess then
     tObject.deconstruct()
-    return error(me, "Failed to define room object:" && tdata, #createRoomObject, #major)
+    return error(me, "Failed to define room object:" && tdata, #createRoomObject)
   end if
   tList[tObject.getID()] = tObject
   return 1
@@ -1081,7 +1076,7 @@ end
 
 on removeRoomObject me, tid, tList
   if voidp(tList[tid]) then
-    return error(me, "Object not found:" && tid, #removeRoomObject, #minor)
+    return error(me, "Object not found:" && tid, #removeRoomObject)
   end if
   tList[tid].deconstruct()
   tList.deleteProp(tid)

@@ -241,7 +241,7 @@ end
 
 on createItemImg me, tProps, tDownloadPrevented
   if voidp(tProps) then
-    error(me, "Invalid props!", #createItemImg, #major)
+    error(me, "Invalid props!", #createItemImg)
     return image(1, 1, 8)
   end if
   tImgProps = [#ink: 8]
@@ -263,7 +263,7 @@ on createItemImg me, tProps, tDownloadPrevented
     if memberExists(tClass & "_" & tCount & "_" & "small") then
       tMemStr = tClass & "_" & tCount & "_" & "small"
     else
-      error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg, #major)
+      error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
     end if
   else
     if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then
@@ -284,7 +284,7 @@ on createItemImg me, tProps, tDownloadPrevented
               if not tDownloadPrevented then
                 tDynThread = getThread(#dynamicdownloader)
                 if tDynThread = 0 then
-                  error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg, #major)
+                  error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
                   return image(1, 18, 8)
                 else
                   tDynComponent = tDynThread.getComponent()

@@ -30,7 +30,7 @@ on parse me, tFieldName
       end if
     end if
   else
-    return error(me, "Member not found:" && tFieldName, #parse, #major)
+    return error(me, "Member not found:" && tFieldName, #parse)
   end if
   return tdata.duplicate()
 end
@@ -95,7 +95,7 @@ on parse_window me, tFieldName
           member(tPalMemNum).duplicate(tResMngr.createMember(tPalette && "Duplicate", #palette))
         else
           tResMngr.createMember(tPalette && "Duplicate", #palette)
-          error(me, "Palette member missing:" && tPalette, #parse_window, #minor)
+          error(me, "Palette member missing:" && tPalette, #parse_window)
         end if
       end if
       tElem[#palette] = tPalette && "Duplicate"
@@ -258,7 +258,7 @@ on parse_visual me, tFieldName
     end if
   end repeat
   if voidp(tLayDefinition[#version]) then
-    error(me, "Old visualizer definition:" && tFieldName, #parse_room, #minor)
+    error(me, "Old visualizer definition:" && tFieldName, #parse_room)
     repeat with tElem in tLayDefinition[#elements]
       if tElem[#media] = #field or tElem[#media] = #text then
         tElem[#txtColor] = tElem[#color]
