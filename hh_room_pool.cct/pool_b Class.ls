@@ -151,16 +151,16 @@ on poolTeleport me, tEvent, tSprID, tParam
   getThread(#room).getInterface().eventProcRoom(tEvent, "floor", tParam)
   if not (tSprID contains "pool_clickarea") and tloc[3] < 7 then
     if tloc[2] > 11 and tloc[1] < 20 then
-      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 17, #short: 22])
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 17, #integer: 22])
     else
-      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 31, #short: 11])
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 31, #integer: 11])
     end if
   else
     if tSprID contains "pool_clickarea" and tloc[3] = 7 then
       if tloc[2] > 11 then
-        getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 17, #short: 21])
+        getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 17, #integer: 21])
       else
-        getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 31, #short: 10])
+        getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 31, #integer: 10])
       end if
     end if
   end if

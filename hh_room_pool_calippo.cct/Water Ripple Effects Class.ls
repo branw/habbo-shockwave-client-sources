@@ -24,7 +24,7 @@ on Init me, tID
     pRipples.add(createObject(#temp, "Ripple Class"))
     pRipples[f].define([#id: f, #buffer: pMemberImg])
   end repeat
-  pMemberImg.fill(pMemberImg.rect, rgb(109, 187, 226))
+  pMemberImg.fill(pMemberImg.rect, rgb(0, 153, 153))
   pLocFixPoint = point(tSpr.locH - tSpr.member.regPoint.locH, tSpr.locV - tSpr.member.regPoint.locV)
   receivePrepare(me.getID())
 end

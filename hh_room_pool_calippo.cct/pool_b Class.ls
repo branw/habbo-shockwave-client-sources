@@ -2,15 +2,14 @@ property pAnimCounter, pAnimList, pCurrentFrame, pCurtainsLocZ, pSplashs, pArrow
 
 on construct me
   pSplashs = [:]
-  pBalloonRightMargin = getIntVariable("balloons.rightmargin", 720)
-  createVariable("balloons.rightmargin", 597)
   initThread("thread.pelle")
+  me.regMsgList(1)
   return 1
 end
 
 on deconstruct me
+  me.regMsgList(0)
   closeThread(#pellehyppy)
-  createVariable("balloons.rightmargin", pBalloonRightMargin)
   removeUpdate(me.getID())
   if objectExists(#waterripples) then
     removeObject(#waterripples)
@@ -79,39 +78,39 @@ on showprogram me, tMsg
       return 0
     end if
     call(symbol("fuseShow_" & tCmd), getObject(#pool_fuse_screen), tPrm)
-  else
-    if tDst contains "Splash" then
-      me.splash(tDst, tCmd)
-    else
-      if tDst contains "door" then
-        me.delay(200, #elvatorDoor, [#dest: tDst, #command: tCmd])
-      else
-      end if
-    end if
   end if
 end
 
-on splash me, tDest, tCommand
-  if voidp(pSplashs[tDest]) then
-    return 0
+on handle_pool_bigsplash_data me, tMsg
+  tConn = tMsg.connection
+  tDest = "BIGSPLASH"
+  if not voidp(pSplashs[tDest]) then
+    call(#Activate, pSplashs[tDest])
   end if
-  call(#Activate, pSplashs[tDest])
 end
 
-on elvatorDoor me, tProps
-  tDst = tProps[#dest]
-  tCmd = tProps[#command]
-  case tCmd of
-    "open":
-      tmember = getMember("towerdoor_2")
-    "close":
+on handle_pool_elevator me, tMsg
+  tConn = tMsg.connection
+  tstate = tConn.GetIntFrom()
+  case tstate of
+    0:
       tmember = getMember("towerdoor_0")
+    otherwise:
+      tmember = getMember("towerdoor_2")
   end case
   tVisObj = getThread(#room).getInterface().getRoomVisualizer()
   if tVisObj = 0 then
     return 0
   end if
   tVisObj.getSprById("lift_door").setMember(tmember)
+end
+
+on handle_pool_stair_splash me, tMsg
+  tConn = tMsg.connection
+  tDest = "Splash" & tConn.GetIntFrom()
+  if not voidp(pSplashs[tDest]) then
+    call(#Activate, pSplashs[tDest])
+  end if
 end
 
 on update me
@@ -152,17 +151,33 @@ on poolTeleport me, tEvent, tSprID, tParam
   getThread(#room).getInterface().eventProcRoom(tEvent, "floor", tParam)
   if not (tSprID contains "pool_clickarea") and tloc[3] < 7 then
     if tloc[2] > 11 and tloc[1] < 20 then
-      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 17, #short: 22])
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 17, #integer: 22])
     else
-      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 31, #short: 11])
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 31, #integer: 11])
     end if
   else
     if tSprID contains "pool_clickarea" and tloc[3] = 7 then
       if tloc[2] > 11 then
-        getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 17, #short: 21])
+        getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 17, #integer: 21])
       else
-        getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 31, #short: 10])
+        getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 31, #integer: 10])
       end if
     end if
   end if
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(500, #handle_pool_bigsplash_data)
+  tMsgs.setaProp(502, #handle_pool_elevator)
+  tMsgs.setaProp(505, #handle_pool_stair_splash)
+  tCmds = [:]
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  end if
+  return 1
 end

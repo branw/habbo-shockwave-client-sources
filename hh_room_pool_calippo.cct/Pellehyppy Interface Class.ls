@@ -165,7 +165,7 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
     case tSprID of
       "ph_swimsuit_exitbutton":
         me.closeUimaKoppi()
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: EMPTY])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit_gobutton":
         me.closeUimaKoppi()
@@ -178,7 +178,7 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
         tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
-        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", tswimsuit)
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", [#string: tswimsuit])
         getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit.left.button":
         me.changeSwimSuitColor("ch", -1)
@@ -194,7 +194,11 @@ on showRoomBar me, tRoomData
   tRoomInterface.showVote()
   return 1
   if not windowExists(pBottomBarId) then
-    createWindow(pBottomBarId, "room_bar.window", 0, 486)
+    tLayout = "room_bar.window"
+    if (the stage).image.widht >= 960 then
+      tLayout = "room_bar_wide.window"
+    end if
+    createWindow(pBottomBarId, tLayout, 0, 486)
     tWndObj = getWindow(pBottomBarId)
     if tWndObj.elementExists("chat_field_bg_long") then
       tWidthLong = tWndObj.getElement("chat_field_bg_long").getProperty(#width)

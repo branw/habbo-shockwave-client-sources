@@ -5,10 +5,12 @@ on construct me
   tProps = [:]
   pSplashs = [:]
   initThread("thread.pelle")
+  me.regMsgList(1)
   return 1
 end
 
 on deconstruct me
+  me.regMsgList(0)
   closeThread(#pellehyppy)
   removeUpdate(me.getID())
   if objectExists(#waterripples) then
@@ -53,41 +55,40 @@ on prepare me
 end
 
 on showprogram me, tMsg
-  if voidp(tMsg) then
-    return 0
-  end if
-  tDest = tMsg[#show_dest]
-  tCommand = tMsg[#show_command]
-  tParm = tMsg[#show_params]
-  if tDest contains "curtains" then
-    me.curtains(tDest, tCommand)
-  else
-    if tDest contains "Splash" then
-      me.splash(tDest, tCommand)
-    end if
-  end if
 end
 
-on curtains me, tID, tCommand
-  case tCommand of
-    "open":
-      tmember = getMember("verhot auki")
-    "close":
-      tmember = getMember("verho kiinni")
+on handle_dressing_room_curtain me, tMsg
+  tConn = tMsg.connection
+  tID = tConn.GetStrFrom()
+  tStateInt = tConn.GetIntFrom()
+  case tStateInt of
+    0:
+      tmember = member(getmemnum("verho kiinni"))
+      tlocz = pCurtainsLocZ[tID] - 1000
+    1:
+      tmember = member(getmemnum("verhot auki"))
+      tlocz = pCurtainsLocZ[tID] - 2000
   end case
-  tVisObj = getThread(#room).getInterface().getRoomVisualizer()
-  if tVisObj = 0 then
+  tID = "curtains" & tID.char[tID.length]
+  tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
+  if tRoomVis = 0 then
     return 0
   end if
-  tVisObj.getSprById(tID).setMember(tmember)
+  tSpr = tRoomVis.getSprById(tID)
+  if tSpr = 0 then
+    return 0
+  end if
+  tSpr.setMember(tmember)
+  tSpr.locZ = tlocz
   return 1
 end
 
-on splash me, tDest, tCommand
-  if voidp(pSplashs[tDest]) then
-    return 0
+on handle_pool_stair_splash me, tMsg
+  tConn = tMsg.connection
+  tDest = "Splash" & tConn.GetIntFrom()
+  if not voidp(pSplashs[tDest]) then
+    call(#Activate, pSplashs[tDest])
   end if
-  call(#Activate, pSplashs[tDest])
 end
 
 on update me
@@ -128,10 +129,25 @@ on poolTeleport me, tEvent, tSprID, tParm
   tloc = tObject.getLocation()
   getThread(#room).getInterface().eventProcRoom(tEvent, "floor", tParm)
   if not (tSprID contains "pool_clickarea") and tloc[3] < 7 then
-    getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 21, #short: 28])
+    getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 21, #integer: 28])
   else
     if tSprID contains "pool_clickarea" and tloc[3] = 7 then
-      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 20, #short: 28])
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#integer: 20, #integer: 28])
     end if
   end if
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tMsgs.setaProp(504, #handle_dressing_room_curtain)
+  tMsgs.setaProp(505, #handle_pool_stair_splash)
+  tCmds = [:]
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  end if
+  return 1
 end

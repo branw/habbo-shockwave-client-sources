@@ -113,12 +113,12 @@ on jumpPlayPack me, tMsg
 end
 
 on sendSign me, tSign
-  getConnection(getVariable("connection.room.id")).send("SIGN", tSign)
+  getConnection(getVariable("connection.room.id")).send("SIGN", [#integer: integer(tSign)])
 end
 
 on sendJumpPerf me, tJumpData
   if not objectExists("Figure_System_Pool") then
     return error(me, "Figure system Pool object not found", #sendJumpPerf)
   end if
-  getConnection(getVariable("connection.room.id")).send("JUMPPERF", tJumpData)
+  getConnection(getVariable("connection.room.id")).send("JUMPPERF", [#string: string(tJumpData)])
 end
