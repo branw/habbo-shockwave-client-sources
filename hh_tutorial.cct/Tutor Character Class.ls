@@ -20,18 +20,6 @@ on deconstruct me
   removeWindow(me.pTutorWindow.getProperty(#id))
 end
 
-on setLinks me, tLinkList
-  me.pBubble.setText(getText("tutorial_menu_text"))
-  me.pBubble.setLinks(tLinkList)
-end
-
-on setStatuses me, tStatuses
-  if voidp(tStatuses) then
-    return 0
-  end if
-  me.pBubble.setCheckmarks(tStatuses)
-end
-
 on hideLinks me
   me.pBubble.setLinks(VOID)
 end

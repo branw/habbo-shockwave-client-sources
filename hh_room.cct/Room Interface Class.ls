@@ -1332,6 +1332,9 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tObject.getClass() = "user" then
       executeMessage(#userClicked, tObject.getName())
     end if
+    if tObject.getClass() = "user" and tEvent = #mouseDown then
+      executeMessage(#tutorial_userClicked)
+    end if
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = tObject.getClass()

@@ -1,4 +1,4 @@
-property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pWebLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pCacheWebLinkImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
+property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pWebLinkRect, pFollowLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pCacheWebLinkImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
@@ -8,15 +8,16 @@ on construct me
   pLocation = EMPTY
   pLastTime = EMPTY
   pMsgCount = "0"
-  pTopMarg = 3
+  pTopMarg = 2
   pLeftMarg = 29
-  pLineHeight = 10
+  pLineHeight = 12
   pMsgLinkRect = rect(0, 0, 0, 0)
   pWebLinkRect = rect(0, 0, 0, 0)
+  pFollowLinkRect = rect(0, 0, 0, 0)
   pSelected = 0
   pDotLineImg = member(getmemnum("meswhitedottedline")).image
   pCacheOnlineImg = member(getmemnum("mes_smallbuddy_head")).image
-  pCacheWebLinkImg = member(getmemnum("messenger_web_page_button")).image
+  pCacheWebLinkImg = member(getmemnum("messenger_web_page_button_new")).image
   pNameNeedUpdate = 1
   pMsgsNeedUpdate = 1
   pLocationNeedUpdate = 1
@@ -114,6 +115,11 @@ on clickAt me, locX, locY
       openNetPage(tDestURL)
     end if
   end if
+  if point(locX, locY).inside(pFollowLinkRect) then
+    tID = integer(pData.id)
+    tConn = getConnection(getVariable("connection.info.id"))
+    tConn.send("FOLLOW_FRIEND", [#integer: tID])
+  end if
 end
 
 on atWebLinkIcon me, tpoint
@@ -125,6 +131,10 @@ on atMessageCount me, tpoint
     return 0
   end if
   return tpoint.inside(pMsgLinkRect)
+end
+
+on atFollowLink me, tpoint
+  return tpoint.inside(pFollowLinkRect)
 end
 
 on render me, tBuffer, tPosition
@@ -212,8 +222,26 @@ on render me, tBuffer, tPosition
       tY2 = tY1 + tMissionImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
       pCacheImage.fill(rect(tX1, tY1, tX1 + pwidth, tY2), rgb(255, 255, 255))
-      pCacheImage.copyPixels(tMissionImg, tDstRect, tMissionImg.rect)
-      pMissNeedUpdate = 0
+      if string(pCustomText).length > 0 then
+        pCacheImage.copyPixels(tMissionImg, tDstRect, tMissionImg.rect)
+        pMissNeedUpdate = 0
+      end if
+    end if
+    if pLastNeedUpdate or pLocationNeedUpdate then
+      if pOnline and tlocation <> getText("console_onfrontpage") then
+        tGotoImg = pWriterMsgs.render(getText("console_follow_friend"))
+        tX1 = pLeftMarg
+        tX2 = tX1 + tGotoImg.width
+        tY1 = pLineHeight * 3 + pTopMarg + pFriendPerMsgOffset
+        tY2 = tY1 + tGotoImg.height
+        tDstRect = rect(tX1, tY1, tX2, tY2)
+        pFollowLinkRect = tDstRect
+        pCacheImage.fill(rect(tX1, tY1, tX1 + pwidth, tY2), rgb(255, 255, 255))
+        pCacheImage.copyPixels(tGotoImg, tDstRect, tGotoImg.rect)
+      else
+        pCacheImage.fill(pFollowLinkRect, rgb(255, 255, 255))
+        pFollowLinkRect = rect(0, 0, 0, 0)
+      end if
     end if
     tX1 = 0
     tX2 = pDotLineImg.width

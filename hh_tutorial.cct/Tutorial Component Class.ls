@@ -198,6 +198,8 @@ on nextStep me
     end if
     tLinkList.setaProp(#menu, "tutorial_select_another_topic")
     tTutorList.setaProp(#links, tLinkList)
+    tStatusList = [#menu: 1]
+    tTutorList.setaProp(#statuses, tStatusList)
     me.completeTopic(me.pTopicID)
   end if
   me.getInterface().setTutor(tTutorList)

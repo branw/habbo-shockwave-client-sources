@@ -3,11 +3,7 @@ property pBottomBarId, pMaxHealth, pMaxHealthBarHeight, pOrigHealthBarLoc, pLast
 on construct me
   pBallCountAnimTimer = 0
   pBallCreateAnimTimer = 0
-  tRoomInt = getObject(#room_interface)
-  if tRoomInt = 0 then
-    return 0
-  end if
-  pBottomBarId = tRoomInt.pBottomBarId
+  pBottomBarId = "RoomBarID"
   registerMessage(#roomReady, me.getID(), #replaceRoomBar)
   pMaxHealth = getIntVariable("snowwar.health.maximum")
   pMaxBallcount = getIntVariable("snowwar.snowball.maximum")

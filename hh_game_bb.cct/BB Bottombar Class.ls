@@ -5,11 +5,7 @@ on construct me
   pCarriedPowerupId = 0
   pCarriedPowerupType = 0
   pCarriedPowerupTimeToLive = 0
-  tRoomInt = getObject(#room_interface)
-  if tRoomInt = 0 then
-    return 0
-  end if
-  pBottomBarId = tRoomInt.pBottomBarId
+  pBottomBarId = "RoomBarID"
   registerMessage(#roomReady, me.getID(), #replaceRoomBar)
   return 1
 end

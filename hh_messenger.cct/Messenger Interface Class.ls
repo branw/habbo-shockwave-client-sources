@@ -3,7 +3,7 @@ property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr,
 on construct me
   pWindowTitle = getText("win_messenger", "Habbo Console")
   pBuddyListBufferWidth = 203
-  pBuddylistItemHeight = 40
+  pBuddylistItemHeight = 53
   if variableExists("messenger_friend_permsg_offset") then
     pBuddylistItemHeight = pBuddylistItemHeight + getVariable("messenger_friend_permsg_offset") + 1
   end if
@@ -498,6 +498,14 @@ on renderMessage me, tMsgStruct
   end if
   tFrom = getText("console_getmessage_sender") && tSenderName & RETURN & tTime
   tWndObj.getElement("console_getmessage_sender").setText(tFrom)
+  tOnline = tdata.getaProp(#online)
+  tlocation = tdata.getaProp(#location)
+  tElem = tWndObj.getElement("console_getmessage_follow")
+  if not tOnline or tlocation = getText("console_onfrontpage") then
+    tElem.hide()
+  else
+    tElem.show()
+  end if
   tElem = tWndObj.getElement("console_getmessage_field")
   tRect = rect(0, 0, tElem.pwidth, tElem.pheight)
   tElem.feedImage(getWriter(pWriterID_consolemsg).render(tMsg, tRect))
@@ -824,6 +832,13 @@ on eventProcMessenger me, tEvent, tElemID, tParm
             end if
             me.renderMessage(me.getComponent().getNextMessage())
           end if
+        "console_getmessage_follow":
+          tID = integer(pLastGetMsg.getaProp(#senderID))
+          if voidp(pLastGetMsg[#senderID]) then
+            return 0
+          end if
+          tConn = getConnection(getVariable("connection.info.id"))
+          tConn.send("FOLLOW_FRIEND", [#integer: tID])
         "console_getmessage_reply":
           if voidp(pLastGetMsg[#id]) then
             return 0
@@ -1015,7 +1030,11 @@ on eventProcMessenger me, tEvent, tElemID, tParm
                 if pBuddyDrawObjList[tBuddyName].atMessageCount(tBuddyPoint) then
                   tElemRef.setProperty(#cursor, "cursor.finger")
                 else
-                  tElemRef.setProperty(#cursor, 0)
+                  if pBuddyDrawObjList[tBuddyName].atFollowLink(tBuddyPoint) then
+                    tElemRef.setProperty(#cursor, "cursor.finger")
+                  else
+                    tElemRef.setProperty(#cursor, 0)
+                  end if
                 end if
               end if
             otherwise:

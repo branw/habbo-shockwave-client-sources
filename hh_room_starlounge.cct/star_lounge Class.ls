@@ -1,6 +1,7 @@
 property pGradientObj
 
 on construct me
+  return 0
   tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
   tsprite = tVisualizer.getSprById("starlounge_gr")
   if tsprite = 0 then

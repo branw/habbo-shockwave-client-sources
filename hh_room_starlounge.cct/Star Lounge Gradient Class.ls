@@ -1,6 +1,7 @@
 property pSprite, pOffset, pMaxOffset, pPhase, pSpeed, pLocOrig, pCreases, pUseCreases, pImageOrig, pBinMember, pPaletteMember
 
 on define me, tsprite
+  return 0
   pMaxOffset = 300
   pSpeed = 10
   pUseCreases = 1
@@ -25,8 +26,6 @@ on define me, tsprite
     else
       pPaletteMember = member(createMember("starlounge_gradient_palette", #palette))
     end if
-    pPaletteMember.media = tOrigMember.paletteRef.media
-    pBinMember.paletteRef = pPaletteMember
   end if
   tWidth = (the stage).rect.width
   tHeight = (the stage).rect.height
@@ -65,8 +64,10 @@ end
 on cleanup me
   if not voidp(pBinMember) then
     removeMember(pBinMember.name)
+    pBinMember = member(1, "hh_room_starlounge")
   end if
   if not voidp(pPaletteMember) then
     removeMember(pPaletteMember.name)
+    pPaletteMember = member(2, "hh_room_starlounge")
   end if
 end

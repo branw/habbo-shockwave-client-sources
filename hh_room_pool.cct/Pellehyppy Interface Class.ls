@@ -2,7 +2,7 @@ property pWindowTitle, pSwimSuitIndex, pSwimSuitModel, pSwimSuitColor, pBottomBa
 
 on construct me
   pWindowTitle = "pellehyppy"
-  pBottomBarId = "Room_bar"
+  pBottomBarId = "RoomBarID"
   pSignState = VOID
   pChatmode = "CHAT"
   if not objectExists("Figure_System_Pool") then

@@ -723,7 +723,7 @@ on flipImage me, tImg_a
 end
 
 on getCanvasName me
-  return pClass && pName & me.getID() && "Canvas"
+  return pClass && pName && me.getID() && "Canvas"
 end
 
 on action_mv me, tProps

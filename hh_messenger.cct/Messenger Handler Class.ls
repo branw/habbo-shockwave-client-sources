@@ -166,6 +166,21 @@ on handle_buddy_request_result me, tMsg
   return 1
 end
 
+on handle_follow_failed me, tMsg
+  tConn = tMsg.connection
+  tFailureType = tConn.GetIntFrom()
+  case tFailureType of
+    0:
+      tTextKey = "console_follow_not_friend"
+    1:
+      tTextKey = "console_follow_offline"
+    2:
+      tTextKey = "console_follow_hotelview"
+  end case
+  executeMessage(#alert, tTextKey)
+  return 1
+end
+
 on handle_campaign_message me, tMsg
   tdata = me.get_campaign_message(tMsg)
   return me.getComponent().receive_CampaignMsg(tdata)
@@ -430,6 +445,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(313, #handle_messenger_messages)
   tMsgs.setaProp(314, #handle_buddy_request_list)
   tMsgs.setaProp(315, #handle_buddy_request_result)
+  tMsgs.setaProp(349, #handle_follow_failed)
   tCmds = [:]
   tCmds.setaProp("MESSENGERINIT", 12)
   tCmds.setaProp("MESSENGER_UPDATE", 15)
@@ -446,6 +462,7 @@ on regMsgList me, tBool
   tCmds.setaProp("MESSENGER_GETMESSAGES", 191)
   tCmds.setaProp("MESSENGER_REPORTMESSAGE", 201)
   tCmds.setaProp("GET_BUDDY_REQUESTS", 233)
+  tCmds.setaProp("FOLLOW_FRIEND", 262)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

@@ -1,14 +1,16 @@
-property pWindowType, pLinkList, pLinkWriter, pResizeOffset, pLinkPosOrigX, pLinkPosOrigY, pWidthOrig, pHeightOrig
+property pWindowType, pLinkList, pLinkWriter, pResizeOffset, pLinkPosOrigX, pLinkPosOrigY, pWidthOrig, pHeightOrig, pLinkLineHeight, pLinksOffset
 
 on construct me
   me.pWindowType = "bubble_links.window"
   me.pTextWidth = 160
   me.Init()
+  me.pLinksOffset = 10
   me.pWindow.registerProcedure(#blendHandler, me.getID(), #mouseEnter)
   me.pWindow.registerProcedure(#blendHandler, me.getID(), #mouseLeave)
   me.pWindow.registerProcedure(#eventHandler, me.getID(), #mouseUp)
   tLinkFont = getStructVariable("struct.font.link")
-  tLinkFont.setaProp(#lineHeight, 16)
+  me.pLinkLineHeight = 16
+  tLinkFont.setaProp(#lineHeight, me.pLinkLineHeight)
   tWriterID = getUniqueID()
   createWriter(tWriterID, tLinkFont)
   me.pLinkWriter = getWriter(tWriterID)
@@ -31,7 +33,7 @@ on setText me, tText
   me.setLinks(me.pLinkList)
 end
 
-on setLinks me, tLinkList
+on setLinks me, tLinkList, tStatusList
   me.pLinkList = tLinkList
   tElem = me.pWindow.getElement("bubble_links")
   if voidp(me.pLinkList) then
@@ -48,13 +50,28 @@ on setLinks me, tLinkList
   end repeat
   tListString = tListString.line[1..tListString.line.count - 1]
   tLinkImage = me.pLinkWriter.render(tListString).duplicate()
+  if not voidp(tStatusList) then
+    tColorOrig = pLinkWriter.pMember.color
+    repeat with i = 1 to tLinkList.count
+      tID = tLinkList.getPropAt(i)
+      if tStatusList.getaProp(tID) then
+        me.pLinkWriter.pMember.line[i].color = rgb(200, 200, 200)
+      end if
+    end repeat
+    tLinkImage = me.pLinkWriter.pMember.image.duplicate()
+    me.pLinkWriter.pMember.color = tColorOrig
+  end if
   tElem.show()
   tElem.feedImage(tLinkImage)
   tElem.resizeTo(tLinkImage.width, tLinkImage.height, 1)
   tTextH = me.pWindow.getElement("bubble_text").getProperty(#height)
-  tElem.moveTo(0, tTextH + 10)
-  me.pWindow.resizeTo(me.pEmptySizeX, me.pEmptySizeY + tTextH + 10 + tElem.getProperty(#height))
+  tElem.moveTo(0, tTextH + me.pLinksOffset)
+  tSizeY = me.pEmptySizeY + tTextH + me.pLinksOffset + tElem.getProperty(#height)
+  me.pWindow.resizeTo(me.pEmptySizeX, tSizeY)
   me.updatePointer()
+  if not voidp(tStatusList) then
+    me.setCheckmarks(tStatusList, 1)
+  end if
 end
 
 on hideLinks me
@@ -65,27 +82,16 @@ on hideLinks me
   me.updatePointer()
 end
 
-on setCheckmarks me, tStatusList
-  tMarkImage = member("checkmark").image
-  tLinkElem = me.pWindow.getElement("bubble_links")
-  tLinkImage = tLinkElem.getProperty(#image)
-  tImage = image(tLinkImage.width + 11, tLinkImage.height, 8)
-  tImage.copyPixels(tLinkImage, rect(12, 0, tImage.width, tImage.height), tLinkImage.rect)
-  repeat with tLinkNum = 1 to me.pLinkList.count
-    tID = me.pLinkList.getPropAt(tLinkNum)
-    if not tStatusList.getaProp(tID) then
-      next repeat
-    end if
-    tY1 = 16 * (tLinkNum - 1) + 4
-    tY2 = tY1 + 9
-    tImage.copyPixels(tMarkImage, rect(1, tY1, 10, tY2), tMarkImage.rect)
-  end repeat
-  tLinkElem.feedImage(tImage)
-  tLinkElem.resizeTo(tImage.width, tImage.height, 1)
+on setCheckmarks me, tStatusList, tBlockTextReset
+  if not tBlockTextReset then
+    me.setLinks(me.pLinkList, tStatusList)
+  end if
 end
 
 on blendHandler me, tEvent, tSpriteID, tParam
-  nothing()
+  if voidp(me.pLinkList) then
+    callAncestor(#blendHandler, [me], tEvent, tSpriteID, tParam)
+  end if
 end
 
 on eventHandler me, tEvent, tSpriteID, tParam

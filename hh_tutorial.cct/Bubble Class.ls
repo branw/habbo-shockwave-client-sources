@@ -1,9 +1,10 @@
-property pWindowID, pTargetElementID, pTargetWindowID, pLocX, pLocY, pText, pOffsetX, pOffsetY, pDirection, pSpecial, pWindow, pWindowType, pTextWidth, pTextHeight, pWriter, pFadeState, pTextOffset, pEmptySizeX, pEmptySizeY, pPointerX, pPointerY
+property pWindowID, pTargetElementID, pTargetWindowID, pLocX, pLocY, pText, pOffsetX, pOffsetY, pDirection, pSpecial, pWindow, pWindowType, pTextWidth, pTextHeight, pWriter, pFadeState, pFaded, pTextOffset, pEmptySizeX, pEmptySizeY, pPointerX, pPointerY
 
 on construct me
   me.pWindowType = "bubble_text.window"
   me.pFadeState = #ready
   me.pTextWidth = 120
+  me.pFaded = 0
   me.Init()
   me.pWindow.registerProcedure(#blendHandler, me.getID(), #mouseEnter)
   me.pWindow.registerProcedure(#blendHandler, me.getID(), #mouseLeave)
@@ -12,6 +13,7 @@ end
 
 on deconstruct me
   removeWindow(me.pWindowID)
+  removeWriter(me.pWriter.getID())
 end
 
 on Init me
@@ -25,12 +27,13 @@ on Init me
   tElem = me.pWindow.getElement("bubble_text")
   me.pWindow.resizeBy(pTextWidth - tElem.getProperty(#width), 0)
   me.pTextHeight = tElem.getProperty(#height)
-  tPlain = getStructVariable("struct.font.bold")
+  tPlainFont = getStructVariable("struct.font.plain")
   tWriterID = getUniqueID()
-  createWriter(tWriterID, tPlain)
+  createWriter(tWriterID, tPlainFont)
   me.pWriter = getWriter(tWriterID)
   tMetrics = [#wordWrap: 1, #rect: rect(0, 0, pTextWidth, 0)]
   me.pWriter.define(tMetrics)
+  me.pWriter.pMember.fixedLineSpace = 11
   me.pEmptySizeX = me.pWindow.getProperty(#width)
   me.pEmptySizeY = me.pWindow.getProperty(#height)
   me.hide()
@@ -125,6 +128,16 @@ on selectPointer me, tPointerNum
 end
 
 on update me
+  if me.pFaded then
+    tX1 = me.pWindow.getProperty(#locX)
+    tY1 = me.pWindow.getProperty(#locY)
+    tX2 = tX1 + me.pWindow.getProperty(#width)
+    tY2 = tY1 + me.pWindow.getProperty(#height)
+    if not (the mouseLoc).inside(rect(tX1, tY1, tX2, tY2)) then
+      me.pFaded = 0
+      me.show()
+    end if
+  end if
   me.updateFade()
   me.updatePosition()
 end
@@ -191,7 +204,9 @@ on updatePosition me
   tX = tTargetRect[1] + me.pOffsetX - me.pPointerX
   tY = tTargetRect[2] + me.pOffsetY - me.pPointerY
   me.pWindow.moveTo(tX, tY)
-  me.pWindow.show()
+  if not me.pFaded then
+    me.pWindow.show()
+  end if
 end
 
 on findTargetWindow me
@@ -209,7 +224,7 @@ on updateFade me
   if me.pFadeState = #ready then
     return 1
   end if
-  tFadeSpeed = 7
+  tFadeSpeed = 5
   tUpperLimit = 100
   tLowerLimit = 0
   tElemBG = me.pWindow.getElement("bubble_bg")
@@ -227,6 +242,8 @@ on updateFade me
   if tNewBlend <= tLowerLimit then
     tNewBlend = tLowerLimit
     me.pFadeState = #ready
+    me.pFaded = 1
+    me.pWindow.hide()
   end if
   if me.pFadeState = #ready then
     removeUpdate(me.getID())
