@@ -210,7 +210,7 @@ on updateUserFind me, tMsg, tstate
     tBuddyData = me.getComponent().getBuddyData()
     tBuddyAlreadyOnline = string(tBuddyData.online) contains QUOTE & tUserName & QUOTE
     tBuddyAlreadyOffline = string(tBuddyData.offline) contains QUOTE & tUserName & QUOTE
-    tNotOwnUser = getObject(#session).GET("user_name") <> tUserName
+    tNotOwnUser = getObject(#session).get("user_name") <> tUserName
     tBuddyButton = tWinObj.getElement("console_search_friendrequest_button")
     if not tBuddyAlreadyOnline and not tBuddyAlreadyOffline and tNotOwnUser then
       tBuddyButton.Activate()
@@ -326,13 +326,13 @@ on updateRadioButton me, tElement, tListOfOthersElements
 end
 
 on createTemplateHead me
-  tTempFigure = getObject(#session).GET("user_figure")
+  tTempFigure = getObject(#session).get("user_figure")
   if not listp(tTempFigure) then
     return error(me, "Missing user figure data!", #createTemplateHead)
   end if
   pBodyPartObjects = [:]
   if objectExists(#classes) then
-    tBodyPartClass = value(getObject(#classes).GET("bodypart"))
+    tBodyPartClass = value(getObject(#classes).get("bodypart"))
   else
     if memberExists("fuse.object.classes") then
       tBodyPartClass = value(readValueFromField("fuse.object.classes", RETURN, "bodypart"))
@@ -518,8 +518,8 @@ on ChangeWindowView me, tWindowName
   case tWindowName of
     "console_myinfo.window":
       pSelectedBuddies = []
-      me.updateMyHeadPreview(getObject(#session).GET("user_figure"), "console_myhead_image")
-      tName = getObject(#session).GET("user_name")
+      me.updateMyHeadPreview(getObject(#session).get("user_figure"), "console_myhead_image")
+      tName = getObject(#session).get("user_name")
       tNewMsgCount = string(me.getComponent().getNumOfMessages()) && getText("console_newmessages", "new message(s)")
       tNewReqCount = string(me.getComponent().getNumOfBuddyRequest()) && getText("console_requests", "Friend Request(s)")
       tMission = me.getComponent().getMyPersistenMsg()

@@ -46,7 +46,7 @@ on removeObject tid
 end
 
 on getObject tid
-  return getObjectManager().get(tid)
+  return getObjectManager().GET(tid)
 end
 
 on objectExists tid

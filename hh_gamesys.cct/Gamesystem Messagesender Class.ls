@@ -18,7 +18,7 @@ on setInstanceListUpdates me, tBoolean
     tVarMgrObj.set(#instancelist_timestamp, 0)
   end if
   if tBoolean then
-    if abs(the milliSeconds - tVarMgrObj.GET(#instancelist_timestamp)) > pUpdateInterval then
+    if abs(the milliSeconds - tVarMgrObj.get(#instancelist_timestamp)) > pUpdateInterval then
       me.getMessageSender().sendGetInstanceList()
     end if
     if timeoutExists(tTimeOutId) then
@@ -82,7 +82,7 @@ on sendGameParameterValues me, tParamList, tTeamId
     return error(me, "Connection not found:" && pConnectionId, #sendGameParameterValues)
   end if
   me.setInstanceListUpdates(0)
-  tStruct = me.getVariableManager().GET(#gameparametervalues_format)
+  tStruct = me.getVariableManager().get(#gameparametervalues_format)
   tOutput = [#integer: tStruct.count]
   repeat with i = 1 to tStruct.count
     tValueData = tStruct[i]
@@ -120,7 +120,7 @@ on sendInitiateJoinGame me, tInstanceId, tTeamId
   if not connectionExists(pConnectionId) then
     return error(me, "Connection not found:" && pConnectionId, #sendInitiateJoinGame)
   end if
-  tdata = me.getVariableManager().GET(#observed_instance_data)
+  tdata = me.getVariableManager().get(#observed_instance_data)
   if tdata.findPos(#id) = 0 then
     return 0
   end if
@@ -143,7 +143,7 @@ on sendJoinParameterValues me, tInstanceId, tTeamId, tParamList
   if not connectionExists(pConnectionId) then
     return error(me, "Connection not found:" && pConnectionId, #sendJoinParameterValues)
   end if
-  tdata = me.getVariableManager().GET(#observed_instance_data)
+  tdata = me.getVariableManager().get(#observed_instance_data)
   if tInstanceId = VOID then
     tInstanceId = tdata[#id]
   end if

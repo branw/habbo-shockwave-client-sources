@@ -59,6 +59,7 @@ on createGamesystem me, tSystemId
   end repeat
   tModuleObj = createObject(symbol(pSystemId & "_variablemanager"), getClassVariable("variable.manager.class"))
   pSystemThread.setaProp(#variablemanager, tModuleObj)
+  executeMessage(#gamesystem_constructed)
   return 1
 end
 
@@ -69,5 +70,6 @@ on removeGamesystem me
   end repeat
   removeObject(symbol(pSystemId & "_variablemanager"))
   pSystemThread = VOID
+  executeMessage(#gamesystem_deconstructed)
   return 1
 end

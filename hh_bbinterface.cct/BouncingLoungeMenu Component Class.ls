@@ -15,7 +15,7 @@ on getGameSystem me
 end
 
 on getUserName me
-  return getObject(#session).get(#userName)
+  return getObject(#session).GET(#userName)
 end
 
 on isUserHost me

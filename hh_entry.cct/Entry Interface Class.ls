@@ -163,15 +163,15 @@ on updateEntryBar me
     return 0
   end if
   tSession = getObject(#session)
-  tName = tSession.get("user_name")
-  tText = tSession.get("user_customData")
+  tName = tSession.GET("user_name")
+  tText = tSession.GET("user_customData")
   if tSession.exists("user_walletbalance") then
-    tCrds = tSession.get("user_walletbalance")
+    tCrds = tSession.GET("user_walletbalance")
   else
     tCrds = getText("loading", "Loading")
   end if
   if tSession.exists("club_status") then
-    tClub = tSession.get("club_status")
+    tClub = tSession.GET("club_status")
   else
     tClub = getText("loading", "Loading")
   end if
@@ -453,7 +453,7 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
     "update_habboid_text", "ownhabbo_icon_image":
       tAllowModify = 1
       if getObject(#session).exists("allow_profile_editing") then
-        tAllowModify = getObject(#session).get("allow_profile_editing")
+        tAllowModify = getObject(#session).GET("allow_profile_editing")
       end if
       if tAllowModify then
         if threadExists(#registration) then

@@ -159,7 +159,7 @@ on getPassword me
 end
 
 on getSpecialLayoutRights me
-  return getObject(#session).GET("user_rights").getPos("fuse_use_special_room_layouts")
+  return getObject(#session).get("user_rights").getPos("fuse_use_special_room_layouts")
 end
 
 on setPageValues me, tWindowName
@@ -175,7 +175,7 @@ on setPageValues me, tWindowName
       if not voidp(pRoomProps[#description]) then
         tWndObj.getElement("romatic_roomdescription_field").setText(pRoomProps[#description])
       end if
-      pRoomProps[#owner] = getObject(#session).GET("user_name")
+      pRoomProps[#owner] = getObject(#session).get("user_name")
       tWndObj.getElement("roomatic_ownername_field").setText(pRoomProps[#owner])
       if not voidp(pRoomProps[#showownername]) then
         if pRoomProps[#showownername] = 1 then
@@ -191,7 +191,7 @@ on setPageValues me, tWindowName
       if not ilk(tDropDown, #instance) then
         return error(me, "Unable to retrieve dropdown:" && tDropDown, #setPageValues)
       end if
-      tCatProps = getObject(#session).GET("user_flat_cats")
+      tCatProps = getObject(#session).get("user_flat_cats")
       if not ilk(tCatProps, #propList) then
         return error(me, "Category list was not a property list:" && tCatProps, #setPageValues)
       end if
@@ -297,7 +297,7 @@ on eventProc me, tEvent, tSprID, tParm
       "roomatic_2_button_next":
         tRoomName = replaceChars(getWindow(pWindowTitle).getElement("roomatic_roomname_field").getText(), "/", EMPTY)
         if tRoomName = EMPTY then
-          return executeMessage(#alert, [#Msg: "roomatic_givename"])
+          return executeMessage(#alert, [#msg: "roomatic_givename"])
         end if
         pRoomProps[#name] = tRoomName
         pRoomProps[#description] = getWindow(pWindowTitle).getElement("romatic_roomdescription_field").getText()

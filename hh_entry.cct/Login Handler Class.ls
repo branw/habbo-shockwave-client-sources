@@ -81,6 +81,7 @@ on handleLoginOK me, tMsg
   if objectExists(#session) then
     getObject(#session).set("userLoggedIn", 1)
   end if
+  executeMessage(#userloggedin)
   if not objectExists("loggertool") then
     if memberExists("Debug System Class") then
       createObject("loggertool", "Debug System Class")
@@ -122,8 +123,8 @@ on handleUserObj me, tMsg
   repeat with i = 1 to tuser.count
     tSession.set("user_" & tuser.getPropAt(i), tuser[i])
   end repeat
-  tSession.set(#userName, tSession.get("user_name"))
-  tSession.set("user_password", tSession.get(#password))
+  tSession.set(#userName, tSession.GET("user_name"))
+  tSession.set("user_password", tSession.GET(#password))
   executeMessage(#updateFigureData)
   if getObject(#session).exists("user_logged") then
     return 
@@ -131,7 +132,7 @@ on handleUserObj me, tMsg
     getObject(#session).set("user_logged", 1)
   end if
   if getIntVariable("quickLogin", 0) and the runMode contains "Author" then
-    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).get(#userName), getObject(#session).get(#password)]))
+    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#password)]))
     me.getInterface().hideLogin()
   else
     me.getInterface().showUserFound()
@@ -141,7 +142,7 @@ end
 
 on handleUserBanned me, tMsg
   tBanMsg = getText("Alert_YouAreBanned") & RETURN & tMsg.content
-  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #msg: tBanMsg, #modal: 1])
+  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #Msg: tBanMsg, #modal: 1])
   removeConnection(tMsg.connection.getID())
 end
 
@@ -176,7 +177,7 @@ on handleSystemBroadcast me, tMsg
   tMsg = tMsg[#content]
   tMsg = replaceChunks(tMsg, "\r", RETURN)
   tMsg = replaceChunks(tMsg, "<br>", RETURN)
-  executeMessage(#alert, [#msg: tMsg])
+  executeMessage(#alert, [#Msg: tMsg])
   the keyboardFocusSprite = 0
 end
 
@@ -205,7 +206,7 @@ end
 on handleRights me, tMsg
   tSession = getObject(#session)
   tSession.set("user_rights", [])
-  tRights = tSession.get("user_rights")
+  tRights = tSession.GET("user_rights")
   tPrivilegeFound = 1
   repeat while tPrivilegeFound = 1
     tPrivilege = tMsg.connection.GetStrFrom()
@@ -231,35 +232,35 @@ on handleErr me, tMsg
       else
         getObject(#session).set("failed_password", 1)
         me.getInterface().showLogin()
-        executeMessage(#alert, [#msg: "Alert_WrongNameOrPassword"])
+        executeMessage(#alert, [#Msg: "Alert_WrongNameOrPassword"])
       end if
     tMsg.content contains "mod_warn":
       tDelim = the itemDelimiter
       the itemDelimiter = "/"
       tTextStr = tMsg.content.item[2..tMsg.content.item.count]
       the itemDelimiter = tDelim
-      executeMessage(#alert, [#title: "alert_warning", #msg: tTextStr, #modal: 1])
+      executeMessage(#alert, [#title: "alert_warning", #Msg: tTextStr, #modal: 1])
     tMsg.content contains "Version not correct":
-      executeMessage(#alert, [#msg: "Old client version!!!"])
+      executeMessage(#alert, [#Msg: "Old client version!!!"])
     tMsg.content contains "Duplicate session":
       removeConnection(tMsg.connection.getID())
       me.getComponent().setaProp(#pOkToLogin, 0)
       me.getInterface().showLogin()
-      executeMessage(#alert, [#msg: "alert_duplicatesession"])
+      executeMessage(#alert, [#Msg: "alert_duplicatesession"])
   end case
   return 1
 end
 
 on handleModAlert me, tMsg
   if not voidp(tMsg.content) then
-    executeMessage(#alert, [#title: "alert_warning", #msg: tMsg.content])
+    executeMessage(#alert, [#title: "alert_warning", #Msg: tMsg.content])
   else
     error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
 end
 
 on handleCryptoParameters me, tMsg
-  tClientToServer = 1
+  tClientToServer = tMsg.connection.GetIntFrom() <> 0
   tServerToClient = tMsg.connection.GetIntFrom() <> 0
   pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
   if tClientToServer then
@@ -279,7 +280,7 @@ on handleSecretKey me, tMsg
   tMsg.connection.setEncoder(createObject(#temp, getClassVariable("connection.decoder.class")))
   tMsg.connection.getEncoder().setKey(tKey)
   tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 17)
+  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 13)
   tMsg.connection.setEncryption(1)
   if pCryptoParams.getaProp(#ServerToClient) = 1 then
     me.makeServerToClientKey()
@@ -317,7 +318,7 @@ on makeServerToClientKey me
   tConnection.setDecoder(tDecoder)
   tConnection.getDecoder().setKey(tKey)
   tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tConnection.getDecoder().preMixEncodeSbox(tPremixChars, 17)
+  tConnection.getDecoder().preMixEncodeSbox(tPremixChars, 13)
   tConnection.setProperty(#deciphering, 1)
 end
 

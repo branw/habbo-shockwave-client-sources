@@ -1,4 +1,4 @@
-property pDynDownloadURL, pFurniCastNameTemplate, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading, pBinCastName
+property pDynDownloadURL, pFurniCastNameTemplate, pSoundDownloadUrl, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading, pBinCastName
 
 on construct me
   if variableExists("dynamic.download.url") then
@@ -10,6 +10,11 @@ on construct me
     pFurniCastNameTemplate = getVariable("dynamic.download.name.template")
   else
     pFurniCastNameTemplate = "hh_furni_xx_%typeid%.cct"
+  end if
+  if variableExists("sound.download.url") then
+    pSoundDownloadUrl = getVariable("sound.download.url")
+  else
+    pSoundDownloadUrl = "sound/%typeid%.cct"
   end if
   pDownloadQueue = [:]
   pPriorityDownloadQueue = [:]
@@ -52,7 +57,7 @@ on downloadCastDynamically me, tAssetId, tAssetType, tCallbackObjectID, tCallBac
   tStatus = me.checkDownloadStatus(tAssetId)
   case tStatus of
     #nodata, #downloading, #inqueue:
-      me.addToDownloadQueue(tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, 0, tCallbackParams)
+      me.addToDownloadQueue(tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, 0, tCallbackParams, tAssetType)
       me.tryNextDownload()
       return 1
     #downloaded, #failed:
@@ -103,7 +108,7 @@ on checkDownloadStatus me, tAssetId
   return #nodata
 end
 
-on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tAllowIndexing, tCallbackParams
+on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tAllowIndexing, tCallbackParams, tAssetType
   if voidp(tAllowIndexing) then
     tAllowIndexing = 0
   end if
@@ -123,6 +128,7 @@ on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriori
           return 0
         end if
         tDownloadObj.setAssetId(tAssetId)
+        tDownloadObj.setAssetType(tAssetType)
         tDownloadObj.setIndexing(tAllowIndexing)
         if tPriorityDownload then
           pPriorityDownloadQueue.addProp(tAssetId, tDownloadObj)
@@ -181,6 +187,9 @@ on tryNextDownload me
     tAliasedAssetId = pAliasList[tAssetId]
   end if
   tDownloadURL = pDynDownloadURL & pFurniCastNameTemplate
+  if tDownloadObj.getAssetType() = #sound then
+    tDownloadURL = pSoundDownloadUrl
+  end if
   tFixedAssetId = replaceChunks(tAliasedAssetId, " ", "_")
   tDownloadURL = replaceChunks(tDownloadURL, "%typeid%", tFixedAssetId)
   tRawAssetId = tAssetId
@@ -287,6 +296,8 @@ on acquireAssetsFromCast me, tCastNum, tAssetId
             end if
           end if
         #script:
+          me.copyMemberToBin(tmember)
+        #sound:
           me.copyMemberToBin(tmember)
       end case
     end repeat

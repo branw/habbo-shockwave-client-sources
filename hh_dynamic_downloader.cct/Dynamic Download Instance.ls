@@ -1,4 +1,4 @@
-property pListenerList, pAssetId, pDownloadURL, pAllowindexing
+property pListenerList, pAssetId, pDownloadURL, pAllowindexing, pAssetType
 
 on construct me
   pListenerList = []
@@ -35,6 +35,14 @@ end
 
 on getAssetId me
   return pAssetId
+end
+
+on setAssetType me, tAssetType
+  pAssetType = tAssetType
+end
+
+on getAssetType me
+  return pAssetType
 end
 
 on setDownloadName me, tURL

@@ -23,7 +23,7 @@ on removeTimeout tid
 end
 
 on getTimeout tid
-  return getTimeoutManager().get(tid)
+  return getTimeoutManager().GET(tid)
 end
 
 on timeoutExists tid

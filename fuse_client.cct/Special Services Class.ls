@@ -111,8 +111,13 @@ on openNetPage me, tURL_key, tTarget
     tURL = tURL_key
   end if
   if tURL contains "http://%predefined%/" then
-    if getVariable("url.prefix").ilk = #string then
-      tURL = replaceChunks(tURL, "http://%predefined%/", getVariable("url.prefix"))
+    if variableExists("url.prefix") then
+      tReplace = "http://%predefined%"
+      tPrefix = getVariable("url.prefix")
+      if chars(tPrefix, tPrefix.length, tPrefix.length) = "/" then
+        tReplace = "http://%predefined%/"
+      end if
+      tURL = replaceChunks(tURL, tReplace, tPrefix)
     else
       return error(me, "URL prefix not defined, invalid link.", #openNetPage)
     end if
@@ -196,7 +201,7 @@ end
 on getExtVarPath me
   tVariableID = "system.v2"
   if not variableExists(tVariableID) then
-    return getVariableManager().get("external.variables.txt")
+    return getVariableManager().GET("external.variables.txt")
   end if
   return deobfuscate(getVariable(tVariableID))
 end

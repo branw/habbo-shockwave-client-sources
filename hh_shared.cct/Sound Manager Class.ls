@@ -2,7 +2,7 @@ property pChannelCount, pChannelList, pMuted, pUpdateInterval
 
 on construct me
   pMuted = 0
-  pChannelCount = 4
+  pChannelCount = 5
   pChannelList = []
   pUpdateInterval = 0
   repeat with i = 1 to pChannelCount
@@ -98,6 +98,13 @@ on stopChannel me, tNum
     return 0
   end if
   return pChannelList[tNum].reset()
+end
+
+on playChannel me, tNum
+  if tNum = VOID then
+    return 0
+  end if
+  return pChannelList[tNum].startPlaying()
 end
 
 on stopAllSounds me

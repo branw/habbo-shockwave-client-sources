@@ -11,7 +11,7 @@ on select me
   end if
   tUserObj = getThread(#room).getComponent().getOwnUser()
   if not tUserObj then
-    return error(me, "User object not found:" && getObject(#session).GET("user_name"), #select)
+    return error(me, "User object not found:" && getObject(#session).get("user_name"), #select)
   end if
   case me.pDirection[1] of
     4:

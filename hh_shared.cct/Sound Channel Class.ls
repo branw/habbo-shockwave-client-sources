@@ -4,7 +4,7 @@ on define me, tChannelNum
   pChannelNum = tChannelNum
   tChannel = sound(pChannelNum)
   if ilk(tChannel) <> #instance then
-    return error(me, "Invalid sound channel:" && pChannelNum, #play)
+    return error(me, "Invalid sound channel:" && pChannelNum, #define)
   end if
   pCounter = 0
   pEndTime = 0
@@ -19,7 +19,19 @@ on reset me
   return 1
 end
 
-on play me, tSoundObj
+on createSoundInstance me, tMemName, tPriority, tProps
+  tObject = createObject(#temp, "Sound Instance Class")
+  if tObject = 0 then
+    return 0
+  end if
+  tObject.define(tMemName, tPriority, tProps)
+  return tObject
+end
+
+on play me, tSoundObj, tParams
+  if not objectp(tSoundObj) then
+    tSoundObj = me.createSoundInstance(tSoundObj, #cut, tParams)
+  end if
   tmember = tSoundObj.getMember()
   if tmember = 0 then
     return 0
@@ -42,13 +54,21 @@ on play me, tSoundObj
   return pChannelNum
 end
 
-on queue me, tSoundObj
-  tmember = tSoundObj.getMember()
+on startPlaying me
+  sound(pChannelNum).play()
+  return 1
+end
+
+on queue me, tSoundObj, tProps
+  if tProps.ilk <> #propList then
+    tProps = [:]
+  end if
+  tmember = getMember(tSoundObj)
   if tmember = 0 then
     return 0
   end if
-  tChannel = sound(pChannelNum)
-  tChannel.queue(tmember)
+  tProps[#member] = tmember
+  tChannel = sound(pChannelNum).queue(tProps)
   return 1
 end
 

@@ -235,6 +235,10 @@ on isUnderTrade me, tStripID
   return pMyStripItems.getPos(tStripID) > 0
 end
 
+on getState me
+  return pState
+end
+
 on createItemImg me, tProps, tDownloadPrevented
   if voidp(tProps) then
     error(me, "Invalid props!", #createItemImg)

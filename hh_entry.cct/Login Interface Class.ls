@@ -149,7 +149,7 @@ on showUserFound me
   tWndObj = getWindow(#login_b)
   tWndObj.merge("login_c.window")
   tTxt = tWndObj.getElement("login_c_welcome").getText()
-  tTxt = tTxt && getObject(#session).get("user_name")
+  tTxt = tTxt && getObject(#session).GET("user_name")
   tWndObj.getElement("login_c_welcome").setText(tTxt)
   if objectExists("Figure_Preview") then
     tBuffer = getObject("Figure_Preview").createTemplateHuman("h", 3, "wave")
@@ -223,7 +223,7 @@ on eventProcLogin me, tEvent, tSprID, tParam
               return 1
             end if
           else
-            executeMessage(#alert, [#msg: "registration_disabled_text", #modal: 1])
+            executeMessage(#alert, [#Msg: "registration_disabled_text", #modal: 1])
           end if
         "login_forgotten":
           if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then

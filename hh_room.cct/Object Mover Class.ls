@@ -1,4 +1,4 @@
-property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLoczList, pLocShiftList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr, pOrigCoord, pObjType
+property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLoczList, pLocShiftList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr, pOrigCoord, pObjType, pObjProps
 
 on construct me
   pActive = 0
@@ -38,7 +38,7 @@ on deconstruct me
   return 1
 end
 
-on define me, tClientID, tStripID, tObjType
+on define me, tClientID, tStripID, tObjType, tProps
   if pClientID <> EMPTY then
     return error(me, "Already moving active object:" && pClientID, #define)
   end if
@@ -47,6 +47,7 @@ on define me, tClientID, tStripID, tObjType
     pStripID = tStripID
   end if
   pObjType = tObjType
+  pObjProps = tProps
   if pSprList.count > 0 then
     error(me, "Sprites hanging in object mover! Clearing them out...", #define)
     repeat with i = 1 to pSprList.count
@@ -180,6 +181,7 @@ on clear me, tRestart
   pPause = 0
   pClientID = EMPTY
   pStripID = EMPTY
+  pClientObj = VOID
   pSavedDim = 1
   pSavedDir = 2
   pOrigCoord = [0, 0, 0]
@@ -213,6 +215,10 @@ on getProperty me, tProp
       return pClientID
     #stripId:
       return pStripID
+    #clientObj:
+      return pClientObj
+    #clientProps:
+      return pObjProps
     #itemLocStr:
       if pItemLocStr = 0 then
         return 0
@@ -585,7 +591,7 @@ on objectFinalized me, tid
     tStripID = pStripID
     tObjType = pObjType
     me.clear(1)
-    me.define(tClientID, tStripID, tObjType)
+    me.define(tClientID, tStripID, tObjType, pObjProps)
     pLastLoc = the mouseLoc - point(1, 1)
     me.update()
   end if

@@ -69,6 +69,12 @@ on Init me, tSourceURL, tClickURL, tRegisteredLayout
     end if
     pDLCounter = pDLCounter + 1
     pMemberID = pMemberIDBase & pDLCounter
+    if tSourceURL contains "?" then
+      tSeparator = "&"
+    else
+      tSeparator = "?"
+    end if
+    tSourceURL = tSourceURL & tSeparator & "r=" & random(9999999999.0)
     pAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
     if not (pAdMemNum > 0) then
       pState = 0

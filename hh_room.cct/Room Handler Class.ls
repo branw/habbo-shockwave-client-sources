@@ -545,6 +545,7 @@ on handle_stripinfo me, tMsg
         tObj[#dimensions] = [integer(tItem.item[7]), integer(tItem.item[8])]
         tObj[#stuffdata] = tItem.item[9]
         tObj[#colors] = tItem.item[10]
+        tObj[#isRecyclable] = tItem.item[11]
         the itemDelimiter = ","
         if tObj[#colors].char[1] = "#" then
           if tObj[#colors].item.count > 1 then
@@ -558,6 +559,7 @@ on handle_stripinfo me, tMsg
       "I":
         tObj[#striptype] = "item"
         tObj[#props] = tItem.item[7]
+        tObj[#isRecyclable] = tItem.item[8]
         case tObj[#class] of
           "poster":
             tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")

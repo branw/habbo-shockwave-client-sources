@@ -29,9 +29,9 @@ on construct me
   pBannerLink = 0
   pSwapAnimations = []
   pInfoStandName = VOID
+  pTradeTimeout = 0
   pLoadingBarID = 0
   pQueueCollection = []
-  pTradeTimeout = 0
   pModBadgeList = getVariableValue("moderator.badgelist")
   createObject(pGeometryId, "Room Geometry Class")
   createObject(pContainerID, "Container Hand Class")
@@ -944,7 +944,7 @@ on unignoreAdmin me, tUserID, tBadge
   end if
 end
 
-on startObjectMover me, tObjID, tStripID
+on startObjectMover me, tObjID, tStripID, tProps
   if not objectExists(pObjMoverID) then
     createObject(pObjMoverID, "Object Mover Class")
   end if
@@ -956,7 +956,7 @@ on startObjectMover me, tObjID, tStripID
     "user":
       return error(me, "Can't move user objects!", #startObjectMover)
   end case
-  return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType)
+  return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType, tProps)
 end
 
 on stopObjectMover me

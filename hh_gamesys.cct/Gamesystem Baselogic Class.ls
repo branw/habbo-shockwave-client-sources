@@ -62,7 +62,7 @@ on getGamestatus me
   if tVarMgr.exists(#game_status) = 0 then
     return 0
   end if
-  return tVarMgr.GET(#game_status)
+  return tVarMgr.get(#game_status)
 end
 
 on startTurnManager me
@@ -82,7 +82,7 @@ on enterLounge me
   if not getObject(#session).exists(#gamelounge_world_info) then
     return 0
   end if
-  tLoungeData = getObject(#session).GET(#gamelounge_world_info)
+  tLoungeData = getObject(#session).get(#gamelounge_world_info)
   if not listp(tLoungeData) then
     return 0
   end if
@@ -94,11 +94,11 @@ on checkIfInGameArea me
   if not getObject(#session).exists("lastroom") then
     return 0
   end if
-  tRoomData = getObject(#session).GET("lastroom")
+  tRoomData = getObject(#session).get("lastroom")
   if not getObject(#session).exists(#gamespace_world_info) then
     return 0
   end if
-  tGameSpaceData = getObject(#session).GET(#gamespace_world_info)
+  tGameSpaceData = getObject(#session).get(#gamespace_world_info)
   if tRoomData[#port] = tGameSpaceData[#unitId] and tRoomData[#door] = tGameSpaceData[#worldId] then
     return 1
   else
@@ -123,7 +123,7 @@ on store_loungeinfo me, tdata
   if getObject(#session) = 0 then
     return 0
   end if
-  tWorldData = getObject(#session).GET("lastroom")
+  tWorldData = getObject(#session).get("lastroom")
   if not listp(tWorldData) then
     return 0
   end if
@@ -152,7 +152,7 @@ end
 on store_gameinstance me, tItem
   me.getMessageSender().setInstanceListUpdates(0)
   me.getVariableManager().set(#observed_instance_data, tItem)
-  tInstanceList = me.getVariableManager().GET(#instancelist)
+  tInstanceList = me.getVariableManager().get(#instancelist)
   tInstanceList[string(tItem[#id])] = tItem
   me.getVariableManager().set(#instancelist, tInstanceList)
   if me.getGamestatus() = #watch_requested then
@@ -180,7 +180,7 @@ on store_createfailed me, tReason
 end
 
 on store_gamedeleted me, tInstanceId
-  tInstanceList = me.getVariableManager().GET(#instancelist)
+  tInstanceList = me.getVariableManager().get(#instancelist)
   tInstanceList.deleteProp(string(tInstanceId))
   me.getVariableManager().set(#instancelist, tInstanceList)
   me.getVariableManager().set(#observed_instance_data, [:])
@@ -204,7 +204,7 @@ on store_gamelocation me, tParamList
   if getObject(#session) = 0 then
     return 0
   end if
-  tParamList.addProp(#tournament_flag, me.getVariableManager().GET(#tournament_flag))
+  tParamList.addProp(#tournament_flag, me.getVariableManager().get(#tournament_flag))
   getObject(#session).set(#gamespace_world_info, tParamList)
   me.getMessageSender().setInstanceListUpdates(0)
   tUnitId = tParamList[#unitId]
@@ -300,7 +300,7 @@ end
 
 on spaceTravel me, tUnitId, tWorldId, tWorldType
   me.getMessageSender().setInstanceListUpdates(0)
-  tPresentStruct = getObject(#session).GET("lastroom")
+  tPresentStruct = getObject(#session).get("lastroom")
   if tPresentStruct = 0 then
     tPresentStruct = [#name: tWorldId, #casts: []]
   end if

@@ -3,6 +3,7 @@ property pMessageBuffer, pPlaceHolderList, pDownloader, pTempTimeOutID, pTempDow
 on construct me
   registerMessage(#leaveRoom, me.getID(), #leaveRoom)
   registerMessage(#changeRoom, me.getID(), #leaveRoom)
+  registerMessage(#downloadObject, me.getID(), #downloadObject)
   pPlaceHolderList = ["active": [:], "item": [:]]
   pMessageBuffer = ["active": [:], "item": [:]]
   pTempTimeOutID = "temp_temp_timeout"
@@ -14,6 +15,7 @@ end
 on deconstruct me
   unregisterMessage(#leaveRoom, me.getID())
   unregisterMessage(#changeRoom, me.getID())
+  unregisterMessage(#downloadObject, me.getID())
   pPlaceHolderList = [:]
   pMessageBuffer = [:]
   if timeoutExists(pTempTimeOutID) then
@@ -120,6 +122,25 @@ on downloadCompleted me, tClassID, tSuccess
       end if
     end if
   end repeat
+end
+
+on downloadObject me, tdata
+  if ilk(tdata) <> #propList then
+    return 0
+  end if
+  tClass = me.getClassName(tdata[#class], tdata[#type])
+  if getThread(#dynamicdownloader) = 0 then
+    tIsDownloaded = 1
+  else
+    tIsDownloaded = getThread(#dynamicdownloader).getComponent().isAssetDownloaded(tClass)
+  end if
+  if tIsDownloaded then
+    tdata[#ready] = 1
+    return 1
+  end if
+  tdata[#ready] = 0
+  me.downloadClass(tClass, tdata[#type])
+  return 1
 end
 
 on removeObject me, tid, ttype

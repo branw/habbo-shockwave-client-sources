@@ -136,7 +136,7 @@ on setupBuyWindow me
 end
 
 on replaceCreditsText me
-  tCredits = getObject(#session).GET("user_walletbalance")
+  tCredits = getObject(#session).get("user_walletbalance")
   tWndObj = getWindow(pDialogId)
   tText = getText("club_confirm_text" & pChosenLength)
   tText = replaceChunks(tText, "%credits%", string(tCredits))
@@ -264,9 +264,9 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
     "club_isp_change":
       tSession = getObject(#session)
       tURL = getText("club_change_url")
-      tURL = tURL & urlEncode(tSession.GET("user_name"))
+      tURL = tURL & urlEncode(tSession.get("user_name"))
       if tSession.exists("user_checksum") then
-        tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
+        tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
       end if
       openNetPage(tURL)
     "club_intro_link", "club_general_infolink":
@@ -274,9 +274,9 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
     "club_isp_buy":
       tSession = getObject(#session)
       tURL = getText("club_paybycash_url")
-      tURL = tURL & urlEncode(tSession.GET("user_name"))
+      tURL = tURL & urlEncode(tSession.get("user_name"))
       if tSession.exists("user_checksum") then
-        tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
+        tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
       end if
       openNetPage(tURL, "_new")
     "club_button_1_period":

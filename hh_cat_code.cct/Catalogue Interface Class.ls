@@ -73,6 +73,8 @@ on hideCatalogue me
   if objectExists(pLoaderObjID) then
     getObject(pLoaderObjID).hideLoadingScreen()
   end if
+  tProgram = getObject(pPageProgramID)
+  call(#closePage, [tProgram])
   if windowExists(pCatalogID) then
     return removeWindow(pCatalogID)
   else
@@ -294,11 +296,13 @@ on ChangeWindowView me, tWindowName
     else
       tWndObj = getWindow(pCatalogID)
       tWndObj.center()
-      tWndObj.moveBy(-30, -30)
+      tWndObj.moveBy(-60, -30)
       tWndObj.registerClient(me.getID())
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseUp)
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseDown)
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #keyDown)
+      tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseEnter)
+      tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseLeave)
     end if
   end if
   if not voidp(tWindowName) then
@@ -1273,7 +1277,7 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
       if tSession.exists("user_checksum") then
         tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
-      openNetPage(tURL, "_new")
+      openNetPage(tURL)
       me.hideOrderInfo()
       pActiveOrderCode = EMPTY
     "subscribe":

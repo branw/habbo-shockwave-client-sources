@@ -12,6 +12,7 @@ on construct me
   pNextActive = 1
   pPrevActive = 1
   pIconPlaceholderName = "icon_placeholder"
+  registerMessage(#recyclerStateChange, me.getID(), #showContainerItems)
   return 1
 end
 
@@ -21,6 +22,7 @@ on deconstruct me
       removeMember("handcontainer_" & i)
     end if
   end repeat
+  unregisterMessage(#recyclerStateChange)
   removeWindow(pHandButtonsWnd)
   removeUpdate(me.getID())
   if visualizerExists(pHandVisID) then
@@ -384,6 +386,13 @@ on showContainerItems me
   tHand = getVisualizer(pHandVisID)
   tList = me.getStripItem(#list)
   tCount = tList.count
+  tAddRecyclerTags = 0
+  tRecyclerThread = getThread(#recycler)
+  if not (tRecyclerThread = 0) and memberExists("recycler_icon_tag") then
+    if tRecyclerThread.getComponent().isRecyclerOpenAndVisible() then
+      tAddRecyclerTags = 1
+    end if
+  end if
   repeat with i = 1 to 9
     if getmemnum("handcontainer_" & i) < 1 then
       createMember("handcontainer_" & i, #bitmap)
@@ -392,13 +401,22 @@ on showContainerItems me
     tVisible = 1
     if i <= tCount then
       tItem = tList[i]
-      tImage = getObject("Preview_renderer").renderPreviewImage(tItem[#member], VOID, tItem[#colors], tItem[#class])
-      if voidp(tImage) then
+      tPreviewImage = getObject("Preview_renderer").renderPreviewImage(tItem[#member], VOID, tItem[#colors], tItem[#class])
+      tTempImage = image(tPreviewImage.width, tPreviewImage.height, 32)
+      tTempImage.copyPixels(tPreviewImage, tPreviewImage.rect, tPreviewImage.rect)
+      if voidp(tPreviewImage) then
         error(me, "Preview image was void!", #showContainerItems)
         return 0
       end if
-      member(tMem).image = tImage
-      tVisible = not getThread(#room).getInterface().getSafeTrader().isUnderTrade(pItemList.getPropAt(i))
+      if tAddRecyclerTags and integer(tItem[#isRecyclable]) = 1 then
+        tRecyclableTagImg = getMember("recycler_icon_tag").image
+        tRect = tRecyclableTagImg.rect
+        tTempImage.copyPixels(tRecyclableTagImg, tRect, tRect, [#ink: 36])
+      end if
+      member(tMem).image = tTempImage
+      tInTrade = getThread(#room).getInterface().getSafeTrader().isUnderTrade(pItemList.getPropAt(i))
+      tInRecycler = getThread(#recycler).getComponent().isFurniInRecycler(pItemList.getPropAt(i))
+      tVisible = not (tInTrade or tInRecycler)
       if tVisible then
         if not (tItem[#class] contains "post.it") then
           tVisible = not (getThread(#room).getInterface().getObjectMover().pClientID = pItemList.getPropAt(i))
@@ -409,10 +427,12 @@ on showContainerItems me
       tVisible = 0
     end if
     tSpr = tHand.getSprById("room_hand_item_" & i)
-    tSpr.setMember(tMem)
-    tSpr.blend = 100
-    tSpr.visible = tVisible
-    tSpr.ink = 8
+    if not voidp(tSpr) then
+      tSpr.setMember(tMem)
+      tSpr.blend = 100
+      tSpr.visible = tVisible
+      tSpr.ink = 8
+    end if
   end repeat
   me.setHandButtonsVisible()
   return 1
@@ -425,8 +445,10 @@ on hideContainerItems me
   tHand = getVisualizer(pHandVisID)
   repeat with i = 1 to 9
     tSpr = tHand.getSprById("room_hand_item_" & i)
-    tSpr.setMember(member(getmemnum("room_object_placeholder_sd")))
-    tSpr.visible = 0
+    if not voidp(tSpr) then
+      tSpr.setMember(member(getmemnum("room_object_placeholder_sd")))
+      tSpr.visible = 0
+    end if
   end repeat
   return 1
 end
@@ -492,37 +514,48 @@ on setItemPlacingMode me, tdata
   tRoomInterface.pSelectedObj = tdata[#id]
   tRoomInterface.pSelectedType = tdata[#striptype]
   if tdata[#striptype] = "active" then
-    tRoomInterface.startObjectMover(tdata[#id], tdata[#stripId])
+    tRoomInterface.startObjectMover(tdata[#id], tdata[#stripId], tdata)
     tRoomInterface.setProperty(#clickAction, "placeActive")
   else
     if tdata[#striptype] = "item" then
-      tRoomInterface.startObjectMover(tdata[#id], tdata[#stripId])
+      tRoomInterface.startObjectMover(tdata[#id], tdata[#stripId], tdata)
       tRoomInterface.setProperty(#clickAction, "placeItem")
     end if
   end if
 end
 
-on setHandButtonsVisible me
+on setHandButtonsVisible me, tVisible
+  if voidp(tVisible) then
+    tVisible = 1
+  end if
   if not windowExists(pHandButtonsWnd) then
     if not createWindow(pHandButtonsWnd, "habbo_hand_buttons.window") then
       return 0
     end if
   end if
   tWndObj = getWindow(pHandButtonsWnd)
-  tStageRight = the stageRight - the stageLeft
-  tTopOffset = 5
-  tWndObj.moveTo(tStageRight - tWndObj.getProperty(#width) - 5, tTopOffset)
-  if pNextActive then
-    tWndObj.getElement("habbo_hand_next").Activate()
-  else
-    tWndObj.getElement("habbo_hand_next").deactivate()
+  if not tWndObj.elementExists("habbo_hand_next") or not tWndObj.elementExists("habbo_hand_next") then
+    return 0
   end if
-  if pPrevActive then
-    tWndObj.getElement("habbo_hand_prev").Activate()
+  if tVisible then
+    tWndObj.setProperty(#visible, 1)
+    tStageRight = the stageRight - the stageLeft
+    tTopOffset = 5
+    tWndObj.moveTo(tStageRight - tWndObj.getProperty(#width) - 5, tTopOffset)
+    if pNextActive then
+      tWndObj.getElement("habbo_hand_next").Activate()
+    else
+      tWndObj.getElement("habbo_hand_next").deactivate()
+    end if
+    if pPrevActive then
+      tWndObj.getElement("habbo_hand_prev").Activate()
+    else
+      tWndObj.getElement("habbo_hand_prev").deactivate()
+    end if
+    tWndObj.registerProcedure(#eventProcHandButtons, me.getID())
   else
-    tWndObj.getElement("habbo_hand_prev").deactivate()
+    tWndObj.setProperty(#visible, 0)
   end if
-  tWndObj.registerProcedure(#eventProcHandButtons, me.getID())
 end
 
 on eventProcHandButtons me, tEvent, tSprID, tParam

@@ -42,7 +42,7 @@ on Remove me, tid
   return pItemList.deleteProp(tid)
 end
 
-on get me, tid
+on GET me, tid
   tObj = pItemList[tid]
   if voidp(tObj) then
     return 0

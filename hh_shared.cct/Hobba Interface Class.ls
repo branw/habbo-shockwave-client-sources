@@ -174,10 +174,10 @@ end
 
 on buttonLocH me, tPos
   if tPos = 1 then
-    return 5
+    return 40
   else
     if tPos = 2 then
-      return 35
+      return 70
     end if
   end if
   return 5
