@@ -1,14 +1,6 @@
 global gLoadNo, gCurrentNetIds, gCurrentFile, gBytes, gLastF, gStartLoadingTime, gEndLoadingTime, gAllNetIds
 
 on startLoading
-  if the runMode = "Author" then
-    if the movieName contains "ch_" or the movieName contains "_ch" then
-      goUnit("ch_private")
-    else
-      goUnit("gf_private")
-    end if
-    exit
-  end if
   gLoadNo = 0
   gLastF = 0
   gBytes = 0
@@ -23,21 +15,12 @@ on nextLoad
   gLoadNo = gLoadNo + 1
   if gLoadNo <= the number of lines in field "loadlistPrivateRoom" then
     file = line gLoadNo of field "loadlistPrivateRoom"
-    if the movieName contains "ch_" or the movieName contains "_ch" then
-      if file = "gf_private.dcr" then
-        file = "ch_private.dcr"
-      end if
-    end if
     if the runMode = "Author" then
-      file = "http://www.habbohotel.com/dcr/dcr2505/" & file
-      if the movieName contains "ch_" or the movieName contains "_ch" then
-        file = "fuse.taivas.com/chabbo/dcr/dcr2806/" & file
-      end if
+      file = the moviePath & file
     end if
     netId = preloadNetThing(file)
     add(gCurrentNetIds, [netId, 0, file, the milliSeconds])
     gAllNetIds.addProp(netId, 0)
-    put file
   else
     if gCurrentNetIds.count = 0 then
       loadComplete()
@@ -52,11 +35,7 @@ on loadComplete
   gEndLoadingTime = the milliSeconds
   sFrame = "flat_loadReady"
   goContext(sFrame, gPopUpContext2)
-  if the movieName contains "ch_" or the movieName contains "_ch" then
-    goMovie("ch_private", "quickentry")
-  else
-    goMovie("gf_private", "quickentry")
-  end if
+  goMovie("gf_private", "quickentry")
 end
 
 on checkLoad
@@ -85,7 +64,6 @@ on checkLoad
       end if
     end if
     if netDone(netId) then
-      put "Done," && getaProp(l, #bytesSoFar)
       gBytes = gBytes + gCurrentNetIds[i][2]
       gAllNetIds.setProp(gCurrentNetIds[i][1], 1)
       deleteAt(gCurrentNetIds, i)
@@ -94,7 +72,9 @@ on checkLoad
   end repeat
   LoaderStatusBar()
   sFrame = "FLAT_LOADING"
-  goContext(sFrame, gPopUpContext2)
+  if the runMode <> "Author" then
+    goContext(sFrame, gPopUpContext2)
+  end if
 end
 
 on LoaderStatusBar me

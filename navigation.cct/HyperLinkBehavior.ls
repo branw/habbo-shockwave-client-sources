@@ -1,9 +1,10 @@
 property pLinkTargetURL
+global gCountryPrefix
 
 on mouseUp me
   if member(sprite(me.spriteNum).member.name).word[sprite(me.spriteNum).pointToWord(the mouseLoc)].fontStyle = [#underline] then
     theUrl = pLinkTargetURL
-    if the movieName contains "_ch" or the movieName contains "ch_" then
+    if gCountryPrefix = "ch" then
       saveDelim = the itemDelimiter
       the itemDelimiter = "/"
       webPage = theUrl.item[theUrl.item.count]

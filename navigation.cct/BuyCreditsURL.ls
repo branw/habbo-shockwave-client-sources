@@ -1,9 +1,9 @@
-global gMyName
+global gMyName, gCountryPrefix
 
 on mouseUp me
   webPage = "purchase.jsp?userName=" & gMyName
   url = "http://www.habbohotel.com/"
-  if the movieName contains "_ch" or the movieName contains "ch_" then
+  if gCountryPrefix = "ch" then
     tFolder = externalParamValue("sw1")
     ch_url = externalParamValue("sw2")
     if voidp(tFolder) then

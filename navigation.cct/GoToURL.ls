@@ -1,8 +1,9 @@
 on mouseUp me
+  global gCountryPrefix
   if member(sprite(me.spriteNum).member.name).word[sprite(me.spriteNum).pointToWord(the mouseLoc)].fontStyle = [#underline] then
     lineN = member(sprite(me.spriteNum).member.name).locVToLinePos(the mouseV - sprite(me.spriteNum).top)
     theUrl = member("HabboHelpURL_links").line[lineN]
-    if the movieName contains "_ch" or the movieName contains "ch_" then
+    if gCountryPrefix = "ch" then
       saveDelim = the itemDelimiter
       the itemDelimiter = "/"
       webPage = theUrl.item[theUrl.item.count]

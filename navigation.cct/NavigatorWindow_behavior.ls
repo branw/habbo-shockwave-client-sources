@@ -33,10 +33,22 @@ on initNavigator me
   the itemDelimiter = ":"
   TempImg = image(44, 7, 8)
   s = member("public_place.hierarchy").text
+  tExceptList = member("unitMovies multiple rooms exception list").text
+  tExceptions = [:]
+  repeat with i = 1 to tExceptList.line.count
+    tLine = tExceptList.line[i]
+    if tLine <> EMPTY and tLine.char[1..2] <> "--" then
+      tExceptions[tLine.item[1].word[1..tLine.item[1].word.count]] = tLine.item[2].word[1..tLine.item[2].word.count]
+    end if
+  end repeat
   repeat with f = 1 to s.line.count
     if value(s.line[f].item[2]) > 0 then
       VisibleLines_navi = VisibleLines_navi + 1
-      gNaviP.addProp(s.line[f].item[1], ["Visible": 1, "Main": 1, "Status": "Closed", "Multiroom": s.line[f].item[2]])
+      if tExceptions[s.line[f].item[1]] <> "hide" then
+        gNaviP.addProp(s.line[f].item[1], ["Visible": 1, "Main": 1, "Status": "Closed", "Multiroom": s.line[f].item[2]])
+      else
+        gNaviP.addProp(s.line[f].item[1], ["Visible": 1, "Main": 1, "Status": "Closed", "Multiroom": "1"])
+      end if
       MainPlace = s.line[f].item[1]
     else
       visib = s.line[f].item[2]
