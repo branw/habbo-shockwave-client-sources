@@ -1,7 +1,7 @@
 property pSprite, pRandom, pFrameCount, pCount, pAdd
 
-on define me, tsprite
-  pSprite = tsprite
+on define me, tSprite
+  pSprite = tSprite
   me.reset()
   return 1
 end

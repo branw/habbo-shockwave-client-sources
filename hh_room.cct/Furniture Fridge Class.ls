@@ -1,7 +1,14 @@
 property pTokenList, pDoorTimer
 
 on prepare me
-  pTokenList = value(getVariable("obj_" & me.pClass))
+  tClass = me.pClass
+  if tClass contains "*" then
+    tClass = tClass.char[1..offset("*", tClass) - 1]
+  end if
+  if tClass.char[1..2] = "s_" then
+    tClass = tClass.char[3..tClass.length]
+  end if
+  pTokenList = value(getVariable("obj_" & tClass))
   if not listp(pTokenList) then
     pTokenList = [3]
   end if
