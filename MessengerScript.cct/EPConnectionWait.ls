@@ -8,7 +8,7 @@ on exitFrame
       go(the frame + 1)
     else
       if gGoTo = "register" then
-        gotoFrame("regist")
+        startRegistration()
       else
         if gGoTo = "forgottenPassword" then
           gotoFrame("sendMyPassword")

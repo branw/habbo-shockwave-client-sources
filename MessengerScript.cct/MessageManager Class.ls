@@ -7,18 +7,28 @@ on new me
 end
 
 on handleFusePMessage me, data
-  put data
   msg = new(script("Message Class"), data)
   l = getaProp(pBuddyMsgs, msg.senderID)
   if l = VOID then
     l = []
     addProp(pBuddyMsgs, msg.senderID, l)
   end if
-  puppetSound(3, "newmessage.sound")
+  puppetSound(3, getmemnum("newmessage.sound"))
   add(l, msg)
   if objectp(gBuddyList) then
     update(gBuddyList)
   end if
+end
+
+on handleFusePCampaignMessage me, data
+  msg = new(script("Campaign Message Class"), data)
+  l = getaProp(pBuddyMsgs, msg.senderID)
+  if l = VOID then
+    l = []
+    addProp(pBuddyMsgs, msg.senderID, l)
+  end if
+  puppetSound(3, getmemnum("newmessage.sound"))
+  add(l, msg)
 end
 
 on getMessageCount me
@@ -51,8 +61,9 @@ on getNextBuddyMsg me, buddyId
       if count(l) = 0 then
         deleteProp(pBuddyMsgs, buddyId)
       end if
-      markAsRead(msg)
-      MyWireFace(FigureDataParser(gBuddyFigures.getaProp(buddyId)), "face_icon")
+      if buddyId > 0 then
+        MyWireFace(FigureDataParser(gBuddyFigures.getaProp(buddyId)), "face_icon")
+      end if
       return msg
     else
       return getNextMessage(me)

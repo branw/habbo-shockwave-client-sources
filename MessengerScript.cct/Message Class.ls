@@ -34,8 +34,10 @@ end
 on display me
   s = "From:" && getBuddyName(gBuddyList, senderID)
   s = s & RETURN & time & RETURN
-  member("messenger.message_info").text = s
-  member("messenger.message").text = message
+  member(getmemnum("messenger.message_info")).text = s
+  member(getmemnum("messenger.message")).text = message
+  goContext("readmsg")
+  me.markAsRead()
   gActiveMsg = me
 end
 

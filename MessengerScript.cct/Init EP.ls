@@ -1,14 +1,23 @@
 on exitFrame me
-  global gEPIp, gEPPort, gpUiButtons, gStartLoadingTime, gEndLoadingTime, gHabboRep, gCountryPrefix
+  global gEPIp, gEPPort, gpUiButtons, gStartLoadingTime, gEndLoadingTime, gHabboRep, gCountryPrefix, gKusetus
   t1 = gStartLoadingTime
   t2 = gEndLoadingTime
   clearGlobals()
   startTimer()
+  gKusetus = gKusetus & "fc=" & random(10) & "/"
+  gKusetus = gKusetus & "hd=" & random(10) & "/"
+  gKusetus = gKusetus & "sh=" & random(10) & "/"
+  gKusetus = gKusetus & "sl=" & random(10) & "/"
+  gKusetus = gKusetus & "sd=" & random(10) & "/"
+  gKusetus = gKusetus & "rh=" & random(10) & "/"
+  gKusetus = gKusetus & "rs=" & random(10) & "/"
+  gKusetus = gKusetus & "bd=" & random(10) & "/"
+  gKusetus = gKusetus & "hr=" & random(10) & "/"
   gCountryPrefix = "gf"
   gStartLoadingTime = t1
   gEndLoadingTime = t2
   gEPIp = "fuse-pc2.kultakalaglobal.com"
-  gEPPort = 37050
+  gEPPort = 37040
   if the runMode <> "Author" then
     gHabboRep = getNetText("http://habborep.magenta.net/serverid.txt")
     hostInfo = externalParamValue("swText")

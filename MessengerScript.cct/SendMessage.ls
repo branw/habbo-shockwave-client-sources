@@ -2,12 +2,12 @@ global gBuddyList, gMessageManager, gChosenBuddyId, gMModeChosenMode
 
 on mouseDown me
   global gCredits
-  receivers = field("receivers")
+  receivers = field(getmemnum("receivers"))
   if receivers.length < 1 then
     ShowAlert("ChooseWhoToSentMessage")
     return 
   end if
-  message = member("messenger.message.new").text
+  message = member(getmemnum("messenger.message.new")).text
   if message.length < 1 then
     return 
   else
@@ -25,7 +25,7 @@ on mouseDown me
             s = s & RETURN & RETURN & AddTextToField("smsCredits2")
             s = stringReplace(s, "XXX", gCredits)
             s = s & RETURN & RETURN & AddTextToField("smsCredits3")
-            member("sms_conf_nocredits_e").text = s
+            member(getmemnum("sms_conf_nocredits_e")).text = s
             goContext("msg_sms_conf_nocredits")
           else
             s = AddTextToField("smsCredits1")
@@ -42,9 +42,9 @@ on mouseDown me
     end if
     goContext("buddies")
   end if
-  put EMPTY into field "receivers"
-  member("messenger.message.new").text = EMPTY
-  member("messenger.message.new").scrollTop = 0
-  member("message.charCount").text = "0/255"
-  puppetSound(2, "messagesent")
+  put EMPTY into field getmemnum("receivers")
+  member(getmemnum("messenger.message.new")).text = EMPTY
+  member(getmemnum("messenger.message.new")).scrollTop = 0
+  member(getmemnum("message.charCount")).text = "0/255"
+  puppetSound(2, getmemnum("messagesent"))
 end

@@ -1,18 +1,22 @@
-property lastSearch
+property lastSearch, pOrigFrame
 
 on beginSprite me
+  pOrigFrame = the frame
   the keyboardFocusSprite = me.spriteNum
 end
 
-on exitFrame me
+on exitFrame me, bEndSprite
   if voidp(lastSearch) then
     lastSearch = EMPTY
   end if
-  if the keyboardFocusSprite <> me.spriteNum then
+  if the keyboardFocusSprite <> me.spriteNum or bEndSprite then
     if (field("charactername_field")).length < 3 then
       lastSearch = EMPTY
       ShowAlert("YourNameIstooShort")
       member("charactername_field").text = EMPTY
+      if bEndSprite then
+        go(pOrigFrame)
+      end if
       the keyboardFocusSprite = me.spriteNum
       return 
     end if
@@ -27,7 +31,7 @@ on exitFrame me
 end
 
 on endSprite me
-  sendEPFuseMsg("FINDUSER" && field("charactername_field"))
+  me.exitFrame(1)
 end
 
 on keyDown me

@@ -1,4 +1,4 @@
-global gEPConnectionsSecured, gEPConnectionInstance, gEPlastContent, gEPIp, gEPPort, gEPConnectionOk, gBuddyList, gMessageManager, gBuddyRequestSprite, gMyName, figurePartList, figureColorList, MyfigurePartList, MyfigureColorList, gPhonenumberOk, gEndLoadingTime, gStartLoadingTime, gHabboRep
+global gEPConnectionsSecured, gEPConnectionInstance, gEPlastContent, gEPIp, gEPPort, gEPConnectionOk, gBuddyList, gMessageManager, gBuddyRequestSprite, gMyName, figurePartList, figureColorList, MyfigurePartList, MyfigureColorList, gPhonenumberOk, gEndLoadingTime, gStartLoadingTime, gHabboRep, gChosenCountry, gChosenRegion, gChosenContinent
 
 on epLogin user, password
   gMyName = user
@@ -42,17 +42,17 @@ on messengerInit
   gBuddyList = new(script("BuddyLIst Class"))
   update(gBuddyList)
   gMessageManager = new(script("MessageManager Class"))
-  member("messenger.new_buddy_requests").text = AddTextToField("ZerobuddyRequest")
-  member("messenger.new_buddy_requests").font = "Volter (goldfish)"
-  member("messenger.new_buddy_requests").fontStyle = [#plain]
-  member("messenger.new_buddy_requests2").text = member("messenger.new_buddy_requests").text
-  member("messenger.new_buddy_requests2").font = "Volter (goldfish)"
-  member("messenger.new_buddy_requests2").fontStyle = [#plain]
-  member("messenger.sms_account").text = " "
-  member("messenger.no_of_new_messages").text = AddTextToField("ZerobuddyMessage")
-  member("messenger.no_of_new_messages").font = "Volter (goldfish)"
-  member("messenger.no_of_new_messages").fontStyle = [#plain]
-  member("messenger.my_persistent_message").text = AddTextToField("MyPersistentMessage")
+  member(getmemnum("messenger.new_buddy_requests")).text = AddTextToField("ZerobuddyRequest")
+  member(getmemnum("messenger.new_buddy_requests")).font = "Volter (goldfish)"
+  member(getmemnum("messenger.new_buddy_requests")).fontStyle = [#plain]
+  member(getmemnum("messenger.new_buddy_requests2")).text = member("messenger.new_buddy_requests").text
+  member(getmemnum("messenger.new_buddy_requests2")).font = "Volter (goldfish)"
+  member(getmemnum("messenger.new_buddy_requests2")).fontStyle = [#plain]
+  member(getmemnum("messenger.sms_account")).text = " "
+  member(getmemnum("messenger.no_of_new_messages")).text = AddTextToField("ZerobuddyMessage")
+  member(getmemnum("messenger.no_of_new_messages")).font = "Volter (goldfish)"
+  member(getmemnum("messenger.no_of_new_messages")).fontStyle = [#plain]
+  member(getmemnum("messenger.my_persistent_message")).text = AddTextToField("MyPersistentMessage")
 end
 
 on sendEPFuseMsg s
@@ -172,7 +172,7 @@ on showUnitsInMsg
     repeat with unit in gUnits
       put unit[1] && "(" & unit[2] & ")" & RETURN after s
     end repeat
-    put s into field "messenger.member_info"
+    put s into field getmemnum("messenger.member_info")
   end if
 end
 
@@ -219,7 +219,7 @@ on handleEPMessageContent content
             else
               if firstline contains "NAME" then
                 ShowAlert("unacceptableName")
-                put EMPTY into field "charactername_field"
+                put EMPTY into field getmemnum("charactername_field")
               else
                 if firstline contains "ERROR" and not (firstline contains "PURCHASE") then
                   put content
@@ -240,7 +240,7 @@ on handleEPMessageContent content
                       else
                         if content contains "User exists" then
                           ShowAlert("NameAlreadyUse")
-                          put EMPTY into field "charactername_field"
+                          put EMPTY into field getmemnum("charactername_field")
                           gotoFrame("figure")
                         else
                           if content contains "Only 10" then
@@ -287,20 +287,23 @@ on handleMemberInfo data
       end if
     end if
   end if
-  put EMPTY into field "messenger.member_info"
-  set the textFont of field "messenger.member_info" to "Volter (goldfish)"
-  put EMPTY into field "messenger.member_info2"
-  set the textFont of field "messenger.member_info2" to "Volter (goldfish)"
-  put name & RETURN & customText & RETURN into field "messenger.member_info"
-  put lastAccess & RETURN & RETURN & AddTextToField("BuddyNow") && location into field "messenger.member_info2"
-  set the textFont of field "messenger.member_info" to "Volter (goldfish)"
-  set the textFont of line 1 of field "messenger.member_info" to "Volter-Bold (goldfish)"
-  set the textFont of field "messenger.member_info2" to "Volter (goldfish)"
+  put EMPTY into field getmemnum("messenger.member_info")
+  set the textFont of field getmemnum("messenger.member_info") to "Volter (goldfish)"
+  put EMPTY into field getmemnum("messenger.member_info2")
+  set the textFont of field getmemnum("messenger.member_info2") to "Volter (goldfish)"
+  put name & RETURN & customText & RETURN into field getmemnum("messenger.member_info")
+  put lastAccess & RETURN & RETURN & AddTextToField("BuddyNow") && location into field getmemnum("messenger.member_info2")
+  set the textFont of field getmemnum("messenger.member_info") to "Volter (goldfish)"
+  set the textFont of line 1 of field getmemnum("messenger.member_info") to "Volter-Bold (goldfish)"
+  set the textFont of field getmemnum("messenger.member_info2") to "Volter (goldfish)"
   MyWireFace(FigureDataParser(FigureData), "face_icon")
 end
 
 on handleMessengerMessages content
-  global gUserLoginRetrieve, gMySex, CryCount, PurseAndHelpContext, CryHelp
+  global gUserLoginRetrieve, gUserProperties, gMySex, gForcedCountryReg, CryCount, PurseAndHelpContext, CryHelp
+  if the runMode = "author" then
+    put content
+  end if
   firstline = line 1 of content
   if firstline contains "BUDDYLIST" then
     if voidp(gBuddyList) then
@@ -315,235 +318,259 @@ on handleMessengerMessages content
       handleFusePMessage(gMessageManager, line 2 to the number of lines in content of content)
       update(gBuddyList)
     else
-      if firstline contains "USEROBJECT" then
-        p = keyValueToPropList(content, RETURN)
-        put content, p
-        if getaProp(p, "phoneNumber") = VOID then
-          gPhonenumberOk = 0
-        else
-          if length(getaProp(p, "phoneNumber")) > 7 then
-            gPhonenumberOk = 1
-          end if
+      if firstline contains "CAMPAIGN_MSG" then
+        if not objectp(gMessageManager) then
+          gMessageManager = new(script("MessageManager Class"))
         end if
-        if gUserLoginRetrieve = 1 then
-          gUserLoginRetrieve = 0
-          put p, getaProp(p, "customData")
-          put getaProp(p, "customData") into field "character_info_desc"
-          put gMyName into field "character_info_name"
-          put getaProp(p, "sex") into field "charactersex_field"
-          put "AND YOUR SEX WILL BE" && field("charactersex_field")
-          if member("charactersex_field").text = "M" then
-            member("charactersex_field").text = "Male"
-          end if
-          if member("charactersex_field").text = "F" then
-            member("charactersex_field").text = "Female"
-          end if
-          gMySex = field("charactersex_field")
-          if p.getPos("country") <> VOID then
-            put getaProp(p, "country") into field "countryname"
+        handleFusePCampaignMessage(gMessageManager, line 2 to the number of lines in content of content)
+        update(gBuddyList)
+      else
+        if firstline contains "USEROBJECT" then
+          p = keyValueToPropList(content, RETURN)
+          put content, p
+          gUserProperties = p
+          if getaProp(p, "phoneNumber") = VOID then
+            gPhonenumberOk = 0
           else
-            member(getmemnum("countryname")).text = EMPTY
+            if length(getaProp(p, "phoneNumber")) > 7 then
+              gPhonenumberOk = 1
+            end if
           end if
-          MyfigurePartList = [:]
-          MyfigureColorList = [:]
-          MyfigurePartList = keyValueToPropList(getaProp(p, "figure"), "&")
-          oldDelim = the itemDelimiter
-          repeat with i = 1 to count(MyfigurePartList)
-            model = getAt(MyfigurePartList, i)
-            the itemDelimiter = "/"
-            if (item 2 of model).length > 3 then
-              clothColor = value("color(#rgb," & item 2 of model & ")")
+          if gUserLoginRetrieve = 1 then
+            gUserLoginRetrieve = 0
+            put p, getaProp(p, "customData")
+            put getaProp(p, "customData") into field getmemnum("character_info_desc")
+            put gMyName into field getmemnum("character_info_name")
+            put getaProp(p, "sex") into field getmemnum("charactersex_field")
+            if member(getmemnum("charactersex_field")).text = "M" then
+              member(getmemnum("charactersex_field")).text = "Male"
+            end if
+            if member(getmemnum("charactersex_field")).text = "F" then
+              member(getmemnum("charactersex_field")).text = "Female"
+            end if
+            gMySex = field("charactersex_field")
+            if p.getPos("country") <> VOID then
+              put getaProp(p, "country") into field getmemnum("countryname")
             else
-              clothColor = paletteIndex(integer(item 2 of model))
+              member(getmemnum("countryname")).text = EMPTY
             end if
-            if clothColor = VOID then
-              clothColor = color(#rgb, 0, 0, 0)
-            end if
-            addProp(MyfigureColorList, getPropAt(MyfigurePartList, i), clothColor)
-            setAt(MyfigurePartList, i, item 1 of model)
-            the itemDelimiter = oldDelim
-          end repeat
-          sendEPFuseMsg("GETCREDITS")
-          return 
-        else
-          tmpStr = "figure=" & p["figure"]
-          tmpStr2 = EMPTY
-          the itemDelimiter = "="
-          repeat with c = 1 to tmpStr.item.count
-            if c > 1 and c < tmpStr.item.count then
-              tmpStr2 = tmpStr2 & tmpStr.item[c] & "="
-              next repeat
-            end if
-            if c > 1 and c = tmpStr.item.count then
-              tmpStr2 = tmpStr2 & tmpStr.item[c]
-            end if
-          end repeat
-          the itemDelimiter = ","
-          put tmpStr2 into field "figure_field"
-          tmpList = []
-          figurePartList = [:]
-          figureColorList = [:]
-          the itemDelimiter = "&"
-          repeat with c = 1 to tmpStr2.item.count
-            tmpList.add(tmpStr2.item[c])
-          end repeat
-          the itemDelimiter = ","
-          repeat with c = 1 to tmpList.count
-            the itemDelimiter = "/"
-            tmpPart = tmpList[c]
-            tName = tmpPart.char[1..2]
-            figurePartList.addProp(tName, tmpPart.item[1])
-            figureColorList.addProp(tName, tmpPart.item[2])
-            the itemDelimiter = ","
-          end repeat
-          put figurePartList && "figurePartList <-----"
-          put figureColorList
-          put getaProp(p, "name") into field "charactername_field"
-          put getaProp(p, "email") into field "email_field"
-          put getaProp(p, "directMail") into field "can_spam_field"
-          put getaProp(p, "customData") into field "persistantmessage_field"
-          put getaProp(p, "birthday") into field "birthday_field"
-          put getaProp(p, "has_read_agreement") into field "Agreement_field"
-          put getaProp(p, "sex") into field "charactersex_field"
-          put getaProp(p, "country") into field "countryname"
-          if getaProp(p, "phoneNumber") <> "null" then
-            put getaProp(p, "phoneNumber") into field "phonenumber"
+            MyfigurePartList = [:]
+            MyfigureColorList = [:]
+            MyfigurePartList = keyValueToPropList(getaProp(p, "figure"), "&")
+            oldDelim = the itemDelimiter
+            repeat with i = 1 to count(MyfigurePartList)
+              model = getAt(MyfigurePartList, i)
+              the itemDelimiter = "/"
+              if (item 2 of model).length > 3 then
+                clothColor = value("color(#rgb," & item 2 of model & ")")
+              else
+                clothColor = paletteIndex(integer(item 2 of model))
+              end if
+              if clothColor = VOID then
+                clothColor = color(#rgb, 0, 0, 0)
+              end if
+              addProp(MyfigureColorList, getPropAt(MyfigurePartList, i), clothColor)
+              setAt(MyfigurePartList, i, item 1 of model)
+              the itemDelimiter = oldDelim
+            end repeat
+            sendEPFuseMsg("GETCREDITS")
+            return 
           else
-            put "+41" into field "phonenumber"
-          end if
-          put getaProp(p, "name") into field "loginname_locked"
-          repeat with i = 2 to the number of lines in content
-            ln = line i of content
-            sfield = item 1 of ln
-            sdata = item 2 of ln
-            put sfield, sdata
-            if the number of member sfield > 0 and sfield.length > 0 then
-              if sdata <> "null" then
-                put doSpecialCharConversion(sdata) into field sfield
+            tmpStr = "figure=" & p["figure"]
+            tmpStr2 = EMPTY
+            the itemDelimiter = "="
+            repeat with c = 1 to tmpStr.item.count
+              if c > 1 and c < tmpStr.item.count then
+                tmpStr2 = tmpStr2 & tmpStr.item[c] & "="
                 next repeat
               end if
-              put EMPTY into field sfield
-            end if
-          end repeat
-          the itemDelimiter = ","
-          gotoFrame("change1")
-        end if
-      else
-        if firstline contains "NOSUCHUSER" then
-          put AddTextToField("CantFindYou") into field "messenger.member_info"
-          member("messenger.member_match").text = AddTextToField("NoProfileFind")
-          sendSprite(gBuddyRequestSprite, #disable)
-        else
-          if firstline contains "MEMBERINFO" then
-            if the movieName contains "entry" and the frameLabel = "regist_2" or the frameLabel = "figure" then
-              ShowAlert("NameAlreadyUse")
-              put EMPTY into field "charactername_field"
-              gotoFrame("regist")
-              return 
-            end if
-            handleMemberInfo(line 2 to the number of lines in content of content)
-            sendSprite(gBuddyRequestSprite, #enable)
-          else
-            if firstline contains "MESSENGERSMSACCOUNT" then
-              ln2 = line 2 of content
-              if ln2 contains "noaccount" then
-                sText = "Tekstiviestipalvelua ei avattu"
-              else
-                numbers = value(ln2)
-                if count(numbers) = 1 then
-                  sText = "Tekstiviestipalvelu avattu."
-                else
-                  sText = "Tekstiviestipalvelu avattu" && count(numbers) && "numeroon"
-                end if
+              if c > 1 and c = tmpStr.item.count then
+                tmpStr2 = tmpStr2 & tmpStr.item[c]
               end if
-              set the textStyle of field "messenger.sms_account" to "plain"
-              set the textFont of field "messenger.sms_account" to "Volter (goldfish)"
-              put sText into field "messenger.sms_account"
-              set the textStyle of word 1 of line 1 of field "messenger.sms_account" to "underline"
+            end repeat
+            the itemDelimiter = ","
+            put tmpStr2 into field getmemnum("figure_field")
+            tmpList = []
+            figurePartList = [:]
+            figureColorList = [:]
+            the itemDelimiter = "&"
+            repeat with c = 1 to tmpStr2.item.count
+              tmpList.add(tmpStr2.item[c])
+            end repeat
+            the itemDelimiter = ","
+            repeat with c = 1 to tmpList.count
+              the itemDelimiter = "/"
+              tmpPart = tmpList[c]
+              tName = tmpPart.char[1..2]
+              figurePartList.addProp(tName, tmpPart.item[1])
+              figureColorList.addProp(tName, tmpPart.item[2])
+              the itemDelimiter = ","
+            end repeat
+            put figurePartList && "figurePartList <-----"
+            put figureColorList
+            put getaProp(p, "name") into field getmemnum("charactername_field")
+            put getaProp(p, "email") into field getmemnum("email_field")
+            put getaProp(p, "directMail") into field getmemnum("can_spam_field")
+            put getaProp(p, "customData") into field getmemnum("persistantmessage_field")
+            put getaProp(p, "birthday") into field getmemnum("birthday_field")
+            put getaProp(p, "has_read_agreement") into field getmemnum("Agreement_field")
+            put getaProp(p, "sex") into field getmemnum("charactersex_field")
+            put getaProp(p, "country") into field getmemnum("countryname")
+            gChosenCountry = integer(getaProp(p, "country"))
+            gChosenRegion = integer(getaProp(p, "region"))
+            if gChosenCountry <> VOID then
+              gChosenContinent = integer(string(gChosenCountry).char[1])
+            end if
+            if gChosenRegion = 0 then
+              gChosenRegion = VOID
+            end if
+            if getaProp(p, "phoneNumber") <> "null" then
+              put getaProp(p, "phoneNumber") into field getmemnum("phonenumber")
             else
-              if firstline contains "BUDDYADDREQUESTS" then
-                requester = word 1 of line 2 of content
-                oldDelim = the itemDelimiter
-                the itemDelimiter = "/"
-                requesterName = item 2 of requester
-                addBuddyRequest(gBuddyList, requesterName)
-              else
-                if firstline contains "MYPERSISTENTMSG" then
-                  if line 2 of content = EMPTY then
-                    member("messenger.my_persistent_message").text = AddTextToField("MyPersistentMessage")
-                  else
-                    member("messenger.my_persistent_message").text = line 2 of content
-                  end if
+              put "+41" into field getmemnum("phonenumber")
+            end if
+            put getaProp(p, "name") into field getmemnum("loginname_locked")
+            repeat with i = 2 to the number of lines in content
+              ln = line i of content
+              sfield = item 1 of ln
+              sdata = item 2 of ln
+              if getmemnum(sfield) > 0 and sfield.length > 0 then
+                if sdata <> "null" then
+                  put doSpecialCharConversion(sdata) into field getmemnum(sfield)
+                  next repeat
+                end if
+                put EMPTY into field sfield
+              end if
+            end repeat
+            the itemDelimiter = ","
+            if gForcedCountryReg then
+              startUpdate(3)
+            else
+              startUpdate()
+            end if
+            gForcedCountryReg = VOID
+          end if
+        else
+          if firstline contains "NOSUCHUSER" then
+            put AddTextToField("CantFindYou") into field getmemnum("messenger.member_info")
+            member(getmemnum("messenger.member_match")).text = AddTextToField("NoProfileFind")
+            sendSprite(gBuddyRequestSprite, #disable)
+          else
+            if firstline contains "MEMBERINFO" then
+              if the movieName contains "entry" and (the frame >= label("regist1") and the frame <= label("regist2")) then
+                ShowAlert("NameAlreadyUse")
+                put EMPTY into field getmemnum("charactername_field")
+                if not (the movieName contains "habbo_ch_entry") then
+                  gotoFrame("regist1")
                 else
-                  if firstline contains "USERPROFILE" then
-                    parseUserProfile(line 2 to the number of lines in content of content)
+                  gotoFrame("regist")
+                end if
+                return 
+              end if
+              handleMemberInfo(line 2 to the number of lines in content of content)
+              sendSprite(gBuddyRequestSprite, #enable)
+            else
+              if firstline contains "MESSENGERSMSACCOUNT" then
+                ln2 = line 2 of content
+                if ln2 contains "noaccount" then
+                  sText = "Tekstiviestipalvelua ei avattu"
+                else
+                  numbers = value(ln2)
+                  if count(numbers) = 1 then
+                    sText = "Tekstiviestipalvelu avattu."
                   else
-                    if firstline contains "USERMATCH" then
-                      put content
-                      if line 3 of content = "-1.0" then
-                        member("messenger.member_match").text = AddTextToField("NoProfileFind")
-                      else
-                        member("messenger.member_match").text = AddTextToField("Profilematch") && integer(value(line 3 of content) * 100)
-                      end if
+                    sText = "Tekstiviestipalvelu avattu" && count(numbers) && "numeroon"
+                  end if
+                end if
+                set the textStyle of field "messenger.sms_account" to "plain"
+                set the textFont of field "messenger.sms_account" to "Volter (goldfish)"
+                put sText into field "messenger.sms_account"
+                set the textStyle of word 1 of line 1 of field "messenger.sms_account" to "underline"
+              else
+                if firstline contains "BUDDYADDREQUESTS" then
+                  requester = word 1 of line 2 of content
+                  oldDelim = the itemDelimiter
+                  the itemDelimiter = "/"
+                  requesterName = item 2 of requester
+                  addBuddyRequest(gBuddyList, requesterName)
+                else
+                  if firstline contains "MYPERSISTENTMSG" then
+                    if line 2 of content = EMPTY then
+                      member("messenger.my_persistent_message").text = AddTextToField("MyPersistentMessage")
                     else
-                      if firstline contains "CRYFORHELP" then
-                        put "Cry:" && content
-                        if CryHelp = VOID then
-                          CryHelp = [:]
+                      member(getmemnum("messenger.my_persistent_message")).text = line 2 of content
+                    end if
+                  else
+                    if firstline contains "USERPROFILE" then
+                      parseUserProfile(line 2 to the number of lines in content of content)
+                    else
+                      if firstline contains "USERMATCH" then
+                        put content
+                        if line 3 of content = "-1.0" then
+                          member("messenger.member_match").text = AddTextToField("NoProfileFind")
+                        else
+                          member(getmemnum("messenger.member_match")).text = AddTextToField("Profilematch") && integer(value(line 3 of content) * 100)
                         end if
-                        cryinguser = line 2 of content
-                        cryurl = line 3 of content
-                        oldI = the itemDelimiter
-                        the itemDelimiter = ";"
-                        CryMsg = (line 4 of content).item[3]
-                        CryUnit = (line 4 of content).item[1]
-                        CrygDoor = (line 4 of content).item[2]
-                        Cryprivate_gChosenFlatId = stringReplace((line 4 of content).item[4], TAB, "/")
-                        the itemDelimiter = oldI
-                        temp = []
-                        repeat with f = 1 to count(CryHelp)
-                          if CryHelp.getProp(CryHelp.getPropAt(f)).getProp("PickedCry") <> "<nobody>" then
-                            temp.add(CryHelp.getPropAt(f))
+                      else
+                        if firstline contains "CRYFORHELP" then
+                          put "Cry:" && content
+                          if CryHelp = VOID then
+                            CryHelp = [:]
                           end if
-                        end repeat
-                        repeat with f in temp
-                          CryHelp.deleteProp(f)
-                        end repeat
-                        if CryCount > count(CryHelp) then
-                          CryCount = count(CryHelp)
-                        end if
-                        if cryinguser <> "[AUTOMATIC]" then
-                          CryHelp.addProp(cryurl, ["cryinguser": cryinguser, "url": line 3 of content, "CryMsg": CryMsg, "Unit": CryUnit, "gDoor": CrygDoor, "PickedCry": "<nobody>", "CryPrivate": Cryprivate_gChosenFlatId])
-                          put CryHelp
-                          if PurseAndHelpContext <> VOID then
-                            if PurseAndHelpContext.frame <> "hobba_alert" then
-                              CryCount = count(CryHelp)
+                          cryinguser = line 2 of content
+                          cryurl = line 3 of content
+                          oldI = the itemDelimiter
+                          the itemDelimiter = ";"
+                          CryMsg = (line 4 of content).item[3]
+                          CryUnit = (line 4 of content).item[1]
+                          CrygDoor = (line 4 of content).item[2]
+                          Cryprivate_gChosenFlatId = stringReplace((line 4 of content).item[4], TAB, "/")
+                          the itemDelimiter = oldI
+                          temp = []
+                          repeat with f = 1 to count(CryHelp)
+                            if CryHelp.getProp(CryHelp.getPropAt(f)).getProp("PickedCry") <> "<nobody>" then
+                              temp.add(CryHelp.getPropAt(f))
                             end if
-                          else
+                          end repeat
+                          repeat with f in temp
+                            CryHelp.deleteProp(f)
+                          end repeat
+                          if CryCount > count(CryHelp) then
                             CryCount = count(CryHelp)
                           end if
-                          if PurseAndHelpContext <> VOID then
-                            if PurseAndHelpContext.frame <> "cryForHelp" and PurseAndHelpContext.frame <> "cryDone" then
+                          if cryinguser <> "[AUTOMATIC]" then
+                            CryHelp.addProp(cryurl, ["cryinguser": cryinguser, "url": line 3 of content, "CryMsg": CryMsg, "Unit": CryUnit, "gDoor": CrygDoor, "PickedCry": "<nobody>", "CryPrivate": Cryprivate_gChosenFlatId])
+                            put CryHelp
+                            if PurseAndHelpContext <> VOID then
+                              if PurseAndHelpContext.frame <> "hobba_alert" then
+                                CryCount = count(CryHelp)
+                              end if
+                            else
+                              CryCount = count(CryHelp)
+                            end if
+                            if PurseAndHelpContext <> VOID then
+                              if PurseAndHelpContext.frame <> "cryForHelp" and PurseAndHelpContext.frame <> "cryDone" then
+                                sprite(870).member = member(getmemnum("hobba_alert_anim"))
+                                sprite(870).loc = point(30, 20)
+                                sprite(870).height = member(getmemnum("hobba_alert_anim")).height
+                                sprite(870).width = member(getmemnum("hobba_alert_anim")).width
+                              end if
+                            else
                               sprite(870).member = member(getmemnum("hobba_alert_anim"))
                               sprite(870).loc = point(30, 20)
                               sprite(870).height = member(getmemnum("hobba_alert_anim")).height
                               sprite(870).width = member(getmemnum("hobba_alert_anim")).width
                             end if
-                          else
-                            sprite(870).member = member(getmemnum("hobba_alert_anim"))
-                            sprite(870).loc = point(30, 20)
-                            sprite(870).height = member(getmemnum("hobba_alert_anim")).height
-                            sprite(870).width = member(getmemnum("hobba_alert_anim")).width
                           end if
-                        end if
-                      else
-                        if firstline contains "PICKED_CRY" then
-                          put content
-                          CryPickedBy = line 2 of content
-                          cryurl = line 3 of content
-                          if CryHelp <> VOID then
-                            if CryHelp.findPos(cryurl) <> VOID then
-                              CryHelp.getProp(cryurl).setProp("PickedCry", CryPickedBy)
+                        else
+                          if firstline contains "PICKED_CRY" then
+                            put content
+                            CryPickedBy = line 2 of content
+                            cryurl = line 3 of content
+                            if CryHelp <> VOID then
+                              if CryHelp.findPos(cryurl) <> VOID then
+                                CryHelp.getProp(cryurl).setProp("PickedCry", CryPickedBy)
+                              end if
                             end if
                           end if
                         end if

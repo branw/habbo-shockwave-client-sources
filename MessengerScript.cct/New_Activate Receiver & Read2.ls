@@ -2,7 +2,7 @@ property selected, mname, num
 global gBuddyList, gMessageManager, gpUiButtons, gChosenBuddyId, gChosenbuddyName, gpBuddyIndicators, gpBuddyExistsIndicators
 
 on beginSprite me
-  put EMPTY into field "receivers"
+  put EMPTY into field getmemnum("receivers")
   mname = sprite(me.spriteNum).member.name
   num = integer(char 7 of mname)
   mname = "buddy" & num & ".field"
@@ -55,13 +55,13 @@ end
 
 on enable me
   bname = getBuddyIdFromFieldNum(gBuddyList, num)
-  if not (field("receivers") contains bname & " ") then
+  if not (field(getmemnum("receivers")) contains bname & " ") then
     put bname & " " after field "receivers"
   end if
   gChosenbuddyName = getBuddyNameFromFieldNum(gBuddyList, num)
   receiverNames = EMPTY
-  repeat with i = 1 to the number of words in field "receivers"
-    id = integer(word i of field "receivers")
+  repeat with i = 1 to the number of words in field getmemnum("receivers")
+    id = integer(word i of field getmemnum("receivers"))
     receiverNames = receiverNames && getBuddyName(gBuddyList, id)
   end repeat
   member("receivers.show").text = AddTextToField("receivers2") & RETURN & receiverNames
@@ -85,7 +85,7 @@ on disable me
   end if
   bname = getBuddyIdFromFieldNum(gBuddyList, num)
   newrc = EMPTY
-  rc = field("receivers")
+  rc = field(getmemnum("receivers"))
   repeat with i = 1 to the number of words in rc
     if word i of rc = bname then
       next repeat
@@ -98,10 +98,10 @@ on disable me
     id = integer(word i of field "receivers")
     receiverNames = receiverNames && getBuddyName(gBuddyList, id)
   end repeat
-  member("receivers.show").text = AddTextToField("receivers2") & RETURN & receiverNames
-  member("messenger.message.new").text = EMPTY
-  member("messenger.message.new").scrollTop = 0
-  member("message.charCount").text = "0/255"
+  member(getmemnum("receivers.show")).text = AddTextToField("receivers2") & RETURN & receiverNames
+  member(getmemnum("messenger.message.new")).text = EMPTY
+  member(getmemnum("messenger.message.new")).scrollTop = 0
+  member(getmemnum("message.charCount")).text = "0/255"
   if voidp(gpBuddyIndicators) then
     gpBuddyIndicators = [:]
   end if
@@ -121,7 +121,7 @@ end
 
 on checkBuddyList me
   bname = getBuddyIdFromFieldNum(gBuddyList, num)
-  rc = field("receivers")
+  rc = field(getmemnum("receivers"))
   repeat with i = 1 to the number of words in rc
     if word i of rc = bname then
       enable(me)

@@ -99,7 +99,7 @@ on mouseUp me
     if ClickPoint.locH <= sprite(me.spriteNum).right - 30 and ClickPlace.getaProp("Main") and value(ClickPlace.getaProp("Multiroom")) > 1 and ClickPlace.getaProp("Status") = "Closed" then
       ClickPlace.setaProp("Status", "Open")
       openhierarchy(ClickPlaceNum, value(ClickPlace.getaProp("Multiroom")), gNaviP.getPropAt(ClickPlaceNum))
-      redraw(me)
+      reDraw(me)
       sendSprite(ScrollBarLiftBtn, #NaviLiftPosiotion, FirstVisiblePlace_navi, VisibleLines_navi - (integer(MyHeight_navi / lineH_navi) - 1))
     else
       if ClickPoint.locH <= sprite(me.spriteNum).right - 30 and ClickPlace.getaProp("Main") and value(ClickPlace.getaProp("Multiroom")) > 1 and ClickPlace.getaProp("Status") = "Open" then
@@ -109,7 +109,7 @@ on mouseUp me
           Mytop_navi = 0
           FirstVisiblePlace_navi = 0
         end if
-        redraw(me)
+        reDraw(me)
         sendSprite(ScrollBarLiftBtn, #NaviLiftPosiotion, FirstVisiblePlace_navi, VisibleLines_navi - (integer(MyHeight_navi / lineH_navi) - 1))
       end if
     end if
@@ -224,7 +224,7 @@ on NaviScrollWhithLift me, percentNow
   if Mytop_navi < 0 then
     Mytop_navi = 0
   end if
-  redraw(me)
+  reDraw(me)
 end
 
 on ScrollNavigatorWindow me, direction
@@ -239,7 +239,7 @@ on ScrollNavigatorWindow me, direction
       if Mytop_navi < 0 then
         Mytop_navi = 0
       end if
-      redraw(me)
+      reDraw(me)
       ScrollWaitTime(me, 7)
       if FirstVisiblePlace_navi > 1 then
         sendAllSprites(#ActiveOrNotScrollUpBtn, 1)
@@ -260,7 +260,7 @@ on ScrollNavigatorWindow me, direction
       if Mytop_navi < 0 then
         Mytop_navi = 0
       end if
-      redraw(me)
+      reDraw(me)
       ScrollWaitTime(me, 7)
       if VisibleLines_navi - FirstVisiblePlace_navi > integer(MyHeight_navi / lineH_navi) - 1 then
         sendAllSprites(#ActiveOrNotScrollDownBtn, 1)
@@ -282,7 +282,7 @@ on ScrollWaitTime me, ScrollWait
   end repeat
 end
 
-on redraw me
+on reDraw me
   global NavImg
   UpdateNaviWindow(me)
   sprite(spriteNum).member.image = NavImg
@@ -311,7 +311,7 @@ on exitFrame me
     sendSprite(gNaviDownBtn, #ActiveOrNotScrollDownBtn, 0)
   end if
   if UnitIsUpdated = 1 and NeedUpdatetime < the timer then
-    redraw(me)
+    reDraw(me)
     put "Navigator Update Units"
     UnitIsUpdated = 0
     NeedUpdatetime = the timer + 10

@@ -89,45 +89,45 @@ on update me
     msgCount = msgCount + getBuddyMsgCount(gMessageManager, getaProp(pBuddies[i + 1], #id))
   end repeat
   if count(pBuddies) = 0 then
-    member("buddy1.field").text = AddTextToField("YouCanAskBuddys")
+    member(getmemnum("buddy1.field")).text = AddTextToField("YouCanAskBuddys")
   end if
   if count(lBuddyRequests) = 1 then
-    member("messenger.new_buddy_requests").text = AddTextToField("OnebuddyRequest")
-    member("messenger.new_buddy_requests").font = "Volter-Bold (goldfish)"
-    member("messenger.new_buddy_requests").fontStyle = [#underline]
+    member(getmemnum("messenger.new_buddy_requests")).text = AddTextToField("OnebuddyRequest")
+    member(getmemnum("messenger.new_buddy_requests")).font = "Volter-Bold (goldfish)"
+    member(getmemnum("messenger.new_buddy_requests")).fontStyle = [#underline]
   else
-    member("messenger.new_buddy_requests").text = count(lBuddyRequests) && AddTextToField("BuddyRequesta")
+    member(getmemnum("messenger.new_buddy_requests")).text = count(lBuddyRequests) && AddTextToField("BuddyRequesta")
   end if
-  member("messenger.new_buddy_requests").font = "Volter-Bold (goldfish)"
-  member("messenger.new_buddy_requests").fontStyle = [#underline]
+  member(getmemnum("messenger.new_buddy_requests")).font = "Volter-Bold (goldfish)"
+  member(getmemnum("messenger.new_buddy_requests")).fontStyle = [#underline]
   if objectp(gMessageManager) then
-    member("messenger.no_of_new_messages").text = getMessageCount(gMessageManager) && AddTextToField("NewBuddyMessages")
+    member(getmemnum("messenger.no_of_new_messages")).text = getMessageCount(gMessageManager) && AddTextToField("NewBuddyMessages")
     if getMessageCount(gMessageManager) > 0 then
-      member("messenger.no_of_new_messages").font = "Volter-Bold (goldfish)"
-      member("messenger.no_of_new_messages").fontStyle = [#underline]
+      member(getmemnum("messenger.no_of_new_messages")).font = "Volter-Bold (goldfish)"
+      member(getmemnum("messenger.no_of_new_messages")).fontStyle = [#underline]
     else
-      member("messenger.no_of_new_messages").font = "Volter (goldfish)"
-      member("messenger.no_of_new_messages").fontStyle = [#plain]
+      member(getmemnum("messenger.no_of_new_messages")).font = "Volter (goldfish)"
+      member(getmemnum("messenger.no_of_new_messages")).fontStyle = [#plain]
     end if
   end if
   if count(lBuddyRequests) > 0 then
-    member("messenger.new_buddy_requests").font = "Volter-Bold (goldfish)"
-    member("messenger.new_buddy_requests").fontStyle = [#underline]
-    member("messenger.new_buddy_requests2").text = member("messenger.new_buddy_requests").text
-    member("messenger.new_buddy_requests2").font = "Volter-Bold (goldfish)"
-    member("messenger.new_buddy_requests2").fontStyle = [#underline]
+    member(getmemnum("messenger.new_buddy_requests")).font = "Volter-Bold (goldfish)"
+    member(getmemnum("messenger.new_buddy_requests")).fontStyle = [#underline]
+    member(getmemnum("messenger.new_buddy_requests2")).text = member(getmemnum("messenger.new_buddy_requests")).text
+    member(getmemnum("messenger.new_buddy_requests2")).font = "Volter-Bold (goldfish)"
+    member(getmemnum("messenger.new_buddy_requests2")).fontStyle = [#underline]
   else
-    member("messenger.new_buddy_requests").font = "Volter (goldfish)"
-    member("messenger.new_buddy_requests").fontStyle = [#plain]
-    member("messenger.new_buddy_requests2").text = member("messenger.new_buddy_requests").text
-    member("messenger.new_buddy_requests2").font = "Volter (goldfish)"
-    member("messenger.new_buddy_requests2").fontStyle = [#plain]
+    member(getmemnum("messenger.new_buddy_requests")).font = "Volter (goldfish)"
+    member(getmemnum("messenger.new_buddy_requests")).fontStyle = [#plain]
+    member(getmemnum("messenger.new_buddy_requests2")).text = member(getmemnum("messenger.new_buddy_requests")).text
+    member(getmemnum("messenger.new_buddy_requests2")).font = "Volter (goldfish)"
+    member(getmemnum("messenger.new_buddy_requests2")).fontStyle = [#plain]
   end if
 end
 
 on emptyField me, num
-  member("buddy" & num & ".field").text = EMPTY
-  member("buddy_" & num).picture = member("buddy" & num & ".field").picture
+  member(getmemnum("buddy" & num & ".field")).text = EMPTY
+  member(getmemnum("buddy_" & num)).picture = member(getmemnum("buddy" & num & ".field")).picture
 end
 
 on fillField me, num, p
@@ -136,7 +136,7 @@ on fillField me, num, p
   else
     msgCount = 0
   end if
-  member("buddy" & num & ".messages").text = msgCount && AddTextToField("UnreadMessages")
+  member(getmemnum("buddy" & num & ".messages")).text = msgCount && AddTextToField("UnreadMessages")
   if getaProp(p, #unit).length > 2 then
     location = "(" & getaProp(p, #unit) & ")"
   else
@@ -162,14 +162,14 @@ on fillField me, num, p
   mFieldText = mFieldText & RETURN & location & RETURN & QUOTE & getaProp(p, #msg) & QUOTE
   mFieldText = charReplace(mFieldText, "ä", "Š")
   mFieldText = charReplace(mFieldText, "ö", "š")
-  member("buddy" & num & ".field").text = mFieldText
+  member(getmemnum("buddy" & num & ".field")).text = mFieldText
   bField = "buddy" & num & ".field"
   set the textFont of field bField to "Volter (goldfish)"
   set the textStyle of field bField to "plain"
   set the textFont of word 1 of field bField to "Volter-Bold (goldfish)"
   set the textStyle of word 3 to the number of words in line 1 of field bField of line 1 of field bField to "underline"
   set the textStyle of line 3 of field bField to "plain"
-  member("buddy_" & num).picture = member("buddy" & num & ".field").picture
+  member(getmemnum("buddy_" & num)).picture = member(getmemnum("buddy" & num & ".field")).picture
   if listp(gpBuddyExistsIndicators) then
     l = getaProp(gpBuddyExistsIndicators, num)
     if getaProp(p, #unit).length > 2 then
@@ -239,9 +239,9 @@ end
 on nextBuddyRequest me
   if count(lBuddyRequests) > 0 then
     gChosenBuddyRequest = lBuddyRequests[1]
-    s = member("messenger.buddy_request").text
+    s = member(getmemnum("messenger.buddy_request")).text
     put gChosenBuddyRequest into line 1 of s
-    member("messenger.buddy_request").text = s
+    member(getmemnum("messenger.buddy_request")).text = s
     goContext("buddy_requests")
   else
     goContext("main")

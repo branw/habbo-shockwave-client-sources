@@ -14,5 +14,5 @@ on mouseDown me
   end if
   put EMPTY into field "receivers"
   put EMPTY into field "message"
-  puppetSound(2, "messagesent")
+  puppetSound(2, getmemnum("messagesent"))
 end

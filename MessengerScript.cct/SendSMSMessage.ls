@@ -6,16 +6,16 @@ on mouseDown me
     ShowAlert("ChooseWhoToSentMessage")
     return 
   end if
-  message = member("messenger.message.new").text
+  message = member(getmemnum("messenger.message.new")).text
   if message.length < 1 then
     return 
   else
     sendEPFuseMsg("MESSENGER_SENDSMSMSG" && receivers & RETURN & message)
     goContext("buddies")
   end if
-  put EMPTY into field "receivers"
-  member("messenger.message.new").text = EMPTY
-  member("messenger.message.new").scrollTop = 0
-  member("message.charCount").text = "0/255"
-  puppetSound(2, "messagesent")
+  put EMPTY into field getmemnum("receivers")
+  member(getmemnum("messenger.message.new")).text = EMPTY
+  member(getmemnum("messenger.message.new")).scrollTop = 0
+  member(getmemnum("message.charCount")).text = "0/255"
+  puppetSound(2, getmemnum("messagesent"))
 end
