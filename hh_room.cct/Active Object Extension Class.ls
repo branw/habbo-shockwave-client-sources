@@ -72,6 +72,7 @@ on prepare me, tdata
   end if
   me.setState(tstate)
   me.resetFrameNumbers()
+  callAncestor(#prepare, [me], tdata)
   return 1
 end
 
@@ -81,6 +82,7 @@ on select me
   else
     getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY])
   end if
+  callAncestor(#select, [me])
   return 1
 end
 
@@ -127,6 +129,12 @@ on update me
               end if
               if pFrameNumberList2[tLayer] < 0 then
                 pFrameNumberList2[tLayer] = random(abs(pFrameNumberList2[tLayer]))
+              end if
+              if not voidp(tFrameList[#blend]) then
+                tBlendList = tFrameList[#blend]
+                if tBlendList.count >= pFrameNumberList2[tLayer] then
+                  me.pSprList[tLayer].blend = tBlendList[pFrameNumberList2[tLayer]]
+                end if
               end if
             end if
           end if
@@ -286,6 +294,9 @@ on setState me, tNewState
   repeat with tLayer = 1 to pLayerDataList.count
     pLoopCountList[tLayer] = 0
   end repeat
+  if tNewState = EMPTY then
+    tNewState = 1
+  end if
   if ilk(value(tNewState)) <> #integer then
     return 0
   end if

@@ -59,6 +59,8 @@ on update me
         getCastLoadManager().DoneCurrentDownLoad(pFile, pURL, pGroupId, pState)
         pState = #failed
         return SystemAlert(me, "Failed download operation:" & RETURN & "Tried to load file" && QUOTE & pFile & QUOTE && ptryCount && "times.", #update)
+      else
+        pURL = getSpecialServices().addRandomParamToURL(pURL)
       end if
       getCastLoadManager().TellStreamState(pFile, pState, 0.0, pGroupId)
       me.Activate()

@@ -271,6 +271,16 @@ on readValueFromField me, tField, tDelimiter, tSearchedKey
   return 0
 end
 
+on addRandomParamToURL me, tURL
+  tRandomParamName = "randp"
+  tSeparator = "?"
+  if tURL contains "?" then
+    tSeparator = "&"
+  end if
+  tURL = tURL & tSeparator & tRandomParamName & random(999) & "=1"
+  return tURL
+end
+
 on print me, tObj, tMsg
   tObj = string(tObj)
   tObj = tObj.word[2..tObj.word.count - 2]
