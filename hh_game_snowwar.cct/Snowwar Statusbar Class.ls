@@ -268,7 +268,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         return me.updateSoundIcon()
     end case
   end if
-  tRoomInt = getObject(#room_interface)
+  tRoomInt = getObject("RoomBarProgram")
   if tRoomInt = 0 then
     return 0
   end if

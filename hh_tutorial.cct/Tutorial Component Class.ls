@@ -148,6 +148,7 @@ on selectTopic me, tTopicID
       return 1
     #quit:
       me.exitTutorial()
+      executeMessage(#show_navigator)
       return 1
     #otherwise:
       nothing()

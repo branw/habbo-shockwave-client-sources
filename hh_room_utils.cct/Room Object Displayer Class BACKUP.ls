@@ -46,7 +46,7 @@ on showObjectInfo me, tObjType
   else
     tProps = tObj.getInfo()
   end if
-  repeat with tPos = 1 to tWindowTypes.count
+  repeat with tPos = tWindowTypes.count down to 1
     tWindowType = tWindowTypes[tPos]
     case tWindowType of
       "human":
@@ -66,7 +66,11 @@ on showObjectInfo me, tObjType
         tID = pWindowCreator.createLinksWindow(#furni)
         me.pushWindowToDisplayList(tID)
       "actions_human":
-        tID = pWindowCreator.createActionsHumanWindow(tProps[#name])
+        if tProps[#name] = getObject(#session).GET("user_name") then
+          tID = pWindowCreator.createActionsHumanWindow(#own)
+        else
+          tID = pWindowCreator.createActionsHumanWindow(#peer)
+        end if
         me.pushWindowToDisplayList(tID)
       "actions_furni":
         tID = pWindowCreator.createActionsFurniWindow()
@@ -76,7 +80,7 @@ on showObjectInfo me, tObjType
         me.pushWindowToDisplayList(tID)
     end case
   end repeat
-  createTimeout("object.displayer.align", 20, #alignWindows, me.getID(), VOID, 1)
+  createTimeout(#temp, 20, #alignWindows, me.getID(), VOID, 1)
 end
 
 on clearWindowDisplayList me
@@ -87,25 +91,19 @@ on clearWindowDisplayList me
 end
 
 on pushWindowToDisplayList me, tWindowID
+  tNewWindow = getWindow(tWindowID)
+  tLeftPos = getVariable("object.display.pos.left")
+  if pWindowList.count > 0 then
+    tPrevWindowID = pWindowList[pWindowList.count]
+    tPrevWindow = getWindow(tPrevWindowID)
+    tTopPos = tPrevWindow.getProperty(#locY) - tNewWindow.getProperty(#height)
+  else
+    tTopPos = getVariable("object.display.pos.bottom")
+    tTopPos = tTopPos - tNewWindow.getProperty(#height)
+  end if
+  tNewWindow.moveTo(tLeftPos, tTopPos)
   pWindowList.add(tWindowID)
 end
 
 on alignWindows me
-  if pWindowList.count = 0 then
-    return 0
-  end if
-  repeat with tIndex = pWindowList.count down to 1
-    tWindowID = pWindowList[tIndex]
-    tWindowObj = getWindow(tWindowID)
-    if tIndex = pWindowList.count then
-      tDefLeftPos = getVariable("object.display.pos.left")
-      tDefTopPos = getVariable("object.display.pos.bottom")
-      tWindowObj.moveTo(tDefLeftPos, tDefTopPos)
-      next repeat
-    end if
-    tPrevWindowID = pWindowList[tIndex + 1]
-    tPrevWindow = getWindow(tPrevWindowID)
-    tTopPos = tPrevWindow.getProperty(#locY) - tWindowObj.getProperty(#height)
-    tWindowObj.moveTo(tDefLeftPos, tTopPos)
-  end repeat
 end

@@ -18,7 +18,10 @@ on construct me
   pNodeCacheExpList = [:]
   pNaviHistory = []
   pHideFullRoomsFlag = 0
-  pUpdateInterval = getIntVariable("navigator.updatetime")
+  pUpdateInterval = getIntVariable("navigator.cache.duration") * 1000
+  if pUpdateInterval = 0 then
+    pUpdateInterval = getIntVariable("navigator.updatetime")
+  end if
   pConnectionId = getVariableValue("connection.info.id", #Info)
   pInfoBroker = createObject(#navigator_infobroker, "Navigator Info Broker Class")
   getObject(#session).set("lastroom", "Entry")
@@ -146,6 +149,10 @@ on getNodeProperty me, tNodeId, tProp
     return 0
   end if
   return tNodeInfo.getaProp(tProp)
+end
+
+on getUpdateInterval me
+  return pUpdateInterval
 end
 
 on updateInterface me, tID

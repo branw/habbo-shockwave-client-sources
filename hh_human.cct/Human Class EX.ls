@@ -777,21 +777,28 @@ end
 on action_lay me, tProps
   pMainAction = "lay"
   pCarrying = 0
-  pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
+  tRestingHeight = getLocalFloat(tProps.word[2])
+  if tRestingHeight < 0.0 then
+    pRestingHeight = abs(tRestingHeight) - 1.0
+    tZOffset = 0
+  else
+    pRestingHeight = tRestingHeight - 1.0
+    tZOffset = 2000
+  end if
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   if pXFactor < 33 then
     case pFlipList[pDirection + 1] of
       2:
-        pScreenLoc = pScreenLoc + [-10, 18, 2000]
+        pScreenLoc = pScreenLoc + [-10, 18, tZOffset]
       0:
-        pScreenLoc = pScreenLoc + [-17, 18, 2000]
+        pScreenLoc = pScreenLoc + [-17, 18, tZOffset]
     end case
   else
     case pFlipList[pDirection + 1] of
       2:
-        pScreenLoc = pScreenLoc + [10, 30, 2000]
+        pScreenLoc = pScreenLoc + [10, 30, tZOffset]
       0:
-        pScreenLoc = pScreenLoc + [-47, 32, 2000]
+        pScreenLoc = pScreenLoc + [-47, 32, tZOffset]
     end case
   end if
   if pXFactor > 32 then

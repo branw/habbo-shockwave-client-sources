@@ -256,7 +256,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
       return me.activateButtonPressed()
     end if
   end if
-  tRoomInt = getObject(#room_interface)
+  tRoomInt = getObject("RoomBarProgram")
   if tRoomInt = 0 then
     return 0
   end if

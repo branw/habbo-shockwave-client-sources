@@ -284,7 +284,7 @@ on setUpdates me, tBoolean
     if timeoutExists(#navigator_update) then
       return 1
     end if
-    tUpdateInterval = getIntVariable("navigator.updatetime")
+    tUpdateInterval = me.getComponent().getUpdateInterval()
     return createTimeout(#navigator_update, tUpdateInterval, #setUpdates, me.getID(), 1, 0)
   else
     if timeoutExists(#navigator_update) then

@@ -80,6 +80,11 @@ on setProperty me, tProperty, tValue
       me.pTutorWindow.moveTo(me.pPosX, me.pPosY)
     #links:
       me.pBubble.setLinks(tValue)
+      if tValue.ilk = #propList then
+        if not voidp(tValue.getaProp(#menu)) then
+          me.pBubble.addText("tutorial_next")
+        end if
+      end if
     #sex:
       me.pSex = tValue
       me.updateImage()

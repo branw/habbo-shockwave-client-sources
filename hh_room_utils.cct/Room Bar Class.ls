@@ -26,7 +26,7 @@ end
 
 on showRoomBar me
   if not windowExists(pBottomBarId) then
-    createWindow(pBottomBarId, "empty.window", 0, 488)
+    createWindow(pBottomBarId, "empty.window", 0, 487)
   end if
   tWndObj = getWindow(pBottomBarId)
   if tWndObj = 0 then

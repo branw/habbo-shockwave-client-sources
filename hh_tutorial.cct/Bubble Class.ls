@@ -50,12 +50,17 @@ on show me
 end
 
 on setText me, tText
+  me.pText = tText
   tTextImage = me.pWriter.render(tText).duplicate()
   tElem = me.pWindow.getElement("bubble_text")
   tElem.feedImage(tTextImage)
   tElem.resizeTo(tTextImage.width, tTextImage.height, 1)
   me.pWindow.resizeTo(me.pEmptySizeX, me.pEmptySizeY + tTextImage.height)
   me.updatePointer()
+end
+
+on addText me, tText
+  me.setText(me.pText & RETURN & RETURN & getText(tText))
 end
 
 on getProperty me, tProp
