@@ -158,23 +158,23 @@ on appendBuddy me, tdata
   return me.buildBuddyListImg()
 end
 
-on removeBuddy me, tid
-  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tid)) then
-    return error(me, "Buddy data not found:" && tid, #removeBuddy, #minor)
+on removeBuddy me, tID
+  if voidp(pBuddyListPntr.getaProp(#value).buddies.getaProp(tID)) then
+    return error(me, "Buddy data not found:" && tID, #removeBuddy, #minor)
   end if
   repeat with i = 1 to pSelectedBuddies.count
-    if pSelectedBuddies[i][#id] = tid then
+    if pSelectedBuddies[i][#id] = tID then
       pSelectedBuddies.deleteAt(i)
       exit repeat
     end if
   end repeat
-  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tid).name
+  tName = pBuddyListPntr.getaProp(#value).buddies.getaProp(tID).name
   if voidp(pBuddyDrawObjList[tName]) then
-    return error(me, "Buddy renderer not found:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer not found:" && tID, #removeBuddy, #minor)
   end if
   tPos = pBuddyListPntr.getaProp(#value).render.getPos(tName)
   if tPos = 0 then
-    return error(me, "Buddy renderer was lost:" && tid, #removeBuddy, #minor)
+    return error(me, "Buddy renderer was lost:" && tID, #removeBuddy, #minor)
   end if
   pBuddyDrawObjList.deleteProp(tName)
   tW = pBuddyListBuffer.width
@@ -424,8 +424,8 @@ on createHeadPreview me, tElemID
   end if
 end
 
-on buddySelectOrNot me, tName, tid, tstate
-  tdata = [#name: tName, #id: tid]
+on buddySelectOrNot me, tName, tID, tstate
+  tdata = [#name: tName, #id: tID]
   if tstate then
     pSelectedBuddies.add(tdata)
   else
@@ -498,15 +498,17 @@ on renderMessage me, tMsgStruct
   end if
   tFrom = getText("console_getmessage_sender") && tSenderName & RETURN & tTime
   tWndObj.getElement("console_getmessage_sender").setText(tFrom)
+  tElem = tWndObj.getElement("console_getmessage_follow")
   if tMessageIsValid then
     tOnline = tdata.getaProp(#online)
     tlocation = tdata.getaProp(#location)
-    tElem = tWndObj.getElement("console_getmessage_follow")
     if not tOnline or tlocation = getText("console_onfrontpage") then
       tElem.hide()
     else
       tElem.show()
     end if
+  else
+    tElem.hide()
   end if
   tElem = tWndObj.getElement("console_getmessage_field")
   tRect = rect(0, 0, tElem.pwidth, tElem.pheight)
@@ -835,12 +837,12 @@ on eventProcMessenger me, tEvent, tElemID, tParm
             me.renderMessage(me.getComponent().getNextMessage())
           end if
         "console_getmessage_follow":
-          tid = integer(pLastGetMsg.getaProp(#senderID))
+          tID = integer(pLastGetMsg.getaProp(#senderID))
           if voidp(pLastGetMsg[#senderID]) then
             return 0
           end if
           tConn = getConnection(getVariable("connection.info.id"))
-          tConn.send("FOLLOW_FRIEND", [#integer: tid])
+          tConn.send("FOLLOW_FRIEND", [#integer: tID])
         "console_getmessage_reply":
           if voidp(pLastGetMsg[#id]) then
             return 0
