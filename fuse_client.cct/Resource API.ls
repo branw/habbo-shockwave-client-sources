@@ -14,8 +14,8 @@ on getResourceManager
   return tMgr.getManager(#resource_manager)
 end
 
-on createMember tMemName, ttype
-  return getResourceManager().createMember(tMemName, ttype)
+on createMember tMemName, ttype, tForcedDuplicate
+  return getResourceManager().createMember(tMemName, ttype, tForcedDuplicate)
 end
 
 on removeMember tMemName

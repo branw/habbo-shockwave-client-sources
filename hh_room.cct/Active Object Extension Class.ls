@@ -1,10 +1,11 @@
-property pStateSequenceList, pStateIndex, pState, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pLoczList, pLocShiftList, pNameBase, pInitialized
+property pStateSequenceList, pStateIndex, pState, pStateStringList, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pNameBase, pInitialized
 
 on define me, tProps
   pStateSequenceList = []
   pStateIndex = 1
   pState = 1
   pLayerDataList = [:]
+  pStateStringList = []
   pFrameNumberList = []
   pFrameNumberList2 = []
   pLoopCountList = []
@@ -14,12 +15,16 @@ on define me, tProps
   pLocShiftList = []
   pFrameRepeatList = []
   pIsAnimatingList = []
-  pNameBase = tProps[#class]
   tClass = tProps[#class]
-  tDataName = pNameBase & ".data"
-  if getThread(#room).getInterface().getGeometry().pXFactor = 32 then
-    tDataName = "s_" & tDataName
+  tOffset = offset("*", tClass)
+  if tOffset > 0 then
+    tClass = tClass.char[1..tOffset - 1]
   end if
+  pNameBase = tClass
+  if getThread(#room).getInterface().getGeometry().pXFactor = 32 then
+    pNameBase = "s_" & pNameBase
+  end if
+  tDataName = pNameBase & ".data"
   if memberExists(tDataName) then
     tText = member(getmemnum(tDataName)).text
     tText = replaceChunks(tText, RETURN, EMPTY)
@@ -28,11 +33,15 @@ on define me, tProps
       if tdata.ilk = #propList then
         pStateSequenceList = tdata[#states]
         pLayerDataList = tdata[#layers]
+        pStateStringList = tdata[#statestrings]
         if voidp(pLayerDataList) then
           pLayerDataList = [:]
         end if
         if voidp(pStateSequenceList) then
           pStateSequenceList = []
+        end if
+        if voidp(pStateStringList) then
+          pStateStringList = []
         end if
         if not me.validateStateSequenceList() then
           pStateSequenceList = []
@@ -40,11 +49,6 @@ on define me, tProps
       end if
     end if
   end if
-  tstate = tProps[#type]
-  if ilk(value(tstate)) <> #integer or value(tstate) = 0 then
-    tstate = 1
-  end if
-  me.setState(tstate)
   me.resetFrameNumbers()
   tCount = 1
   if pLayerDataList.count > 0 then
@@ -55,16 +59,28 @@ on define me, tProps
     if pLayerDataList.count >= tLayer then
       tLayerName = pLayerDataList.getPropAt(tLayer)
     end if
-    pInkList[tLayer] = me.solveInk(tLayerName)
-    pBlendList[tLayer] = me.solveBlend(tLayerName)
+    pInkList[tLayer] = me.solveInk(tLayerName, pNameBase)
+    pBlendList[tLayer] = me.solveBlend(tLayerName, pNameBase)
   end repeat
   pInitialized = 0
   return callAncestor(#define, [me], tProps)
 end
 
+on prepare me, tdata
+  tstate = tdata[#stuffdata]
+  if pStateStringList.findPos(tstate) > 0 then
+    tstate = pStateStringList.findPos(tstate)
+  end if
+  me.setState(tstate)
+  me.resetFrameNumbers()
+  return 1
+end
+
 on select me
   if the doubleClick then
     me.getNextState()
+  else
+    getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY])
   end if
   return 1
 end
@@ -130,8 +146,11 @@ on update me
 end
 
 on solveMembers me
+  if not pInitialized then
+    callAncestor(#solveMembers, [me])
+  end if
   tMembersFound = 0
-  tCount = 1
+  tCount = me.pLocShiftList.count
   if pLayerDataList.count > 0 then
     tCount = pLayerDataList.count
   end if
@@ -212,58 +231,29 @@ on solveMembers me
   end if
 end
 
-on updateLocation me
-  callAncestor(#updateLocation, [me])
-  tDirection = me.pDirection
-  if ilk(tDirection) = #string then
-    if tDirection = "leftwall" then
-      tDirection = 2
-    else
-      if tDirection = "rightwall" then
-        tDirection = 4
-      end if
-    end if
-  end if
-  tScreenLocs = getThread(#room).getInterface().getGeometry().getScreenCoordinate(me.pWallX - 1, me.pWallY + 1, 0)
-  if ilk(tDirection) = #integer then
-    tCount = 1
-    if pLayerDataList.count > 0 then
-      tCount = pLayerDataList.count
-    end if
-    repeat with tLayer = 1 to tCount
-      tLayerName = EMPTY
-      if pLayerDataList.count >= tLayer then
-        tLayerName = pLayerDataList.getPropAt(tLayer)
-      end if
-      tlocz = me.solveLocZ(tLayerName)
-      me.pSprList[tLayer].locZ = tScreenLocs[3] + tlocz + tLayer
-      tLocShift = me.solveLocShift(tLayerName)
-      if ilk(tLocShift) = #point then
-        me.pSprList[tLayer].loc = me.pSprList[tLayer].loc + tLocShift
-      end if
-    end repeat
-  end if
-end
-
 on postProcessLayer me, tLayer
   return 1
 end
 
 on getMemberName me, tLayer
-  tName = me.pDirection && pNameBase
+  tName = pNameBase
   tLayerIndex = pLayerDataList.findPos(tLayer)
   tFrameList = me.getFrameList(tLayer)
+  tDirection = 0
+  if not voidp(me.pDirection) then
+    if me.pDirection.count >= 1 then
+      tDirection = me.pDirection[1]
+    end if
+  end if
+  tFrame = 0
   if not voidp(tFrameList) and not voidp(tLayerIndex) then
     tFrameSequence = tFrameList[#frames]
     if not voidp(tFrameSequence) then
       tFrameNumber = pFrameNumberList2[tLayerIndex]
       tFrame = tFrameSequence[tFrameNumber]
-      tName = tName & "_" & tLayer & "_" & tFrame
     end if
   end if
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
+  tName = tName & "_" & tLayer & "_0_" & me.pDimensions[1] & "_" & me.pDimensions[2] & "_" & tDirection & "_" & tFrame
   return tName
 end
 
@@ -282,6 +272,15 @@ on getFrameList me, tLayer
     end if
   end if
   return VOID
+end
+
+on updateStuffdata me, tValue
+  if ilk(tValue) = #string then
+    if pStateStringList.findPos(tValue) > 0 then
+      tValue = pStateStringList.findPos(tValue)
+    end if
+  end if
+  me.setState(value(tValue))
 end
 
 on setState me, tNewState
@@ -321,6 +320,8 @@ on setState me, tNewState
           pLoopCountList[tLayer] = tLoop
         end if
       end repeat
+      me.solveMembers()
+      me.updateLocation()
       return 1
     end if
   end repeat
@@ -341,7 +342,11 @@ on getNextState me
   else
     tStateNew = tstate
   end if
-  return getThread(#room).getComponent().getRoomConnection().send("SETITEMSTATE", [#string: string(me.id), #integer: tStateNew])
+  tStr = string(tStateNew)
+  if pStateStringList.count >= tStateNew then
+    tStr = string(pStateStringList[tStateNew])
+  end if
+  return getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
 end
 
 on validateStateSequenceList me
@@ -394,107 +399,8 @@ on resetFrameNumbers me
   end repeat
 end
 
-on solveInk me, tPart
-  tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
-  if memberExists(tName & ".props") then
-    tPropList = value(member(getmemnum(tName & ".props")).text)
-    if ilk(tPropList) <> #propList then
-      error(me, tName & ".props is not valid!", #solveInk)
-    else
-      if tPropList[tPart] <> VOID then
-        if tPropList[tPart][#ink] <> VOID then
-          return tPropList[tPart][#ink]
-        end if
-      end if
-    end if
-  end if
-  return 8
-end
-
-on solveBlend me, tPart
-  tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
-  if memberExists(tName & ".props") then
-    tPropList = value(member(getmemnum(tName & ".props")).text)
-    if ilk(tPropList) <> #propList then
-      error(me, tName & ".props is not valid!", #solveInk)
-    else
-      if tPropList[tPart] <> VOID then
-        if tPropList[tPart][#blend] <> VOID then
-          return tPropList[tPart][#blend]
-        end if
-      end if
-    end if
-  end if
-  return 100
-end
-
-on solveLocShift me, tPart, tdir
-  tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
-  if not memberExists(tName & ".props") then
-    return 0
-  end if
-  tPropList = value(field(getmemnum(tName & ".props")))
-  if ilk(tPropList) <> #propList then
-    error(me, tName & ".props is not valid!", #solveLocShift)
-    return 0
-  else
-    if voidp(tPropList[tPart]) then
-      return 0
-    end if
-    if voidp(tPropList[tPart][#locshift]) then
-      return 0
-    end if
-    if tPropList[tPart][#locshift].count <= tdir then
-      return 0
-    end if
-    tShift = value(tPropList[tPart][#locshift][tdir + 1])
-    if ilk(tShift) = #point then
-      return tShift
-    end if
-  end if
-  return 0
-end
-
-on solveLocZ me, tPart, tdir
-  tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
-  if not memberExists(tName & ".props") then
-    return charToNum(tPart)
-  end if
-  tPropList = value(field(getmemnum(tName & ".props")))
-  if ilk(tPropList) <> #propList then
-    error(me, tName & ".props is not valid!", #solveLocZ)
-    return 0
-  else
-    if tPropList[tPart] = VOID then
-      return 0
-    end if
-    if tPropList[tPart][#zshift] = VOID then
-      return 0
-    end if
-    if tPropList[tPart][#zshift].count <= tdir then
-      tdir = 0
-    end if
-  end if
-  return tPropList[tPart][#zshift][tdir + 1]
-end
-
 on solveTransparency me, tPart
   tName = pNameBase
-  if me.pXFactor = 32 then
-    tName = "s_" & tName
-  end if
   if memberExists(tName & ".props") then
     tPropList = value(member(getmemnum(tName & ".props")).text)
     if ilk(tPropList) <> #propList then

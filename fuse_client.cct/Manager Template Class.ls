@@ -28,8 +28,8 @@ on create me, tid, tClass
   return 1
 end
 
-on get me, tid
-  return getObjectManager().get(tid)
+on GET me, tid
+  return getObjectManager().GET(tid)
 end
 
 on Remove me, tid
@@ -52,7 +52,7 @@ on print me
     else
       tid = me.pItemList.getPropAt(i)
     end if
-    tObj = me.get(tid)
+    tObj = me.GET(tid)
     if symbolp(tid) then
       tid = "#" & tid
     end if

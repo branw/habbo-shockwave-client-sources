@@ -368,7 +368,7 @@ on getClassContainer me
 end
 
 on getOwnUser me
-  return me.getUserObject(getObject(#session).get("user_index"))
+  return me.getUserObject(getObject(#session).GET("user_index"))
 end
 
 on getShadowManager me
@@ -398,14 +398,14 @@ on sendChat me, tChat
   if tChat.char[1] = ":" then
     case tChat.word[1] of
       ":chooser":
-        if getObject(#session).get("user_rights").getOne("fuse_habbo_chooser") then
+        if getObject(#session).GET("user_rights").getOne("fuse_habbo_chooser") then
           return createObject(#chooser, "User Chooser Class")
         end if
       ":furni":
         if pSaveData[#type] <> #private then
           return 1
         end if
-        if getObject(#session).get("user_rights").getOne("fuse_furni_chooser") then
+        if getObject(#session).GET("user_rights").getOne("fuse_furni_chooser") then
           if not objectExists(pFurniChooserID) then
             createObject(pFurniChooserID, "Furni Chooser Class")
           end if
@@ -415,27 +415,32 @@ on sendChat me, tChat
           return getObject(pFurniChooserID).showList()
         end if
       ":performance":
-        if getObject(#session).get("user_rights").getOne("fuse_performance_panel") then
+        if getObject(#session).GET("user_rights").getOne("fuse_performance_panel") then
           return performance()
         end if
       ":debug", ":log", ":usestaffrights":
-        if getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+        if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
           if not (the runMode contains "Author") then
             me.sendChat(":log")
           end if
         end if
       ":editcatalogue":
-        if getObject(#session).get("user_rights").getOne("fuse_catalog_editor") then
+        if getObject(#session).GET("user_rights").getOne("fuse_catalog_editor") then
           return executeMessage("edit_catalogue")
         end if
       ":copypaste":
-        if getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+        if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
           the editShortcutsEnabled = 1
+          return 1
+        end if
+      ":petcontrol":
+        if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
+          petcontrol()
           return 1
         end if
     end case
   end if
-  if getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+  if getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
     tKeywords = me.getInterface().getKeywords()
     case tChat.word[1] of
       "!!" & tKeywords[1], "!!" & tKeywords[2]:
@@ -473,7 +478,7 @@ on sendChat me, tChat
       if tSelected = EMPTY then
         tMode = "WHISPER"
         tMsg = "User not found."
-        tid = getObject(#session).get("user_index")
+        tid = getObject(#session).GET("user_index")
         me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tid, #message: tMsg])
         return 1
       end if
@@ -614,15 +619,15 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
   tSession = getObject(#session)
   tFigureParser = getObject("Figure_System")
   tParsedFigure = tFigureParser.parseFigure(tUserFigure, tsex, "user")
-  if tSession.get("user_index") = tUserID or tUserID = "-1" then
+  if tSession.GET("user_index") = tUserID or tUserID = "-1" then
     tSession.set("user_figure", tParsedFigure)
     tSession.set("user_sex", tsex)
     tSession.set("user_customData", tUserCustomInfo)
   end if
-  if tSession.get("lastroom") = "Entry" and tUserID = "-1" then
+  if tSession.GET("lastroom") = "Entry" and tUserID = "-1" then
     executeMessage(#updateFigureData)
   else
-    if not (tSession.get("lastroom") = "Entry") and integer(tUserID) > -1 then
+    if not (tSession.GET("lastroom") = "Entry") and integer(tUserID) > -1 then
       if voidp(pUserObjList[tUserID]) then
         return 0
       end if
@@ -631,7 +636,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       tdir = tUserObj.getDirection()
       tuser = [:]
       tuser[#figure] = tParsedFigure
-      tuser[#Custom] = tUserCustomInfo
+      tuser[#custom] = tUserCustomInfo
       tuser[#sex] = tsex
       tUserObj.changeFigureAndData(tuser)
       tScale = #large
@@ -692,7 +697,7 @@ on roomCastLoaded me
     tTxt = getText("room_preparing", "...preparing room.")
     if pSaveData[#type] = #private then
       if pSaveData[#door] = "closed" then
-        if pSaveData[#owner] <> getObject(#session).get("user_name") then
+        if pSaveData[#owner] <> getObject(#session).GET("user_name") then
           tTxt = getText("room_waiting", "...waiting.")
         end if
       end if
@@ -768,7 +773,7 @@ on roomConnected me, tMarker, tstate
   if not getObject(#cache).exists(pCacheKey) then
     getObject(#cache).set(pCacheKey, [:])
   end if
-  tCache = getObject(#cache).get(pCacheKey)
+  tCache = getObject(#cache).GET(pCacheKey)
   if voidp(tCache[#heightmap]) and not pProcessList[#heightmap] then
     tCache[#heightmap] = EMPTY
     me.getRoomConnection().send("G_HMAP")
@@ -825,7 +830,7 @@ on validateHeightMap me, tdata
   me.getInterface().getGeometry().loadHeightMap(tdata)
   me.pHeightMapData = tdata
   if not pActiveFlag then
-    getObject(#cache).get(pCacheKey).setaProp(#heightmap, tdata)
+    getObject(#cache).GET(pCacheKey).setaProp(#heightmap, tdata)
     me.updateProcess(#heightmap, 1)
   end if
   return 0
@@ -855,7 +860,7 @@ on validateUserObjects me, tdata
     return error(me, "Data not expected yet!", #validateUserObjects)
   end if
   if tdata <> 0 then
-    getObject(#cache).get(pCacheKey).getaProp(#users).add(tdata)
+    getObject(#cache).GET(pCacheKey).getaProp(#users).add(tdata)
   end if
   if pActiveFlag and tdata <> 0 then
     me.createUserObject(tdata)
@@ -870,7 +875,7 @@ on validateActiveObjects me, tdata
     return error(me, "Data not expected yet!", #validateActiveObjects)
   end if
   if tdata <> 0 then
-    getObject(#cache).get(pCacheKey).getaProp(#Active).add(tdata)
+    getObject(#cache).GET(pCacheKey).getaProp(#Active).add(tdata)
   end if
   if pActiveFlag and tdata <> 0 then
     me.createActiveObject(tdata)
@@ -885,7 +890,7 @@ on validatePassiveObjects me, tdata
     return error(me, "Data not expected yet!", #validatePassiveObjects)
   end if
   if tdata <> 0 then
-    getObject(#cache).get(pCacheKey).getaProp(#passive).add(tdata)
+    getObject(#cache).GET(pCacheKey).getaProp(#passive).add(tdata)
   end if
   if pActiveFlag and tdata <> 0 then
     me.createPassiveObject(tdata)
@@ -900,7 +905,7 @@ on validateItemObjects me, tdata
     return error(me, "Data not expected yet!", #validateItemObjects)
   end if
   if tdata <> 0 then
-    getObject(#cache).get(pCacheKey).getaProp(#items).add(tdata)
+    getObject(#cache).GET(pCacheKey).getaProp(#items).add(tdata)
   end if
   if pActiveFlag and tdata <> 0 then
     me.createItemObject(tdata)
@@ -935,7 +940,7 @@ on updateProcess me, tKey, tValue
     if timeoutExists(pRoomPollerID) then
       removeTimeout(pRoomPollerID)
     end if
-    tCache = getObject(#cache).get(pCacheKey)
+    tCache = getObject(#cache).GET(pCacheKey)
     repeat with tdata in tCache[#passive]
       me.createPassiveObject(tdata)
     end repeat
@@ -982,6 +987,7 @@ on createRoomObject me, tdata, tList, tClass
   if voidp(tClass) then
     tClass = "passive"
   end if
+  tdata = getThread(#buffer).getComponent().processObject(tdata, tClass)
   tCustomCls = tdata[#class]
   if tCustomCls contains "*" then
     tDelim = the itemDelimiter
@@ -995,9 +1001,9 @@ on createRoomObject me, tdata, tList, tClass
     end if
   end if
   if getObject(pClassContId).exists(tCustomCls) then
-    tClasses = value(getObject(pClassContId).get(tCustomCls))
+    tClasses = value(getObject(pClassContId).GET(tCustomCls))
   else
-    tClasses = value(getObject(pClassContId).get(tClass))
+    tClasses = value(getObject(pClassContId).GET(tClass))
   end if
   tObject = createObject(#temp, tClasses)
   if not objectp(tObject) then
@@ -1060,10 +1066,10 @@ on processTeleportStruct me, tFlatStruct
     return 0
   end if
   tFlatStruct[#id] = tFlatStruct[#flatId]
-  tFlatStruct.addProp(#teleport, getObject(#session).get("target_door_ID"))
+  tFlatStruct.addProp(#teleport, getObject(#session).GET("target_door_ID"))
   getObject(#session).Remove("target_flat_id")
   if getObject(#session).exists("current_door_ID") then
-    tDoorID = getObject(#session).get("current_door_ID")
+    tDoorID = getObject(#session).GET("current_door_ID")
     tDoorObj = me.getComponent().getActiveObject(tDoorID)
     if tDoorObj <> 0 then
       tDoorObj.startTeleport(tFlatStruct)

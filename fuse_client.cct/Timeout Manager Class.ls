@@ -8,7 +8,7 @@ on deconstruct me
   repeat with i = 1 to me.pItemList.count
     tid = me.pItemList[i][#timerid]
     if tObjMngr.exists(tid) then
-      tObjMngr.get(tid).forget()
+      tObjMngr.GET(tid).forget()
     end if
   end repeat
   me.pItemList = [:]
@@ -27,7 +27,7 @@ on create me, tid, tTime, tHandler, tClientID, tArgument, tIterations
   end if
   tObjMngr = getObjectManager()
   if tObjMngr.exists(tClientID) then
-    if not tObjMngr.get(tClientID).handler(tHandler) then
+    if not tObjMngr.GET(tClientID).handler(tHandler) then
       return error(me, "Handler not found in object:" && tHandler && tClientID, #create)
     end if
   else
@@ -48,9 +48,9 @@ on create me, tid, tTime, tHandler, tClientID, tArgument, tIterations
   return 1
 end
 
-on get me, tid
+on GET me, tid
   if not me.exists(tid) then
-    return error(me, "Item not found:" && tid, #get)
+    return error(me, "Item not found:" && tid, #GET)
   end if
   tTask = me.pItemList[tid]
   if voidp(tTask[#client]) then
@@ -58,7 +58,7 @@ on get me, tid
   else
     tObjMngr = getObjectManager()
     if tObjMngr.exists(tTask[#client]) then
-      call(tTask[#handler], tObjMngr.get(tTask[#client]), tTask[#argument])
+      call(tTask[#handler], tObjMngr.GET(tTask[#client]), tTask[#argument])
     else
       return me.Remove(tid)
     end if
@@ -70,7 +70,7 @@ on Remove me, tid
     return error(me, "Item not found:" && tid, #Remove)
   end if
   tObjMngr = getObjectManager()
-  tObject = tObjMngr.get(me.pItemList[tid][#uniqueid])
+  tObject = tObjMngr.GET(me.pItemList[tid][#uniqueid])
   if tObject <> 0 then
     tObject.target = VOID
     tObject.forget()

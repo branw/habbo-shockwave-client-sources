@@ -18,12 +18,12 @@ on deconstruct me
 end
 
 on defineBalloon me
-  pSprite = sprite(me.get(#sprite))
-  pMember = member(me.get(#member))
-  pLoc = me.get(#loc)
+  pSprite = sprite(me.GET(#sprite))
+  pMember = member(me.GET(#member))
+  pLoc = me.GET(#loc)
   pSprite.loc = pLoc
   pSprite.member = pMember
-  setEventBroker(pSprite.spriteNum, me.get(#ownerID))
+  setEventBroker(pSprite.spriteNum, me.GET(#ownerID))
   tTargetID = getThread(#room).getInterface().getID()
   pSprite.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   pSprite.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseEnter)
@@ -69,7 +69,7 @@ on set me, tKey, tValue
   return 1
 end
 
-on get me, tKey
+on GET me, tKey
   tValue = pProps[tKey]
   if voidp(tValue) then
     tValue = 0

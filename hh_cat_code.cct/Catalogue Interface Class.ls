@@ -93,7 +93,7 @@ on showOrderInfo me, tstate, tInfo
   end if
   if tstate = "OK" then
     tPrice = integer(value(tInfo[#price]))
-    tWallet = integer(value(getObject(#session).get("user_walletbalance")))
+    tWallet = integer(value(getObject(#session).GET("user_walletbalance")))
     tMsgA = getText("catalog_costs", "\x1 costs \x2 credits")
     tMsgA = replaceChunks(tMsgA, "\x1", tInfo[#name])
     tMsgA = replaceChunks(tMsgA, "\x2", tPrice)
@@ -128,7 +128,7 @@ on showOrderInfo me, tstate, tInfo
   tWndObj.registerProcedure(#eventProcInfoWnd, me.getID(), #mouseUp)
   tWndObj.setProperty(#locZ, 22000000)
   tWndObj.lock(1)
-  if not getObject(#session).get("user_rights").getOne("fuse_trade") then
+  if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
     if tWndObj.elementExists("buy_gift_ok") then
       tWndObj.getElement("buy_gift_ok").setProperty(#blend, 30)
     end if
@@ -152,12 +152,12 @@ on showNoBalance me, tInfo, tGeneralText
     tMsgA = getText("Alert_no_credits")
   else
     tPrice = integer(value(tInfo[#price]))
-    tWallet = integer(value(getObject(#session).get("user_walletbalance")))
+    tWallet = integer(value(getObject(#session).GET("user_walletbalance")))
     tMsgA = getText("catalog_costs", "\x1 costs \x2 credits")
     tMsgA = replaceChunks(tMsgA, "\x1", tInfo[#name])
     tMsgA = replaceChunks(tMsgA, "\x2", tPrice)
   end if
-  if getObject(#session).get("user_rights").getOne("fuse_buy_credits") then
+  if getObject(#session).GET("user_rights").getOne("fuse_buy_credits") then
     tWndFile = "habbo_orderinfo_nocredits.window"
   else
     tWndFile = "habbo_orderinfo_cantbuycredits.window"
@@ -890,7 +890,7 @@ on showPreviewImage me, tProps, tElemID
       tdata[#id] = "ctlg_previewObj"
       tdata[#class] = tClass
       tdata[#name] = tClass
-      tdata[#Custom] = tClass
+      tdata[#custom] = tClass
       tdata[#direction] = tDirection
       tdata[#dimensions] = tDimensions
       tdata[#colors] = tpartColors
@@ -1269,20 +1269,20 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
       end if
       tSession = getObject(#session)
       tURL = getText("url_nobalance")
-      tURL = tURL & urlEncode(tSession.get(#userName))
+      tURL = tURL & urlEncode(tSession.GET(#userName))
       if tSession.exists("user_checksum") then
-        tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+        tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
       openNetPage(tURL, "_new")
       me.hideOrderInfo()
       pActiveOrderCode = EMPTY
     "subscribe":
       tSession = getObject(#session)
-      tOwnName = tSession.get(#userName)
+      tOwnName = tSession.GET(#userName)
       tURL = getText("url_subscribe")
       tURL = tURL & urlEncode(tOwnName)
       if tSession.exists("user_checksum") then
-        tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+        tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
       end if
       openNetPage(tURL, "_new")
       me.hideOrderInfo()

@@ -364,7 +364,7 @@ on Refresh me
 end
 
 on buildVisual me, tLayout
-  tLayout = getObjectManager().get(#layout_parser).parse(tLayout)
+  tLayout = getObjectManager().GET(#layout_parser).parse(tLayout)
   if not listp(tLayout) then
     return error(me, "Invalid visualizer definition:" && tLayout, #buildVisual)
   end if

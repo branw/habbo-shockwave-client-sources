@@ -25,7 +25,7 @@ on set me, tVariable, tValue
   return 1
 end
 
-on get me, tVariable, tDefault
+on GET me, tVariable, tDefault
   tValue = me.pItemList[tVariable]
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
@@ -35,7 +35,7 @@ on get me, tVariable, tDefault
     else
       tValue = 0
     end if
-    error(me, tError, #get)
+    error(me, tError, #GET)
   end if
   return tValue
 end
@@ -53,7 +53,7 @@ on getInt me, tVariable, tDefault
   return tValue
 end
 
-on getValue me, tVariable, tDefault
+on GetValue me, tVariable, tDefault
   tValue = value(me.pItemList[tVariable])
   if voidp(tValue) then
     tError = "Variable not found:" && QUOTE & tVariable & QUOTE
@@ -61,7 +61,7 @@ on getValue me, tVariable, tDefault
       tValue = tDefault
       tError = tError & RETURN & "Using given default:" && tDefault
     end if
-    error(me, tError, #getValue)
+    error(me, tError, #GetValue)
   end if
   return tValue
 end

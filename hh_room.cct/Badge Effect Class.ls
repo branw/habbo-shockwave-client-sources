@@ -38,7 +38,7 @@ on update me
     end if
     pStarSpr.sprite.member = member(getmemnum("starblink" & pAnimFrame))
     if objectExists(#session) then
-      if getObject(#session).get("badge_visible") = 0 then
+      if getObject(#session).GET("badge_visible") = 0 then
         pStarSpr.sprite.visible = 0
       else
         pStarSpr.sprite.visible = 1

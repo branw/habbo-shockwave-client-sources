@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pIDPrefix, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix
+property pName, pClass, pCustom, pIDPrefix, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix, pPetDefinitions, pRace
 
 on construct me
   pName = EMPTY
@@ -31,6 +31,15 @@ on construct me
   pXFactor = pGeometry.pXFactor
   pYFactor = pGeometry.pYFactor
   pHFactor = pGeometry.pHFactor
+  pOffsetList = [:]
+  pOffsetListSmall = [:]
+  tPetDEfText = member(getmemnum("pet.definitions")).text
+  tPetDEfText = replaceChunks(tPetDEfText, RETURN, EMPTY)
+  pPetDefinitions = value(tPetDEfText)
+  if ilk(pPetDefinitions) <> #propList then
+    pPetDefinitions = [:]
+    error(me, "Pet definitions has invalid data!", me.getID(), #construct)
+  end if
   if pXFactor = 32 then
     pMemberNamePrefix = "s_p_"
     pCorrectLocZ = 0
@@ -38,9 +47,7 @@ on construct me
     pMemberNamePrefix = "p_"
     pCorrectLocZ = 1
   end if
-  pPartClass = value(getThread(#room).getComponent().getClassContainer().get("petpart"))
-  pOffsetList = me.getOffsetList()
-  pOffsetListSmall = me.getOffsetList(#small)
+  pPartClass = value(getThread(#room).getComponent().getClassContainer().GET("petpart"))
   return 1
 end
 
@@ -114,7 +121,10 @@ on setup me, tdata
   pLocX = tdata[#x]
   pLocY = tdata[#y]
   pLocH = tdata[#h]
-  pCustom = getText("pet_race_" & tdata[#figure].word[1] & "_" & tdata[#figure].word[2], EMPTY)
+  pRace = tdata[#figure].word[1]
+  pOffsetList = me.getOffsetList()
+  pOffsetListSmall = me.getOffsetList(#small)
+  pCustom = getText("pet_race_" & pRace & "_" & tdata[#figure].word[2], EMPTY)
   if pName contains numToChar(4) then
     pIDPrefix = pName.char[1..offset(numToChar(4), pName)]
     pName = pName.char[offset(numToChar(4), pName) + 1..length(pName)]
@@ -434,22 +444,20 @@ on setPartLists me, tFigure
   end if
   tRaceNum = tFigure.word[1]
   tPalette = tFigure.word[2]
-  if tPalette.length < 3 then
-    tPalette = "0" & tPalette
+  if tPalette.length < 2 then
+    tPalette = "00" & tPalette
+  else
+    if tPalette.length < 3 then
+      tPalette = "0" & tPalette
+    end if
   end if
-  if tPalette.length < 3 then
-    tPalette = "0" & tPalette
-  end if
-  tPalette = "Pets Palette" && tPalette
+  tPaletteType = pPetDefinitions[pRace][#paletteid]
+  tPalette = "Palette" && tPaletteType && tPalette
   tColor = rgb(tFigure.word[3])
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
     tPartObj = createObject(#temp, pPartClass)
-    if tPartSymbol = "bd" then
-      tmodel = "000"
-    else
-      tmodel = "00" & tRaceNum
-    end if
+    tmodel = pPetDefinitions[pRace][#parts][tPartSymbol]
     tPartObj.define(tPartSymbol, tmodel, tPalette, tColor, pDirection, tAction, me)
     pPartList.add(tPartObj)
   end repeat
@@ -493,99 +501,47 @@ on getOffsetList me, tSize
   if voidp(tSize) then
     tSize = #large
   end if
+  tPetOffsetId = pPetDefinitions[pRace][#offsetid]
   if tSize = #large then
-    tList = [:]
-    tList["hd_std"] = [[36, -21], [38, -18], [37, -18], [32, -15], [32, -20]]
-    tList["hd_sit"] = [[36, -21], [38, -18], [37, -18], [32, -14], [32, -17]]
-    tList["hd_lay"] = [[36, -13], [38, -11], [37, -12], [32, -8], [32, -11]]
-    tList["hd_slp"] = [[36, -11], [38, -9], [37, -10], [32, -6], [32, -9]]
-    tList["hd_wlk"] = tList["hd_std"]
-    tList["hd_pla"] = tList["hd_sit"]
-    tList["hd_spc"] = tList["hd_std"]
-    tList["hd_rdy"] = [[35, -17], [38, -11], [37, -7], [32, -11], [32, -17]]
-    tList["hd_beg"] = [[24, -24], [25, -27], [26, -28], [32, -26], [32, -24]]
-    tList["hd_ded"] = [[40, -3], [38, 1], [37, 5], [32, 8], [32, -7]]
-    tList["hd_jmp_0"] = tList["hd_rdy"]
-    tList["hd_jmp_1"] = tList["hd_sit"]
-    tList["hd_jmp_2"] = [[36, -33], [38, -30], [37, -30], [32, -27], [32, -32]]
-    tList["hd_jmp_3"] = [[36, -25], [38, -22], [37, -22], [32, -19], [32, -24]]
-    tList["hd_scr_0"] = tList["hd_sit"]
-    tList["hd_scr_1"] = [[36, -19], [39, -16], [37, -16], [32, -12], [32, -15]]
-    tList["hd_scr_2"] = tList["hd_sit"]
-    tList["hd_scr_3"] = tList["hd_scr_1"]
-    tList["hd_bnd_0"] = tList["hd_rdy"]
-    tList["hd_bnd_1"] = [[35, -22], [36, -19], [36, -19], [32, -16], [32, -21]]
-    tList["hd_bnd_2"] = tList["hd_bnd_1"]
-    tList["hd_bnd_3"] = tList["hd_bnd_1"]
-    tList["tl_std"] = [[21, -10], [20, -12], [23, -19], [32, -23], [32, -10]]
-    tList["tl_sit"] = [[21, -2], [22, -1], [23, -6], [32, -19], [32, -3]]
-    tList["tl_lay"] = [[21, 1], [18, -1], [23, -10], [32, -15], [32, 0]]
-    tList["tl_slp"] = tList["tl_lay"]
-    tList["tl_wlk"] = tList["tl_std"]
-    tList["tl_pla"] = tList["tl_sit"]
-    tList["tl_spc"] = tList["tl_std"]
-    tList["tl_rdy"] = [[21, -10], [20, -12], [23, -19], [32, -23], [32, -11]]
-    tList["tl_beg"] = [[21, -2], [22, -1], [23, -5], [32, -14], [32, 1]]
-    tList["tl_ded"] = [[23, 2], [18, 1], [23, -19], [32, -20], [32, -10]]
-    tList["tl_jmp_0"] = tList["tl_rdy"]
-    tList["tl_jmp_1"] = tList["tl_sit"]
-    tList["tl_jmp_2"] = [[21, -16], [20, -18], [23, -25], [32, -28], [32, -16]]
-    tList["tl_jmp_3"] = [[21, -20], [20, -22], [23, -29], [32, -33], [32, -20]]
-    tList["tl_scr_0"] = tList["tl_sit"]
-    tList["tl_scr_1"] = [[21, -1], [22, 0], [23, -5], [32, -18], [32, -2]]
-    tList["tl_scr_2"] = tList["tl_sit"]
-    tList["tl_scr_3"] = tList["tl_scr_1"]
-    tList["tl_bnd_0"] = tList["tl_rdy"]
-    tList["tl_bnd_1"] = [[23, -13], [24, -14], [25, -21], [32, -27], [32, -12]]
-    tList["tl_bnd_2"] = tList["tl_bnd_1"]
-    tList["tl_bnd_3"] = tList["tl_bnd_1"]
+    tListMemName = "offset." & tPetOffsetId & ".large"
   else
-    tList = [:]
-    tList["hd_std"] = [[21, -14], [21, -12], [21, -12], [19, -11], [19, -13]]
-    tList["hd_sit"] = [[21, -14], [21, -12], [21, -12], [19, -10], [19, -11]]
-    tList["hd_lay"] = [[21, -10], [21, -9], [21, -9], [19, -7], [19, -9]]
-    tList["hd_slp"] = [[21, -9], [22, -8], [21, -8], [19, -6], [19, -8]]
-    tList["hd_wlk"] = tList["hd_std"]
-    tList["hd_pla"] = tList["hd_sit"]
-    tList["hd_spc"] = tList["hd_std"]
-    tList["hd_rdy"] = [[21, -12], [22, -9], [21, -7], [19, -9], [19, -12]]
-    tList["hd_beg"] = [[15, -15], [15, -17], [16, -17], [19, -14], [19, -15]]
-    tList["hd_ded"] = [[22, -5], [22, 4], [21, 6], [19, 7], [19, -7]]
-    tList["hd_jmp_0"] = tList["hd_rdy"]
-    tList["hd_jmp_1"] = tList["hd_sit"]
-    tList["hd_jmp_2"] = [[21, -20], [23, -19], [21, -18], [19, -17], [19, -19]]
-    tList["hd_jmp_3"] = [[21, -16], [22, -14], [21, -14], [19, -13], [19, -15]]
-    tList["hd_scr_0"] = tList["hd_sit"]
-    tList["hd_scr_1"] = [[20, -13], [22, -11], [21, -11], [19, -9], [19, -11]]
-    tList["hd_scr_2"] = tList["hd_sit"]
-    tList["hd_scr_3"] = tList["hd_scr_1"]
-    tList["hd_bnd_0"] = tList["hd_rdy"]
-    tList["hd_bnd_1"] = [[21, -15], [21, -13], [21, -13], [19, -11], [19, -14]]
-    tList["hd_bnd_2"] = tList["hd_bnd_1"]
-    tList["hd_bnd_3"] = tList["hd_bnd_1"]
-    tList["tl_std"] = [[14, -8], [13, -9], [15, -13], [19, -14], [19, -8]]
-    tList["tl_sit"] = [[12, -1], [13, -1], [16, -5], [19, -13], [19, -4]]
-    tList["tl_lay"] = [[12, 1], [12, -1], [15, -8], [19, -11], [19, 0]]
-    tList["tl_slp"] = tList["tl_lay"]
-    tList["tl_wlk"] = tList["tl_std"]
-    tList["tl_pla"] = tList["tl_sit"]
-    tList["tl_spc"] = tList["tl_std"]
-    tList["tl_rdy"] = [[14, -8], [13, -9], [15, -13], [19, -15], [19, -9]]
-    tList["tl_beg"] = [[14, -1], [14, -1], [15, -5], [19, -10], [19, 1]]
-    tList["tl_ded"] = [[15, 1], [12, 1], [15, -13], [19, -13], [19, -8]]
-    tList["tl_jmp_0"] = tList["tl_rdy"]
-    tList["tl_jmp_1"] = tList["tl_sit"]
-    tList["tl_jmp_2"] = [[14, -11], [13, -12], [15, -16], [19, -17], [19, -11]]
-    tList["tl_jmp_3"] = [[14, -13], [13, -14], [15, -17], [19, -20], [19, -13]]
-    tList["tl_scr_0"] = tList["tl_sit"]
-    tList["tl_scr_1"] = [[14, -1], [14, 0], [15, -5], [19, -12], [19, -1]]
-    tList["tl_scr_2"] = tList["tl_sit"]
-    tList["tl_scr_3"] = tList["tl_scr_1"]
-    tList["tl_bnd_0"] = tList["tl_rdy"]
-    tList["tl_bnd_1"] = [[15, -10], [15, -10], [16, -14], [19, -17], [19, -9]]
-    tList["tl_bnd_2"] = tList["tl_bnd_1"]
-    tList["tl_bnd_3"] = tList["tl_bnd_1"]
+    tListMemName = "offset." & tPetOffsetId & ".small"
   end if
+  if not memberExists(tListMemName) then
+    return [:]
+  end if
+  tListText = member(getmemnum(tListMemName)).text
+  tList = [:]
+  tAliasList = [:]
+  tDelim = the itemDelimiter
+  the itemDelimiter = "="
+  repeat with tLineNo = 1 to tListText.line.count
+    tLineText = tListText.line[tLineNo]
+    if not (chars(tLineText, 1, 1) = "#") then
+      if tLineText.item.count > 1 then
+        tKey = tLineText.item[1]
+        tValue = tLineText.item[2..tLineText.item.count]
+        tKey = value(tKey)
+        tValue = value(tValue)
+        if ilk(tValue) = #list then
+          tList[tKey] = tValue
+          next repeat
+        end if
+        tAliasList[tKey] = tValue
+      end if
+    end if
+  end repeat
+  the itemDelimiter = tDelim
+  repeat with tItemNo = 1 to tAliasList.count
+    tKey = tAliasList.getPropAt(tItemNo)
+    tAliasKey = tAliasList[tItemNo]
+    if tList.getaProp(tAliasKey) <> VOID then
+      tOffsetData = tList[tAliasKey]
+      tList[tKey] = tOffsetData
+      next repeat
+    end if
+    error(me, "Invalid alias definition, no offset available: " & tValue, me.getID(), #getOffsetList)
+  end repeat
   return tList
 end
 

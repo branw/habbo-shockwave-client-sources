@@ -1,4 +1,4 @@
-property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount
+property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount, pAllowindexing
 
 on define me, tdata
   pGroupId = tdata[#id]
@@ -7,6 +7,7 @@ on define me, tdata
   pCastcount = tdata[#casts].count
   pCallBack = tdata[#callback]
   pCurrPercent = tdata[#Percent]
+  pAllowindexing = tdata[#doindexing]
   pTempPercent = 0
   pLastPercent = 0
   pCurLoadCount = 0
@@ -70,6 +71,10 @@ end
 
 on getTaskPercent me
   return pCurrPercent
+end
+
+on getIndexingAllowed me
+  return pAllowindexing
 end
 
 on DoCallBack me

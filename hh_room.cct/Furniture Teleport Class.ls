@@ -14,7 +14,7 @@ on prepare me, tdata
     me.updateStuffdata(tdata[#stuffdata])
   end if
   if getObject(#session).exists("target_door_ID") then
-    if getObject(#session).get("target_door_ID") = me.getID() then
+    if getObject(#session).GET("target_door_ID") = me.getID() then
       getObject(#session).set("target_door_ID", 0)
       me.animate(12)
       me.delay(800, #kickOut)
@@ -113,7 +113,7 @@ on doorLogin me
 end
 
 on prepareToKick me, tIncomer
-  if tIncomer = getObject(#session).get("user_name") then
+  if tIncomer = getObject(#session).GET("user_name") then
     pKickTime = 20
   end if
 end

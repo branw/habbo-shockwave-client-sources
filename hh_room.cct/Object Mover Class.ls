@@ -1,4 +1,4 @@
-property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLoczList, pLocShiftList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr, pOrigCoord
+property pActive, pPause, pClientID, pStripID, pMoveProc, pSprList, pLoczList, pLocShiftList, pGeometry, pLastLoc, pSmallSpr, pSavedDim, pSavedDir, pClientObj, pItemLocStr, pOrigCoord, pObjType
 
 on construct me
   pActive = 0
@@ -15,6 +15,7 @@ on construct me
   pSavedDir = 2
   pItemLocStr = 0
   pOrigCoord = [0, 0, 0]
+  pObjType = 0
   return 1
 end
 
@@ -45,6 +46,7 @@ on define me, tClientID, tStripID, tObjType
   if stringp(tStripID) then
     pStripID = tStripID
   end if
+  pObjType = tObjType
   if pSprList.count > 0 then
     error(me, "Sprites hanging in object mover! Clearing them out...", #define)
     repeat with i = 1 to pSprList.count
@@ -158,6 +160,7 @@ on define me, tClientID, tStripID, tObjType
   pActive = 1
   pPause = 0
   registerMessage(#activeObjectRemoved, me.getID(), #checkObjectExists)
+  registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   receiveUpdate(me.getID())
   return 1
 end
@@ -166,10 +169,13 @@ on close me
   return me.clear()
 end
 
-on clear me
+on clear me, tRestart
   removeUpdate(me.getID())
   unregisterMessage(#activeObjectRemoved, me.getID())
-  me.cancelMove()
+  unregisterMessage(#objectFinalized, me.getID())
+  if not tRestart then
+    me.cancelMove()
+  end if
   pActive = 0
   pPause = 0
   pClientID = EMPTY
@@ -291,7 +297,7 @@ on moveItem me
     pSprList[i].locV = the mouseLoc[2]
   end repeat
   tClass = pClientObj.getClass()
-  if tClass = "poster" or tClass contains "post.it" or tClass = "photo" then
+  if tClass <> "floor" and tClass <> "wallpaper" and tClass <> "chess" then
     tProps = [#insideWall: 0]
     tRoomInterface = getThread(#room).getInterface()
     if not voidp(tRoomInterface) then
@@ -302,8 +308,20 @@ on moveItem me
         tRect = rect(sprite(tSp).locH, sprite(tSp).locV, sprite(tSp).locH, sprite(tSp).locV) + rect(-tRp[1], -tRp[2], sprite(tSp).member.width - tRp[1], sprite(tSp).member.height - tRp[2])
         tProps = tVisual.getWallPartUnderRect(tRect, 0.5)
         if tProps[#insideWall] then
-          tProps[#localCoordinate][1] = tProps[#localCoordinate][1] + pSprList[1].member.regPoint[1]
-          tProps[#localCoordinate][2] = tProps[#localCoordinate][2] + pSprList[1].member.regPoint[2]
+          tRealPos = 0
+          if tClass <> "poster" and not (tClass contains "post.it") and tClass <> "photo" then
+            tRealPos = 1
+            tRect[1] = sprite(tSp).locH
+            tRect[2] = sprite(tSp).locV
+            tRect[3] = sprite(tSp).locH
+            tRect[4] = sprite(tSp).locV
+            tPropsReal = tVisual.getWallPartUnderRect(tRect, 0.5)
+            tProps = tPropsReal
+          end if
+          if tRealPos = 0 then
+            tProps[#localCoordinate][1] = tProps[#localCoordinate][1] + pSprList[1].member.regPoint[1]
+            tProps[#localCoordinate][2] = tProps[#localCoordinate][2] + pSprList[1].member.regPoint[2]
+          end if
         end if
       end if
     end if
@@ -312,7 +330,11 @@ on moveItem me
     end if
     if tProps[#insideWall] = 0 then
       repeat with i = 1 to pSprList.count
-        pSprList[i].blend = 30
+        if pSprList[i].ink <> 33 then
+          pSprList[i].blend = 30
+          next repeat
+        end if
+        pSprList[i].blend = 0
       end repeat
       pItemLocStr = 0
     else
@@ -326,35 +348,37 @@ on moveItem me
       end if
       pItemLocStr = obfuscate(":w=" & tWallObjLoc[1] & "," & tWallObjLoc[2] && "l=" & tProps[#localCoordinate][1] & "," & tProps[#localCoordinate][2] && tProps.direction.char[1])
     end if
-    tName = pSprList[1].member.name
-    if pGeometry.pXFactor = 32 then
-      tMemNum = getmemnum("s_" & tProps[#direction] && tName.word[2..tName.word.count])
-    else
-      tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
-    end if
-    if tMemNum = 0 then
-      return 0
-    end if
-    if tMemNum < 1 then
-      tMemNum = abs(tMemNum)
-      pSprList[1].flipH = 1
-    else
-      pSprList[1].flipH = 0
-    end if
-    pSprList[1].castNum = tMemNum
-    if tProps[#wallSprites] <> 0 then
-      tSprites = tProps[#wallSprites]
-      tlocz = tSprites[1].locZ
-      if tlocz < -1000000 then
-        tlocz = tlocz + 20100
+    repeat with i = 1 to pSprList.count
+      tName = pSprList[i].member.name
+      if pGeometry.pXFactor = 32 then
+        tMemNum = getmemnum("s_" & tProps[#direction] && tName.word[2..tName.word.count])
+      else
+        tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
       end if
-      if tSprites.count > 1 then
-        if tSprites[2].locZ > tlocz then
-          tlocz = tSprites[2].locZ
+      if tMemNum = 0 then
+        return 0
+      end if
+      if tMemNum < 1 then
+        tMemNum = abs(tMemNum)
+        pSprList[i].flipH = 1
+      else
+        pSprList[i].flipH = 0
+      end if
+      pSprList[i].castNum = tMemNum
+      if tProps[#wallSprites] <> 0 then
+        tSprites = tProps[#wallSprites]
+        tlocz = tSprites[1].locZ
+        if tlocz < -1000000 then
+          tlocz = tlocz + 20100
         end if
+        if tSprites.count > 1 then
+          if tSprites[2].locZ > tlocz then
+            tlocz = tSprites[2].locZ
+          end if
+        end if
+        pSprList[i].locZ = tlocz + 2 + i
       end if
-      pSprList[1].locZ = tlocz + 2
-    end if
+    end repeat
   end if
 end
 
@@ -382,6 +406,13 @@ on cancelMove me
       tObj.moveTo(tLocX, tLocY, tLocH)
       tObj.removeGhostEffect()
     "placeActive", "placeItem":
+      if tClickAction = "placeActive" then
+        getThread(#room).getComponent().getComponent().removeActiveObject(pClientID)
+      else
+        if tClickAction = "placeItem" then
+          getThread(#room).getComponent().getComponent().removeItemObject(pClientID)
+        end if
+      end if
       getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
   end case
 end
@@ -545,5 +576,17 @@ on checkObjectExists me
   tObj = getThread(#room).getComponent().getActiveObject(pClientID)
   if tObj = 0 then
     getThread(#room).getInterface().stopObjectMover()
+  end if
+end
+
+on objectFinalized me, tid
+  if pActive and pClientID = tid then
+    tClientID = pClientID
+    tStripID = pStripID
+    tObjType = pObjType
+    me.clear(1)
+    me.define(tClientID, tStripID, tObjType)
+    pLastLoc = the mouseLoc - point(1, 1)
+    me.update()
   end if
 end

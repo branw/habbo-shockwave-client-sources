@@ -1,4 +1,4 @@
-property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag, pHandButtonsWnd, pNextActive, pPrevActive, pDragging, pDragPos
+property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag, pHandButtonsWnd, pNextActive, pPrevActive, pDragging, pDragPos, pIconPlaceholderName
 
 on construct me
   pItemList = [:]
@@ -11,6 +11,7 @@ on construct me
   pHandButtonsWnd = "habbo_hand_buttons"
   pNextActive = 1
   pPrevActive = 1
+  pIconPlaceholderName = "icon_placeholder"
   return 1
 end
 
@@ -105,23 +106,18 @@ on appendStripItem me, tdata
 end
 
 on createStripItem me, tdata
+  tIconClassStr = EMPTY
   case tdata[#striptype] of
     "active":
-      if memberExists(tdata[#class] & "_small") then
-        tdata[#member] = tdata[#class] & "_small"
+      if offset("*", tdata[#class]) > 0 then
+        tIconClassStr = tdata[#class].char[1..offset("*", tdata[#class]) - 1]
       else
-        if offset("*", tdata[#class]) > 0 then
-          tClass = tdata[#class].char[1..offset("*", tdata[#class]) - 1]
-          tdata[#member] = tClass & "_small"
-        else
-          tClass = tdata[#class]
-          error(me, "Member not found:" && tClass & "_small", #createStripItem)
-          tdata[#member] = "room_object_placeholder"
-        end if
+        tIconClassStr = tdata[#class]
       end if
     "item":
+      tIconClassStr = EMPTY
       if tdata[#class] = "poster" then
-        tdata[#member] = "poster" && tdata[#props] & "_small"
+        tIconClassStr = "poster" && tdata[#props]
       else
         if tdata[#class] contains "post.it" then
           tPostnums = integer(value(tdata[#props]) / (20.0 / 6.0))
@@ -140,10 +136,9 @@ on createStripItem me, tdata
               tdata[#member] = "floor_small"
             else
               if memberExists(tdata[#class] & "_small") then
-                tdata[#member] = tClass & "_small"
+                tIconClassStr = tdata[#class]
               else
-                error(me, "Unknown item type:" && tdata[#class], #createStripItem)
-                tdata[#member] = "room_object_placeholder"
+                tIconClassStr = tdata[#class]
               end if
             end if
           end if
@@ -153,8 +148,57 @@ on createStripItem me, tdata
       error(me, "Unknown strip item type:" && tdata[#striptype], #createStripItem)
       tdata[#member] = "room_object_placeholder"
   end case
+  if not voidp(tdata[#member]) then
+    nothing()
+  else
+    if memberExists(tIconClassStr & "_small") then
+      tdata[#member] = tIconClassStr & "_small"
+    else
+      tdata[#member] = pIconPlaceholderName
+      tdata[#truemember] = tIconClassStr & "_small"
+      tdata[#downloadLocked] = 1
+      tDownloadIdName = tIconClassStr
+      tDynThread = getThread(#dynamicdownloader)
+      if tDynThread = 0 then
+        error(me, "Icon member not found and no dynamic download possibility: " & tdata[#member], #createStripItem)
+      else
+        tDynComponent = tDynThread.getComponent()
+        tRoomSizePrefix = EMPTY
+        tRoomThread = getThread(#room)
+        if tRoomThread <> 0 then
+          tTileSize = tRoomThread.getInterface().getGeometry().getTileWidth()
+          if tTileSize = 32 then
+            tRoomSizePrefix = "s_"
+          end if
+        end if
+        tDownloadIdName = tRoomSizePrefix & tDownloadIdName
+        tDynComponent.downloadCastDynamically(tDownloadIdName, tdata[#striptype], me.getID(), #stripItemDownloadCallback, 1)
+      end if
+    end if
+  end if
   pItemList[tdata[#stripId]] = tdata
   return 1
+end
+
+on stripItemDownloadCallback me, tDownloadedClass
+  tIconSuffix = "_small"
+  tSmallScalePrefix = "s_"
+  if chars(tDownloadedClass, 1, tSmallScalePrefix.length) = tSmallScalePrefix then
+    tDownloadedClass = chars(tDownloadedClass, tSmallScalePrefix.length + 1, tDownloadedClass.length)
+  end if
+  repeat with tItem in pItemList
+    tTrueMem = tItem[#truemember]
+    if not voidp(tTrueMem) then
+      if chars(tTrueMem, tTrueMem.length - tIconSuffix.length + 1, tTrueMem.length) = tIconSuffix then
+        tTrueMem = chars(tTrueMem, 1, tTrueMem.length - tIconSuffix.length)
+      end if
+      if tTrueMem = tDownloadedClass then
+        tItem[#member] = tItem[#truemember]
+        tItem[#downloadLocked] = 0
+      end if
+    end if
+  end repeat
+  me.showContainerItems()
 end
 
 on removeStripItem me, tid
@@ -241,10 +285,15 @@ on placeItemToRoom me, tid
           getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
           removeStripItem(me, tid)
           return 1
+        otherwise:
+          tdata[#direction] = "leftwall"
+          if not getThread(#room).getComponent().createItemObject(tdata) then
+            return 0
+          end if
+          getThread(#room).getComponent().getItemObject(tdata[#id]).setaProp(#stripId, tdata[#stripId])
+          me.removeStripItem(tid)
+          return 1
       end case
-      return error(me, "Unknown item class:" && tdata[#class], #placeItemToRoom)
-      removeStripItem(me, tid)
-      return 0
     end if
   end if
 end
@@ -340,6 +389,10 @@ on showContainerItems me
     if i <= tCount then
       tItem = tList[i]
       tImage = getObject("Preview_renderer").renderPreviewImage(tItem[#member], VOID, tItem[#colors], tItem[#class])
+      if voidp(tImage) then
+        error(me, "Preview image was void!", #showContainerItems)
+        return 0
+      end if
       member(tMem).image = tImage
       tVisible = not getThread(#room).getInterface().getSafeTrader().isUnderTrade(pItemList.getPropAt(i))
       if tVisible then
@@ -383,7 +436,7 @@ on eventProcContainer me, tEvent, tSprID, tParam
       getThread(#room).getInterface().stopObjectMover()
       return getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
     "moveActive", "moveItem":
-      if not getObject(#session).get("room_owner") then
+      if not getObject(#session).GET("room_owner") then
         return 0
       end if
       ttype = ["active": "stuff", "item": "item"][getThread(#room).getInterface().pSelectedType]
@@ -399,6 +452,9 @@ on eventProcContainer me, tEvent, tSprID, tParam
     end if
     tdata = tStripList[tItemNum]
     tItemID = tdata[#stripId]
+    if tdata[#downloadLocked] then
+      return 0
+    end if
     if getThread(#room).getInterface().getSafeTrader().isUnderTrade(tItemID) then
       return 0
     end if

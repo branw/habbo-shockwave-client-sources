@@ -1,4 +1,4 @@
-property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetType, pPetTemplateObj, pPetRacesList, pNameCheckPending
+property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedProduct, pLastProductNum, pNumOfColorBoxies, pCurrentProductNum, pPetTemplateObj, pPetRacesList, pNameCheckPending, pDefinitions
 
 on construct me
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
@@ -9,6 +9,13 @@ on construct me
   pPetTemplateObj = createObject(#temp, tPetClass)
   pPageData = [:]
   pPetRacesList = [:]
+  tPetDEfText = member(getmemnum("pet.definitions")).text
+  tPetDEfText = replaceChunks(tPetDEfText, RETURN, EMPTY)
+  pPetDefinitions = value(tPetDEfText)
+  if ilk(pPetDefinitions) <> #propList then
+    pPetDefinitions = [:]
+    error(me, "Pet definitions has invalid data!", me.getID(), #construct)
+  end if
   i = 0
   repeat while 1
     if textExists("pet_race_" & i & "_000") then
@@ -30,15 +37,16 @@ on construct me
           tTempRaces.add(tTemp)
         else
           tColorList = []
-          if memberExists("petColors_" & tPetType) then
-            tColorTxt = member(getmemnum("petColors_" & tPetType)).text
+          tPetColorId = pPetDefinitions[tPetType][#colorid]
+          if memberExists("petColors_" & tPetColorId) then
+            tColorTxt = member(getmemnum("petColors_" & tPetColorId)).text
             repeat with tLine = 1 to tColorTxt.line.count
               if tColorTxt.line[tLine].length = 7 then
                 tColorList.add(tColorTxt.line[tLine].char[2..7])
               end if
             end repeat
           else
-            error(me, "Couldn't find pet colors member!", #construct)
+            error(me, "Couldn't find pet colors member!" && tPetColorId, #construct)
             return 0
           end if
           pPetRacesList[tPetType] = ["races": tTempRaces, "colors": tColorList]

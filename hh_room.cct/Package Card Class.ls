@@ -1,11 +1,15 @@
-property pMessage, pPackageID, pCardWndID
+property pMessage, pPackageID, pCardWndID, pNoIconPlaceholderName, pIconType, pIconCode, pIconColor
 
 on construct me
   pMessage = EMPTY
   pPackageID = EMPTY
   pCardWndID = "Card" && getUniqueID()
+  pNoIconPlaceholderName = "icon_placeholder"
   registerMessage(#leaveRoom, me.getID(), #hideCard)
   registerMessage(#changeRoom, me.getID(), #hideCard)
+  pIconType = VOID
+  pIconCode = VOID
+  pIconColor = VOID
   return 1
 end
 
@@ -42,8 +46,8 @@ on showCard me, tloc
     return 0
   end if
   tWndObj = getWindow(pCardWndID)
-  tUserRights = getObject(#session).get("user_rights")
-  tUserCanOpen = getObject(#session).get("room_owner") or tUserRights.findPos("fuse_pick_up_any_furni")
+  tUserRights = getObject(#session).GET("user_rights")
+  tUserCanOpen = getObject(#session).GET("room_owner") or tUserRights.findPos("fuse_pick_up_any_furni")
   if not tUserCanOpen and tWndObj.getElement("open_package") <> 0 then
     tWndObj.getElement("open_package").hide()
   end if
@@ -70,34 +74,85 @@ on showContent me, tdata
   if not windowExists(pCardWndID) then
     return 0
   end if
-  ttype = tdata[#type]
-  tCode = tdata[#code]
-  tColor = tdata[#color]
+  pIconType = tdata[#type]
+  pIconCode = tdata[#code]
+  pIconColor = tdata[#color]
   tMemNum = VOID
-  if tColor = EMPTY then
-    tColor = VOID
+  if pIconColor = EMPTY then
+    pIconColor = VOID
   end if
-  if ttype contains "*" then
+  if pIconType contains "*" then
     tDelim = the itemDelimiter
     the itemDelimiter = "*"
-    ttype = ttype.item[1]
+    pIconType = pIconType.item[1]
     the itemDelimiter = tDelim
   end if
-  if memberExists(tCode & "_small") then
-    tMemNum = getmemnum(tCode & "_small")
+  if memberExists(pIconCode & "_small") then
+    tMemNum = getmemnum(pIconCode & "_small")
   else
-    if memberExists("ctlg_pic_small_" & tCode) then
-      tMemNum = getmemnum("ctlg_pic_small_" & tCode)
+    if memberExists("ctlg_pic_small_" & pIconCode) then
+      tMemNum = getmemnum("ctlg_pic_small_" & pIconCode)
     end if
   end if
   if tMemNum = 0 then
-    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tColor, tdata[#type])
+    tDynThread = getThread(#dynamicdownloader)
+    if tDynThread = 0 then
+      tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, pIconColor, pIconType)
+    else
+      tDownloadIdName = EMPTY
+      if pIconType contains "poster" then
+        tDownloadIdName = pIconCode
+      else
+        tDownloadIdName = pIconType
+      end if
+      tDynComponent = tDynThread.getComponent()
+      tRoomSizePrefix = EMPTY
+      tRoomThread = getThread(#room)
+      if tRoomThread <> 0 then
+        tTileSize = tRoomThread.getInterface().getGeometry().getTileWidth()
+        if tTileSize = 32 then
+          tRoomSizePrefix = "s_"
+        end if
+      end if
+      tDownloadIdName = tRoomSizePrefix & tDownloadIdName
+      if not tDynComponent.isAssetDownloaded(tDownloadIdName) then
+        tDynComponent.downloadCastDynamically(tDownloadIdName, #unknown, me.getID(), #packetIconDownloadCallback, 1)
+        tImg = member(pNoIconPlaceholderName).image
+      else
+        me.packetIconDownloadCallback(tDownloadIdName)
+      end if
+    end if
   else
     tImg = member(tMemNum).image.duplicate()
   end if
+  me.feedIconToCard(tImg)
+end
+
+on packetIconDownloadCallback me, tDownloadedClass
+  if tDownloadedClass contains "poster" then
+    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, pIconColor, pIconCode)
+  else
+    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, pIconColor, pIconType)
+  end if
+  me.feedIconToCard(tImg)
+end
+
+on feedIconToCard me, tImg
+  if ilk(tImg) <> #image then
+    return error(me, "tImg is not an #image", #feedIconToCard)
+  end if
   tWndObj = getWindow(pCardWndID)
+  tElem = tWndObj.getElement("small_img")
+  tWid = tElem.getProperty(#width)
+  tHei = tElem.getProperty(#height)
+  tCenteredImage = image(tWid, tHei, 32)
+  tMatte = tImg.createMatte()
+  tXchange = (tCenteredImage.width - tImg.width) / 2
+  tYchange = (tCenteredImage.height - tImg.height) / 2
+  tRect1 = tImg.rect + rect(tXchange, tYchange, tXchange, tYchange)
+  tCenteredImage.copyPixels(tImg, tRect1, tImg.rect, [#maskImage: tMatte, #ink: 41])
+  tElem.feedImage(tCenteredImage)
   tWndObj.getElement("card_icon").hide()
-  tWndObj.getElement("small_img").feedImage(tImg)
   tWndObj.getElement("small_img").setProperty(#blend, 100)
   tWndObj.getElement("open_package").hide()
 end

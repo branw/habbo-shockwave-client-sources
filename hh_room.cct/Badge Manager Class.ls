@@ -20,7 +20,7 @@ on deconstruct me
 end
 
 on openBadgeWindow me
-  tBadgeList = getObject("session").get("available_badges", [])
+  tBadgeList = getObject("session").GET("available_badges", [])
   if tBadgeList.count < 1 then
     return 0
   end if
@@ -40,8 +40,8 @@ on openBadgeWindow me
   registerMessage(#leaveRoom, tWndObj.getID(), #close)
   registerMessage(#changeRoom, tWndObj.getID(), #close)
   tWndObj.registerProcedure(#eventProcBadgeChooser, me.getID(), #mouseUp)
-  pChosenVisibility = getObject("session").get("badge_visible")
-  pChosenBadge = getObject("session").get("chosen_badge_index")
+  pChosenVisibility = getObject("session").GET("badge_visible")
+  pChosenBadge = getObject("session").GET("chosen_badge_index")
   if pChosenBadge < 1 then
     pChosenBadge = 1
   end if
@@ -103,7 +103,7 @@ on updateBadgeImage me
     return 0
   end if
   tWndObj = getWindow("badge_choice_window")
-  tBadgeList = getObject("session").get("available_badges", [])
+  tBadgeList = getObject("session").GET("available_badges", [])
   if pChosenBadge > tBadgeList.count or pChosenBadge < 1 then
     return 0
   end if
@@ -127,7 +127,7 @@ on updateBadgeImage me
 end
 
 on badgeNextPrev me, tdir
-  tBadgeList = getObject("session").get("available_badges", [])
+  tBadgeList = getObject("session").GET("available_badges", [])
   if tBadgeList.count = 0 then
     me.closeBadgeWindow()
     return 0
@@ -155,7 +155,7 @@ on eventProcBadgeChooser me, tEvent, tSprID, tParam
       pChosenVisibility = 1
       me.updateBadgeVisibleButtons()
     "badge.ok":
-      tBadgeList = getObject("session").get("available_badges")
+      tBadgeList = getObject("session").GET("available_badges")
       if pChosenBadge > tBadgeList.count then
         me.closeBadgeWindow()
         return 0
@@ -218,10 +218,10 @@ end
 on getMyBadgeInfo me
   tBadge = " "
   tSession = getObject("session")
-  tChosenBadgeNum = tSession.get("chosen_badge_index")
-  tAvailableBadges = tSession.get("available_badges")
+  tChosenBadgeNum = tSession.GET("chosen_badge_index")
+  tAvailableBadges = tSession.GET("available_badges")
   if tSession.exists("badge_visible") then
-    tVisibility = tSession.get("badge_visible")
+    tVisibility = tSession.GET("badge_visible")
   else
     tVisibility = 1
   end if
@@ -256,7 +256,7 @@ on updateInfoStandBadge me, tInfoStandID, tSelectedObj, tBadgeID, tUserID
   tElem = tWndObj.getElement("info_badge")
   tElem.clearImage()
   me.removeBadgeEffect()
-  tOwnCharacter = tSelectedObj = getObject("session").get("user_index")
+  tOwnCharacter = tSelectedObj = getObject("session").GET("user_index")
   if tOwnCharacter = 0 then
     if tUserID <> VOID then
       if tUserID <> tSelectedObj then

@@ -23,7 +23,7 @@ on removeConnection tid
 end
 
 on getConnection tid
-  return getConnectionManager().get(tid)
+  return getConnectionManager().GET(tid)
 end
 
 on connectionExists tid

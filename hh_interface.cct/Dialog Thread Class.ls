@@ -362,14 +362,14 @@ on eventProcPurse me, tEvent, tElemID, tParam, tWndID
         return executeMessage(#hide_purse)
       "purse_link_text":
         tSession = getObject(#session)
-        if tSession.get("user_rights").getOne("can_buy_credits") then
+        if tSession.GET("user_rights").getOne("can_buy_credits") then
           tURL = getText("url_purselink")
         else
           tURL = getText("url_purse_subscribe")
         end if
-        tURL = tURL & urlEncode(tSession.get("user_name"))
+        tURL = tURL & urlEncode(tSession.GET("user_name"))
         if tSession.exists("user_checksum") then
-          tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+          tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
         end if
         openNetPage(tURL, "_new")
     end case
@@ -384,14 +384,14 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
         if textExists("url_help_" & tLineNum) then
           tSession = getObject(#session)
           tURL = getText("url_help_" & tLineNum)
-          tName = urlEncode(tSession.get("user_name"))
+          tName = urlEncode(tSession.GET("user_name"))
           if tURL = EMPTY then
             return 1
           end if
           if tURL contains "\user_name" then
             tURL = replaceChunks(tURL, "\user_name", tName)
             if tSession.exists("user_checksum") then
-              tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+              tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
             end if
           end if
           openNetPage(tURL, "_new")

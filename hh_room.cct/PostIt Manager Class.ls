@@ -22,12 +22,12 @@ on open me, tid, tColor, tLocX, tLocY
   end if
   registerMessage(symbol("itemdata_received" & tid), #postit_manager, #setItemData)
   getThread(#room).getComponent().getRoomConnection().send("G_IDATA", tid)
-  pIsController = getObject(#session).get("room_controller")
-  if getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+  pIsController = getObject(#session).GET("room_controller")
+  if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
     pIsController = 1
   end if
-  pIsOwner = getObject(#session).get("room_owner")
-  pCanRemoveStickies = getObject(#session).get("user_rights").getOne("fuse_remove_stickies")
+  pIsOwner = getObject(#session).GET("room_owner")
+  pCanRemoveStickies = getObject(#session).GET("user_rights").getOne("fuse_remove_stickies")
 end
 
 on close me

@@ -24,7 +24,7 @@ on Remove me, tid
   return me.closeThread(tid)
 end
 
-on get me, tid
+on GET me, tid
   tThreadObj = pThreadList[tid]
   if voidp(tThreadObj) then
     return 0
@@ -54,7 +54,7 @@ on initThread me, tCastNumOrMemName, tid
           if member(tThreadField, i).number > 0 then
             pVarMngrObj.clear()
             pVarMngrObj.dump(member(tThreadField, i).number)
-            if symbol(pVarMngrObj.get("thread.id")) = tCastNumOrMemName then
+            if symbol(pVarMngrObj.GET("thread.id")) = tCastNumOrMemName then
               return me.initThread(i, tid)
               exit repeat
             end if
@@ -81,17 +81,17 @@ on initThread me, tCastNumOrMemName, tid
   if symbolp(tid) then
     tThreadID = tid
   else
-    tThreadID = symbol(pVarMngrObj.get("thread.id"))
+    tThreadID = symbol(pVarMngrObj.GET("thread.id"))
   end if
   if not symbolp(tThreadID) then
     return error(me, "Invalid thread ID:" && tThreadID, #initThread)
   end if
   tMultipleDef = 0
-  if listp(value(pVarMngrObj.get("thread.id"))) then
-    tThreadKeys = pVarMngrObj.getValue("thread.id")
+  if listp(value(pVarMngrObj.GET("thread.id"))) then
+    tThreadKeys = pVarMngrObj.GetValue("thread.id")
     tMultipleDef = 1
   else
-    tThreadKeys = [pVarMngrObj.get("thread.id")]
+    tThreadKeys = [pVarMngrObj.GET("thread.id")]
   end if
   repeat with tThreadKey in tThreadKeys
     tThreadID = symbol(tThreadKey)
@@ -105,7 +105,7 @@ on initThread me, tCastNumOrMemName, tid
           tPreIndex = tThreadKey & "."
         end if
         if pVarMngrObj.exists(tPreIndex & tModule & ".class") then
-          tClass = pVarMngrObj.get(tPreIndex & tModule & ".class")
+          tClass = pVarMngrObj.GET(tPreIndex & tModule & ".class")
           if tClass.char[1] = "[" then
             tClass = value(tClass)
           end if
@@ -134,10 +134,10 @@ on closeThread me, tCastNumOrID
   if integerp(tCastNumOrID) then
     if member(pIndexField, tCastNumOrID).number > 0 then
       pVarMngrObj.dump(member(pIndexField, tCastNumOrID).number)
-      if listp(value(pVarMngrObj.get("thread.id"))) then
-        tThreadKeys = pVarMngrObj.getValue("thread.id")
+      if listp(value(pVarMngrObj.GET("thread.id"))) then
+        tThreadKeys = pVarMngrObj.GetValue("thread.id")
       else
-        tThreadKeys = [pVarMngrObj.get("thread.id")]
+        tThreadKeys = [pVarMngrObj.GET("thread.id")]
       end if
     else
       return 0

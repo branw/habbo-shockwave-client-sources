@@ -40,7 +40,7 @@ on define me, tdata
   me.pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   me.pInfoStruct[#name] = me.pName
   me.pInfoStruct[#class] = me.pClass
-  me.pInfoStruct[#Custom] = me.pCustom
+  me.pInfoStruct[#custom] = me.pCustom
   me.pInfoStruct[#image] = me.getPicture()
   me.pInfoStruct[#ctrl] = "furniture"
   me.pInfoStruct[#badge] = " "
@@ -114,17 +114,8 @@ on Refresh me, tX, tY, tH
   me.pChanges = 1
 end
 
-on deconstructPartList me
-  repeat with tPart in me.pPartList
-    tPart.deconstruct()
-  end repeat
-end
-
 on setPartLists me, tmodels
   tAction = me.pMainAction
-  if me.pPartList.ilk = #list then
-    me.deconstructPartList()
-  end if
   me.pPartList = []
   if me.pSex = "F" then
     tphModel = "s01"
@@ -157,7 +148,7 @@ on setPartLists me, tmodels
     if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and me.pXFactor < 33 then
       tmodels[tPartSymbol]["model"] = "001"
     end if
-    tPartCls = value(getThread(#room).getComponent().getClassContainer().get("swimpart"))
+    tPartCls = value(getThread(#room).getComponent().getClassContainer().GET("swimpart"))
     tPartObj = createObject(#temp, tPartCls)
     if stringp(tmodels[tPartSymbol]["color"]) then
       tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")

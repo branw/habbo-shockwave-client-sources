@@ -20,7 +20,7 @@ on construct me
     exit repeat
   end repeat
   if tCataloguePage.elementExists("trophies_habbo_name") then
-    tUserName = getObject(#session).get(#userName)
+    tUserName = getObject(#session).GET(#userName)
     tCataloguePage.getElement("trophies_habbo_name").setText(tUserName)
   end if
   registerMessage(#serverDate, me.getID(), #setDate)
