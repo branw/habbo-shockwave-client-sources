@@ -6,7 +6,7 @@ on construct me
   pSignState = VOID
   pChatmode = "CHAT"
   if not objectExists("Figure_System_Pool") then
-    createObject("Figure_System_Pool", ["OLD Figure System Class"])
+    createObject("Figure_System_Pool", ["Figure System Class"])
     getObject("Figure_System_Pool").define(["type": "member", "source": "swimfigure_ids_"])
   end if
   return removeWindow(pBottomBarId)
@@ -59,6 +59,8 @@ on createFigurePrew me
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
   tFigure = getObject(#session).GET("user_figure").duplicate()
+  tFigure["hd"]["model"] = "001"
+  tFigure["fc"]["model"] = "001"
   if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else
@@ -69,15 +71,17 @@ on createFigurePrew me
   end if
   tWndObj = getWindow("uimakoppi")
   tFigure["ch"]["color"] = pSwimSuitColor
-  tPartList = #swimmer
-  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 4, "sh")
+  tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
+  tHumanImg = image(32, 60, 16)
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
+  tImgWidth = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#width)
+  tImgHeight = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#height)
+  tPrewImg = image(tImgWidth, tImgHeight, 16)
+  tMargins = rect(-11, 24, -11, 24)
+  tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
+  tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
+  tPrewImg = me.flipImage(tPrewImg)
   if tWndObj.elementExists("ph_swimsuit.preview.img") then
-    tImgWidth = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#width)
-    tImgHeight = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#height)
-    tPrewImg = image(tImgWidth, tImgHeight, 16)
-    tMargins = rect(19, 0, 19, 0)
-    tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
-    tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
     tWndObj.getElement("ph_swimsuit.preview.img").feedImage(tPrewImg)
   end if
   if tWndObj.elementExists("ph_swimsuit.preview") then

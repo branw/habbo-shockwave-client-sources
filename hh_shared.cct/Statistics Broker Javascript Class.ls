@@ -33,7 +33,7 @@ on sendJsMessage me, tMsg, tMsgType
   if tMsgType <> "hello" and not voidp(pDefaultCallTemplate) then
     tMsgContent = replaceChunks(pDefaultCallTemplate, "\TCODE", tMsg)
   end if
-  tCallString = QUOTE & tMsgType & QUOTE & ", " & QUOTE & tMsgContent & QUOTE
+  tCallString = "ClientMessageHandler.call('" & tMsgType & "', '" & tMsgContent & "')"
   pProxy.call(tCallString)
 end
 

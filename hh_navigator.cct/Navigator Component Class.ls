@@ -1,4 +1,4 @@
-property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker, pRoomCatagoriesReady, pRecomUpdateInterval, pRecomRefreshBlockInterval, pRecomNodeInfo, pRecomNodeSaveTime
+property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId, pInfoBroker, pRoomCatagoriesReady, pRecommendedRooms
 
 on construct me
   pRootUnitCatId = string(getIntVariable("navigator.visible.public.root"))
@@ -17,20 +17,10 @@ on construct me
   pNodeCache = [:]
   pNodeCacheExpList = [:]
   pNaviHistory = []
-  pHideFullRoomsFlag = 0
+  pHideFullRoomsFlag = 1
   pUpdateInterval = getIntVariable("navigator.cache.duration") * 1000
   if pUpdateInterval = 0 then
     pUpdateInterval = getIntVariable("navigator.updatetime")
-  end if
-  if variableExists("navigator.recom.updatetime") then
-    pRecomUpdateInterval = getIntVariable("navigator.recom.updatetime")
-  else
-    pRecomUpdateInterval = 30000
-  end if
-  if variableExists("navigator.recom.refresh.blocktime") then
-    pRecomRefreshBlockInterval = getIntVariable("navigator.recom.refresh.blocktime")
-  else
-    pRecomRefreshBlockInterval = 5000
   end if
   pConnectionId = getVariableValue("connection.info.id", #Info)
   pInfoBroker = createObject(#navigator_infobroker, "Navigator Info Broker Class")
@@ -131,10 +121,6 @@ on getNodeInfo me, tNodeId, tCategoryId
   return 0
 end
 
-on getRecomNodeInfo me
-  return pRecomNodeInfo
-end
-
 on getTreeInfoFor me, tID
   if tID = VOID then
     return 0
@@ -169,47 +155,12 @@ on getUpdateInterval me
   return pUpdateInterval
 end
 
-on getRecomUpdateInterval me
-  return pRecomUpdateInterval
-end
-
 on updateInterface me, tID
-  if tID = #own or tID = #src or tID = #fav then
+  if tID = #own or tID = #src or tID = #fav or tID = #recom then
     return me.feedNewRoomList(tID)
   else
     return me.feedNewRoomList(tID & "/" & me.getCurrentNodeMask())
   end if
-end
-
-on showHideRefreshRecoms me, tShow, tForced
-  if tShow and (not me.checkRecomCache() or tForced) then
-    me.getInterface().showHideRefreshRecomLink(1)
-  else
-    me.getInterface().showHideRefreshRecomLink(0)
-    if timeoutExists(#recom_refresh_timeout) then
-      removeTimeout(#recom_refresh_timeout)
-    end if
-    if tForced then
-      return 0
-    end if
-    createTimeout(#recom_refresh_timeout, pRecomRefreshBlockInterval, #showHideRefreshRecoms, me.getID(), 1, 1)
-  end if
-  return 1
-end
-
-on checkRecomCache me
-  tElapsedTime = the milliSeconds - pRecomNodeSaveTime
-  if tElapsedTime > pRecomRefreshBlockInterval or voidp(pRecomNodeInfo) then
-    return 0
-  end if
-  return 1
-end
-
-on updateRecomRooms me
-  if not me.checkRecomCache() then
-    return me.sendGetRecommendedRooms()
-  end if
-  return me.getInterface().updateRecomRoomList(pRecomNodeInfo)
 end
 
 on prepareRoomEntry me, tRoomInfoOrId, tRoomType
@@ -273,6 +224,7 @@ on expandNode me, tNodeId
   me.getInterface().clearRoomList()
   me.getInterface().setProperty(#categoryId, tNodeId)
   me.createNaviHistory(tNodeId)
+  me.updateInterface(#recom)
   return me.updateInterface(tNodeId)
 end
 
@@ -283,7 +235,7 @@ on expandHistoryItem me, tClickedItem
   if tClickedItem > pNaviHistory.count then
     tClickedItem = pNaviHistory.count
   end if
-  if tClickedItem <= 0 then
+  if tClickedItem = 0 then
     return 0
   end if
   if pNaviHistory[tClickedItem] = #entry then
@@ -345,7 +297,9 @@ end
 on callNodeUpdate me
   case me.getInterface().getNaviView() of
     #unit, #flat:
-      return me.sendNavigate(me.getInterface().getProperty(#categoryId))
+      me.sendNavigate(me.getInterface().getProperty(#categoryId))
+      me.sendGetRecommendedRooms()
+      return 1
     #own:
       return me.getComponent().sendGetOwnFlats()
     #fav:
@@ -427,7 +381,11 @@ on feedNewRoomList me, tID
   if not listp(tNodeInfo) or not me.checkCacheForNode(tID) then
     return me.callNodeUpdate()
   end if
-  me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
+  if tID = #recom then
+    me.getInterface().updateRecomRoomList(tNodeInfo[#children])
+  else
+    me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
+  end if
   return 1
 end
 
@@ -473,7 +431,7 @@ end
 
 on saveNodeInfo me, tNodeInfo
   tNodeId = tNodeInfo[#id]
-  if tNodeId <> #own and tNodeId <> #src and tNodeId <> #fav and not (tNodeId contains "tmp") then
+  if tNodeId <> #own and tNodeId <> #src and tNodeId <> #fav and tNodeId <> #recom and not (tNodeId contains "tmp") then
     tNodeId = tNodeId & "/" & tNodeInfo[#nodeMask]
   end if
   if listp(tNodeInfo) then
@@ -481,15 +439,6 @@ on saveNodeInfo me, tNodeInfo
     pNodeCacheExpList[tNodeId] = the milliSeconds
   end if
   return me.feedNewRoomList(tNodeId)
-end
-
-on saveRecomNodeInfo me, tNodeInfo
-  pRecomNodeInfo = tNodeInfo
-  pRecomNodeSaveTime = the milliSeconds
-  me.showHideRefreshRecoms(0)
-  me.getInterface().setRecomUpdates(0)
-  me.getInterface().setRecomUpdates(1)
-  me.updateRecomRooms()
 end
 
 on updateSingleSubNodeInfo me, tdata
@@ -728,7 +677,6 @@ on updateState me, tstate, tProps
     "reset":
       pState = tstate
       me.getInterface().setUpdates(0)
-      me.getInterface().setRecomUpdates(0)
       return 0
     "userLogin":
       pState = tstate
@@ -745,7 +693,7 @@ on updateState me, tstate, tProps
         me.sendGetParentChain(pDefaultFlatCatId)
       end if
       me.sendNavigate(pDefaultFlatCatId)
-      me.updateRecomRooms()
+      me.sendGetRecommendedRooms()
       tForwardingHappening = variableExists("forward.id") and variableExists("forward.type")
       if tForwardingHappening then
         me.delay(3000, #goStraightToRoom)
@@ -783,13 +731,7 @@ on goStraightToRoom me
 end
 
 on followFriend me
-  if not variableExists("friend.id") then
-    return 0
-  end if
-  tID = value(getVariable("friend.id"))
-  if tID.ilk <> #integer then
-    return 0
-  end if
+  tID = getVariable("friend.id")
   tConn = getConnection(getVariable("connection.info.id"))
   tConn.send("FOLLOW_FRIEND", [#integer: tID])
   return 1

@@ -126,7 +126,6 @@ on showCryWnd me
     tWndObj.merge("habbo_hobba_alert.window")
     tWndObj.registerClient(me.getID())
     tWndObj.registerProcedure(#eventProcCryWnd, me.getID(), #mouseUp)
-    tWndObj.registerProcedure(#eventProcCryWnd, me.getID(), #keyDown)
     tCryDB = me.getComponent().getCryDataBase()
     if pCurrCryNum < 1 or pCurrCryNum > tCryDB.count then
       pCurrCryNum = tCryDB.count
@@ -574,24 +573,6 @@ on eventProcCryWnd me, tEvent, tElemID, tParam
         return me.getComponent().send_changeCfhType(pCurrCryID, pCurrCryData[#category])
     end case
     return 0
-  else
-    if tEvent = #keyDown then
-      case tElemID of
-        "hobba_reply_field":
-          tKeyCode = the keyCode
-          if not (tKeyCode = 51 or tKeyCode = 117) then
-            tWndObj = getWindow(pCryWindowID)
-            tElem = tWndObj.getElement("hobba_reply_field")
-            tText = tElem.getText()
-            tMaxTextLength = 512
-            tMaxLineCounts = 4
-            if tText.length >= 512 or tText.line.count > tMaxLineCounts then
-              return 1
-            end if
-          end if
-          pass()
-      end case
-    end if
   end if
 end
 
@@ -657,19 +638,6 @@ on eventProcModToolWnd me, tEvent, tElemID, tParam
         end if
       end if
     else
-      tKeyCode = the keyCode
-      if tElemID = "modtool_reason" then
-        if not (tKeyCode = 51 or tKeyCode = 117) then
-          tWndObj = getWindow(pModtoolWindowID)
-          tElem = tWndObj.getElement("modtool_reason")
-          tText = tElem.getText()
-          tMaxTextLength = 512
-          tMaxLineCounts = 4
-          if tText.length >= 512 or tText.line.count > tMaxLineCounts then
-            return 1
-          end if
-        end if
-      end if
       pass()
     end if
   end if

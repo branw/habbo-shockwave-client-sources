@@ -158,7 +158,7 @@ on eventProcChooser me, tEvent, tSprID, tParam
       tRoomInt.cancelObjectMover()
       tRoomInt.pSelectedObj = tObjID
       tRoomInt.pSelectedType = ttype
-      executeMessage(#showObjectInfo, ttype)
+      tRoomInt.getInfoStandObject().showObjectInfo(ttype)
       tRoomInt.hideArrowHiliter()
       if ttype = "item" then
         if tItemObj.select() then

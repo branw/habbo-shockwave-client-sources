@@ -208,17 +208,6 @@ on getExtVarPath me
   return deobfuscate(getVariable(tVariableID))
 end
 
-on sendProcessTracking me, tStepValue
-  if not variableExists("processlog.enabled") then
-    return 0
-  end if
-  if not getVariable("processlog.enabled") then
-    return 0
-  end if
-  tJsHandler = script("javascriptLog").newJavaScriptLog()
-  tJsHandler.call(tStepValue)
-end
-
 on secretDecode me, tKey
   tLength = tKey.length
   if tLength mod 2 = 1 then

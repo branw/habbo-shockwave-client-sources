@@ -7,13 +7,11 @@ on construct me
   pCarriedPowerupTimeToLive = 0
   pBottomBarId = "RoomBarID"
   registerMessage(#roomReady, me.getID(), #replaceRoomBar)
-  registerMessage(#updateInfostandAvatar, me.getID(), #updateRoomBarFigure)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#roomReady, me.getID())
-  unregisterMessage(#updateInfostandAvatar, me.getID())
   removeWindow(pBottomBarId)
   return 1
 end
@@ -221,7 +219,9 @@ on replaceRoomBar me
   if not tWndObj.merge(tLayout) then
     return 0
   end if
-  me.updateRoomBarFigure()
+  if objectExists("Figure_Preview") then
+    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "bb2_avatar_face", ["hd", "fc", "ey", "hr"])
+  end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #keyDown)
@@ -269,10 +269,4 @@ on getOwnGameIndex me
     return 0
   end if
   return tSession.GET("user_game_index")
-end
-
-on updateRoomBarFigure me
-  if objectExists("Figure_Preview") then
-    getObject("Figure_Preview").createHumanPartPreview(pBottomBarId, "bb2_avatar_face", #head)
-  end if
 end

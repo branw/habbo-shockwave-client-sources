@@ -22,7 +22,7 @@ on createImgFromTxt me
         me.pTextMem.text = string(getObject(me.pMotherId).getProperty(tKey))
       else
         if textExists(me.pFontData[#key]) then
-          me.pTextMem.text = getTextManager().GET(me.pFontData[#key])
+          me.pTextMem.text = getTextManager().get(me.pFontData[#key])
         else
           error(me, "Text not found:" && me.pFontData[#key], #createImgFromTxt)
           me.pTextMem.text = me.pFontData[#key]

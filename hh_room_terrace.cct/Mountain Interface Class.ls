@@ -12,7 +12,7 @@ on construct me
   pLocAnimList = [[2, 0], [2, 0], [2, 0], [2, 0], [2, 0], [2, 2], [2, 0], [2, 2], [2, 2], [2, 2], [2, 2]]
   pLocAnimIndx = 1
   if not objectExists("Figure_System_Mountain") then
-    createObject("Figure_System_Mountain", ["OLD Figure System Class"])
+    createObject("Figure_System_Mountain", ["Figure System Class"])
     getObject("Figure_System_Mountain").define(["type": "member", "source": "swimfigure_ids_"])
   end if
   tsprite = tVisual.getSprById("pool_teleport")
@@ -160,6 +160,8 @@ on createFigurePrew me
     return error(me, "Figure preview not found!", #createFigurePrew)
   end if
   tFigure = getObject(#session).GET("user_figure").duplicate()
+  tFigure["hd"]["model"] = "001"
+  tFigure["fc"]["model"] = "001"
   if getObject(#session).GET("user_sex") = "F" then
     tFigure["ch"]["model"] = pSwimSuitModel
   else
@@ -170,17 +172,15 @@ on createFigurePrew me
   end if
   tWndObj = getWindow(pKoppiWndID)
   tFigure["ch"]["color"] = pSwimSuitColor
-  tPartList = #swimmer
-  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 4, "sh")
-  if tWndObj.getElement("preview_img") <> 0 then
-    tWidth = tWndObj.getElement("preview_img").getProperty(#width)
-    tHeight = tWndObj.getElement("preview_img").getProperty(#height)
-    tPrewImg = image(tWidth, tHeight, 16)
-    tMargins = rect(39, 0, 39, 0)
-    tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
-    tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
-    tWndObj.getElement("preview_img").feedImage(tPrewImg)
-  end if
+  tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
+  tWidth = tWndObj.getElement("preview_img").getProperty(#width)
+  tHeight = tWndObj.getElement("preview_img").getProperty(#height)
+  tPrewImg = image(tWidth, tHeight, 16)
+  tMargins = rect(-11, 24, -11, 24)
+  tdestrect = rect(0, tPrewImg.height - tHumanImg.height * 4, tHumanImg.width * 4, tPrewImg.height) + tMargins
+  tPrewImg.copyPixels(tHumanImg, tdestrect, tHumanImg.rect)
+  tWndObj.getElement("preview_img").feedImage(tPrewImg)
   tWndObj.getElement("preview_color").setProperty(#bgColor, pSwimSuitColor)
 end
 

@@ -112,7 +112,7 @@ on store_loungeinfo me, tdata
     if memberExists("gsys_tournamentlogo") then
       removeMember("gsys_tournamentlogo")
     end if
-    tAdMemNum = queueDownload(tdata[#tournament_logo_url], "gsys_tournamentlogo", #bitmap, 1, #httpcookie)
+    tAdMemNum = queueDownload(tdata[#tournament_logo_url], "gsys_tournamentlogo", #bitmap, 1)
     registerDownloadCallback(tAdMemNum, #store_tournamentlogo_member, me.getID(), [#member_num: tAdMemNum, #click_url: tdata[#tournament_logo_click_url]])
     if tAdMemNum = 0 then
       error(me, "Gamesystem cannot initialize download manager!", #store_loungeinfo)

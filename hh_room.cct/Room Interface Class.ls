@@ -140,7 +140,6 @@ on hideRoomBar me
 end
 
 on showInterface me, tObjType
-  return 1
   tSession = getObject(#session)
   tUserRights = getObject(#session).GET("user_rights")
   tOwnUser = me.getComponent().getOwnUser()
@@ -355,7 +354,6 @@ on endTradeButtonTimeout me
 end
 
 on hideInterface me, tHideOrRemove
-  return 1
   if voidp(tHideOrRemove) then
     tHideOrRemove = #Remove
   end if
@@ -664,9 +662,6 @@ on hideAll me
   if objectExists(pInfoStandId) then
     getObject(pInfoStandId).hideInfoStand()
   end if
-  if objectExists(pRoomGuiID) then
-    getObject(pRoomGuiID).hideInfoStand()
-  end if
   me.hideRoom()
   me.hideRoomBar()
   me.hideInterface(#Remove)
@@ -717,6 +712,10 @@ end
 
 on getSelectedObject me
   return pSelectedObj
+end
+
+on getInfoStandObject me
+  return getObject(pInfoStandId)
 end
 
 on getProperty me, tPropID
@@ -814,8 +813,9 @@ on startObjectMover me, tObjID, tStripID, tProps
       pClickAction = "moveActive"
     "item":
       pClickAction = "moveItem"
+    "user":
+      return error(me, "Can't move user objects!", #startObjectMover, #minor)
   end case
-  return error(me, "Object type" && pSelectedType && "can't be moved.", #startObjectMover, #minor)
   return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType, tProps)
 end
 
@@ -827,7 +827,9 @@ on stopObjectMover me
   pClickAction = "moveHuman"
   pSelectedObj = EMPTY
   pSelectedType = EMPTY
-  executeMessage(#hideObjectInfo)
+  if objectExists(pInfoStandId) then
+    getObject(pInfoStandId).hideObjectInfo()
+  end if
   me.hideInterface(#hide)
   return 1
 end
@@ -989,7 +991,9 @@ end
 
 on objectFinalized me, tID
   if pSelectedObj = tID then
-    executeMessage(#hideObjectInfo)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).showObjectInfo(pSelectedType)
+    end if
   end if
 end
 
@@ -1129,7 +1133,9 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       tComponent.getRoomConnection().send("ASSIGNRIGHTS", tUserName)
       pSelectedObj = EMPTY
-      executeMessage(#hideObjectInfo)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.hideInterface(#hide)
       me.hideArrowHiliter()
       return 1
@@ -1141,7 +1147,9 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       tComponent.getRoomConnection().send("REMOVERIGHTS", tUserName)
       pSelectedObj = EMPTY
-      executeMessage(#hideObjectInfo)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.hideInterface(#hide)
       me.hideArrowHiliter()
       return 1
@@ -1225,7 +1233,9 @@ on eventProcRoom me, tEvent, tSprID, tParam
       "moveHuman":
         if tParam <> "object_selection" then
           pSelectedObj = EMPTY
-          executeMessage(#hideObjectInfo)
+          if objectExists(pInfoStandId) then
+            getObject(pInfoStandId).hideObjectInfo()
+          end if
           me.hideInterface(#hide)
           me.hideArrowHiliter()
         end if
@@ -1254,7 +1264,9 @@ on eventProcRoom me, tEvent, tSprID, tParam
         if getObject(#session).GET("room_owner") then
           me.placeFurniture(pSelectedObj, pSelectedType)
           me.hideInterface(#hide)
-          executeMessage(#hideObjectInfo)
+          if objectExists(pInfoStandId) then
+            getObject(pInfoStandId).hideObjectInfo()
+          end if
           me.stopObjectMover()
         else
           if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
@@ -1278,7 +1290,9 @@ on eventProcRoom me, tEvent, tSprID, tParam
         if getObject(#session).GET("room_owner") then
           if me.placeFurniture(pSelectedObj, pSelectedType) then
             me.hideInterface(#hide)
-            executeMessage(#hideObjectInfo)
+            if objectExists(pInfoStandId) then
+              getObject(pInfoStandId).hideObjectInfo()
+            end if
             me.stopObjectMover()
           end if
         else
@@ -1324,8 +1338,8 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = tObject.getClass()
-      if tParam <> #userEnters then
-        executeMessage(#showObjectInfo, pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
       end if
       me.showInterface(pSelectedType)
       me.showArrowHiliter(tSprID)
@@ -1340,7 +1354,9 @@ on eventProcUserObj me, tEvent, tSprID, tParam
   else
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    executeMessage(#hideObjectInfo)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
   end if
@@ -1367,7 +1383,9 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
   if tObject = 0 then
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    executeMessage(#hideObjectInfo)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
     return error(me, "Active object not found:" && tSprID, #eventProcActiveObj, #major)
@@ -1376,7 +1394,9 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = "active"
-      executeMessage(#showObjectInfo, pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.hideArrowHiliter()
     end if
@@ -1436,7 +1456,9 @@ on eventProcItemObj me, tEvent, tSprID, tParam
   if not me.getComponent().itemObjectExists(tSprID) then
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
-    executeMessage(#hideObjectInfo)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).hideObjectInfo()
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
     return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
@@ -1445,14 +1467,18 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = "item"
-      executeMessage(#showObjectInfo, pSelectedType)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).showObjectInfo(pSelectedType)
+      end if
       me.showInterface(pSelectedType)
       me.hideArrowHiliter()
     end if
   else
     pSelectedObj = tSprID
     pSelectedType = "item"
-    executeMessage(#showObjectInfo, pSelectedType)
+    if objectExists(pInfoStandId) then
+      getObject(pInfoStandId).showObjectInfo(pSelectedType)
+    end if
     me.hideInterface(#hide)
     me.hideArrowHiliter()
   end if
@@ -1469,7 +1495,9 @@ on eventProcDelConfirm me, tEvent, tSprID, tParam
           me.getComponent().getRoomConnection().send("REMOVEITEM", pDeleteObjID)
       end case
       me.hideInterface(#hide)
-      executeMessage(#hideObjectInfo)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       pDeleteObjID = EMPTY
       pDeleteType = EMPTY
     "habbo_decision_cancel", "close":
@@ -1484,7 +1512,9 @@ on eventProcPlcConfirm me, tEvent, tSprID, tParam
       me.placeFurniture(pSelectedObj, pSelectedType)
       me.hideConfirmPlace()
       me.hideInterface(#hide)
-      executeMessage(#hideObjectInfo)
+      if objectExists(pInfoStandId) then
+        getObject(pInfoStandId).hideObjectInfo()
+      end if
       me.stopObjectMover()
     "habbo_decision_cancel", "close":
       me.getObjectMover().resume()

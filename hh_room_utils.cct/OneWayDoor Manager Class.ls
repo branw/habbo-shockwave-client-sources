@@ -23,8 +23,8 @@ on changeStatus me, tMsg
     return 0
   end if
   tActiveObject = tComponent.getActiveObject(tID)
-  if voidp(tActiveObject) or tActiveObject = 0 then
-    error(me, "One way door object" && tID && "not found.", #changeStatus, #minor)
+  if voidp(tActiveObject) then
+    error(me, "One way door object" && tID && "not found.", #changeStatus, #major)
     return 0
   end if
   if tActiveObject.handler(#setDoor) then

@@ -44,7 +44,7 @@ on roomObjectAction me, tAction, tdata
       me.pChanges = 1
       me.pDirChange = 1
       repeat with tBodyPart in me.pPartList
-        tBodyPart.resetMemberCache()
+        tBodyPart.pMemString = EMPTY
       end repeat
       me.pMember.image.fill(me.pMember.image.rect, me.pAlphaColor)
       me.render()
@@ -56,9 +56,8 @@ on roomObjectAction me, tAction, tdata
       me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
       me.pDestLScreen = me.pGeometry.getScreenCoordinate(tdata[#x], tdata[#y], tdata[#z])
       me.pMoveStart = the milliSeconds
-      me.definePartListAction(me.pPartListSubSet["sit"], "sit")
-      me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
-      me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
+      call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+      call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
   end case
 end
 
@@ -143,16 +142,16 @@ on update me
   end repeat
 end
 
-on render me, tForceUpdate
+on render me
   if not me.pChanges then
     return 1
   end if
   me.pChanges = 0
-  if me.pLocChange and not me.pDirChange and not tForceUpdate then
+  if me.pLocChange and not me.pDirChange then
     me.pLocChange = 0
     return me.setHumanSpriteLoc()
   end if
-  if me.pDirChange = 0 and not tForceUpdate then
+  if me.pDirChange = 0 then
     return 1
   end if
   me.pDirChange = 0
@@ -169,12 +168,22 @@ on render me, tForceUpdate
     me.pMatteSpr.height = tSize[2]
     me.pBuffer = image(tSize[1], tSize[2], tSize[3])
   end if
-  me.pMember.regPoint = point(0, me.pMember.regPoint[2])
-  me.pShadowFix = 0
-  if me.pSprite.flipH then
-    me.pSprite.flipH = 0
-    me.pMatteSpr.flipH = 0
-    me.pShadowSpr.flipH = 0
+  if me.pFlipList[me.pDirection + 1] <> me.pDirection or me.pDirection = 3 and me.pHeadDir = 4 or me.pDirection = 7 and me.pHeadDir = 6 then
+    me.pMember.regPoint = point(me.pMember.image.width, me.pMember.regPoint[2])
+    me.pShadowFix = me.pXFactor
+    if not me.pSprite.flipH then
+      me.pSprite.flipH = 1
+      me.pMatteSpr.flipH = 1
+      me.pShadowSpr.flipH = 1
+    end if
+  else
+    me.pMember.regPoint = point(0, me.pMember.regPoint[2])
+    me.pShadowFix = 0
+    if me.pSprite.flipH then
+      me.pSprite.flipH = 0
+      me.pMatteSpr.flipH = 0
+      me.pShadowSpr.flipH = 0
+    end if
   end if
   me.setHumanSpriteLoc()
   me.pUpdateRect = rect(0, 0, 0, 0)
@@ -182,9 +191,9 @@ on render me, tForceUpdate
   if pBallState then
     call(#update, me.pPartList)
   else
-    repeat with tPart in me.pPartList
-      if tPart.pPart <> "bl" then
-        call(#update, tPart)
+    repeat with tPartPos = 1 to me.pPartIndex.count
+      if me.pPartIndex.getPropAt(tPartPos) <> "bl" then
+        call(#update, [me.pPartList[me.pPartIndex[tPartPos]]])
       end if
     end repeat
   end if
@@ -212,7 +221,7 @@ on setBallColor me, tColor
   if tBallPart <> VOID then
     tBallPart.setColor(tColor)
   end if
-  tBallPart.resetMemberCache()
+  tBallPart.pMemString = EMPTY
   me.pChanges = 1
   me.pDirChange = 1
   me.render()
@@ -220,41 +229,79 @@ on setBallColor me, tColor
 end
 
 on setPartLists me, tmodels
-  me.resetAction()
-  if not voidp(tmodels["bl"]) then
-    pOrigBallColor = tmodels["bl"]["color"]
-  end if
-  callAncestor(#setPartLists, [me], tmodels)
+  me.pMainAction = "sit"
+  me.pPartList = []
+  tPartDefinition = getVariableValue("bouncing.human.parts.sh")
+  repeat with i = 1 to tPartDefinition.count
+    tPartSymbol = tPartDefinition[i]
+    if voidp(tmodels[tPartSymbol]) then
+      tmodels[tPartSymbol] = [:]
+    end if
+    if voidp(tmodels[tPartSymbol]["model"]) then
+      tmodels[tPartSymbol]["model"] = "001"
+    end if
+    if voidp(tmodels[tPartSymbol]["color"]) then
+      tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
+    end if
+    if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and me.pXFactor < 33 then
+      tmodels[tPartSymbol]["model"] = "001"
+    end if
+    if tPartSymbol = "bl" then
+      tPartObj = createObject(#temp, me.pBallClass)
+      pOrigBallColor = tmodels[tPartSymbol]["color"]
+    else
+      tPartObj = createObject(#temp, me.pPartClass)
+    end if
+    if stringp(tmodels[tPartSymbol]["color"]) then
+      tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
+    end if
+    if tmodels[tPartSymbol]["color"].ilk <> #color then
+      tColor = rgb(tmodels[tPartSymbol]["color"])
+    else
+      tColor = tmodels[tPartSymbol]["color"]
+    end if
+    if tColor.red + tColor.green + tColor.blue > 238 * 3 then
+      tColor = rgb("EEEEEE")
+    end if
+    if (["ls", "lh", "rs", "rh"]).getPos(tPartSymbol) = 0 then
+      tAction = me.pMainAction
+    else
+      tAction = "crr"
+    end if
+    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, me.pDirection, tAction, me)
+    me.pPartList.add(tPartObj)
+    me.pColors.setaProp(tPartSymbol, tColor)
+  end repeat
+  me.pPartIndex = [:]
+  repeat with i = 1 to me.pPartList.count
+    me.pPartIndex[me.pPartList[i].pPart] = i
+  end repeat
   call(#reset, me.pPartList)
-  me.definePartListAction(me.pPartListSubSet["sit"], "sit")
-  me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
-  me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
+  call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+  call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
   return 1
 end
 
-on arrangeParts me
-  callAncestor(#arrangeParts, [me], "bouncing.human.parts")
-end
-
 on getPicture me, tImg
-  return me.getPartialPicture(#Full, tImg, 4, "sh")
-end
-
-on getPartClass me, tPartSymbol
-  if tPartSymbol = "bl" then
-    return pBallClass
+  if voidp(tImg) then
+    tCanvas = image(32, 62, 32)
   else
-    return me.pPartClass
+    tCanvas = tImg
   end if
-end
-
-on getPartListNameBase me
-  return "bouncing.human.parts"
+  tPartDefinition = getVariableValue("human.parts.sh")
+  tTempPartList = []
+  repeat with tPartSymbol in tPartDefinition
+    if not voidp(me.pPartIndex[tPartSymbol]) then
+      tTempPartList.append(me.pPartList[me.pPartIndex[tPartSymbol]])
+    end if
+  end repeat
+  call(#copyPicture, tTempPartList, tCanvas, "2", "sh")
+  return tCanvas
 end
 
 on Refresh me, tX, tY, tH
   call(#defineDir, me.pPartList, me.pDirection)
-  call(#defineDirMultiple, me.pPartList, me.pDirection, me.pPartListSubSet["head"])
+  call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "ey", "fc"])
   me.arrangeParts()
   return 1
 end
@@ -352,7 +399,6 @@ on action_mv me, tProps
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
-  me.definePartListAction(me.pPartListSubSet["sit"], "sit")
-  me.definePartListAction(me.pPartListSubSet["handLeft"], "crr")
-  me.definePartListAction(me.pPartListSubSet["handRight"], "crr")
+  call(#defineActMultiple, me.pPartList, "sit", ["bd", "lg", "sh"])
+  call(#defineActMultiple, me.pPartList, "crr", ["lh", "rh", "ls", "rs"])
 end

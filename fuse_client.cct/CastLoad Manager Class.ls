@@ -16,26 +16,12 @@ on construct me
   return 1
 end
 
-on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing, tDoTracking
+on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing
   if voidp(tPermanentFlag) then
     tPermanentFlag = 0
   end if
-  if voidp(tAdd) then
-    tAdd = 0
-  end if
   if voidp(tDoIndexing) then
     tDoIndexing = 1
-  end if
-  if voidp(tDoTracking) then
-    tDoTracking = 0
-  end if
-  if tDoTracking then
-    tCastsStr = EMPTY & tCasts
-    tCastsStr = replaceChunks(tCastsStr, QUOTE, EMPTY)
-    tCastsStr = replaceChunks(tCastsStr, " ", EMPTY)
-    tCastsStr = replaceChunks(tCastsStr, "[", EMPTY)
-    tCastsStr = replaceChunks(tCastsStr, "]", EMPTY)
-    tCastsStr = replaceChunks(tCastsStr, RETURN, EMPTY)
   end if
   pTempWaitList = []
   tCastList = []
@@ -61,6 +47,9 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing, tDoTracking
   end case
   if count(tCasts) = 0 then
     return 0
+  end if
+  if voidp(tAdd) then
+    tAdd = 0
   end if
   tID = getUniqueID()
   pLatestTaskID = tID

@@ -62,10 +62,6 @@ on getExtVarPath me
   return getSpecialServices().getExtVarPath()
 end
 
-on sendProcessTracking tStepValue
-  return getSpecialServices().sendProcessTracking(tStepValue)
-end
-
 on secretDecode tKey
   return getSpecialServices().secretDecode(tKey)
 end

@@ -5,21 +5,12 @@ on define me, tPart, tProps
   pBalance = 2
   pDirection = tProps[#Dir]
   pAnimFrm = 0
-  if not voidp(tProps[#figure]["bd"]) then
-    pBodyColor = tProps[#figure]["bd"]["color"]
-  else
-    pBodyColor = rgb("#EEEEEE")
-  end if
-  if not voidp(tProps[#figure]["ch"]) then
-    pSuitColor = tProps[#figure]["ch"]["color"]
-    pSuitModel = tProps[#figure]["ch"]["model"]
-  else
-    pSuitColor = rgb("#EEEEEE")
-    pSuitModel = "s01"
-  end if
+  pBodyColor = tProps[#figure]["bd"]["color"]
+  pSuitColor = tProps[#figure]["ch"]["color"]
   if pSuitColor = rgb(0, 0, 0) then
     pSuitColor = rgb("#EEEEEE")
   end if
+  pSuitModel = tProps[#figure]["ch"]["model"]
   pCounter = 0
   return 1
 end

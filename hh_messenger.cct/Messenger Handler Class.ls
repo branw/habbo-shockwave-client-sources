@@ -23,13 +23,16 @@ on handle_messenger_init me, tMsg
   me.getInterface().setBuddyListLimits(tUserLimit, tNormalLimit, tExtendedLimit)
   tConsoleInfo = me.get_console_info(tMsg)
   me.getComponent().receive_BuddyList(#new, tConsoleInfo[#buddies])
+  repeat with tItem in tConsoleInfo[#console_messages]
+    me.getComponent().receive_Message(tItem)
+  end repeat
   repeat with tItem in tConsoleInfo[#campaign_messages]
     me.getComponent().receive_CampaignMsg(tItem)
   end repeat
-  tComponent = me.getComponent()
-  tComponent.send_AskForMessages()
-  tComponent.send_AskForFriendRequests()
-  return tComponent.receive_MessengerReady("MESSENGERREADY")
+  repeat with tItem in tConsoleInfo[#buddy_requests]
+    me.getComponent().receive_BuddyRequest(tItem)
+  end repeat
+  return me.getComponent().receive_MessengerReady("MESSENGERREADY")
 end
 
 on handle_buddylist me, tMsg
@@ -105,81 +108,7 @@ end
 
 on handle_buddy_request me, tMsg
   tdata = me.get_buddy_request(tMsg)
-  return me.getComponent().receive_BuddyRequest([tdata])
-end
-
-on handle_buddy_request_list me, tMsg
-  tConn = tMsg.connection
-  tTotalFriendRequests = tConn.GetIntFrom()
-  tFriendRequestCount = tConn.GetIntFrom()
-  tRequests = []
-  repeat with tRequestNo = 1 to tFriendRequestCount
-    tRequests.add(me.get_buddy_request(tMsg))
-  end repeat
-  if tTotalFriendRequests > tFriendRequestCount then
-    me.getComponent().setFriendRequestUpdateRequired(1)
-  else
-    me.getComponent().setFriendRequestUpdateRequired(0)
-  end if
-  me.getComponent().receive_BuddyRequest(tRequests)
-end
-
-on handle_buddy_request_result me, tMsg
-  tConn = tMsg.connection
-  tFailureCount = tConn.GetIntFrom()
-  tErrorList = [:]
-  repeat with tItemNo = 1 to tFailureCount
-    tSenderName = tConn.GetStrFrom()
-    tErrorCode = tConn.GetIntFrom()
-    tErrorList.setaProp(tSenderName, tErrorCode)
-  end repeat
-  me.getComponent().receive_BuddyRequestResult(tErrorList)
-  if tFailureCount < 1 then
-    return 1
-  end if
-  tNamesPerAlert = 10
-  tNames = RETURN
-  repeat with tNameNum = 1 to tErrorList.count
-    tNames = tNames & RETURN & tErrorList.getPropAt(tNameNum)
-    case tErrorList[tNameNum] of
-      1:
-        tReason = getText("console_fr_limit_exceeded_error")
-      2:
-        tReason = getText("console_target_friend_list_full")
-      3:
-        tReason = getText("console_target_does_not_accept")
-      4:
-        tReason = getText("console_friend_request_not_found")
-      42:
-        tReason = getText("console_concurrency_error")
-    end case
-    tNames = tNames & " - " & tReason
-    if tNameNum mod tNamesPerAlert = 0 then
-      tMessage = getText("console_friend_request_error") & tNames
-      executeMessage(#alert, [#Msg: tMessage])
-      tNames = RETURN
-    end if
-  end repeat
-  if tNames.line.count > 2 then
-    tMessage = getText("console_friend_request_error") & tNames
-    executeMessage(#alert, [#Msg: tMessage])
-  end if
-  return 1
-end
-
-on handle_follow_failed me, tMsg
-  tConn = tMsg.connection
-  tFailureType = tConn.GetIntFrom()
-  case tFailureType of
-    0:
-      tTextKey = "console_follow_not_friend"
-    1:
-      tTextKey = "console_follow_offline"
-    2:
-      tTextKey = "console_follow_hotelview"
-  end case
-  executeMessage(#alert, tTextKey)
-  return 1
+  return me.getComponent().receive_BuddyRequest(tdata)
 end
 
 on handle_campaign_message me, tMsg
@@ -187,35 +116,25 @@ on handle_campaign_message me, tMsg
   return me.getComponent().receive_CampaignMsg(tdata)
 end
 
-on handle_messenger_message me, tMsg
-  tdata = me.get_console_message(tMsg)
-  if tdata <> 0 then
-    me.getComponent().receive_Message(tdata)
-  end if
-  playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
-  return 1
-end
-
 on handle_messenger_messages me, tMsg
-  tTotalMessages = tMsg.connection.GetIntFrom()
-  tMessageCount = tMsg.connection.GetIntFrom()
-  if tTotalMessages > tMessageCount then
-    me.getComponent().setMessageUpdateRequired(1)
-  end if
-  repeat with i = 1 to tMessageCount
+  tLoopCount = tMsg.connection.GetIntFrom()
+  repeat with i = 1 to tLoopCount
     tdata = me.get_console_message(tMsg)
     if tdata <> 0 then
       me.getComponent().receive_Message(tdata)
     end if
   end repeat
-  if tMessageCount > 1 then
-    playSound("con_new_message", #cut, [#loopCount: 1, #infiniteloop: 0, #volume: 255])
-  end if
   return 1
 end
 
 on handle_add_buddy me, tMsg
   tBuddyData = me.get_user_info(tMsg)
+  tPendAcc = me.getComponent().pItemList[#pendingBuddyAccept]
+  if ilk(tPendAcc) = #propList then
+    if tPendAcc[#name] = tBuddyData[#name] then
+      me.getComponent().pItemList[#pendingBuddyAccept] = EMPTY
+    end if
+  end if
   return me.getComponent().receive_AppendBuddy([#buddies: tBuddyData])
 end
 
@@ -235,17 +154,10 @@ on handle_messenger_error me, tMsg
   if tConn = 0 then
     return 0
   end if
-  tClientMessageId = tConn.GetIntFrom()
   tErrorCode = tConn.GetIntFrom()
   case tErrorCode of
     0:
-      return error(me, "Undefined messenger error!", #handle_messenger_error, #major)
-    2:
-      return executeMessage(#alert, [#Msg: getText("console_target_friend_list_full")])
-    3:
-      return executeMessage(#alert, [#Msg: getText("console_target_does_not_accept")])
-    4:
-      return executeMessage(#alert, [#Msg: getText("console_friend_request_not_found")])
+      return error(me, "Undefined messenger error!", #handle_messenger_error)
     37:
       tReason = tConn.GetIntFrom()
       if tReason = 1 then
@@ -266,10 +178,13 @@ on handle_messenger_error me, tMsg
       end if
     39:
       return me.getInterface().openBuddyMassremoveWindow()
-    42:
-      return executeMessage(#alert, [#Msg: getText("console_concurrency_error")])
+    40:
+      tReason = tConn.GetIntFrom()
+      if tReason = 42 then
+        return me.getComponent().handleFriendlistConcurrency()
+      end if
   end case
-  return error(me, "Messenger error, failed c->s message:" && tErrorCode && "Triggered by message:" && tClientMessageId, #handle_messenger_error, #major)
+  return error(me, "Messenger error, failed c->s message:" && tErrorCode, #handle_messenger_error)
   return 1
 end
 
@@ -290,13 +205,17 @@ on get_console_info me, tMsg
   tBuddyList = me.get_sorted_buddy_list(tBuddyData)
   tBuddyList[#buddies] = tBuddyData
   tResult.addProp(#buddies, tBuddyList)
-  tResult[#request_limit] = tConn.GetIntFrom()
-  tResult[#request_count] = tConn.GetIntFrom()
-  tResult[#message_limit] = tConn.GetIntFrom()
-  tResult[#message_count] = tConn.GetIntFrom()
-  tResult[#campaign_message_count] = tConn.GetIntFrom()
   tList = []
-  tLoopCount = tResult[#campaign_message_count]
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_console_message(tMsg)
+    if tdata <> 0 then
+      tList.add(tdata)
+    end if
+  end repeat
+  tResult.addProp(#console_messages, tList)
+  tList = []
+  tLoopCount = tConn.GetIntFrom()
   repeat with i = 1 to tLoopCount
     tdata = me.get_campaign_message(tMsg)
     if tdata <> 0 then
@@ -304,6 +223,15 @@ on get_console_info me, tMsg
     end if
   end repeat
   tResult.addProp(#campaign_messages, tList)
+  tList = []
+  tLoopCount = tConn.GetIntFrom()
+  repeat with i = 1 to tLoopCount
+    tdata = me.get_buddy_request(tMsg)
+    if tdata <> 0 then
+      tList.add(tdata)
+    end if
+  end repeat
+  tResult.addProp(#buddy_requests, tList)
   return tResult
 end
 
@@ -406,8 +334,6 @@ on get_buddy_request me, tMsg
   tdata = [:]
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#name] = tConn.GetStrFrom()
-  tdata[#webID] = tConn.GetStrFrom()
-  tdata[#state] = #pending
   return tdata
 end
 
@@ -432,16 +358,12 @@ on regMsgList me, tBool
   tMsgs.setaProp(128, #handle_memberinfo)
   tMsgs.setaProp(132, #handle_buddy_request)
   tMsgs.setaProp(133, #handle_campaign_message)
-  tMsgs.setaProp(134, #handle_messenger_message)
+  tMsgs.setaProp(134, #handle_messenger_messages)
   tMsgs.setaProp(137, #handle_add_buddy)
   tMsgs.setaProp(138, #handle_remove_buddy)
   tMsgs.setaProp(147, #handle_mypersistentmessage)
   tMsgs.setaProp(260, #handle_messenger_error)
   tMsgs.setaProp(263, #handle_buddylist)
-  tMsgs.setaProp(313, #handle_messenger_messages)
-  tMsgs.setaProp(314, #handle_buddy_request_list)
-  tMsgs.setaProp(315, #handle_buddy_request_result)
-  tMsgs.setaProp(349, #handle_follow_failed)
   tCmds = [:]
   tCmds.setaProp("MESSENGERINIT", 12)
   tCmds.setaProp("MESSENGER_UPDATE", 15)
@@ -457,8 +379,6 @@ on regMsgList me, tBool
   tCmds.setaProp("FINDUSER", 41)
   tCmds.setaProp("MESSENGER_GETMESSAGES", 191)
   tCmds.setaProp("MESSENGER_REPORTMESSAGE", 201)
-  tCmds.setaProp("GET_BUDDY_REQUESTS", 233)
-  tCmds.setaProp("FOLLOW_FRIEND", 262)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
