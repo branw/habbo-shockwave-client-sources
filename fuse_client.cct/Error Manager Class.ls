@@ -1,4 +1,4 @@
-property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList, pFatalReported
+property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList, pFatalReported, pFatalReportParamOrder
 
 on construct me
   if not (the runMode contains "Author") then
@@ -17,6 +17,7 @@ on construct me
       pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
     end if
   end if
+  pFatalReportParamOrder = ["error", "version", "build", "os", "host", "port", "client_version", "mus_errorcode"]
   return 1
 end
 
@@ -154,6 +155,22 @@ on handleFatalError me, tErrorData
   tErrorData["version"] = tEnv[#productVersion]
   tErrorData["build"] = tEnv[#productBuildVersion]
   tErrorData["os"] = tEnv[#osVersion]
+  tNuErrorData = [:]
+  t = 1
+  repeat with i = 1 to pFatalReportParamOrder.count
+    tKey = pFatalReportParamOrder[i]
+    tValue = tErrorData.getaProp(tKey)
+    if tErrorData.getaProp(tKey) <> VOID then
+      tNuErrorData.setaProp(tKey, tValue)
+      t = t + 1
+    end if
+  end repeat
+  if tErrorData.count > t then
+    repeat with t = t + 1 to tErrorData.count
+      tNuErrorData.setaProp(tErrorData.getPropAt(t), tErrorData[t])
+    end repeat
+  end if
+  tErrorData = tNuErrorData
   repeat with tItemNo = 1 to tErrorData.count
     tKey = string(tErrorData.getPropAt(tItemNo))
     tKey = urlEncode(tKey)

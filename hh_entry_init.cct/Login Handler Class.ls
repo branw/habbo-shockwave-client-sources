@@ -30,6 +30,8 @@ on handleDisconnect me, tMsg
       tErrorList["host"] = tConnection.getProperty(#host)
       tErrorList["port"] = tConnection.getProperty(#port)
     end if
+    tErrorList["client_version"] = getIntVariable("client.version.id")
+    tErrorList["mus_errorcode"] = tConnection.GetLastError()
     return fatalError(tErrorList)
   end if
 end

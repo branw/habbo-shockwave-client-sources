@@ -1,4 +1,4 @@
-property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector
+property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD, pUnicodeDirector, pLastError
 
 on construct me
   if value(_player.productVersion) >= 11 then
@@ -17,6 +17,7 @@ on construct me
   pCommandsPntr = getStructVariable("struct.pointer")
   pListenersPntr = getStructVariable("struct.pointer")
   me.setLogMode(getIntVariable("connection.log.level", 0))
+  pLastError = 0
   return 1
 end
 
@@ -373,6 +374,10 @@ on print me
   return 1
 end
 
+on GetLastError me
+  return pLastError
+end
+
 on xtraMsgHandler me
   if pConnectionShouldBeKilled <> 0 then
     return 0
@@ -387,6 +392,7 @@ on xtraMsgHandler me
       me.log("host = " & pHost && ", port = " & pPort)
       me.log(tNewMsg)
     end if
+    pLastError = tErrCode
     me.disconnect()
     return 0
   end if
