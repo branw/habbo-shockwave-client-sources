@@ -1,4 +1,4 @@
-property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pClubDaysCount, pSwapAnimations, pBouncerID, pDisableRoomevents
+property pEntryVisual, pBottomBar, pSignSprList, pSignSprLocV, pItemObjList, pUpdateTasks, pViewMaxTime, pViewOpenTime, pViewCloseTime, pAnimUpdate, pFirstInit, pInActiveIconBlend, pMessengerFlash, pClubDaysCount, pSwapAnimations, pBouncerID, pIMFlashTimeoutID, pIMFlashState, pDisableRoomevents
 
 on construct me
   pEntryVisual = "entry_view"
@@ -17,6 +17,7 @@ on construct me
   pFirstInit = 1
   pSwapAnimations = []
   pBouncerID = #entry_im_icon_bouncer
+  pIMFlashTimeoutID = #im_icon_flash_timeout
   pDisableRoomevents = 0
   if variableExists("disable.roomevents") then
     pDisableRoomevents = getIntVariable("disable.roomevents")
@@ -429,18 +430,49 @@ on updateIMIcon me
       tmember = getMember("im.icon.active")
       tElem.setProperty(#cursor, "cursor.finger")
       me.bounceIMIcon(0)
+      me.flashIMIcon(#stop)
     #highlighted:
       tmember = getMember("im.icon.highlighted")
       tElem.setProperty(#cursor, "cursor.finger")
       me.bounceIMIcon(1)
+      me.flashIMIcon(#start)
     #inactive:
       tmember = getMember("im.icon.inactive")
       tElem.setProperty(#cursor, 0)
       me.bounceIMIcon(0)
+      me.flashIMIcon(#stop)
   end case
   return 0
   tElem.setProperty(#member, tmember)
   return 1
+end
+
+on flashIMIcon me, tstate
+  case tstate of
+    #start:
+      if timeoutExists(pIMFlashTimeoutID) then
+        removeTimeout(pIMFlashTimeoutID)
+      end if
+      if not timeoutExists(pIMFlashTimeoutID) then
+        createTimeout(pIMFlashTimeoutID, 500, #flashIMIcon, me.getID(), #flash, 0)
+      end if
+    #stop:
+      if timeoutExists(pIMFlashTimeoutID) then
+        removeTimeout(pIMFlashTimeoutID)
+      end if
+    #flash:
+      tWnd = getWindow(pBottomBar)
+      if not tWnd then
+        return 0
+      end if
+      tElem = tWnd.getElement("im_icon")
+      if pIMFlashState = 1 then
+        tElem.setProperty(#member, "im.icon.highlighted.2")
+      else
+        tElem.setProperty(#member, "im.icon.highlighted")
+      end if
+      pIMFlashState = not pIMFlashState
+  end case
 end
 
 on eventProcEntryBar me, tEvent, tSprID, tParam
