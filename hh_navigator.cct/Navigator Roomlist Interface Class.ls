@@ -218,7 +218,7 @@ on leaveModifyPage me
       pModifyFlatInfo[#description] = getWindow(me.pWindowTitle).getElement("nav_modify_roomdescription_field").getText()
       pModifyFlatInfo[#maxVisitors] = getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").getText()
     "nav_gr_mod_b":
-      pModifyFlatInfo[#password] = me.getPasswordFromField("nav_modify_door_pw")
+      pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
   end case
 end
 
@@ -401,7 +401,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           if tFlatData = 0 then
             return 0
           end if
-          tFlatData[#password] = tTemp
+          tFlatData[#Password] = tTemp
           me.getComponent().updateSingleSubNodeInfo(tFlatData)
           me.ChangeWindowView("nav_gr_trypassword")
           me.getComponent().executeRoomEntry(tLastClickedId)
@@ -521,7 +521,7 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
             return 0
           end if
           tFlatData[#description] = pModifyFlatInfo[#description]
-          tFlatData[#password] = pModifyFlatInfo[#password]
+          tFlatData[#Password] = pModifyFlatInfo[#Password]
           tFlatData[#name] = convertSpecialChars(tFlatData[#name], 1)
           tFlatData[#description] = convertSpecialChars(tFlatData[#description], 1)
           me.getComponent().sendupdateFlatInfo(tFlatData)
