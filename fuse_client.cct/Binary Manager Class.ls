@@ -1,7 +1,8 @@
-property pConnectionId, pQueue
+property pConnectionId, pTimeOutID, pQueue
 
 on construct me
   pConnectionId = getVariable("connection.mus.id", #mus)
+  pTimeOutID = "mus_close_delay"
   pCallBacks = [:]
   pQueue = []
   return me.registerCmds(1)
@@ -20,7 +21,7 @@ on retrieveData me, tid, tAuth, tCallBackObj
 end
 
 on storeData me, tdata, tCallBackObj
-  pQueue.add([#type: #store, #data: tdata, #callback: tCallBackObj])
+  pQueue.add([#type: #store, #Data: tdata, #callback: tCallBackObj])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
@@ -52,11 +53,14 @@ on next me
     me.delay(1000, #checkConnection)
   else
     if getMultiuser(pConnectionId).connectionReady() then
+      if timeoutExists(pTimeOutID) then
+        removeTimeout(pTimeOutID)
+      end if
       if count(pQueue) > 0 then
         tTask = pQueue[1]
         case tTask.type of
           #store:
-            return getMultiuser(pConnectionId).sendBinary(tTask.data)
+            return getMultiuser(pConnectionId).sendBinary(tTask.Data)
           #retrieve:
             return getMultiuser(pConnectionId).send("GETBINDATA" && tTask.id && tTask.auth)
           #fusemsg:
@@ -65,6 +69,8 @@ on next me
             me.next()
             return 1
         end case
+      else
+        createTimeout(pTimeOutID, 30000, #delayedClosing, me.getID(), VOID, 1)
       end if
     end if
   end if
@@ -97,6 +103,12 @@ on binaryDataReceived me, tdata
     end if
   end if
   me.next()
+end
+
+on delayedClosing me
+  if multiuserExists(pConnectionId) and count(pQueue) = 0 then
+    removeMultiuser(pConnectionId)
+  end if
 end
 
 on registerCmds me, tBool

@@ -57,9 +57,12 @@ on loadHeightMap me, tdata
 end
 
 on getScreenCoordinate me, tLocX, tLocY, tHeight
+  tPrecision = the floatPrecision
+  set the floatPrecision to 2
   tLocH = (tLocX - tLocY) * (pXFactor * 0.5) + pXOffset
   tLocV = float((tLocY + tLocX) * pYFactor * 0.5 + pYOffset) - tHeight * pHFactor
   tlocz = 1000 * (tLocX + tLocY + 1) + pZOffset
+  set the floatPrecision to tPrecision
   return [integer(tLocH), integer(tLocV), integer(tlocz)]
 end
 

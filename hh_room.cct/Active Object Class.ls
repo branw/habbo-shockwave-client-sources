@@ -1,4 +1,4 @@
-property pClass, pName, pCustom, pSprList, pDirection, pDimensions, pLoczList, pPartColors, pAnimFrame, pLocX, pLocY, pLocH, pAltitude, pXFactor, pCorrectLocZ
+property pClass, pName, pCustom, pSprList, pDirection, pDimensions, pLoczList, pLocShiftList, pPartColors, pAnimFrame, pLocX, pLocY, pLocH, pAltitude, pXFactor, pCorrectLocZ, pSmallMember, pGeometry, pStartloc, pDestLoc, pSlideStartTime, pSlideEndTime, pSlideTimePerTile
 
 on construct me
   pClass = EMPTY
@@ -8,6 +8,7 @@ on construct me
   pDirection = []
   pDimensions = []
   pLoczList = []
+  pLocShiftList = []
   pPartColors = []
   pAnimFrame = 0
   pLocX = 0
@@ -20,6 +21,7 @@ on construct me
   else
     pCorrectLocZ = 1
   end if
+  pSlideTimePerTile = 500
   return 1
 end
 
@@ -27,23 +29,19 @@ on deconstruct me
   repeat with tSpr in pSprList
     releaseSprite(tSpr.spriteNum)
   end repeat
+  getThread("room").getComponent().removeSlideObject(me.ancestor.id)
   pSprList = []
   return 1
 end
 
 on define me, tdata
   pClass = tdata[#class]
-  pName = tdata[#name]
-  pCustom = tdata[#Custom]
   pDirection = tdata[#direction]
   pDimensions = tdata[#dimensions]
   pAltitude = tdata[#altitude]
   pLocX = tdata[#x]
   pLocY = tdata[#y]
   pLocH = pAltitude
-  if pClass contains "*" then
-    pClass = pClass.char[1..offset("*", pClass) - 1]
-  end if
   me.solveColors(tdata[#colors])
   if me.solveMembers() = 0 then
     return 0
@@ -57,17 +55,21 @@ end
 
 on getInfo me
   tInfo = [:]
-  tInfo[#name] = pName
   tInfo[#class] = pClass
-  tInfo[#Custom] = pCustom
-  if memberExists(pClass & "_small") then
-    tInfo[#image] = member(getmemnum(pClass & "_small")).image
-  end if
+  tInfo[#name] = getText("furni_" & pClass & "_name", "furni_" & pClass & "_name")
+  tInfo[#Custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  tInfo[#smallmember] = pSmallMember
+  tInfo[#image] = getObject("Preview_renderer").renderPreviewImage(VOID, pPartColors, VOID, pClass)
   return tInfo
 end
 
+on getLocation me
+  return [pLocX, pLocY, pLocH]
+end
+
 on getCustom me
-  return pCustom
+  tCustom = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  return tCustom
 end
 
 on getSprites me
@@ -111,7 +113,58 @@ on rotate me, tChange
   if not memberExists(tTryName) then
     return error(me, "Direction for object not found:" && pClass && tDirection[1], #rotate)
   end if
-  getThread(#room).getComponent().getRoomConnection().send(#room, "MOVESTUFF" && me.getID() && me.pLocX && me.pLocY && tDirection[1])
+  getThread(#room).getComponent().getRoomConnection().send("MOVESTUFF", me.getID() && me.pLocX && me.pLocY && tDirection[1])
+end
+
+on setSlideTo me, tFromLoc, tToLoc, tTimeNow, tHasCharacter
+  if voidp(tTimeNow) then
+    tTimeNow = the milliSeconds
+  end if
+  pSlideStartTime = tTimeNow
+  pLastSlideUpdateTime = pSlideStartTime
+  pLocX = tFromLoc[1].float
+  pLocY = tFromLoc[2].float
+  pLocH = tFromLoc[3].float
+  tDistances = []
+  tDistances[1] = abs(tFromLoc[1] - tToLoc[1])
+  tDistances[2] = abs(tFromLoc[2] - tToLoc[2])
+  tDistances[3] = abs(tFromLoc[3] - tToLoc[3])
+  tMoveTime = max(tDistances) * pSlideTimePerTile
+  pSlideEndTime = pSlideStartTime + tMoveTime
+  pStartloc = [pLocX, pLocY, pLocH]
+  pDestLoc = tToLoc
+  me.updateLocation()
+end
+
+on animateSlide me, tTimeNow
+  if voidp(tTimeNow) then
+    tTimeNow = the milliSeconds
+  end if
+  if pSlideEndTime < tTimeNow then
+    pLocX = pDestLoc[1].integer
+    pLocY = pDestLoc[2].integer
+    pLocH = pDestLoc[3]
+    getThread("room").getComponent().removeSlideObject(me.ancestor.id)
+    me.updateLocation()
+    return 1
+  end if
+  tTimeUsed = float(tTimeNow - pSlideStartTime)
+  tPercentSlided = tTimeUsed / float(pSlideEndTime - pSlideStartTime)
+  pLocX = float(pDestLoc[1] - pStartloc[1]) * tPercentSlided + pStartloc[1]
+  pLocY = float(pDestLoc[2] - pStartloc[2]) * tPercentSlided + pStartloc[2]
+  pLocH = float(pDestLoc[3] - pStartloc[3]) * tPercentSlided + pStartloc[3]
+  me.updateLocation()
+  return 1
+end
+
+on ghostObject me
+  repeat with tSpr in pSprList
+    if tSpr.ink = 33 then
+      tSpr.visible = 0
+      next repeat
+    end if
+    tSpr.blend = 35
+  end repeat
 end
 
 on prepare me, tdata
@@ -138,33 +191,96 @@ on solveColors me, tpartColors
   the itemDelimiter = tDelim
 end
 
-on solveInk me, tPart
-  tInkField = getmemnum(pClass & "_" & tPart & ".ink")
-  if tInkField > 0 then
-    return integer(field(tInkField))
+on solveInk me, tPart, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 8
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 8
+  end if
+  if not voidp(tPropList[tPart][#ink]) then
+    return tPropList[tPart][#ink]
   end if
   return 8
 end
 
-on solveBlend me, tPart
-  tBlendField = getmemnum(pClass & "_" & tPart & ".blend")
-  if tBlendField > 0 then
-    return integer(field(tBlendField))
+on solveBlend me, tPart, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 100
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 100
+  end if
+  if not voidp(tPropList[tPart][#blend]) then
+    return tPropList[tPart][#blend]
   end if
   return 100
 end
 
-on solveLocZ me, tPart, tdir
-  if not memberExists(pClass & "_" & tPart & ".zshift") then
+on solveLocZ me, tPart, tdir, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
     return 0
   end if
-  if (field(getmemnum(pClass & "_" & tPart & ".zshift"))).line.count = 1 then
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 0
+  end if
+  if voidp(tPropList[tPart][#zshift]) then
+    return 0
+  end if
+  if tPropList[tPart][#zshift].count <= tdir then
     tdir = 0
   end if
-  return integer((field(getmemnum(pClass & "_" & tPart & ".zshift"))).line[tdir + 1])
+  return tPropList[tPart][#zshift][tdir + 1]
+end
+
+on solveLocShift me, tPart, tdir, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 0
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 0
+  end if
+  if voidp(tPropList[tPart][#locshift]) then
+    return 0
+  end if
+  if tPropList[tPart][#locshift].count <= tdir then
+    return 0
+  end if
+  tShift = value(tPropList[tPart][#locshift][tdir + 1])
+  if ilk(tShift) = #point then
+    return tShift
+  end if
+  return 0
 end
 
 on solveMembers me
+  tClass = pClass
+  if tClass contains "*" then
+    tSmallMem = tClass & "_small"
+    tClass = tClass.char[1..offset("*", tClass) - 1]
+    if not memberExists(tSmallMem) then
+      tSmallMem = tClass & "_small"
+    end if
+  else
+    tSmallMem = tClass & "_small"
+  end if
+  pSmallMember = tSmallMem
   if pSprList.count > 0 then
     repeat with tSpr in pSprList
       releaseSprite(tSpr.spriteNum)
@@ -174,10 +290,11 @@ on solveMembers me
   tMemNum = 1
   i = charToNum("a")
   j = 1
+  tLoczAdjust = -5
   repeat while tMemNum > 0
     tFound = 0
     repeat while tFound = 0
-      tMemNameA = pClass & "_" & numToChar(i) & "_" & "0"
+      tMemNameA = tClass & "_" & numToChar(i) & "_" & "0"
       if listp(pDimensions) then
         tMemNameA = tMemNameA & "_" & pDimensions[1] & "_" & pDimensions[2]
       end if
@@ -203,7 +320,7 @@ on solveMembers me
             pDirection[tdir] = integer(pDirection[tdir] + 1)
           end repeat
           if pDirection[1] = 8 then
-            error(me, "Couldn't define members:" && pClass, #solveMembers)
+            error(me, "Couldn't define members:" && tClass, #solveMembers)
             tMemNum = getmemnum("room_object_placeholder")
             pDirection = [0, 0, 0]
             tFound = 1
@@ -228,9 +345,14 @@ on solveMembers me
       if pLoczList.count < pSprList.count then
         pLoczList.add([])
       end if
+      if pLocShiftList.count < pSprList.count then
+        pLocShiftList.add([])
+      end if
       repeat with tdir = 0 to 7
-        pLoczList.getLast().add(me.solveLocZ(numToChar(i), tdir))
+        pLoczList.getLast().add(integer(me.solveLocZ(numToChar(i), tdir, tClass)) + tLoczAdjust)
+        pLocShiftList.getLast().add(me.solveLocShift(numToChar(i), tdir, tClass))
       end repeat
+      tLoczAdjust = tLoczAdjust + 1
       if not voidp(tSpr) and tSpr <> sprite(0) then
         if tMemNum < 1 then
           tMemNum = abs(tMemNum)
@@ -240,11 +362,11 @@ on solveMembers me
         tSpr.castNum = tMemNum
         tSpr.width = member(tMemNum).width
         tSpr.height = member(tMemNum).height
-        tSpr.ink = me.solveInk(numToChar(i))
-        tSpr.blend = me.solveBlend(numToChar(i))
+        tSpr.ink = me.solveInk(numToChar(i), tClass)
+        tSpr.blend = me.solveBlend(numToChar(i), tClass)
         if j <= pPartColors.count then
-          if string(pPartColors[j]).char[1] = "*" then
-            tSpr.bgColor = rgb("#" & string(pPartColors[j]).char[2..length(string(pPartColors[j]))])
+          if string(pPartColors[j]).char[1] = "#" then
+            tSpr.bgColor = rgb(pPartColors[j])
           else
             tSpr.bgColor = paletteIndex(integer(pPartColors[j]))
           end if
@@ -256,18 +378,19 @@ on solveMembers me
     i = i + 1
     j = j + 1
   end repeat
-  tShadowName = pClass & "_sd"
+  tShadowName = tClass & "_sd"
   if listp(pDirection) then
     tShadowName = tShadowName & "_" & pDirection[1]
   end if
   tShadowNum = getmemnum(tShadowName)
   if not tShadowNum and listp(pDirection) then
-    tShadowNum = getmemnum(pClass & "_sd")
+    tShadowNum = getmemnum(tClass & "_sd")
   end if
   if tShadowNum <> 0 then
     tSpr = sprite(reserveSprite(me.getID()))
     pSprList.add(tSpr)
     pLoczList.add([-4000, -4000, -4000, -4000, -4000, -4000, -4000])
+    pLocShiftList.add([0, 0, 0, 0, 0, 0, 0, 0])
     if tShadowNum < 0 then
       tShadowNum = abs(tShadowNum)
       tSpr.rotation = 180
@@ -286,7 +409,7 @@ on solveMembers me
   if pSprList.count > 0 then
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveMembers)
+    return error(me, "Couldn't define members:" && tClass, #solveMembers)
   end if
 end
 
@@ -300,6 +423,8 @@ on updateLocation me
     if tSpr.rotation = 180 then
       tSpr.locH = tSpr.locH + pXFactor
     end if
+    tLocShift = pLocShiftList[i][pDirection[1] + 1]
+    tSpr.loc = tSpr.loc + tLocShift
     tZ = pLoczList[i][pDirection[1] + 1]
     if pCorrectLocZ then
       tSpr.locZ = tScreenLocs[3] + pLocH * 1000 + tZ - 1

@@ -1,4 +1,4 @@
-property pOwnX, pOwnY, pOwnW, pOwnH, pOffX, pOffY, pScrolls
+property pOwnX, pOwnY, pOwnW, pOwnH, pOffX, pOffY, pScrolls, pUpdateLock
 
 on prepare me
   pOffX = 0
@@ -6,6 +6,7 @@ on prepare me
   pOwnW = me.pProps[#width]
   pOwnH = me.pProps[#height]
   pScrolls = []
+  pUpdateLock = 0
   me.pDepth = the colorDepth
   me.pimage = image(me.pwidth, me.pheight, me.pDepth)
   if me.pProps[#style] = #unique then
@@ -32,7 +33,9 @@ on feedImage me, tImage
   me.pBuffer.image.fill(tTargetRect, me.pProps[#bgColor])
   me.pimage = tImage
   me.render()
+  pUpdateLock = 1
   me.registerScroll()
+  pUpdateLock = 0
   return 1
 end
 
@@ -60,8 +63,9 @@ on registerScroll me, tid
   end if
   tSourceRect = rect(pOffX, pOffY, pOffX + pOwnW, pOffY + pOwnH)
   tScrollList = []
+  tWndObj = getWindowManager().get(me.pMotherId)
   repeat with tScrollId in pScrolls
-    tScrollList.add(getWindowManager().get(me.pMotherId).getElement(tScrollId))
+    tScrollList.add(tWndObj.getElement(tScrollId))
   end repeat
   call(#updateData, tScrollList, tSourceRect, me.pimage.rect)
 end
@@ -69,15 +73,19 @@ end
 on adjustOffsetTo me, tX, tY
   pOffX = tX
   pOffY = tY
-  me.clearImage()
-  me.render()
+  if not pUpdateLock then
+    me.clearImage()
+    me.render()
+  end if
 end
 
 on adjustOffsetBy me, tOffX, tOffY
   pOffX = pOffX + tOffX
   pOffY = pOffY + tOffY
-  me.clearImage()
-  me.render()
+  if not pUpdateLock then
+    me.clearImage()
+    me.render()
+  end if
 end
 
 on adjustXOffsetTo me, tX

@@ -26,11 +26,11 @@ end
 on eventProcShipPlacer me, tEvent, tSprID, tParam
   pSpr.visible = 0
   tSprite = rollover()
+  pSpr.visible = 1
   tid = call(#getID, sprite(tSprite).scriptInstanceList)
   if tid = "close" or tid contains "turn" then
     getThread(#games).getInterface().eventProcBattleShip(tEvent, tid)
   end if
-  pSpr.visible = 1
 end
 
 on getNextShip me
@@ -116,6 +116,9 @@ on ShipPlace me, tPoint1, tPoint2
 end
 
 on turnShip me
+  if not threadExists(#games) then
+    return removeObject(me.getID())
+  end if
   if pDirection = "horizontal" then
     pDirection = "vertical"
   else

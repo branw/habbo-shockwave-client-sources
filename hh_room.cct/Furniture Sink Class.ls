@@ -1,14 +1,10 @@
 property pDoorTimer, pTokenList
 
 on prepare me
-  tTokenList = getText("obj_" & me.pClass, "water")
-  pTokenList = []
-  tDelim = the itemDelimiter
-  the itemDelimiter = ","
-  repeat with i = 1 to tTokenList.item.count
-    pTokenList.add(tTokenList.item[i].word[1..tTokenList.item[i].word.count])
-  end repeat
-  the itemDelimiter = tDelim
+  pTokenList = value(getVariable("obj_" & me.pClass))
+  if not listp(pTokenList) then
+    pTokenList = [18]
+  end if
   return 1
 end
 
@@ -21,7 +17,7 @@ on updateStuffdata me, tProp, tValue
 end
 
 on select me
-  tUserObj = getThread(#room).getComponent().getUserObject(getObject(#session).get("user_name"))
+  tUserObj = getThread(#room).getComponent().getOwnUser()
   if tUserObj = 0 then
     return 1
   end if
@@ -32,7 +28,7 @@ on select me
           me.giveDrink()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && me.pLocX && me.pLocY + 1)
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY + 1])
       end if
     0:
       if me.pLocX = tUserObj.pLocX and me.pLocY - tUserObj.pLocY = 1 then
@@ -40,7 +36,7 @@ on select me
           me.giveDrink()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && me.locX && me.pLocY - 1)
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.locX, #short: me.pLocY - 1])
       end if
     2:
       if me.pLocY = tUserObj.pLocY and me.pLocX - tUserObj.pLocX = -1 then
@@ -48,7 +44,7 @@ on select me
           me.giveDrink()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && me.pLocX + 1 && me.pLocY)
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX + 1, #short: me.pLocY])
       end if
     6:
       if me.pLocY = tUserObj.pLocY and me.pLocX - tUserObj.pLocX = 1 then
@@ -56,7 +52,7 @@ on select me
           me.giveDrink()
         end if
       else
-        getThread(#room).getComponent().getRoomConnection().send(#room, "Move" && me.pLocX - 1 && me.pLocY)
+        getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX - 1, #short: me.pLocY])
       end if
   end case
   return 1
@@ -67,9 +63,9 @@ on giveDrink me
   if tConnection = 0 then
     return 0
   end if
-  tConnection.send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
-  tConnection.send(#room, "LOOKTO" && me.pLocX && me.pLocY)
-  tConnection.send(#room, "CarryDrink" && me.getDrinkname())
+  tConnection.send("SETSTUFFDATA", me.getID() & "/" & "DOOROPEN" & "/" & "TRUE")
+  tConnection.send("LOOKTO", me.pLocX && me.pLocY)
+  tConnection.send("CARRYDRINK", me.getDrinkname())
 end
 
 on getDrinkname me

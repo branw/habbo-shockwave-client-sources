@@ -1,9 +1,14 @@
-property pWndID, pActive, pArrowSpr, pOwnPlayer, pKeyList, pCurrAct, pCycleTime, pCurrTime, pCurrBal
+property pWndID, pActive, pArrowSpr, pOwnPlayer, pKeyList, pKeyResList, pCurrAct, pCycleTime, pCurrTime, pCurrBal
 
 on construct me
   pWndID = "PaaluWindow"
   pActive = 0
-  pKeyList = getVariableValue("paalu.key.list", [:])
+  pKeyList = getVariableValue("paalu.key.list")
+  if pKeyList.ilk <> #propList then
+    error(me, "Couldn't retrieve keymap for Wobble Squabble! Using default keys.", #construct)
+    pKeyList = [#bal1: "Q", #bal2: "E", #push1: "A", #push2: "D", #move1: "N", #move2: "M", #stabilise: "SPACE"]
+  end if
+  pKeyResList = getVariableValue("paalu.key.res.list", [])
   pCycleTime = getIntVariable("paalu.cycle.time", 100)
   pCurrAct = "-"
   pArrowSpr = VOID
@@ -46,6 +51,7 @@ on prepare me, tOwnPlayerObj
   pCurrTime = the milliSeconds
   pCurrBal = 0
   pActive = 0
+  me.localizeKeys()
   return 1
 end
 
@@ -53,6 +59,7 @@ on start me
   pActive = 1
   the keyboardFocusSprite = 0
   receiveUpdate(me.getID())
+  me.resetDialog()
   startTimer()
   return 1
 end
@@ -75,9 +82,15 @@ on update me
     if tKey = SPACE then
       tKey = "SPACE"
     end if
-    if tKey <> pCurrAct then
-      if not voidp(pKeyList[tKey]) then
-        pCurrAct = tKey
+    repeat with i = 1 to pKeyList.count
+      if pKeyList[i] = tKey then
+        tKeyNr = i
+        exit repeat
+      end if
+    end repeat
+    if tKeyNr > 0 then
+      if pKeyResList[tKeyNr] <> pCurrAct then
+        pCurrAct = pKeyResList[tKeyNr]
         me.sendAction()
         me.resetDialog()
         me.selectKey(pCurrAct)
@@ -101,43 +114,72 @@ on update me
   pArrowSpr.rotation = pCurrBal
 end
 
-on resetDialog me
+on localizeKeys me
   tWndObj = getWindow(pWndID)
   if not tWndObj then
     return 
   end if
-  repeat with i = 1 to pKeyList.count
-    tKey = pKeyList.getPropAt(i)
-    tmember = member(getmemnum("paaluUI_butt_" & tKey & "_0"))
+  repeat with i = 1 to pKeyResList.count - 1
+    tKey = pKeyList[i]
+    tWndObj.getElement("paalu_btext_" & i).setText(tKey)
+  end repeat
+end
+
+on resetDialog me
+  tWndObj = getWindow(pWndID)
+  if not tWndObj then
+    return 0
+  end if
+  repeat with i = 1 to pKeyResList.count - 1
+    tmember = member(getmemnum("paaluUI_button_inactive"))
     if tmember.number > 0 then
-      tWndObj.getElement("button" && tKey).getProperty(#sprite).member = tmember
+      tWndObj.getElement("paalu_image_" & i).getProperty(#sprite).member = tmember
     end if
   end repeat
+  tmember = member(getmemnum("paaluUI_butt_SPACE_1"))
+  if tmember.number > 0 then
+    tWndObj.getElement("paalu_image_7").getProperty(#sprite).member = tmember
+  end if
+  return 1
 end
 
 on sendAction me
   if pActive then
-    getThread(#room).getComponent().getRoomConnection().send(#room, "PTM" && pKeyList[pCurrAct])
+    getThread(#room).getComponent().getRoomConnection().send("PTM", pCurrAct)
   end if
 end
 
 on selectKey me, tAction
-  tmember = member(getmemnum("paaluUI_butt_" & tAction & "_1"))
+  tButtonNum = pKeyResList.getPos(tAction)
+  if tButtonNum = 7 then
+    tmember = member(getmemnum("paaluUI_butt_SPACE_2"))
+  else
+    tmember = member(getmemnum("paaluUI_button_active"))
+  end if
   if tmember.number > 0 then
-    getWindow(pWndID).getElement("button" && tAction).getProperty(#sprite).member = tmember
+    getWindow(pWndID).getElement("paalu_image_" & tButtonNum).getProperty(#sprite).member = tmember
   end if
 end
 
 on highLightKey me, tAction
-  tmember = member(getmemnum("paaluUI_butt_" & tAction & "_2"))
+  tButtonNum = pKeyResList.getPos(tAction)
+  if tButtonNum = 7 then
+    tmember = member(getmemnum("paaluUI_butt_SPACE_2"))
+  else
+    tmember = member(getmemnum("paaluUI_button_active"))
+  end if
   if tmember.number > 0 then
-    getWindow(pWndID).getElement("button" && tAction).getProperty(#sprite).member = tmember
+    getWindow(pWndID).getElement("paalu_image_" & tButtonNum).getProperty(#sprite).member = tmember
   end if
 end
 
 on eventProcPaalu me, tEvent, tSprID, tParam
-  if tSprID.word[1] = "button" then
-    tAction = tSprID.word[2]
+  if tSprID contains "button" or tSprID = "paalu_image_7" then
+    tActionNum = integer(tSprID.char[tSprID.length])
+    if tActionNum < 1 or tActionNum > pKeyResList.count then
+      return 0
+    end if
+    tAction = pKeyResList[tActionNum]
     if pCurrAct <> tAction then
       pCurrAct = tAction
       me.sendAction()

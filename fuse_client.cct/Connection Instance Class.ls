@@ -3,7 +3,7 @@ property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pCo
 on construct me
   pEncryptionOn = 0
   pMsgStruct = getStructVariable("struct.message")
-  pMsgStruct.setaProp(#connection, me.getID())
+  pMsgStruct.setaProp(#connection, me)
   pDecoder = 0
   pLastContent = EMPTY
   pConnectionShouldBeKilled = 0
@@ -37,9 +37,7 @@ end
 
 on disconnect me, tControlled
   if tControlled <> 1 then
-    me.forwardMsg("DISCONNECT")
-  else
-    me.send(#info, "QUIT")
+    me.forwardMsg(-1)
   end if
   pConnectionShouldBeKilled = 1
   if objectp(pXtra) then
@@ -97,35 +95,116 @@ on setEncryption me, tBoolean
 end
 
 on send me, tCmd, tMsg
+  if tMsg.ilk = #propList then
+    return me.sendNew(tCmd, tMsg)
+  end if
   if not (pConnectionOk and objectp(pXtra)) then
     return error(me, "Connection not ready:" && me.getID(), #send)
   end if
   if tMsg.ilk <> #string then
     tMsg = string(tMsg)
   end if
-  if pLogMode > 0 then
-    me.log("<--" && tCmd && tMsg)
-  end if
-  getObject(#session).set("con_lastsend", tCmd && tMsg && "-" && the long time)
   if tCmd.ilk <> #integer then
-    tCmd = pCommandsPntr.getaProp(#value).getaProp(tCmd)
+    tStr = tCmd
+    tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
   end if
   if tCmd.ilk = #void then
     return error(me, "Unrecognized command!", #send)
   end if
-  if pEncryptionOn and objectp(pDecoder) then
-    tMsg = pDecoder.encipher(tMsg)
-  else
+  if pLogMode > 0 then
+    me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
   end if
+  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
+  tMsg = tCmd & tMsg
   tLength = 0
   repeat with tChar = 1 to length(tMsg)
     tCharNum = charToNum(char tChar of tMsg)
     tLength = tLength + 1 + (tCharNum > 255)
   end repeat
-  tL1 = numToChar(bitOr(bitAnd(tLength, 127), 128))
-  tL2 = numToChar(bitOr(bitAnd(tLength / 128, 127), 128))
-  tL3 = numToChar(bitOr(bitAnd(tLength / 16384, 127), 128))
-  tMsg = tCmd & tL3 & tL2 & tL1 & tMsg
+  tL1 = numToChar(bitOr(bitAnd(tLength, 63), 64))
+  tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
+  tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
+  tMsg = tL3 & tL2 & tL1 & tMsg
+  if pEncryptionOn and objectp(pDecoder) then
+    tMsg = pDecoder.encipher(tMsg)
+  end if
+  pXtra.sendNetMessage(0, 0, tMsg)
+  return 1
+end
+
+on sendNew me, tCmd, tParmArr
+  if not (pConnectionOk and objectp(pXtra)) then
+    return error(me, "Connection not ready:" && me.getID(), #send)
+  end if
+  tMsg = EMPTY
+  tLength = 2
+  if listp(tParmArr) then
+    repeat with i = 1 to tParmArr.count
+      ttype = tParmArr.getPropAt(i)
+      tParm = tParmArr[i]
+      case ttype of
+        #string:
+          tLen = 0
+          repeat with tChar = 1 to length(tParm)
+            tNum = charToNum(char tChar of tParm)
+            tLen = tLen + 1 + (tNum > 255)
+          end repeat
+          tBy1 = numToChar(bitOr(64, tLen / 64))
+          tBy2 = numToChar(bitOr(64, bitAnd(63, tLen)))
+          tMsg = tMsg & tBy1 & tBy2 & tParm
+          tLength = tLength + tLen + 2
+        #short:
+          tBy1 = numToChar(bitOr(64, tParm / 64))
+          tBy2 = numToChar(bitOr(64, bitAnd(63, tParm)))
+          tMsg = tMsg & tBy1 & tBy2
+          tLength = tLength + 2
+        #integer:
+          if tParm < 0 then
+            tNegMask = 4
+            tParm = -tParm
+          else
+            tNegMask = 0
+          end if
+          tStr = numToChar(64 + bitAnd(tParm, 3))
+          tBytes = 1
+          tParm = tParm / 4
+          repeat while tParm <> 0
+            tBytes = tBytes + 1
+            put numToChar(64 + bitAnd(tParm, 63)) after tStr
+            tParm = tParm / 64
+          end repeat
+          put numToChar(bitOr(bitOr(charToNum(char 1 of tStr), tBytes * 8), tNegMask)) after tMsg
+          put chars(tStr, 2, tBytes) after tMsg
+          tLength = tLength + tBytes
+        #boolean:
+          tParm = tParm <> 0
+          tBy1 = numToChar(bitOr(64, bitAnd(63, tParm)))
+          tMsg = tMsg & tBy1
+          tLength = tLength + 1
+        otherwise:
+          error(me, "Unsupported param type:" && ttype, #send)
+      end case
+    end repeat
+  end if
+  if tCmd.ilk <> #integer then
+    tStr = tCmd
+    tCmd = pCommandsPntr.getaProp(#value).getaProp(tStr)
+  end if
+  if tCmd.ilk = #void then
+    return error(me, "Unrecognized command!", #send)
+  end if
+  if pLogMode > 0 then
+    me.log("<--" && tStr && "(" & tCmd & ")" && tMsg)
+  end if
+  getObject(#session).set("con_lastsend", tStr && tMsg && "-" && the long time)
+  tMsg = tCmd & tMsg
+  tL1 = numToChar(bitOr(bitAnd(tLength, 63), 64))
+  tL2 = numToChar(bitOr(bitAnd(tLength / 64, 63), 64))
+  tL3 = numToChar(bitOr(bitAnd(tLength / 4096, 63), 64))
+  tMsg = tL3 & tL2 & tL1 & tMsg
+  if pEncryptionOn and objectp(pDecoder) then
+    tMsg = pDecoder.encipher(tMsg)
+  end if
   pXtra.sendNetMessage(0, 0, tMsg)
   return 1
 end
@@ -187,6 +266,52 @@ on setProperty me, tProp, tValue
   return 0
 end
 
+on GetBoolFrom me
+  tByteStr = pMsgStruct.getaProp(#content)
+  tByte = bitAnd(charToNum(char 1 of tByteStr), 63)
+  pMsgStruct.setaProp(#content, tByteStr.char[2..length(tByteStr)])
+  return tByte <> 0
+end
+
+on GetByteFrom me
+  tByteStr = pMsgStruct.getaProp(#content)
+  tByte = bitAnd(charToNum(char 1 of tByteStr), 63)
+  pMsgStruct.setaProp(#content, tByteStr.char[2..length(tByteStr)])
+  return tByte
+end
+
+on GetIntFrom me
+  tByteStr = pMsgStruct.getaProp(#content)
+  tByte = bitAnd(charToNum(char 1 of tByteStr), 63)
+  tByCnt = bitOr(bitAnd(tByte, 56) / 8, 0)
+  tNeg = bitAnd(tByte, 4)
+  tInt = bitAnd(tByte, 3)
+  if tByCnt > 1 then
+    tPowTbl = [4, 256, 16384, 1048576, 67108864]
+    repeat with i = 2 to tByCnt
+      tByte = bitAnd(charToNum(char i of tByteStr), 63)
+      tInt = bitOr(tByte * tPowTbl[i - 1], tInt)
+    end repeat
+  end if
+  if tNeg then
+    tInt = -tInt
+  end if
+  pMsgStruct.setaProp(#content, tByteStr.char[tByCnt + 1..length(tByteStr)])
+  return tInt
+end
+
+on GetStrFrom me
+  tArr = pMsgStruct.getaProp(#content)
+  tLen = offset(numToChar(2), tArr)
+  if tLen > 1 then
+    tStr = char 1 to tLen - 1 of tArr
+  else
+    tStr = EMPTY
+  end if
+  pMsgStruct.setaProp(#content, char tLen + 1 to length(tArr) of tArr)
+  return tStr
+end
+
 on print me
   tStr = EMPTY
   if symbolp(me.getID()) then
@@ -226,75 +351,61 @@ on xtraMsgHandler me
     me.disconnect()
     return 0
   end if
-  if tContent.ilk = #string then
-    if not (tContent contains "##") then
-      pLastContent = pLastContent & tContent
-      return 0
-    end if
-    if pLastContent <> EMPTY then
-      tContent = pLastContent & tContent
-    end if
-    tDelim = the itemDelimiter
-    pContentChunk = EMPTY
-    tContentArray = []
-    the itemDelimiter = "##"
-    tLength = length(tContent)
-    tBool = not (chars(tContent, tLength - 1, tLength) = "##")
-    tCount = tContent.items.count
+  me.msghandler(tContent)
+end
+
+on msghandler me, tContent
+  if tContent.ilk <> #string then
+    return 0
+  end if
+  if pLastContent.length > 0 then
+    tContent = pLastContent & tContent
     pLastContent = EMPTY
-    repeat with i = 1 to tCount
-      tMsgStr = tContent.item[i]
-      if i < tCount or tBool = 0 then
-        if length(tMsgStr) > 1 then
-          tContentArray.add(tMsgStr)
-        end if
-        next repeat
-      end if
-      if tBool = 1 and i = tCount then
-        pLastContent = tMsgStr
-      end if
-    end repeat
-    the itemDelimiter = tDelim
-    repeat with i = 1 to tContentArray.count
-      me.forwardMsg(tContentArray[i])
-    end repeat
+  end if
+  if tContent.length < 3 then
+    pLastContent = pLastContent & tContent
+    return 
+  end if
+  tByte1 = bitAnd(charToNum(char 2 of tContent), 63)
+  tByte2 = bitAnd(charToNum(char 1 of tContent), 63)
+  tMsgType = bitOr(tByte2 * 64, tByte1)
+  tLength = offset(numToChar(1), tContent)
+  if tLength = 0 then
+    pLastContent = tContent
+    return 
+  end if
+  tParams = char 3 to tLength - 1 of tContent
+  tContent = char tLength + 1 to tContent.length of tContent
+  me.forwardMsg(tMsgType, tParams)
+  if tContent.length > 0 then
+    me.msghandler(tContent)
   end if
 end
 
-on forwardMsg me, tMessage
-  if pConnectionShouldBeKilled = 1 then
-    return 0
-  end if
+on forwardMsg me, tSubject, tParams
   if pLogMode > 0 then
-    me.log("-->" && tMessage)
+    me.log("-->" && tSubject & RETURN & tParams)
   end if
-  getObject(#session).set("con_lastreceived", tMessage.line[1] && "-" && the long time)
-  tSubject = tMessage.word[1]
+  getObject(#session).set("con_lastreceived", tSubject && "-" && the long time)
+  tParams = getStringServices().convertSpecialChars(tParams)
   tCallbackList = pListenersPntr.getaProp(#value).getaProp(tSubject)
-  if pMsgStruct.ilk <> #struct then
-    pMsgStruct = getStructVariable("struct.message")
-    pMsgStruct.setaProp(#connection, me.getID())
-    error(me, "Connection instance had problems...", #forwardMsg)
+  if tCallbackList.ilk <> #list then
+    return error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
   end if
-  if listp(tCallbackList) then
-    tObjMngr = getObjectManager()
-    repeat with i = 1 to count(tCallbackList)
-      tCallback = tCallbackList[i]
-      tObject = tObjMngr.get(tCallback[1])
-      if tObject <> 0 then
-        pMsgStruct.setaProp(#message, tMessage)
-        pMsgStruct.setaProp(#subject, tSubject)
-        pMsgStruct.setaProp(#content, tMessage.word[2..tMessage.word.count])
-        call(tCallback[2], tObject, pMsgStruct)
-        next repeat
-      end if
-      error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg)
-      tCallbackList.deleteAt(1)
-      i = i - 1
-    end repeat
-  else
-    error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
-  end if
+  tObjMgr = getObjectManager()
+  repeat with i = 1 to count(tCallbackList)
+    tCallback = tCallbackList[i]
+    tObject = tObjMgr.get(tCallback[1])
+    if tObject <> 0 then
+      pMsgStruct.setaProp(#subject, tSubject)
+      pMsgStruct.setaProp(#content, tParams)
+      call(tCallback[2], tObject, pMsgStruct)
+      next repeat
+    end if
+    error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg)
+    tCallbackList.deleteAt(1)
+    i = i - 1
+  end repeat
 end
 
 on log me, tMsg

@@ -35,7 +35,7 @@ on update me
   tdir = me.pFlipList[pDirection + 1]
   pXFix = 0
   pYFix = 0
-  if me.pAnimating then
+  if me.pAnimating and me.checkPartNotCarrying() then
     tMemString = me.animate()
   else
     case pPart of
@@ -113,6 +113,7 @@ on update me
         end if
       "ri":
         if not me.pCarrying then
+          pMemString = EMPTY
           if pCacheRectA.width > 0 then
             me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
             pCacheRectA = rect(0, 0, 0, 0)
@@ -228,6 +229,22 @@ on setColor me, tColor
   return 1
 end
 
+on checkPartNotCarrying me
+  if not me.getProperty(#carrying) then
+    return 1
+  end if
+  if pDirection = me.pFlipList[pDirection + 1] then
+    tHandParts = ["rh", "rs", "ri"]
+  else
+    tHandParts = ["lh", "ls", "li", "ri"]
+  end if
+  if tHandParts.getPos(pPart) then
+    return 0
+  else
+    return 1
+  end if
+end
+
 on doHandWork me, tAct
   if (["lh", "ls", "li", "rh", "rs", "ri"]).getOne(pPart) <> 0 then
     pAction = tAct
@@ -325,7 +342,15 @@ on animate me
   if not pAnimation then
     return EMPTY
   end if
-  tdir = me.pFlipList[pDirection + 1] + pAnimation[#OffD][pAnimFrame]
+  tdir = pDirection + pAnimation[#OffD][pAnimFrame]
+  if tdir > 7 then
+    tdir = tdir - tdir mod 7
+  else
+    if tdir < 0 then
+      tdir = 7 + tdir + 1
+    end if
+  end if
+  tdir = me.pFlipList[tdir + 1]
   pXFix = pAnimation[#OffX][pAnimFrame]
   pYFix = pAnimation[#OffY][pAnimFrame]
   tMemName = me.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & pPart & "_" & pmodel & "_" & tdir & "_" & pAnimation[#frm][pAnimFrame]

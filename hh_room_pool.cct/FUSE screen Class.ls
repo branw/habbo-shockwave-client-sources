@@ -16,7 +16,9 @@ on construct me
   pSprite = getThread(#room).getInterface().getRoomVisualizer().getSprById("cam1")
   pScrImg = member(getmemnum("fuse_screen")).image
   pTargetSpr = pSprite
-  member(getmemnum("fuse_screen")).image = member(getmemnum("fuse_screen_logo")).image
+  if memberExists("fuse_screen_logo") then
+    pScrImg.copyPixels(member(getmemnum("fuse_screen_logo")).image, pScrImg.rect, pScrImg.rect)
+  end if
   pTransition = 0
   pTextShowState = 0
   StateOfAd = 0
@@ -30,7 +32,6 @@ on construct me
     return error(me, "Couldn't create writer for screen!", #construct)
   else
     getWriter(pWriterID).define([#alignment: #center, #rect: rect(0, 0, 108, 10)])
-    me.fuseShow_transition("fade")
     receivePrepare(me.getID())
     return 1
   end if
@@ -72,12 +73,12 @@ on fuseShow_transition me, tTran
     case tTran of
       "cameraPan":
         pTransition = "cameraPan"
-        pTargetObj = EMPTY
+        pTargetObj = VOID
         pSpeed = 5.0 + random(25)
         pFlexible = 30.0 + random(20)
       "fade":
         pTransition = "fade"
-        pTargetObj = EMPTY
+        pTargetObj = VOID
         pTransitBuffer = image(pheight, pwidth, 16)
         pTransitState = 0
         pFadeSpeed = random(2) * 10
@@ -140,7 +141,7 @@ on mouseDown me
     if adLink contains "http:" then
       openNetPage(adLink)
     end if
-    getConnection(getVariable("connection.info.id")).send(#info, "ADCLICK" && adIdNum)
+    getConnection(getVariable("connection.info.id")).send("ADCLICK", adIdNum)
   end if
 end
 

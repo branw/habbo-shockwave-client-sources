@@ -66,9 +66,9 @@ on update me
     pKeycounter = pKeycounter + 1
     if pKeycounter <= pJumpData.length then
       if pJumpData.char[pKeycounter] <> "0" then
-        me.MykeyDown(pJumpData.char[pKeycounter], the milliSeconds - pKeyAcceptTime)
+        me.MykeyDown(pJumpData.char[pKeycounter], the milliSeconds - pKeyAcceptTime, 1)
       else
-        me.NotKeyDown(the milliSeconds - pKeyAcceptTime)
+        me.NotKeyDown(the milliSeconds - pKeyAcceptTime, 1)
       end if
       pKeyAcceptTime = the milliSeconds + (100 - (the milliSeconds - pKeyAcceptTime))
     else
@@ -76,9 +76,9 @@ on update me
         pJumpDone = 1
         tSplashPos = getThread(#room).getInterface().getGeometry().getWorldCoordinate(me.pMyLoc.locH, me.pMyLoc.locV)
         if tSplashPos = 0 then
-          getThread(#room).getComponent().getRoomConnection().send(#room, "SPLASH_POSITION" && "21,19")
+          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", "21,19")
         else
-          getThread(#room).getComponent().getRoomConnection().send(#room, "SPLASH_POSITION" && tSplashPos[1] & "," & tSplashPos[2])
+          getThread(#room).getComponent().getRoomConnection().send("SPLASH_POSITION", tSplashPos[1] & "," & tSplashPos[2])
         end if
       end if
       me.openHidePlayBackWindow()

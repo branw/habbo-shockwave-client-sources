@@ -59,7 +59,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "FIREON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & tStr)
   end if
   return 1
 end

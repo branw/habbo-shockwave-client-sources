@@ -1,35 +1,19 @@
-property pPhFigure, pPelleFigure, pFigure, pSwim, pSwimAndStay, pSign, pSwimShadowH, pSignMember, pSwimAnimCount
+property pPhFigure, pPelleFigure, pFigure, pSwim, pSwimAndStay, pSwimAnimCount
 
 on define me, tdata
-  pValid = 1
   pPhFigure = tdata[#phfigure]
   pFigure = tdata[#figure]
   pSwimAnimCount = 0
   pSwimAndStay = 0
-  me.pClass = tdata[#class]
-  me.pCustom = tdata[#Custom]
-  me.pSex = tdata[#sex]
-  me.pDirection = tdata[#direction][1]
-  me.pLastDir = me.pDirection
-  me.pLocX = tdata[#x]
-  me.pLocY = tdata[#y]
-  me.pLocH = tdata[#h]
-  me.pPeopleSize = getVariable("human.size." & integer(me.pXFactor))
-  if not me.pPeopleSize then
-    error(me, "People size not found, using default!", #define)
-    me.pPeopleSize = "sh"
+  me.setup(tdata)
+  if not memberExists(me.pClass && me.pName && "Canvas") then
+    createMember(me.pClass && me.pName && "Canvas", #bitmap)
   end if
-  me.pCanvasSize = value(getVariable("human.canvas." & me.pPeopleSize))
-  me.pCanvasSize.addProp(#swm, [60, 60, 32, -8])
-  if not me.pCanvasSize then
-    error(me, "Canvas size not found, using default!", #define)
-    me.pCanvasSize = [#std: [64, 102, 32, -8], #lay: [89, 102, 32, -4]]
-  end if
-  if not memberExists(me.getID() && "Canvas") then
-    createMember(me.getID() && "Canvas", #bitmap)
+  if voidp(me.pCanvasSize[#swm]) then
+    me.pCanvasSize[#swm] = [60, 60, 32, -8]
   end if
   tSize = me.pCanvasSize[#std]
-  me.pMember = member(getmemnum(me.getID() && "Canvas"))
+  me.pMember = member(getmemnum(me.pClass && me.pName && "Canvas"))
   me.pMember.image = image(tSize[1], tSize[2], tSize[3])
   me.pMember.regPoint = point(0, me.pMember.image.height + tSize[4])
   me.pBuffer = me.pMember.image.duplicate()
@@ -54,18 +38,12 @@ on define me, tdata
   me.pMatteSpr.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseLeave)
   setEventBroker(me.pShadowSpr.spriteNum, me.getID())
   me.pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
-  tPartSymbols = tdata[#parts]
-  if not setPartLists(me, tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #define)
-  end if
-  me.arrangeParts()
-  me.refresh(me.pLocX, me.pLocY, me.pLocH, me.pDirection, me.pDirection)
-  me.pInfoStruct[#name] = me.getID()
+  me.pInfoStruct[#name] = me.pName
   me.pInfoStruct[#class] = me.pClass
   me.pInfoStruct[#Custom] = me.pCustom
   me.pInfoStruct[#image] = me.getPicture()
   me.pInfoStruct[#ctrl] = "furniture"
-  me.pInfoStruct[#badge] = 0
+  me.pInfoStruct[#badge] = " "
   return 1
 end
 
@@ -94,7 +72,6 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pSleeping = 0
   pSwim = 0
   pSwimAndStay = 0
-  pSign = 0
   me.pLocFix = point(0, 0)
   call(#reset, me.pPartList)
   if me.pMainAction = "sit" then
@@ -102,13 +79,29 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   else
     me.pScreenLoc = me.pGeometry.getScreenCoordinate(tX, tY, tH)
   end if
+  if tDirBody <> me.pFlipList[tDirBody + 1] then
+    if tDirBody <> tDirHead then
+      case tDirHead of
+        4:
+          tDirHead = 2
+        5:
+          tDirHead = 1
+        6:
+          tDirHead = 4
+        7:
+          tDirHead = 5
+      end case
+    end if
+  end if
   call(#defineDir, me.pPartList, tDirBody)
+  call(#defineDirMultiple, me.pPartList, tDirHead, ["hd", "hr", "ey", "fc"])
+  me.pDirection = tDirBody
+  me.pHeadDir = tDirHead
   me.pMainAction = "std"
   me.pLocX = tX
   me.pLocY = tY
   me.pLocH = tH
   me.pRestingHeight = 0.0
-  me.pDirection = tDirBody
   me.arrangeParts()
   if me.pExtraObjs.count > 0 then
     call(#refresh, me.pExtraObjs)
@@ -117,7 +110,7 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pChanges = 1
 end
 
-on setPartLists me, tModels
+on setPartLists me, tmodels
   tAction = me.pMainAction
   me.pPartList = []
   if me.pSex = "F" then
@@ -126,45 +119,45 @@ on setPartLists me, tModels
     tphModel = "s02"
   end if
   tColor = pPhFigure["color"]
-  tModels["ch"] = ["model": tphModel, "color": tColor]
+  tmodels["ch"] = ["model": tphModel, "color": tColor]
   repeat with f in ["bd", "lh", "rh"]
-    if voidp(tModels[f]) then
-      tModels[f] = ["model": "001", "color": rgb("#EEEEEE")]
+    if voidp(tmodels[f]) then
+      tmodels[f] = ["model": "001", "color": rgb("#EEEEEE")]
     end if
   end repeat
-  tModels["bd"]["model"] = "s" & tModels["bd"]["model"].char[2..3]
-  tModels["lh"]["model"] = "s" & tModels["bd"]["model"].char[2..3]
-  tModels["rh"]["model"] = "s" & tModels["bd"]["model"].char[2..3]
-  pPelleFigure = tModels
+  tmodels["bd"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
+  tmodels["lh"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
+  tmodels["rh"]["model"] = "s" & tmodels["bd"]["model"].char[2..3]
+  pPelleFigure = tmodels
   tPartDefinition = ["li", "lh", "bd", "ch", "hd", "fc", "ey", "hr", "ri", "rh"]
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
-    if voidp(tModels[tPartSymbol]) then
-      tModels[tPartSymbol] = [:]
+    if voidp(tmodels[tPartSymbol]) then
+      tmodels[tPartSymbol] = [:]
     end if
-    if voidp(tModels[tPartSymbol]["model"]) then
-      tModels[tPartSymbol]["model"] = "001"
+    if voidp(tmodels[tPartSymbol]["model"]) then
+      tmodels[tPartSymbol]["model"] = "001"
     end if
-    if voidp(tModels[tPartSymbol]["color"]) then
-      tModels[tPartSymbol]["color"] = rgb("#EEEEEE")
+    if voidp(tmodels[tPartSymbol]["color"]) then
+      tmodels[tPartSymbol]["color"] = rgb("#EEEEEE")
     end if
-    if tPartSymbol = "fc" and tModels[tPartSymbol]["model"] = "002" and me.pXFactor < 33 then
-      tModels[tPartSymbol]["model"] = "001"
+    if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and me.pXFactor < 33 then
+      tmodels[tPartSymbol]["model"] = "001"
     end if
     tPartCls = value(getThread(#room).getComponent().getClassContainer().get("swimpart"))
     tPartObj = createObject(#temp, tPartCls)
-    if stringp(tModels[tPartSymbol]["color"]) then
-      tColor = value("rgb(" & tModels[tPartSymbol]["color"] & ")")
+    if stringp(tmodels[tPartSymbol]["color"]) then
+      tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
     end if
-    if tModels[tPartSymbol]["color"].ilk <> #color then
-      tColor = rgb(tModels[tPartSymbol]["color"])
+    if tmodels[tPartSymbol]["color"].ilk <> #color then
+      tColor = rgb(tmodels[tPartSymbol]["color"])
     else
-      tColor = tModels[tPartSymbol]["color"]
+      tColor = tmodels[tPartSymbol]["color"]
     end if
     if tColor.red + tColor.green + tColor.blue > 238 * 3 then
       tColor = rgb("EEEEEE")
     end if
-    tPartObj.define(tPartSymbol, tModels[tPartSymbol]["model"], tColor, me.pDirection, tAction, me)
+    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, me.pDirection, tAction, me)
     me.pPartList.add(tPartObj)
     me.pColors.setaProp(tPartSymbol, tColor)
   end repeat
@@ -286,6 +279,7 @@ on prepare me
     me.pChanges = 1
   end if
   if me.pDancing then
+    me.pLocFix = point(0, 1)
     me.pAnimating = 1
     me.pChanges = 1
   end if
@@ -317,7 +311,7 @@ on render me
     me.pMatteSpr.height = tSize[2]
     me.pBuffer = image(tSize[1], tSize[2], tSize[3])
   end if
-  if me.pFlipList[me.pDirection + 1] <> me.pDirection then
+  if me.pFlipList[me.pDirection + 1] <> me.pDirection or me.pDirection = 3 and me.pHeadDir = 4 or me.pDirection = 7 and me.pHeadDir = 6 then
     if not me.pSprite.flipH then
       me.pSprite.flipH = 1
       me.pMatteSpr.flipH = 1
@@ -354,6 +348,10 @@ on render me
   me.pMember.image.copyPixels(me.pBuffer, me.pUpdateRect, me.pUpdateRect)
 end
 
+on action_swim me, props
+  pSwim = 1
+end
+
 on action_mv me, tProps
   me.pMoving = 1
   tDelim = the itemDelimiter
@@ -361,30 +359,9 @@ on action_mv me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = integer(tloc.item[3])
+  tLocH = float(tloc.item[3])
   the itemDelimiter = tDelim
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
-  if tLocH < 7 then
-    pSwimShadowH = tLocH
-    tLocH = 4
-  end if
-end
-
-on action_swim me, props
-  pSwim = 1
-end
-
-on action_sign me, props
-  if pSwim then
-    return 
-  end if
-  tSignMem = "sign" & props.word[2]
-  call(#doHandWorkLeft, me.pPartList, "sig")
-  tSignObjID = "SIGN_EXTRA"
-  if voidp(me.pExtraObjs[tSignObjID]) then
-    me.pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))
-  end if
-  call(#show_sign, me.pExtraObjs, ["sprite": me.pSprite, "direction": me.pDirection, "signmember": tSignMem])
 end

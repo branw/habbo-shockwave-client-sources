@@ -14,7 +14,7 @@ end
 
 on sendNewRoomData me, tFlatData
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send(#info, "CREATEFLAT" && tFlatData)
+    return getConnection(getVariable("connection.info.id")).send("CREATEFLAT", tFlatData)
   else
     return 0
   end if
@@ -22,7 +22,21 @@ end
 
 on sendSetFlatInfo me, tFlatMsg
   if connectionExists(getVariable("connection.info.id")) then
-    getConnection(getVariable("connection.info.id")).send(#info, "SETFLATINFO" && tFlatMsg)
+    getConnection(getVariable("connection.info.id")).send("SETFLATINFO", tFlatMsg)
+  else
+    return 0
+  end if
+end
+
+on sendFlatCategory me, tNodeId, tCategoryId
+  if voidp(tNodeId) then
+    return error(me, "Node ID expected!", #sendFlatCategory)
+  end if
+  if voidp(tCategoryId) then
+    return error(me, "Category ID expected!", #sendFlatCategory)
+  end if
+  if connectionExists(getVariable("connection.info.id")) then
+    return getConnection(getVariable("connection.info.id")).send("SETFLATCAT", [#integer: integer(tNodeId), #integer: integer(tCategoryId)])
   else
     return 0
   end if

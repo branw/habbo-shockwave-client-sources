@@ -3,17 +3,20 @@ property pSprite, pEventList
 on construct me
   pEventList = [:]
   pSprite = sprite(reserveSprite(me.getID()))
+  if pSprite.spriteNum = 0 then
+    return 0
+  end if
   pSprite.member = member(getmemnum("null"))
   pSprite.rect = rect(-90, -90, -80, -80)
   pSprite.locZ = 20000000
   pSprite.blend = 0
-  setEventBroker(pSprite.spriteNum, me.getID())
+  getSpriteManager().setEventBroker(pSprite.spriteNum, me.getID())
   return 1
 end
 
 on deconstruct me
   removePrepare(me.getID())
-  releaseSprite(pSprite.spriteNum)
+  getSpriteManager().releaseSprite(pSprite.spriteNum)
   return 1
 end
 

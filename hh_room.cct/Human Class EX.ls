@@ -1,6 +1,7 @@
-property pClass, pCustom, pSex, pModState, pCtrlType, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc
 
 on construct me
+  pName = EMPTY
   pPartList = []
   pPartIndex = [:]
   pFlipList = [0, 1, 2, 3, 2, 1, 0, 7]
@@ -9,6 +10,7 @@ on construct me
   pScreenLoc = [0, 0, 0]
   pStartLScreen = [0, 0, 0]
   pDestLScreen = [0, 0, 0]
+  pPreviousLoc = [0, 0, 0]
   pRestingHeight = 0.0
   pAnimCounter = 0
   pMoveStart = 0
@@ -26,6 +28,7 @@ on construct me
   pTrading = 0
   pCtrlType = 0
   pAnimating = 0
+  pBadge = SPACE
   pCurrentAnim = EMPTY
   pAlphaColor = rgb(255, 255, 255)
   pSync = 1
@@ -34,11 +37,13 @@ on construct me
   pExtraObjs = [:]
   pDefShadowMem = member(0)
   pInfoStruct = [:]
+  pQueuesWithObj = 0
   pGeometry = getThread(#room).getInterface().getGeometry()
   pXFactor = pGeometry.pXFactor
   pYFactor = pGeometry.pYFactor
   pHFactor = pGeometry.pHFactor
   pCorrectLocZ = 0
+  pPartClass = value(getThread(#room).getComponent().getClassContainer().get("bodypart"))
   return 1
 end
 
@@ -49,7 +54,9 @@ on deconstruct me
   releaseSprite(pSprite.spriteNum)
   releaseSprite(pMatteSpr.spriteNum)
   releaseSprite(pShadowSpr.spriteNum)
-  removeMember(me.getID() && "Canvas")
+  if memberExists(pClass && pName && "Canvas") then
+    removeMember(pClass && pName && "Canvas")
+  end if
   call(#deconstruct, pExtraObjs)
   pExtraObjs = VOID
   pShadowSpr = VOID
@@ -59,30 +66,12 @@ on deconstruct me
 end
 
 on define me, tdata
-  pClass = tdata[#class]
-  pCustom = tdata[#Custom]
-  pSex = tdata[#sex]
-  pDirection = tdata[#direction][1]
-  pLastDir = pDirection
-  pLocX = tdata[#x]
-  pLocY = tdata[#y]
-  pLocH = tdata[#h]
-  pPeopleSize = getVariable("human.size." & integer(pXFactor))
-  if not pPeopleSize then
-    error(me, "People size not found, using default!", #define)
-    pPeopleSize = "h"
-  end if
-  pCorrectLocZ = pPeopleSize = "h"
-  pCanvasSize = value(getVariable("human.canvas." & pPeopleSize))
-  if not pCanvasSize then
-    error(me, "Canvas size not found, using default!", #define)
-    pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
-  end if
-  if not memberExists(me.getID() && "Canvas") then
-    createMember(me.getID() && "Canvas", #bitmap)
+  me.setup(tdata)
+  if not memberExists(pClass && pName && "Canvas") then
+    createMember(pClass && pName && "Canvas", #bitmap)
   end if
   tSize = pCanvasSize[#std]
-  pMember = member(getmemnum(me.getID() && "Canvas"))
+  pMember = member(getmemnum(pClass && pName && "Canvas"))
   pMember.image = image(tSize[1], tSize[2], tSize[3])
   pMember.regPoint = point(0, pMember.image.height + tSize[4])
   pBuffer = pMember.image.duplicate()
@@ -107,32 +96,68 @@ on define me, tdata
   pMatteSpr.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseLeave)
   setEventBroker(pShadowSpr.spriteNum, me.getID())
   pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
-  tPartSymbols = tdata[#parts]
-  if not me.setPartLists(tdata[#figure]) then
-    return error(me, "Couldn't create part lists!", #define)
-  end if
-  me.arrangeParts()
-  me.refresh(pLocX, pLocY, pLocH, pDirection, pDirection)
-  pSync = 0
-  pInfoStruct[#name] = me.getID()
+  pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
   pInfoStruct[#Custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
-  pInfoStruct[#badge] = 0
+  pInfoStruct[#badge] = " "
   return 1
 end
 
+on setup me, tdata
+  pName = tdata[#name]
+  pClass = tdata[#class]
+  pCustom = tdata[#Custom]
+  pSex = tdata[#sex]
+  pDirection = tdata[#direction][1]
+  pHeadDir = pDirection
+  pLastDir = pDirection
+  pLocX = tdata[#x]
+  pLocY = tdata[#y]
+  pLocH = tdata[#h]
+  pBadge = tdata[#badge]
+  pPeopleSize = getVariable("human.size." & integer(pXFactor))
+  if not pPeopleSize then
+    error(me, "People size not found, using default!", #setup)
+    pPeopleSize = "h"
+  end if
+  pCorrectLocZ = pPeopleSize = "h"
+  pCanvasSize = value(getVariable("human.canvas." & pPeopleSize))
+  if not pCanvasSize then
+    error(me, "Canvas size not found, using default!", #setup)
+    pCanvasSize = [#std: [64, 102, 32, -10], #lay: [89, 102, 32, -8]]
+  end if
+  tPartSymbols = tdata[#parts]
+  if not me.setPartLists(tdata[#figure]) then
+    return error(me, "Couldn't create part lists!", #setup)
+  end if
+  me.arrangeParts()
+  me.refresh(pLocX, pLocY, pLocH, pDirection, pHeadDir)
+  pSync = 0
+end
+
 on update me
-  pSync = not pSync
-  if pSync then
+  if pQueuesWithObj then
     me.prepare()
-  else
     me.render()
+  else
+    pSync = not pSync
+    if pSync then
+      me.prepare()
+    else
+      me.render()
+    end if
   end if
 end
 
 on refresh me, tX, tY, tH, tDirHead, tDirBody
+  if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
+    return 1
+  end if
+  if pDancing then
+    tDirHead = tDirBody
+  end if
   pMoving = 0
   pDancing = 0
   pTalking = 0
@@ -145,28 +170,48 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   pSleeping = 0
   pLocFix = point(-1, 2)
   call(#reset, pPartList)
-  if pCorrectLocZ then
-    pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH + pRestingHeight)
-  else
-    pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
-  end if
+  pScreenLoc = pGeometry.getScreenCoordinate(tX, tY, tH)
   pMainAction = "std"
   pLocX = tX
   pLocY = tY
   pLocH = tH
   pRestingHeight = 0.0
+  if tDirBody <> pFlipList[tDirBody + 1] then
+    if tDirBody <> tDirHead then
+      case tDirHead of
+        4:
+          tDirHead = 2
+        5:
+          tDirHead = 1
+        6:
+          tDirHead = 4
+        7:
+          tDirHead = 5
+      end case
+    end if
+  end if
   call(#defineDir, pPartList, tDirBody)
   call(#defineDirMultiple, pPartList, tDirHead, ["hd", "hr", "ey", "fc"])
   pDirection = tDirBody
+  pHeadDir = tDirHead
   me.arrangeParts()
   if pExtraObjs.count > 0 then
     call(#refresh, pExtraObjs)
   end if
+  pQueuesWithObj = 0
   pChanges = 1
 end
 
 on select me
   return 1
+end
+
+on getName me
+  return pName
+end
+
+on getClass me
+  return "user"
 end
 
 on setPartModel me, tPart, tmodel
@@ -253,33 +298,7 @@ on getInfo me
   else
     pInfoStruct[#ctrl] = pCtrlType
   end if
-  if pModState <> 0 then
-    pInfoStruct[#badge] = pModState
-    pInfoStruct[#badge_visible] = 1
-  else
-    pInfoStruct[#badge] = 0
-    pInfoStruct[#badge_visible] = 1
-  end if
-  tSession = getObject(#session)
-  if me.getID() = tSession.get("user_name") then
-    if not tSession.exists("badge_visible") then
-      tSession.set("badge_visible", pModState <> 0)
-    end if
-    if tSession.exists("club_status") then
-      tClubStatus = tSession.get("club_status")
-      if tClubStatus.ilk = #propList then
-        if tClubStatus[#status] = "active" then
-          pInfoStruct[#badge] = "H"
-          pInfoStruct[#badge_visible] = tSession.get("badge_visible")
-        end if
-      end if
-    end if
-    tModType = tSession.get("moderator")
-    if tModType <> 0 then
-      pInfoStruct[#badge] = tModType
-      pInfoStruct[#badge_visible] = tSession.get("badge_visible")
-    end if
-  end if
+  pInfoStruct[#badge] = me.pBadge
   if pTrading then
     pInfoStruct[#Custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
@@ -294,6 +313,23 @@ end
 
 on getSprites me
   return [pSprite, pShadowSpr, pMatteSpr]
+end
+
+on getProperty me, tPropID
+  case tPropID of
+    #dancing:
+      return pDancing
+    #carrying:
+      return pCarrying
+    #loc:
+      return [pLocX, pLocY, pLocH]
+  end case
+  return 0
+end
+
+on setProperty me, tPropID, tValue
+  -- ERROR: Could not identify jmp
+  return 0
 end
 
 on closeEyes me
@@ -426,7 +462,7 @@ on render me
     pMatteSpr.height = tSize[2]
     pBuffer = image(tSize[1], tSize[2], tSize[3])
   end if
-  if pFlipList[pDirection + 1] <> pDirection then
+  if pFlipList[pDirection + 1] <> pDirection or pDirection = 3 and pHeadDir = 4 or pDirection = 7 and pHeadDir = 6 then
     pMember.regPoint = point(pMember.image.width, pMember.regPoint[2])
     pShadowFix = pXFactor
     if not pSprite.flipH then
@@ -450,10 +486,10 @@ on render me
   end if
   pSprite.locH = pScreenLoc[1]
   pSprite.locV = pScreenLoc[2]
-  pSprite.locZ = pScreenLoc[3] + tOffZ
   pMatteSpr.loc = pSprite.loc
-  pMatteSpr.locZ = pSprite.locZ + 1
   pShadowSpr.loc = pSprite.loc + [pShadowFix, 0]
+  pSprite.locZ = pScreenLoc[3] + tOffZ
+  pMatteSpr.locZ = pSprite.locZ + 1
   pShadowSpr.locZ = pSprite.locZ - 3
   pUpdateRect = rect(0, 0, 0, 0)
   pBuffer.fill(pBuffer.rect, pAlphaColor)
@@ -467,38 +503,37 @@ on reDraw me
   pMember.image.copyPixels(pBuffer, pBuffer.rect, pBuffer.rect)
 end
 
-on setPartLists me, tModels
+on setPartLists me, tmodels
   tAction = pMainAction
   pPartList = []
   tPartDefinition = getVariableValue("human.parts." & pPeopleSize)
   repeat with i = 1 to tPartDefinition.count
     tPartSymbol = tPartDefinition[i]
-    if voidp(tModels[tPartSymbol]) then
-      tModels[tPartSymbol] = [:]
+    if voidp(tmodels[tPartSymbol]) then
+      tmodels[tPartSymbol] = [:]
     end if
-    if voidp(tModels[tPartSymbol]["model"]) then
-      tModels[tPartSymbol]["model"] = "001"
+    if voidp(tmodels[tPartSymbol]["model"]) then
+      tmodels[tPartSymbol]["model"] = "001"
     end if
-    if voidp(tModels[tPartSymbol]["color"]) then
-      tModels[tPartSymbol]["color"] = rgb("EEEEEE")
+    if voidp(tmodels[tPartSymbol]["color"]) then
+      tmodels[tPartSymbol]["color"] = rgb("EEEEEE")
     end if
-    if tPartSymbol = "fc" and tModels[tPartSymbol]["model"] <> "001" and pXFactor < 33 then
-      tModels[tPartSymbol]["model"] = "001"
+    if tPartSymbol = "fc" and tmodels[tPartSymbol]["model"] <> "001" and pXFactor < 33 then
+      tmodels[tPartSymbol]["model"] = "001"
     end if
-    tPartCls = value(getThread(#room).getComponent().getClassContainer().get("bodypart"))
-    tPartObj = createObject(#temp, tPartCls)
-    if stringp(tModels[tPartSymbol]["color"]) then
-      tColor = value("rgb(" & tModels[tPartSymbol]["color"] & ")")
+    tPartObj = createObject(#temp, pPartClass)
+    if stringp(tmodels[tPartSymbol]["color"]) then
+      tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")
     end if
-    if tModels[tPartSymbol]["color"].ilk <> #color then
-      tColor = rgb(tModels[tPartSymbol]["color"])
+    if tmodels[tPartSymbol]["color"].ilk <> #color then
+      tColor = rgb(tmodels[tPartSymbol]["color"])
     else
-      tColor = tModels[tPartSymbol]["color"]
+      tColor = tmodels[tPartSymbol]["color"]
     end if
     if tColor.red + tColor.green + tColor.blue > 238 * 3 then
       tColor = rgb("EEEEEE")
     end if
-    tPartObj.define(tPartSymbol, tModels[tPartSymbol]["model"], tColor, pDirection, tAction, me)
+    tPartObj.define(tPartSymbol, tmodels[tPartSymbol]["model"], tColor, pDirection, tAction, me)
     pPartList.add(tPartObj)
     pColors.setaProp(tPartSymbol, tColor)
   end repeat
@@ -596,24 +631,42 @@ on action_mv me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = integer(tloc.item[3])
+  tLocH = float(tloc.item[3])
   the itemDelimiter = tDelim
+  pMoveStart = the milliSeconds
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
-  pMoveStart = the milliSeconds
   call(#defineActMultiple, pPartList, "wlk", ["bd", "lg", "lh", "rh", "ls", "rs", "sh"])
+end
+
+on action_sld me, tProps
+  pMoving = 1
+  tDelim = the itemDelimiter
+  the itemDelimiter = ","
+  tloc = tProps.word[2]
+  tLocX = integer(tloc.item[1])
+  tLocY = integer(tloc.item[2])
+  tLocH = float(tloc.item[3])
+  the itemDelimiter = tDelim
+  pQueuesWithObj = integer(tProps.word[3])
+  pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
+  pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
+  pPreviousLoc = [pLocX, pLocY, pLocH]
+  tStartTime = tProps.word[4]
+  if voidp(tStartTime) then
+    pMoveStart = the milliSeconds
+  else
+    pMoveStart = tStartTime
+  end if
 end
 
 on action_sit me, tProps
   call(#defineActMultiple, pPartList, "sit", ["bd", "lg", "sh"])
   pMainAction = "sit"
-  if pCorrectLocZ then
-    pRestingHeight = float(tProps.word[2]) - pLocH - 1.0
-    pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
-  else
-    pRestingHeight = float(tProps.word[2]) - 1.0
-    pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pRestingHeight)
-  end if
+  pRestingHeight = float(tProps.word[2]) - 1.0
+  pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
+  tIsInQueue = integer(tProps.word[3])
+  pQueuesWithObj = tIsInQueue
   me.arrangeParts()
 end
 
@@ -638,65 +691,150 @@ on action_lay me, tProps
 end
 
 on action_carryd me, tProps
-  pCarrying = tProps.word[2..tProps.word.count]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItm = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "001")
+    else
+      tCarryItm = "001"
+    end if
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
+    end if
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "001"
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
   end if
-  call(#doHandWorkRight, pPartList, "crr")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItm)
 end
 
 on action_cri me, tProps
-  pCarrying = tProps.word[2..tProps.word.count]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItm = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "075")
+    else
+      tCarryItm = "075"
+    end if
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
+    end if
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "001"
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
   end if
-  call(#doHandWorkRight, pPartList, "crr")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItm)
 end
 
 on action_usei me, tProps
-  pCarrying = tProps.word[2..tProps.word.count]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItm = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "001")
+    else
+      tCarryItm = "001"
+    end if
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
+    end if
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    me.arrangeParts()
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "001"
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
   end if
-  call(#doHandWorkRight, pPartList, "drk")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItm)
-  me.arrangeParts()
 end
 
 on action_drink me, tProps
-  pCarrying = tProps.word[2..tProps.word.count]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItem = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "001")
+    else
+      tCarryItm = "001"
+    end if
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
+    end if
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    me.arrangeParts()
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "001"
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
+    me.arrangeParts()
   end if
-  call(#doHandWorkRight, pPartList, "drk")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItem)
-  me.arrangeParts()
 end
 
 on action_carryf me, tProps
-  pCarrying = tProps.word[2]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItm = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "001")
+    else
+      tCarryItm = "001"
+    end if
+    call(#doHandWorkRight, pPartList, "crr")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, tItem)
+    end if
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "004"
+      call(#doHandWorkRight, pPartList, "crr")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
   end if
-  call(#doHandWorkRight, pPartList, "crr")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItm)
 end
 
 on action_eat me, tProps
-  pCarrying = tProps.word[2]
-  tCarryItm = "001"
-  if variableExists("handitem.right." & pCarrying) then
-    tCarryItm = getVariable("handitem.right." & pCarrying, "001")
+  tItem = tProps.word[2]
+  if integerp(value(tItem)) then
+    tCarrying = tItem
+    if variableExists("handitem.right." & tCarrying) then
+      tCarryItm = getVariable("handitem.right." & tCarrying, "001")
+    else
+      tCarryItm = "001"
+    end if
+    if textExists("handitem" & tCarrying) then
+      pCarrying = getText("handitem" & tCarrying, "handitem" & tCarrying)
+    end if
+    call(#doHandWorkRight, pPartList, "drk")
+    pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+  else
+    if getObject(#room_component).getRoomID() <> "private" then
+      pCarrying = tProps.word[2..tProps.word.count]
+      tCarryItm = "004"
+      call(#doHandWorkRight, pPartList, "drk")
+      pPartList[pPartIndex["ri"]].setModel(tCarryItm)
+    end if
   end if
-  call(#doHandWorkRight, pPartList, "drk")
-  pPartList[pPartIndex["ri"]].setModel(tCarryItm)
 end
 
 on action_talk me, tProps
@@ -750,21 +888,12 @@ on action_sleep me
   pSleeping = 1
 end
 
-on action_xtras me, tProps
-  error(me, "Obsolete action used!", #action_xtras)
-end
-
 on action_flatctrl me, tProps
   pCtrlType = tProps.word[2]
 end
 
 on action_mod me, tProps
   pModState = tProps.word[2]
-  tSession = getObject(#session)
-  if me.getID() = tSession.get("user_name") then
-    tSession.set("moderator", pModState)
-    tSession.set("badge_visible", 1)
-  end if
 end
 
 on action_sign me, props

@@ -87,7 +87,7 @@ on select me
     end if
   end if
   if tUpdate then
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "SCORE" & "/" & tScore)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SCORE" & "/" & tScore)
   end if
   return 1
 end

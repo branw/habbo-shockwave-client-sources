@@ -1,4 +1,4 @@
-property pState, pTraderPal, pAcceptFlagMe, pAcceptFlagHe, pMyStripItems, pItemListMe, pItemListHe, pTraderWndID, pMaxTradeItms, pItemSlotRect
+property pState, pTraderPal, pAcceptFlagMe, pAcceptFlagHe, pMyStripItems, pItemListMe, pItemListHe, pTraderWndID, pMaxTradeItms, pItemSlotRect, pConfirmationWndID, pMySlotProps, pHerSlotProps
 
 on construct me
   pState = #closed
@@ -10,6 +10,10 @@ on construct me
   pMyStripItems = []
   pMaxTradeItms = 0
   pItemSlotRect = rect(0, 0, 32, 32)
+  pHerSlotCount = 0
+  pMySlotProps = [:]
+  pHerSlotProps = [:]
+  pConfirmationWndID = "safetrading_confirmationdialog"
   return 1
 end
 
@@ -18,7 +22,8 @@ on deconstruct me
 end
 
 on open me, tdata
-  getThread(#room).getInterface().pClickAction = "tradeItem"
+  getThread(#room).getInterface().cancelObjectMover()
+  getThread(#room).getInterface().setProperty(#clickAction, "tradeItem")
   if windowExists(pTraderWndID) then
     return 0
   end if
@@ -38,7 +43,9 @@ on open me, tdata
     return 0
   end if
   tWndObj = getWindow(pTraderWndID)
-  tWndObj.merge("habbo_trading.window")
+  if not tWndObj.merge("habbo_trading.window") then
+    return tWndObj.close()
+  end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcTrading, me.getID())
   tWndObj.getElement("trading_heoffers_text").setText(pTraderPal && getText("trading_offers", "offers"))
@@ -51,7 +58,7 @@ on open me, tdata
     pMaxTradeItms = pMaxTradeItms + 1
   end repeat
   repeat with i = 1 to pMaxTradeItms
-    tWndObj.getElement("trading_mystuff_" & i).draw(rgb(200, 200, 200))
+    tWndObj.getElement("trading_mystuff_" & i).draw(rgb(100, 100, 100))
     tWndObj.getElement("trading_herstuff_" & i).draw(rgb(200, 200, 200))
   end repeat
   tWidth = tWndObj.getElement("trading_mystuff_1").getProperty(#width)
@@ -63,7 +70,7 @@ on open me, tdata
 end
 
 on close me, tdata
-  getThread(#room).getInterface().pClickAction = "moveHuman"
+  getThread(#room).getInterface().setProperty(#clickAction, "moveHuman")
   getThread(#room).getInterface().getObjectMover().clear()
   if windowExists(pTraderWndID) then
     pAcceptFlagMe = 0
@@ -71,7 +78,10 @@ on close me, tdata
     pItemListMe = []
     pItemListHe = []
     pMyStripItems = []
+    pMySlotProps = [:]
+    pHerSlotProps = [:]
     removeWindow(pTraderWndID)
+    removeWindow(pConfirmationWndID)
   end if
   pState = #closed
   return 1
@@ -96,8 +106,12 @@ on accept me, tuser, tValue
   else
     tOnOff = "off"
   end if
+  tWndObj = getWindow(pTraderWndID)
+  if tWndObj = 0 then
+    return 0
+  end if
   tImage = member(getmemnum("button.checkbox." & tOnOff)).image
-  getWindow(pTraderWndID).getElement("trading_confirm_check").feedImage(tImage)
+  tWndObj.getElement("trading_confirm_check").feedImage(tImage)
   if pAcceptFlagHe then
     tOnOff = "on"
     tBlend = 255
@@ -108,7 +122,8 @@ on accept me, tuser, tValue
   tImageA = member(getmemnum("button.checkbox." & tOnOff)).image
   tImageB = image(tImageA.width, tImageA.height, tImageA.depth, tImageA.paletteRef)
   tImageB.copyPixels(tImageA, tImageA.rect, tImageA.rect, [#blendLevel: tBlend])
-  getWindow(pTraderWndID).getElement("trading_buddycheck_image").feedImage(tImageB)
+  tWndObj.getElement("trading_buddycheck_image").feedImage(tImageB)
+  return 1
 end
 
 on refresh me, tdata
@@ -116,23 +131,54 @@ on refresh me, tdata
   pMyStripItems = []
   tWndObj = getWindow(pTraderWndID)
   pItemListMe = tdata[getObject(#session).get("user_name")][#items]
+  pMySlotProps = [:]
   repeat with i = 1 to pItemListMe.count
-    tImage = me.createItemImg(pItemListMe[i])
-    tWndObj.getElement("trading_mystuff_" & i).feedImage(tImage)
-    tWndObj.getElement("trading_mystuff_" & i).draw(rgb(64, 64, 64))
+    tClass = pItemListMe[i][#class]
+    if not voidp(pItemListMe[i][#props]) then
+      tClass = tClass & "_" & pItemListMe[i][#props]
+    end if
+    if voidp(pMySlotProps[tClass]) then
+      tAddToSlot = pMySlotProps.count + 1
+      if tWndObj.elementExists("trading_mystuff_" & tAddToSlot) then
+        pMySlotProps.addProp(tClass, ["count": 1, "slot": tAddToSlot, "name": pItemListMe[i][#name]])
+        tWndObj.getElement("trading_mycount_" & tAddToSlot).setText(pMySlotProps[tClass]["count"])
+        tImage = me.createItemImg(pItemListMe[i], pItemListMe[i][#colors])
+        tWndObj.getElement("trading_mystuff_" & tAddToSlot).feedImage(tImage)
+        tWndObj.getElement("trading_mystuff_" & tAddToSlot).draw(rgb(64, 64, 64))
+      end if
+    else
+      tCount = pMySlotProps[tClass]["count"]
+      tSlot = pMySlotProps[tClass]["slot"]
+      pMySlotProps[tClass]["count"] = tCount + 1
+      tWndObj.getElement("trading_mycount_" & tSlot).setText(pMySlotProps[tClass]["count"])
+    end if
     pMyStripItems.add(pItemListMe[i][#stripId])
-    if i = pMaxTradeItms then
-      exit repeat
-    end if
   end repeat
+  if tdata[pTraderPal] = VOID then
+    return 0
+  end if
   pItemListHe = tdata[pTraderPal][#items]
+  pHerSlotProps = [:]
   repeat with i = 1 to pItemListHe.count
-    tImage = me.createItemImg(pItemListHe[i])
-    tWndObj.getElement("trading_herstuff_" & i).feedImage(tImage)
-    tWndObj.getElement("trading_herstuff_" & i).draw(rgb(64, 64, 64))
-    if i = pMaxTradeItms then
-      exit repeat
+    tClass = pItemListHe[i][#class]
+    if not voidp(pItemListHe[i][#props]) then
+      tClass = tClass & pItemListHe[i][#props]
     end if
+    if voidp(pHerSlotProps[tClass]) then
+      tAddToSlot = pHerSlotProps.count + 1
+      if tWndObj.elementExists("trading_herstuff_" & tAddToSlot) then
+        pHerSlotProps.addProp(tClass, ["count": 1, "slot": tAddToSlot, "name": pItemListHe[i][#name]])
+        tWndObj.getElement("trading_hercount_" & tAddToSlot).setText(pHerSlotProps[tClass]["count"])
+        tImage = me.createItemImg(pItemListHe[i], pItemListHe[i][#colors])
+        tWndObj.getElement("trading_herstuff_" & tAddToSlot).feedImage(tImage)
+        tWndObj.getElement("trading_herstuff_" & tAddToSlot).draw(rgb(64, 64, 64))
+      end if
+      next repeat
+    end if
+    tCount = pHerSlotProps[tClass]["count"]
+    tSlot = pHerSlotProps[tClass]["slot"]
+    pHerSlotProps[tClass]["count"] = tCount + 1
+    tWndObj.getElement("trading_hercount_" & tSlot).setText(pHerSlotProps[tClass]["count"])
   end repeat
   me.accept(tdata.getPropAt(1), value(tdata[1][#accept]))
   me.accept(tdata.getPropAt(2), value(tdata[2][#accept]))
@@ -147,49 +193,40 @@ on isUnderTrade me, tStripID
 end
 
 on createItemImg me, tProps
-  tClass = tProps[#class]
-  tColor = tProps[#color]
   tImgProps = [#ink: 8]
-  if ilk(tProps[#stripColor], #color) then
-    tImgProps[#bgColor] = tProps[#stripColor]
-    tImgProps[#ink] = 41
+  tClass = tProps[#class]
+  if tProps[#class] contains "*" then
+    tClass = tProps[#class].char[1..offset("*", tProps[#class]) - 1]
   end if
-  if tClass contains "*" then
-    tClass = tClass.char[1..offset("*", tClass) - 1]
-  end if
-  if memberExists(tClass & "_small") then
-    tMemStr = tClass & "_small"
+  if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then
+    tMemStr = tProps[#class] & "_small"
   else
-    if memberExists(tClass & "_a_0_1_1_0_0") then
-      tMemStr = tClass & "_a_0_1_1_0_0"
+    if memberExists(tClass && tProps[#props] & "_small") then
+      tMemStr = tClass && tProps[#props] & "_small"
     else
-      if memberExists(tClass & "_a_0_2_2_0_0") then
-        tMemStr = tClass & "_a_0_2_2_0_0"
+      if memberExists("rightwall" && tClass && tProps[#props]) then
+        tMemStr = "rightwall" && tClass && tProps[#props]
       else
-        if memberExists("rightwall" && tClass && tProps[#props]) then
-          tMemStr = "rightwall" && tClass && tProps[#props]
-        else
-          if tClass contains "post.it" then
-            tCount = integer(value(tProps[#props]) / (20.0 / 6.0))
-            if tCount > 6 then
-              tCount = 6
-            end if
-            if tCount < 1 then
-              tCount = 1
-            end if
-            if memberExists(tClass & "_" & tCount & "_" & "small") then
-              tMemStr = tClass & "_" & tCount & "_" & "small"
-            else
-              return error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
-            end if
-          else
-            return error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+        if tClass contains "post.it" then
+          tCount = integer(value(tProps[#props]) / (20.0 / 6.0))
+          if tCount > 6 then
+            tCount = 6
           end if
+          if tCount < 1 then
+            tCount = 1
+          end if
+          if memberExists(tClass & "_" & tCount & "_" & "small") then
+            tMemStr = tClass & "_" & tCount & "_" & "small"
+          else
+            error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+          end if
+        else
+          error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
         end if
       end if
     end if
   end if
-  tImage = member(getmemnum(tMemStr)).image
+  tImage = getObject("Preview_renderer").renderPreviewImage(tMemStr, VOID, tProps[#colors], tProps[#class])
   tImgProps[#maskImage] = tImage.createMatte()
   tNewImg = image(tImage.width, tImage.height, 32)
   tNewImg.copyPixels(tImage, tImage.rect, tImage.rect, tImgProps)
@@ -252,13 +289,31 @@ on eventProcTrading me, tEvent, tSprID, tParam
         "trading_confirm_check":
           if pAcceptFlagMe then
             pAcceptFlagMe = 0
-            return getThread(#room).getComponent().getRoomConnection().send(#room, "TRADE_UNACCEPT" & SPACE)
+            return getThread(#room).getComponent().getRoomConnection().send("TRADE_UNACCEPT")
           else
-            pAcceptFlagMe = 1
-            return getThread(#room).getComponent().getRoomConnection().send(#room, "TRADE_ACCEPT" & SPACE)
+            if pHerSlotProps.count = 0 then
+              if not createWindow(pConfirmationWndID, VOID, 0, 0, #modal) then
+                return 0
+              end if
+              tWinObj = getWindow(pConfirmationWndID)
+              tWindowTitleStr = getText("win_error", "Notice!")
+              tWinObj.setProperty(#title, tWindowTitleStr)
+              if not tWinObj.merge("habbo_basic.window") then
+                return tWinObj.close()
+              end if
+              if not tWinObj.merge("habbo_tradingalert_dialog.window") then
+                return tWinObj.close()
+              end if
+              tWinObj.center()
+              tWinObj.registerProcedure(#eventProcTradingConfirmation, me.getID(), #mouseUp)
+              return 1
+            else
+              pAcceptFlagMe = 1
+              return getThread(#room).getComponent().getRoomConnection().send("TRADE_ACCEPT")
+            end if
           end if
         "close", "trading_cancel":
-          getThread(#room).getComponent().getRoomConnection().send(#room, "TRADE_CLOSE" & SPACE)
+          getThread(#room).getComponent().getRoomConnection().send("TRADE_CLOSE")
           return me.close()
       end case
       if tSprID contains "trading_mystuff" then
@@ -268,9 +323,9 @@ on eventProcTrading me, tEvent, tSprID, tParam
           tStripID = tObjMover.getProperty(#stripId)
           if tStripID <> EMPTY then
             if pAcceptFlagMe then
-              getThread(#room).getComponent().getRoomConnection().send(#room, "TRADE_UNACCEPT" & SPACE)
+              getThread(#room).getComponent().getRoomConnection().send("TRADE_UNACCEPT")
             end if
-            getThread(#room).getComponent().getRoomConnection().send(#room, "TRADE_ADDITEM" & SPACE & TAB & tStripID)
+            getThread(#room).getComponent().getRoomConnection().send("TRADE_ADDITEM", tStripID)
             return tObjMover.clear()
           end if
         end if
@@ -287,15 +342,15 @@ on eventProcTrading me, tEvent, tSprID, tParam
           return me.showInfo(getText("trading_cancel"))
       end case
       if tSprID contains "trading_mystuff" and not pAcceptFlagMe then
-        if integer(tSprID.char[length(tSprID)]) > pItemListMe.count then
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(128, 128, 128))
+        if integer(tSprID.char[length(tSprID)]) > pMySlotProps.count then
+          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(200, 200, 200))
         else
-          me.showInfo(pItemListMe[integer(tSprID.char[length(tSprID)])][#name])
+          me.showInfo(pMySlotProps[integer(tSprID.char[length(tSprID)])][#name])
         end if
       else
         if tSprID contains "trading_herstuff" then
-          if integer(tSprID.char[length(tSprID)]) <= pItemListHe.count then
-            me.showInfo(pItemListHe[integer(tSprID.char[length(tSprID)])][#name])
+          if integer(tSprID.char[length(tSprID)]) <= pHerSlotProps.count then
+            me.showInfo(pHerSlotProps[integer(tSprID.char[length(tSprID)])][#name])
           end if
         end if
       end if
@@ -311,10 +366,10 @@ on eventProcTrading me, tEvent, tSprID, tParam
         if tObjMover <> 0 then
           tObjMover.moveTrade()
         end if
-        if integer(tSprID.char[length(tSprID)]) <= pItemListMe.count then
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(64, 64, 64))
+        if integer(tSprID.char[length(tSprID)]) <= pMySlotProps.count then
+          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(50, 50, 50))
         else
-          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(200, 200, 200))
+          getWindow(pTraderWndID).getElement(tSprID).draw(rgb(100, 100, 100))
         end if
         me.showInfo(VOID)
       else
@@ -323,4 +378,17 @@ on eventProcTrading me, tEvent, tSprID, tParam
         end if
       end if
   end case
+end
+
+on eventProcTradingConfirmation me, tEvent, tElement, arg3, tWndName
+  if tElement = "habbo_tradingalert_ok" then
+    pAcceptFlagMe = 1
+    removeWindow(tWndName)
+    return getConnection(getVariable("connection.info.id")).send("TRADE_ACCEPT")
+  else
+    if tElement = "habbo_tradingalert_cancel" then
+      removeWindow(tWndName)
+      return 1
+    end if
+  end if
 end

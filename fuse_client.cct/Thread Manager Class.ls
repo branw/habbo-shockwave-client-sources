@@ -39,7 +39,7 @@ end
 
 on initThread me, tCastNumOrMemName, tid
   if stringp(tCastNumOrMemName) then
-    tMemNum = getmemnum(tCastNumOrMemName)
+    tMemNum = getResourceManager().getmemnum(tCastNumOrMemName)
     if tMemNum = 0 then
       return error(me, "Thread index field not found:" && tCastNumOrMemName, #initThread)
     else
@@ -91,7 +91,7 @@ on initThread me, tCastNumOrMemName, tid
   end if
   tThreadObj = createObject(#temp, getClassVariable("thread.instance.class"))
   tThreadObj.setID(tThreadID)
-  repeat with tModule in [#interface, #component, #handler, #parser]
+  repeat with tModule in [#interface, #component, #handler]
     tSymbol = symbol(tThreadID & "_" & tModule)
     if pVarMngrObj.exists(tModule & ".class") then
       tClass = pVarMngrObj.get(tModule & ".class")
@@ -136,17 +136,15 @@ on closeThread me, tCastNumOrID
   if voidp(tThread) then
     return error(me, "Thread not found:" && tid, #closeThread)
   end if
+  tObjMgr = getObjectManager()
   if objectp(tThread.interface) then
-    removeObject(tThread.interface.getID())
+    tObjMgr.remove(tThread.interface.getID())
   end if
   if objectp(tThread.component) then
-    removeObject(tThread.component.getID())
+    tObjMgr.remove(tThread.component.getID())
   end if
   if objectp(tThread.handler) then
-    removeObject(tThread.handler.getID())
-  end if
-  if objectp(tThread.parser) then
-    removeObject(tThread.parser.getID())
+    tObjMgr.remove(tThread.handler.getID())
   end if
   pThreadList.deleteProp(tid)
   return 1
@@ -172,16 +170,18 @@ on buildThreadObj me, tid, tClassList, tThreadObj
   tBase.construct()
   tBase[#ancestor] = tThreadObj
   tBase.setID(tid)
-  registerObject(tid, tBase)
+  tResMgr = getResourceManager()
+  tObjMgr = getObjectManager()
+  tObjMgr.registerObject(tid, tBase)
   tClassList.addAt(1, tBase)
   repeat with tClass in tClassList
     if objectp(tClass) then
       tObject = tClass
       tInitFlag = 0
     else
-      tMemNum = getmemnum(tClass)
+      tMemNum = tResMgr.getmemnum(tClass)
       if tMemNum < 1 then
-        unregisterObject(tid)
+        tObjMgr.unregisterObject(tid)
         return error(me, "Script not found:" && tMemNum, #buildThreadObj)
       end if
       tObject = script(tMemNum).new()
@@ -189,8 +189,8 @@ on buildThreadObj me, tid, tClassList, tThreadObj
     end if
     tObject[#ancestor] = tTemp
     tTemp = tObject
-    unregisterObject(tid)
-    registerObject(tid, tObject)
+    tObjMgr.unregisterObject(tid)
+    tObjMgr.registerObject(tid, tObject)
     if tInitFlag then
       tObject.construct()
     end if

@@ -28,7 +28,7 @@ end
 
 on subscribe me, tDays
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send(#info, "SCR_SUBSCRIBE club_habbo 0" && tDays)
+    return getConnection(getVariable("connection.info.id")).send("SCR_SUBSCRIBE", "club_habbo 0" && tDays)
   else
     return error(me, "Couldn't find connection:" && getVariable("connection.info.id"), #subscribe)
   end if
@@ -36,8 +36,16 @@ end
 
 on extendSubscription me, tDays
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send(#info, "SCR_EXTSCR club_habbo" && tDays)
+    return getConnection(getVariable("connection.info.id")).send("SCR_EXTSCR", "club_habbo" && tDays)
   else
     return error(me, "Couldn't find connection:" && getVariable("connection.info.id"), #extendSubscription)
+  end if
+end
+
+on askforBadgeUpdate me
+  if connectionExists(getVariable("connection.info.id")) then
+    return getConnection(getVariable("connection.info.id")).send("GETAVAILABLEBADGES")
+  else
+    return error(me, "Couldn't find connection:" && getVariable("connection.info.id"), #askforBadgeUpdate)
   end if
 end

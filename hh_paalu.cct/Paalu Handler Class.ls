@@ -47,17 +47,22 @@ on handle_pt_end me, tMsg
 end
 
 on regMsgList me, tBool
-  tList = [:]
-  tList["PT_PR"] = #handle_pt_prepare
-  tList["PT_ST"] = #handle_pt_start
-  tList["PT_SI"] = #handle_pt_status
-  tList["PT_WIN"] = #handle_pt_win
-  tList["PT_BOTHLOSE"] = #handle_pt_bothlose
-  tList["PT_TIMEOUT"] = #handle_pt_timeout
-  tList["PT_EN"] = #handle_pt_end
+  tMsgs = [:]
+  tMsgs.setaProp(114, #handle_pt_start)
+  tMsgs.setaProp(115, #handle_pt_prepare)
+  tMsgs.setaProp(116, #handle_pt_end)
+  tMsgs.setaProp(117, #handle_pt_timeout)
+  tMsgs.setaProp(118, #handle_pt_status)
+  tMsgs.setaProp(119, #handle_pt_win)
+  tMsgs.setaProp(120, #handle_pt_bothlose)
+  tCmds = [:]
+  tCmds.setaProp("PTM", 114)
   if tBool then
-    return registerListener(getVariable("connection.room.id"), me.getID(), tList)
+    registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)
   else
-    return unregisterListener(getVariable("connection.room.id"), me.getID(), tList)
+    unregisterListener(getVariable("connection.room.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.room.id"), me.getID(), tCmds)
   end if
+  return 1
 end

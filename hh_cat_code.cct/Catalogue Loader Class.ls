@@ -17,7 +17,9 @@ on showLoadingScreen me
     return 
   end if
   if not tWinObj.elementExists("ctlg_loading_box") then
-    tWinObj.merge("ctlg_loading.window")
+    if not tWinObj.merge("ctlg_loading.window") then
+      return tWinObj.close()
+    end if
     tid = "ctlg_loading_bg"
     if tWinObj.elementExists(tid) then
       tWinObj.getElement(tid).setProperty(#visible, 1)

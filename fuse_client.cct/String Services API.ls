@@ -7,11 +7,11 @@ on deconstructStringServices
 end
 
 on getStringServices
-  tObjMngr = getObjectManager()
-  if not tObjMngr.managerExists(#string_services) then
+  tMgr = getObjectManager()
+  if not tMgr.managerExists(#string_services) then
     return constructStringServices()
   end if
-  return tObjMngr.getManager(#string_services)
+  return tMgr.getManager(#string_services)
 end
 
 on convertToPropList tString, tDelimiter

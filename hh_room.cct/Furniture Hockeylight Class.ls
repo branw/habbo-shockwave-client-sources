@@ -54,7 +54,7 @@ end
 
 on select me
   if the doubleClick then
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "ON" & "/" & "I")
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "ON" & "/" & "I")
   end if
   return 1
 end

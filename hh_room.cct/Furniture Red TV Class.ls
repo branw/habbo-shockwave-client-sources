@@ -1,7 +1,7 @@
 property pChanges, pActive, pTimer, pNextChange
 
 on prepare me, tdata
-  if tdata["CHANNEL"] = "ON" then
+  if tdata["FIREON"] = "ON" then
     pActive = 1
   else
     pActive = 0
@@ -17,6 +17,9 @@ on updateStuffdata me, tProp, tValue
     pActive = 0
   else
     pActive = 1
+  end if
+  if me.pSprList.count < 2 then
+    return 0
   end if
   me.pSprList[2].castNum = 0
   pChanges = 1
@@ -51,11 +54,11 @@ on update me
 end
 
 on setOn me
-  getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "FIREON" & "/" & "ON")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & "ON")
 end
 
 on setOff me
-  getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "FIREON" & "/" & "OFF")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & "OFF")
 end
 
 on select me

@@ -93,29 +93,48 @@ on solveColors me, tpartColors
 end
 
 on solveInk me, tPart
-  tInkField = getmemnum(pClass & "_" & tPart & ".ink")
-  if tInkField > 0 then
-    return integer(field(tInkField))
+  if not memberExists(pClass & ".props") then
+    return 8
+  end if
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 8
+  end if
+  if not voidp(tPropList[tPart][#ink]) then
+    return tPropList[tPart][#ink]
   end if
   return 8
 end
 
 on solveBlend me, tPart
-  tBlendField = getmemnum(pClass & "_" & tPart & ".blend")
-  if tBlendField > 0 then
-    return integer(field(tBlendField))
+  if not memberExists(pClass & ".props") then
+    return 100
+  end if
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 100
+  end if
+  if not voidp(tPropList[tPart][#blend]) then
+    return tPropList[tPart][#blend]
   end if
   return 100
 end
 
 on solveLocZ me, tPart, tdir
-  if not memberExists(pClass & "_" & tPart & ".zshift") then
+  if not memberExists(pClass & ".props") then
     return 0
   end if
-  if (field(getmemnum(pClass & "_" & tPart & ".zshift"))).line.count = 1 then
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if voidp(tPropList[tPart]) then
+    return 0
+  end if
+  if voidp(tPropList[tPart][#zshift]) then
+    return 0
+  end if
+  if tPropList[tPart][#zshift].count <= tdir then
     tdir = 0
   end if
-  return integer((field(getmemnum(pClass & "_" & tPart & ".zshift"))).line[tdir + 1])
+  return tPropList[tPart][#zshift][tdir + 1]
 end
 
 on solveMembers me
@@ -205,8 +224,8 @@ on solveMembers me
         tSpr.ink = me.solveInk(numToChar(i))
         tSpr.blend = me.solveBlend(numToChar(i))
         if j <= pPartColors.count then
-          if string(pPartColors[j]).char[1] = "*" then
-            tSpr.bgColor = rgb("#" & string(pPartColors[j]).char[2..length(string(pPartColors[j]))])
+          if string(pPartColors[j]).char[1] = "#" then
+            tSpr.bgColor = rgb(pPartColors[j])
           else
             tSpr.bgColor = paletteIndex(integer(pPartColors[j]))
           end if

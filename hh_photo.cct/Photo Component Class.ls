@@ -22,7 +22,12 @@ on deconstruct me
   return 1
 end
 
-on storePicture me, tmember, tText, tCS
+on storePicture me, tmember, tText
+  if not voidp(tText) then
+    tText = getStringServices().convertSpecialChars(tText, 1)
+    tText = replaceChunks(tText, "\", EMPTY)
+  end if
+  tCS = me.countCS(tmember.image)
   tdata = [#image: tmember.media, #time: the date && the time, #cs: tCS]
   addMessageToBinaryQueue("PHOTOTXT /" & tText)
   storeBinaryData(tdata, me.getID())
@@ -83,7 +88,7 @@ on openPhoto me, tItemID, tLocX, tLocY
   pLocX = tLocX
   pLocY = tLocY
   registerMessage(symbol("itemdata_received" & tItemID), me.getID(), #setItemData)
-  getConnection(getVariable("connection.room.id")).send(#room, "G_IDATA /" & tItemID)
+  getConnection(getVariable("connection.room.id")).send("G_IDATA", tItemID)
 end
 
 on countCS me, tImg
@@ -112,7 +117,8 @@ on setItemData me, tMsg
   pPhotoId = tMsg[#text].line[1].word[1]
   tAuthId = tMsg[#text].line[1].word[2]
   pPhotoTime = tMsg[#text].line[1].word[3..4]
-  pPhotoText = tMsg[#text].line[2]
+  pPhotoText = tMsg[#text].line[2..tMsg[#text].line.count]
+  pPhotoText = me.convertScandinavianUTF8(pPhotoText)
   unregisterMessage(symbol("itemdata_received" & pItemId), me.getID())
   if pLocX > 500 then
     pLocX = 500
@@ -135,11 +141,44 @@ on setItemData me, tMsg
   else
     me.binaryDataReceived(pPhotoCache.getaProp(pPhotoId), pPhotoId)
   end if
+  towner = getObject(#session).get("room_owner")
+  tCanRemovePhotos = getObject(#session).get("user_rights").getOne("fuse_remove_photos")
+  if not towner and not tCanRemovePhotos then
+    tWndObj.getElement("photo_remove").setProperty(#visible, 0)
+  end if
+end
+
+on convertScandinavianUTF8 me, tString
+  if tString.length < 6 then
+    return tString
+  end if
+  tUTF8Array = ["&AUML;": "€", "&OUML;": "…", "&auml;": "Š", "&ouml;": "š"]
+  tOutputStr = EMPTY
+  repeat with i = 1 to tString.length
+    tChar = tString.char[i]
+    if not (tChar = "&") then
+      put tChar after tOutputStr
+      next repeat
+    end if
+    tChunkArr = chars(tString, i, i + 5)
+    tChunkScan = getaProp(tUTF8Array, tChunkArr)
+    if tChunkScan <> VOID then
+      put tChunkScan after tOutputStr
+      i = i + 5
+      next repeat
+    end if
+    put "&" after tOutputStr
+  end repeat
+  return tOutputStr
 end
 
 on eventProcPhotoMouseDown me, tEvent, tElemID, tParam
   case tElemID of
     "photo_close":
       removeWindow(pWindowID)
+    "photo_remove":
+      if getThread("room").getComponent().getRoomConnection().send("REMOVEITEM", pItemId) then
+        removeWindow(pWindowID)
+      end if
   end case
 end

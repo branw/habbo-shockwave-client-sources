@@ -54,6 +54,10 @@ on queue me, tURL, tMemName, ttype, tForceFlag
   end if
   if tMemNum < 1 then
     return error(me, "Failed to create member!", #queue)
+  else
+    if member(tMemNum).type = #bitmap then
+      member(tMemNum).image = image(1, 1, 8)
+    end if
   end if
   pReceivedTasks.add(tMemName)
   pTaskQueue[tMemName] = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]

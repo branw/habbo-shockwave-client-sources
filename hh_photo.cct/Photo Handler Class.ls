@@ -1,15 +1,23 @@
 on construct me
-  registerListener(getVariable("connection.info.id"), me.getID(), ["FILM": #handle_film])
-  getMultiuserManager().registerListener(getVariable("connection.mus.id"), me.getID(), ["FILM": #handle_film])
+  registerListener(getVariable("connection.info.id"), me.getID(), [4: #handle_film])
+  getMultiuserManager().registerListener(getVariable("connection.mus.id"), me.getID(), ["OK": #handle_ok, "FILM": #handle_film_mus])
   return 1
 end
 
 on deconstruct me
-  unregisterListener(getVariable("connection.info.id"), me.getID(), ["FILM": #handle_film])
-  getMultiuserManager().unregisterListener(getVariable("connection.mus.id"), me.getID(), ["FILM": #handle_film])
+  unregisterListener(getVariable("connection.info.id"), me.getID(), [4: #handle_film])
+  getMultiuserManager().unregisterListener(getVariable("connection.mus.id"), me.getID(), ["OK": #handle_ok, "FILM": #handle_film_mus])
   return 1
 end
 
+on handle_ok me
+end
+
 on handle_film me, tMsg
-  me.getComponent().setFilm(value(tMsg.getaProp(#content)))
+  tFilmCnt = tMsg.getaProp(#connection).GetIntFrom(tMsg)
+  me.getComponent().setFilm(tFilmCnt)
+end
+
+on handle_film_mus me, tMsg
+  me.getComponent().setFilm(integer(tMsg.getaProp(#content)))
 end

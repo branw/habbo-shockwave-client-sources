@@ -8,6 +8,7 @@ on construct me
   tSession.set("client_url", the moviePath)
   tSession.set("client_lastclick", EMPTY)
   createObject(#headers, getClassVariable("variable.manager.class"))
+  createObject(#classes, getClassVariable("variable.manager.class"))
   createObject(#cache, getClassVariable("variable.manager.class"))
   createBroker(#Initialize)
   return me.updateState("load_variables")
@@ -47,25 +48,30 @@ on updateState me, tstate
       if the runMode contains "Plugin" then
         tDelim = the itemDelimiter
         the itemDelimiter = "="
-        repeat with i = 1 to 9
+        repeat with i = 1 to 12
           tParam = externalParamValue("sw" & i)
           if not voidp(tParam) then
-            if tParam.item.count = 2 then
+            if tParam.item.count > 1 then
               if tParam.item[1] = "external.variables.txt" then
-                getVariableManager().set("external.variables.txt", tParam.item[2])
+                getVariableManager().set("external.variables.txt", tParam.item[2..tParam.item.count])
               end if
             end if
           end if
         end repeat
         the itemDelimiter = tDelim
       end if
-      tURL = getVariable("external.variables.txt")
+      tURL = getVariableManager().get("external.variables.txt")
       tMemName = tURL
+      if tURL contains "?" then
+        tParamDelim = "&"
+      else
+        tParamDelim = "?"
+      end if
       if the moviePath contains "http://" then
-        tURL = tURL & "?" & the milliSeconds
+        tURL = tURL & tParamDelim & the milliSeconds
       else
         if tURL contains "http://" then
-          tURL = tURL & "?" & the milliSeconds
+          tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
@@ -80,8 +86,8 @@ on updateState me, tstate
         repeat with i = 1 to 9
           tParam = externalParamValue("sw" & i)
           if not voidp(tParam) then
-            if tParam.item.count = 2 then
-              getVariableManager().set(tParam.item[1], tParam.item[2])
+            if tParam.item.count > 1 then
+              getVariableManager().set(tParam.item[1], tParam.item[2..tParam.item.count])
             end if
           end if
         end repeat
@@ -101,11 +107,16 @@ on updateState me, tstate
       if tMemName = EMPTY then
         return me.updateState("load_casts")
       end if
+      if tURL contains "?" then
+        tParamDelim = "&"
+      else
+        tParamDelim = "?"
+      end if
       if the moviePath contains "http://" then
-        tURL = tURL & "?" & the milliSeconds
+        tURL = tURL & tParamDelim & the milliSeconds
       else
         if tURL contains "http://" then
-          tURL = tURL & "?" & the milliSeconds
+          tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
       tMemNum = queueDownload(tURL, tMemName, #field)

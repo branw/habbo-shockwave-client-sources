@@ -43,11 +43,11 @@ on prepareGame me, tPlayer01, tPlayer02
   pPlayer02.define([#name: tPlayer02, #dir: 4])
   pPlayer01.status([#bal: 0, #loc: -3])
   pPlayer02.status([#bal: 0, #loc: 4])
-  tMyName = getObject(#session).get(#userName)
-  if tPlayer01 = tMyName then
+  tMyIndex = getObject(#session).get("user_index")
+  if tPlayer01 = tMyIndex then
     tOwnPlayer = pPlayer01
   else
-    if tPlayer02 = tMyName then
+    if tPlayer02 = tMyIndex then
       tOwnPlayer = pPlayer02
     end if
   end if
@@ -70,11 +70,11 @@ on startGame me, tPlayer01, tPlayer02
     pPlayer02.status([#bal: 0, #loc: 4])
     pGameActive = 1
   end if
-  tMyName = getObject(#session).get(#userName)
-  if tPlayer01 = tMyName then
+  tMyIndex = getObject(#session).get("user_index")
+  if tPlayer01 = tMyIndex then
     me.getInterface().start()
   else
-    if tPlayer02 = tMyName then
+    if tPlayer02 = tMyIndex then
       me.getInterface().start()
     end if
   end if
@@ -104,12 +104,14 @@ on endGame me, tLooser
     0:
       pPlayer01.drop()
       if objectExists("dew_camera") then
-        getObject("dew_camera").fuseShow_showtext(getText("paalu.winner", "VOITTAJA:") & RETURN & pPlayer02.pName)
+        tUserName = getThread(#room).getComponent().getUserObject(pPlayer02.pName).getName()
+        getObject("dew_camera").fuseShow_showtext(getText("paalu.winner", "VOITTAJA:") & RETURN & tUserName)
       end if
     1:
       pPlayer02.drop()
       if objectExists("dew_camera") then
-        getObject("dew_camera").fuseShow_showtext(getText("paalu.winner", "VOITTAJA:") & RETURN & pPlayer01.pName)
+        tUserName = getThread(#room).getComponent().getUserObject(pPlayer01.pName).getName()
+        getObject("dew_camera").fuseShow_showtext(getText("paalu.winner", "VOITTAJA:") & RETURN & tUserName)
       end if
     #both:
       pPlayer01.drop()

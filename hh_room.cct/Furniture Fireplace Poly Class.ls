@@ -4,9 +4,9 @@ on prepare me, tdata
   pChanges = 1
   pTiming = 1
   if tdata["FIREON"] = "ON" then
-    setOn(me)
+    me.setOn()
   else
-    setOff(me)
+    me.setOff()
   end if
   return 1
 end
@@ -57,7 +57,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "FIREON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "FIREON" & "/" & tStr)
   end if
   return 1
 end

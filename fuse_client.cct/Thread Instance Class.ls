@@ -1,10 +1,9 @@
-property interface, component, handler, parser
+property interface, component, handler
 
 on construct me
   interface = 0
   component = 0
   handler = 0
-  parser = 0
   return 1
 end
 
@@ -12,7 +11,6 @@ on deconstruct me
   interface = 0
   component = 0
   handler = 0
-  parser = 0
   return 1
 end
 
@@ -26,8 +24,4 @@ end
 
 on getHandler me
   return handler
-end
-
-on getParser me
-  return parser
 end

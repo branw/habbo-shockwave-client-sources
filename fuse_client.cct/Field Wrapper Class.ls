@@ -5,7 +5,7 @@ on deconstruct me
 end
 
 on prepare me
-  pMember = member(getResourceManager().createMember(me.pProps[#member] & the milliSeconds, #field))
+  pMember = member(getResourceManager().createMember(me.pProps[#member] & the milliSeconds & numToChar(random(99)), #field))
   pMember.wordWrap = me.pProps[#wordWrap]
   pMember.autoTab = me.pProps[#autoTab]
   pMember.alignment = me.pProps[#alignment]

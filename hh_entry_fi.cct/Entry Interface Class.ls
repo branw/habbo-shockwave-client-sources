@@ -28,7 +28,9 @@ end
 
 on showHotel me
   if not visualizerExists(pEntryVisual) then
-    createVisualizer(pEntryVisual, "entry_fi.visual")
+    if not createVisualizer(pEntryVisual, "entry_fi.visual") then
+      return 0
+    end if
     tVisObj = getVisualizer(pEntryVisual)
     pSignSprList = []
     pSignSprList.add(tVisObj.getSprById("entry_sign"))

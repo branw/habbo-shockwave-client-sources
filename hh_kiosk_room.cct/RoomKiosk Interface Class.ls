@@ -40,6 +40,8 @@ on ChangeWindowView me, tWindowName
 end
 
 on createRoom me
+  pRoomProps[#name] = getStringServices().convertSpecialChars(pRoomProps[#name], 1)
+  pRoomProps[#description] = getStringServices().convertSpecialChars(pRoomProps[#description], 1)
   pRoomProps[#marker] = "model_" & pRoomModels[value(pRoomProps["model"])]
   tFlatData = "/first floor/"
   repeat with f in [#name, #marker, #door, #showownername]
@@ -49,15 +51,12 @@ on createRoom me
   me.getComponent().sendNewRoomData(tFlatData)
 end
 
-on flatcreated me, tFlatData
-  if tFlatData.ilk <> #propList then
-    return me.showHideRoomKiosk()
-  end if
+on flatcreated me, tFlatName, tFlatID
+  me.getComponent().sendFlatCategory(tFlatID, pRoomProps[#category])
   me.ChangeWindowView("roomatic7.window")
   tWndObj = getWindow(pWindowTitle)
-  pRoomProps[#id] = tFlatData[#id]
-  pRoomProps[#ip] = tFlatData[#ip]
-  pRoomProps[#port] = tFlatData[#port]
+  pRoomProps[#id] = tFlatID
+  pRoomProps[#name] = tFlatName
   if pRoomProps[#door] = "password" then
     pRoomProps[#password] = me.getPassword()
   else
@@ -135,10 +134,22 @@ on checkPassword me
   else
     tPw2 = pTempPassword["roomatic_password2_field"]
   end if
-  return tPw1 = tPw2
+  if tPw1.count = 0 then
+    return "Alert_ForgotSetPassword"
+  end if
+  if tPw1.count < 3 then
+    return "nav_error_passwordtooshort"
+  end if
+  if tPw1 <> tPw2 then
+    return "Alert_WrongPassword"
+  end if
+  return 1
 end
 
 on getPassword me
+  if pTempPassword.count = 0 then
+    return EMPTY
+  end if
   tPw = EMPTY
   repeat with f = 1 to count(pTempPassword["roomatic_password_field"])
     tPw = tPw & pTempPassword["roomatic_password_field"][f]
@@ -168,6 +179,35 @@ on setPageValues me, tWindowName
         pRoomProps[#showownername] = 1
         me.updateRadioButton("roomatic_namedisplayed_yes_check", ["roomatic_namedisplayed_no_check"])
       end if
+      tDropDown = tWndObj.getElement("roomatic_choosecategory")
+      if not ilk(tDropDown, #instance) then
+        return error(me, "Unable to retrieve Dropdown:" && tDropDown, #setPageValues)
+      end if
+      tCatProps = getObject(#session).get("user_flat_cats")
+      if not ilk(tCatProps, #propList) then
+        return error(me, "Category list was not property list:" && tCatProps, #setPageValues)
+      end if
+      tCatTxtItems = []
+      tCatKeyItems = []
+      repeat with i = 1 to tCatProps.count
+        tCatTxtItems[i] = getAt(tCatProps, i)
+        tCatKeyItems[i] = getPropAt(tCatProps, i)
+      end repeat
+      tDropDown.pMenuItems = tCatTxtItems
+      tDropDown.pTextlist = tDropDown.pMenuItems
+      tDropDown.pTextKeys = tCatKeyItems
+      tDropDown.pNumberOfMenuItems = tDropDown.pMenuItems.count
+      if not voidp(pRoomProps[#category]) then
+        tDropDown.setSelection(pRoomProps[#category])
+      else
+        tDropDown.setSelection(tCatKeyItems[1])
+      end if
+      tDropDown.pDropMenuImg = tDropDown.createDropImg(tDropDown.pMenuItems, 1, #up)
+      tDropDown.pDropActiveBtnImg = tDropDown.createDropImg([tDropDown.pMenuItems[tDropDown.pSelectedItemNum]], 0, #up)
+      tDropDown.pBuffer.image = tDropDown.pDropActiveBtnImg
+      tDropDown.pBuffer.regPoint = point(0, 0)
+      tDropDown.pimage = tDropDown.pDropActiveBtnImg
+      tDropDown.render()
     "roomatic3.window", "roomatic_club.window":
       tOthers = []
       if voidp(pRoomProps["model"]) then
@@ -181,7 +221,7 @@ on setPageValues me, tWindowName
       end repeat
       me.updateRadioButton("roomatic_roomchoose_" & tRoomModel, tOthers)
       if tWindowName = "roomatic3.window" then
-        if not getObject(#session).get("user_rights").getPos("special_room_layouts") then
+        if not getObject(#session).get("user_rights").getPos("fuse_use_special_room_layouts") then
           getWindow(pWindowTitle).getElement("goto_club_layouts").hide()
         end if
       end if
@@ -208,10 +248,15 @@ on eventProc me, tEvent, tSprID, tParm
         me.ChangeWindowView("roomatic2.window")
       "roomatic_1_button_cancel":
         me.showHideRoomKiosk()
+      "roomatic_choosecategory":
+        tWndObj = getWindow(pWindowTitle)
+        tDropDown = tWndObj.getElement("roomatic_choosecategory")
+        tDropDown.setSelection(tParm)
+        pRoomProps[#category] = tParm
       "roomatic_2_button_cancel":
         me.showHideRoomKiosk()
       "roomatic_2_button_next":
-        tRoomName = getWindow(pWindowTitle).getElement("roomatic_roomname_field").getText()
+        tRoomName = replaceChars(getWindow(pWindowTitle).getElement("roomatic_roomname_field").getText(), "/", EMPTY)
         if tRoomName = EMPTY then
           return executeMessage(#alert, [#msg: "roomatic_givename"])
         end if
@@ -232,8 +277,13 @@ on eventProc me, tEvent, tSprID, tParm
         me.ChangeWindowView("roomatic2.window")
       "roomatic_4_button_done":
         if pRoomProps[#door] = "password" then
-          if not me.checkPassword() then
-            return me.ChangeWindowView("roomatic5.window")
+          tReturnValue = me.checkPassword()
+          if tReturnValue <> 1 then
+            tReturnText = getText(tReturnValue)
+            me.ChangeWindowView("roomatic5.window")
+            tWndObj = getWindow(pWindowTitle)
+            tWndObj.getElement("roomatic_errorMsg").setText(tReturnText)
+            return 1
           end if
         end if
         me.createRoom()
@@ -265,6 +315,8 @@ on eventProc me, tEvent, tSprID, tParm
         end if
       "roomatic_7_button_cancel":
         me.showHideRoomKiosk()
+      "close":
+        me.showHideRoomKiosk()
       otherwise:
         if tSprID contains "roomatic_roomchoose" then
           tDelim = the itemDelimiter
@@ -283,6 +335,12 @@ on eventProc me, tEvent, tSprID, tParm
     end case
   else
     if tEvent = #keyDown then
+      tASCII = charToNum(the key)
+      if tASCII < 28 then
+        if tASCII <> 8 and tASCII <> 9 then
+          return 1
+        end if
+      end if
       case tSprID of
         "roomatic_password_field", "roomatic_password2_field":
           if voidp(pTempPassword[tSprID]) then

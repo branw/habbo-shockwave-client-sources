@@ -5,10 +5,17 @@ on construct me
   pBottomBarId = "Room_bar"
   pSignState = VOID
   pChatmode = "CHAT"
+  if not objectExists("Figure_System_Pool") then
+    createObject("Figure_System_Pool", ["Figure System Class"])
+    getObject("Figure_System_Pool").define(["type": "member", "source": "swimfigure_ids_"])
+  end if
   return removeWindow(pBottomBarId)
 end
 
 on deconstruct me
+  if objectExists("Figure_System_Pool") then
+    removeObject("Figure_System_Pool")
+  end if
   me.hideTicketWnd()
   me.closeUimaKoppi()
   me.hideRoomBar()
@@ -79,6 +86,9 @@ on changeUimakoppiWindow me, tWindowName, tWindowTitle
 end
 
 on createFigurePrew me
+  if not objectExists("Figure_Preview") then
+    return error(me, "Figure preview not found!", #createFigurePrew)
+  end if
   tFigure = getObject(#session).get("user_figure").duplicate()
   tFigure["hd"]["model"] = "001"
   tFigure["fc"]["model"] = "001"
@@ -94,7 +104,7 @@ on createFigurePrew me
   tFigure["ch"]["color"] = pSwimSuitColor
   tPartList = ["lh", "bd", "ch", "hd", "fc", "hr", "rh"]
   tHumanImg = image(32, 60, 16)
-  tHumanImg = getThread(#registration).getComponent().getHumanPartImg(tPartList, tFigure, 2, "sh")
+  tHumanImg = getObject("Figure_Preview").getHumanPartImg(tPartList, tFigure, 2, "sh")
   tImgWidth = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#width)
   tImgHeight = tWndObj.getElement("ph_swimsuit.preview.img").getProperty(#height)
   tPrewImg = image(tImgWidth, tImgHeight, 16)
@@ -111,12 +121,15 @@ on createFigurePrew me
 end
 
 on getDefaultSwimSuitColor me
+  if not objectExists("Figure_System_Pool") then
+    return error(me, "Figure system Pool object not found", #getDefaultSwimSuitColor)
+  end if
   if getObject(#session).get("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tPartProps = me.getComponent().getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum("ch", 1, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -124,12 +137,15 @@ on getDefaultSwimSuitColor me
 end
 
 on changeSwimSuitColor me, tPart, tButtonDir
+  if not objectExists("Figure_System_Pool") then
+    return error(me, "Figure system Pool object not found", #changeSwimSuitColor)
+  end if
   if getObject(#session).get("user_sex") = "F" then
     tSetID = 20
   else
     tSetID = 10
   end if
-  tMaxValue = me.getComponent().getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
+  tMaxValue = getObject("Figure_System_Pool").getCountOfPartColors(tPart, tSetID, getObject(#session).get("user_sex"))
   if tButtonDir = 0 then
     pSwimSuitIndex = 1
   else
@@ -148,7 +164,7 @@ on changeSwimSuitColor me, tPart, tButtonDir
   else
     tSetID = 10
   end if
-  tPartProps = me.getComponent().getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
+  tPartProps = getObject("Figure_System_Pool").getColorOfPartByOrderNum(tPart, pSwimSuitIndex, tSetID, getObject(#session).get("user_sex"))
   if tPartProps.ilk = #propList then
     tColor = rgb(tPartProps["color"])
     pSwimSuitColor = tColor
@@ -161,8 +177,8 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
     case tSprID of
       "ph_swimsuit_exitbutton":
         me.closeUimaKoppi()
-        getConnection(getVariable("connection.room.id")).send(#room, "UPDATE" && "ph_figure=")
-        getConnection(getVariable("connection.room.id")).send(#room, "CLOSE_UIMAKOPPI")
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT")
+        getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit_gobutton":
         me.closeUimaKoppi()
         tTempDelim = the itemDelimiter
@@ -173,9 +189,9 @@ on eventProcUimakoppi me, tEvent, tSprID, tParam
         tB = value(tColor.item[3].char[1..tColor.item[3].length - 1])
         the itemDelimiter = tTempDelim
         tColor = tR & "," & tG & "," & tB
-        tswimsuit = "ph_figure=ch=" & pSwimSuitModel & "/" & tColor
-        getConnection(getVariable("connection.room.id")).send(#room, "UPDATE" && tswimsuit)
-        getConnection(getVariable("connection.room.id")).send(#room, "CLOSE_UIMAKOPPI")
+        tswimsuit = "ch=" & pSwimSuitModel & "/" & tColor
+        getConnection(getVariable("connection.room.id")).send("SWIMSUIT", tswimsuit)
+        getConnection(getVariable("connection.room.id")).send("CLOSE_UIMAKOPPI")
       "ph_swimsuit.left.button":
         me.changeSwimSuitColor("ch", -1)
       "ph_swimsuit.right.button":
@@ -294,6 +310,12 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
   end if
   if tEvent = #keyDown and tSprID = "chat_field" then
     tChatField = tWndObj.getElement("chat_field")
+    if the commandDown and (the keyCode = 8 or the keyCode = 9) then
+      if not getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+        tChatField.setText(EMPTY)
+        return 1
+      end if
+    end if
     if the keyCode = 36 then
       if pFloodblocking then
         if the milliSeconds < pFloodTimer then
@@ -422,12 +444,8 @@ on eventProcTicketsWindow me, tEvent, tSprID, tParam, tWndID
       "close":
         return removeWindow(tWndID)
       "ph_tickets_buy_button":
-        if getObject(#session).get("user_rights").getOne("can_buy_credits") then
-          tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
-          me.getComponent().buyPoolTickets(tName)
-        else
-          executeMessage(#notify, #subscription_required)
-        end if
+        tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
+        me.getComponent().buyPoolTickets(tName)
         return removeWindow(tWndID)
     end case
   end if

@@ -1,6 +1,9 @@
 property pActive, pSwitch, pTimer, pLastFrm, pKill
 
 on prepare me, tdata
+  if me.pSprList.count < 3 then
+    return 0
+  end if
   removeEventBroker(me.pSprList[2].spriteNum)
   removeEventBroker(me.pSprList[3].spriteNum)
   if tdata["SWITCHON"] = "ON" then
@@ -100,7 +103,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send(#room, "SETSTUFFDATA /" & me.getID() & "/" & "SWITCHON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCHON" & "/" & tStr)
   end if
   return 1
 end

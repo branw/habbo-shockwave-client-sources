@@ -16,13 +16,12 @@ end
 
 on eventProc me
   if connectionExists(getVariable("connection.room.id")) then
-    tName = getObject(#session).get("user_name")
-    tloc = getThread(#room).getComponent().getUserObject(tName).getLocation()
+    tloc = getThread(#room).getComponent().getOwnUser().getLocation()
     tLocY = tloc[2]
     if tLocY > 2 then
-      getConnection(getVariable("connection.room.id")).send(#room, "Move 3 2")
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 3, #short: 2])
     else
-      getConnection(getVariable("connection.room.id")).send(#room, "Move 7 0")
+      getConnection(getVariable("connection.room.id")).send("MOVE", [#short: 7, #short: 0])
     end if
   end if
 end

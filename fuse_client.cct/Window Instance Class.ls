@@ -56,6 +56,10 @@ on define me, tProps
   return 1
 end
 
+on close me
+  return removeWindow(me.getID())
+end
+
 on merge me, tLayout
   me.setDeactive()
   if not me.buildVisual(tLayout) then
@@ -416,6 +420,17 @@ on buildVisual me, tLayout
     end if
     tmember = member(tResManager.createMember(me.getID() & "_" & tid, #bitmap))
     tSprite = sprite(tSprManager.reserveSprite(me.getID()))
+    if tSprite.spriteNum < 1 then
+      repeat with t_rSpr in tSpriteList
+        releaseSprite(t_rSpr.spriteNum, me.getID())
+      end repeat
+      tSpriteList = [:]
+      repeat with t_rMem in tmemberlist
+        removeMember(t_rMem.name)
+      end repeat
+      tmemberlist = [:]
+      return error(me, "Failed to build window. System out of sprites!", #buildVisual)
+    end if
     tmemberlist[tid] = tmember
     tSpriteList[tid] = tSprite
     tSprite.castNum = tmember.number
@@ -423,7 +438,7 @@ on buildVisual me, tLayout
     tElemRect = rect(2000, 2000, -2000, -2000)
     tGroupData[#members].add(tmember)
     tGroupData[#sprites].add(tSprite)
-    getSpriteManager().setEventBroker(tSprite.spriteNum, tid)
+    tSprManager.setEventBroker(tSprite.spriteNum, tid)
     tSprite.registerProcedure(VOID, me.getID(), VOID)
     tBlend = tElement[1][#blend]
     tInk = tElement[1][#ink]
@@ -477,10 +492,10 @@ on buildVisual me, tLayout
         tElemRect[4] = tItem[#locV] + tItem[#height]
       end if
       if not voidp(tItem[#cursor]) then
-        tSprite.setCursor(tItem[#cursor])
+        tSprite.setcursor(tItem[#cursor])
         next repeat
       end if
-      tSprite.setCursor(#arrow)
+      tSprite.setcursor(#arrow)
     end repeat
     if tIsPaletteShared and not voidp(tPalette) then
       if stringp(tPalette) then
@@ -668,22 +683,6 @@ end
 
 on null me
   return 0
-end
-
-on getSpriteByID me, tid
-  tSprite = pSpriteList[tid]
-  if voidp(tSprite) then
-    return 0
-  end if
-  return tSprite
-end
-
-on getSprById me, tid
-  tSprite = pSpriteList[tid]
-  if voidp(tSprite) then
-    return 0
-  end if
-  return tSprite
 end
 
 on movePartBy me, ttype, tX, tY, tInverse

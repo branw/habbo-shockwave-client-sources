@@ -76,7 +76,7 @@ on deconstruct me
   return 1
 end
 
-on createballoonImg me, tText, tBalloonColor, tChatMode
+on createballoonImg me, tName, tText, tBalloonColor, tChatMode
   if tBalloonColor.red + tBalloonColor.green + tBalloonColor.blue >= 600 then
     tBalloonColorDarken = rgb(0, 0, 0)
     tBalloonColorDarken.red = tBalloonColor.red * 0.90000000000000002
@@ -91,10 +91,10 @@ on createballoonImg me, tText, tBalloonColor, tChatMode
   tSavedFont = tmember.font
   tSavedStyle = tmember.fontStyle
   tmember.rect = rect(0, 0, pMaxWidth, tmember.height)
-  tmember.text = tText
   tBoldStruct = getStructVariable("struct.font.bold")
-  tmember.word[1].font = tBoldStruct.getaProp(#font)
-  tmember.word[1].fontStyle = tBoldStruct.getaProp(#fontStyle)
+  tmember.text = tName & ":" && tText
+  tmember.char[1..tName.length + 1].font = tBoldStruct.getaProp(#font)
+  tmember.char[1..tName.length + 1].fontStyle = tBoldStruct.getaProp(#fontStyle)
   tTextWidth = tmember.charPosToLoc(tmember.char.count).locH + pBalloonImg[#left].width * 4
   if tTextWidth + pMarginH * 2 > pMaxWidth then
     tTextWidth = pMaxWidth - pMarginH * 2 - pBalloonImg[#left].width
@@ -210,6 +210,7 @@ on createBalloon me, tMsg
       end if
       pBalloonColor = tUserObj.getPartColor("ch")
       pHumanLoc = tUserObj.getPartLocation("hd")
+      tMsg.setaProp(#name, tUserObj.getInfo().getaProp(#name))
       pLastBalloonId = pAvailableBalloons.getPropAt(1)
       pLastMsg = tMsg
       pBalloonPulse.set(#humanLoc, pHumanLoc)
@@ -254,7 +255,7 @@ on showNewBalloon me
   pAvailableBalloons.deleteProp(pLastBalloonId)
   tmember = member(pVisibleBalloons[pLastBalloonId].get(#member))
   pVisibleBalloons[pLastBalloonId].set(#balloonColor, pBalloonColor)
-  tmember.image = me.createballoonImg(tMsg[#id] & ":" && tMsg[#message], pBalloonColor, tMsg[#command])
+  tmember.image = me.createballoonImg(tMsg[#name], tMsg[#message], pBalloonColor, tMsg[#command])
   tmember.regPoint = tmember.regPoint + point(0, tmember.image.height / 2)
   pBalloonLeftMarg = getIntVariable("balloons.leftmargin", 0)
   pBalloonRightMarg = getIntVariable("balloons.rightmargin", 720)
@@ -268,6 +269,7 @@ on showNewBalloon me
     end if
   end if
   pVisibleBalloons[pLastBalloonId].set(#loc, point(tStartH, pStartV))
+  pVisibleBalloons[pLastBalloonId].set(#ownerID, tMsg[#id])
   call(#defineBalloon, pVisibleBalloons[pLastBalloonId])
 end
 

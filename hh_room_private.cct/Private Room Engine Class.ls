@@ -120,12 +120,21 @@ on setFloorPattern me, tIndex
     pFloorDefined = 0
     return 0
   end if
-  tSpr = getThread(#room).getInterface().getRoomVisualizer().getSprById("floor")
-  tdata = tSpr.member.name.char[length(tSpr.member.name)]
-  tSpr.member = member(getmemnum("floor" & ttype & tdata))
-  tSpr.bgColor = tColor
-  tSpr.member.paletteRef = member(getmemnum(tPalette))
-  tSpr.ink = 41
+  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+  tPieceId = 1
+  tSpr = tVisualizer.getSprById("floor" & tPieceId)
+  repeat while not (tSpr = 0)
+    tMemNum = getmemnum("floor" & ttype & tSpr.member.name.char[7..tSpr.member.name.length])
+    if tMemNum > 0 then
+      tSpr.member = member(tMemNum)
+    end if
+    tSpr.bgColor = tColor
+    tSpr.member.paletteRef = member(getmemnum(tPalette))
+    tSpr.ink = 41
+    tSpr.locZ = tSpr.locZ - 1000000
+    tPieceId = tPieceId + 1
+    tSpr = tVisualizer.getSprById("floor" & tPieceId)
+  end repeat
   the itemDelimiter = tDelim
   pFloorDefined = 1
   return 1
