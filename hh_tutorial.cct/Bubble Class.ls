@@ -1,4 +1,4 @@
-property pWindowID, pTargetElementID, pTargetWindowID, pLocX, pLocY, pTextkey, pText, pOffsetX, pOffsetY, pDirection, pSpecial, pWindow, pWindowType, pTextWidth, pTextHeight, pWriter, pFadeState, pTextOffset, pEmptySizeX, pEmptySizeY, pPointerX, pPointerY
+property pWindowID, pTargetElementID, pTargetWindowID, pLocX, pLocY, pText, pOffsetX, pOffsetY, pDirection, pSpecial, pWindow, pWindowType, pTextWidth, pTextHeight, pWriter, pFadeState, pTextOffset, pEmptySizeX, pEmptySizeY, pPointerX, pPointerY
 
 on construct me
   me.pWindowType = "bubble_text.window"
@@ -38,6 +38,7 @@ end
 
 on hide me
   me.pWindow.hide()
+  me.pTargetWindowID = VOID
 end
 
 on show me
@@ -79,16 +80,17 @@ on setProperty me, tProperty, tValue
   end if
   case tProperty of
     #textKey:
-      me.pTextkey = tValue
-      me.setText(getText(me.pTextkey))
+      tText = getText(tValue)
+      tText = replaceChunks(tText, "\n", RETURN & RETURN)
+      me.setText(tText)
     #targetID:
       me.pTargetElementID = tValue
     #direction:
       me.selectPointer(tValue)
     #offsetx:
-      me.pOffsetX = tValue
+      me.pOffsetX = value(tValue)
     #offsety:
-      me.pOffsetY = tValue
+      me.pOffsetY = value(tValue)
     #special:
       me.pSpecial = tValue
     otherwise:

@@ -494,7 +494,7 @@ on getSampleLength me, tSampleID
       the itemDelimiter = "_"
       tSampleno = tSampleName.item[4] - 1
       tSamplesPerSEt = 9
-      tParentNo = integer(tSampleno / tSamplesPerSEt + 1)
+      tParentNo = integer(tSampleno) / tSamplesPerSEt + 1
       tParentId = "sound_set_" & tParentNo
       the itemDelimiter = tDelim
       tSongController.preloadSounds([[#sound: tSampleName, #parent: tParentId]])

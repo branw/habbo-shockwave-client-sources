@@ -7,10 +7,6 @@ on deconstruct me
   return me.registerServerMessages(0)
 end
 
-on handleLoginOK me, tMsg
-  me.getComponent().startTutorial("NUF")
-end
-
 on handleAccountPreferences me, tMsg
   tConn = tMsg.getaProp(#connection)
   if not tConn then

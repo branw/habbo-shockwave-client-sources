@@ -459,6 +459,9 @@ on renderSongList me
     tElem = tWndObj.getElement("song_length_text")
     if tElem <> 0 then
       tLength = tPlaylistManager.getSongLength()
+      if tLength < 0 then
+        tLength = 0
+      end if
       tLength = tLength * me.getComponent().getTimeLineSlotLength() / 1000
       tStr = me.getComponent().getTimeString(tLength)
       tElem.setText(string(tStr))

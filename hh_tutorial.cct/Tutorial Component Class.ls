@@ -1,20 +1,56 @@
-property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pStarted, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial, pEnabledOnServer
+property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pRunning, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial, pEnabledOnServer, pMessages
 
 on construct me
   me.pEnabled = 0
-  me.pStarted = 0
+  me.pRunning = 0
   me.pWaitingForPrefs = 1
   me.pDefaultTutorial = "NUF"
-  registerMessage(#userlogin, me.getID(), #getUserProperties)
-  registerMessage(#restart_tutorial, me.getID(), #restartTutorial)
-  registerMessage(#updateAvailableFlatCategories, me.getID(), #startDefaultTutorial)
-  registerMessage(#tutorial_send_console_message, me.getID(), #sendConsoleMessage)
-  registerMessage(#tutorial_open_guestrooms_tab, me.getID(), #openGuestroomsTab)
+  me.pMessages = [:]
+  me.pMessages.setaProp(#userlogin, #getUserProperties)
+  me.pMessages.setaProp(#restart_tutorial, #restartTutorial)
+  me.pMessages.setaProp(#updateAvailableFlatCategories, #startDefaultTutorial)
+  me.pMessages.setaProp(#enterRoom, #hideTutorial)
+  me.pMessages.setaProp(#roomReady, #showTutorial)
+  me.pMessages.setaProp(#leaveRoom, #showTutorial)
+  me.pMessages.setaProp(#tutorial_send_console_message, #sendConsoleMessage)
+  me.pMessages.setaProp(#tutorial_open_guestrooms_tab, #openGuestroomsTab)
+  me.pMessages.setaProp(#tutorial_open_publicrooms_tab, #openPublicroomsTab)
+  me.pMessages.setaProp(#exit_tutorial, #exitTutorial)
+  me.pMessages.setaProp(#getHotelClosedDisconnectStatus, #hideTutorial)
+  me.registerClientMessages(1)
   return 1
 end
 
 on deconstruct me
-  unregisterMessage(#restart_tutorial, me.getID(), #restartTutorial)
+  me.registerClientMessages(0)
+  return 1
+end
+
+on registerClientMessages me, tBool
+  if me.pMessages.ilk <> #propList then
+    return error(me, "Message list not initialized.", #registerClientMessages, #major)
+  end if
+  repeat with tMsgNo = 1 to me.pMessages.count
+    tMessage = me.pMessages.getPropAt(tMsgNo)
+    tHandler = me.pMessages[tMsgNo]
+    if tBool then
+      registerMessage(tMessage, me.getID(), tHandler)
+      next repeat
+    end if
+    unregisterMessage(tMessage, me.getID())
+  end repeat
+end
+
+on showTutorial me
+  if not me.pRunning then
+    return 0
+  end if
+  me.getInterface().show()
+  return 1
+end
+
+on hideTutorial me
+  me.getInterface().hide()
   return 1
 end
 
@@ -22,7 +58,7 @@ on getUserProperties me
   tSession = getObject(#session)
   me.pUserName = tSession.GET(#userName)
   me.pUserSex = tSession.GET(#user_sex)
-  me.pEnabledOnServer = tSession.GET(#tutorial_enabled, 1)
+  me.pEnabledOnServer = tSession.GET(#tutorial_enabled, 0)
   me.getInterface().setUserSex(me.pUserSex)
 end
 
@@ -42,7 +78,7 @@ end
 
 on setEnabled me, tBoolean
   me.pEnabled = tBoolean
-  if me.pWaitingForPrefs and me.pStarted then
+  if me.pWaitingForPrefs and me.pRunning then
     me.pWaitingForPrefs = 0
     me.startTutorial()
   end if
@@ -53,7 +89,7 @@ on startTutorial me, tTutorialName
   if not me.pEnabledOnServer then
     return 0
   end if
-  me.pStarted = 1
+  me.pRunning = 1
   if not voidp(tTutorialName) then
     me.pTutorialName = tTutorialName
   end if
@@ -69,7 +105,6 @@ on startTutorial me, tTutorialName
     return 0
   end if
   tConn.send("GET_TUTORIAL_CONFIGURATION", [#string: me.pTutorialName])
-  me.getInterface().show()
   return 1
 end
 
@@ -82,6 +117,7 @@ on setTutorialConfig me, tConfigList
     me.pTopics[tTopicNum] = tTextKey
   end repeat
   me.pTopicStatuses = tConfigList.getaProp(#statuses)
+  me.getInterface().show()
   me.getInterface().showMenu(#welcome)
 end
 
@@ -105,18 +141,21 @@ on setTopicConfig me, tTopicConfig
 end
 
 on selectTopic me, tTopicID
-  if tTopicID = #menu then
-    me.getInterface().showMenu()
-    return 1
-  end if
+  case tTopicID of
+    #menu, #Cancel:
+      me.getInterface().showMenu()
+      return 1
+    #quit:
+      me.exitTutorial()
+      return 1
+    #otherwise:
+      nothing()
+  end case
   tTopicName = me.pTopics.getaProp(tTopicID)
   tURLKey = tTopicName & "_url"
   if textExists(tURLKey) then
     tURL = getText(tURLKey)
     openNetPage(tURL)
-    me.completeTopic(tTopicID)
-    me.getInterface().showMenu()
-    return 1
   end if
   me.pCurrentTopicID = tTopicID
   me.pCurrentTopicNumber = me.pTopics.getPos(me.pTopics.getaProp(tTopicID))
@@ -155,7 +194,7 @@ on nextStep me
       tNextTopicName = me.pTopics[tNextTopicNumber]
       tLinkList.setaProp(tNextTopicID, tNextTopicName)
     end if
-    tLinkList.setaProp(#menu, "Select another topic")
+    tLinkList.setaProp(#menu, "tutorial_select_another_topic")
     tTutorList.setaProp(#links, tLinkList)
     me.completeTopic(me.pTopicID)
   end if
@@ -200,32 +239,46 @@ on setRestrictions me, tRestrictionList
   me.pRestrictionList = tRestrictionList
 end
 
-on clearTriggers me
+on clearTriggers me, tForced
   if not listp(me.pTriggerList) then
     return 0
   end if
   repeat with tTrigger in me.pTriggerList
     unregisterMessage(symbol(tTrigger), me.getID())
+    tHandler = me.pMessages.getaProp(tTrigger)
+    if not voidp(tHandler) then
+      registerMessage(tTrigger, me.getID(), tHandler)
+      if not tForced then
+        call(tHandler, me)
+      end if
+    end if
   end repeat
+  me.pTriggerList = []
 end
 
-on clearRestrictions me
+on clearRestrictions me, tForced
   if not listp(me.pRestrictionList) then
     return 0
   end if
   repeat with tRestriction in me.pRestrictionList
     unregisterMessage(symbol(tRestriction), me.getID())
+    tHandler = me.pMessages.getaProp(tRestriction)
+    if not voidp(tHandler) then
+      registerMessage(tRestriction, me.getID(), tHandler)
+      if not tForced then
+        call(tHandler, me)
+      end if
+    end if
   end repeat
+  me.pRestrictionList = []
 end
 
-on stopTutorial me
-  me.pStarted = 0
-  me.clearTriggers()
-  me.clearRestrictions()
-  me.getInterface().stopTutorial()
+on exitTutorial me
+  me.pRunning = 0
+  me.getInterface().hide()
   tConn = getConnection(getVariable("connection.info.id"))
   if voidp(tConn) then
-    return error(me, "Connection not found.", #stopTutorial, #major)
+    return error(me, "Connection not found.", #exitTutorial, #major)
   end if
   tConn.send("SET_TUTORIAL_MODE", [#integer: 0])
 end
@@ -234,29 +287,13 @@ on restriction me
   me.getInterface().showMenu(#offtopic)
 end
 
-on sendConsoleMessage me, tTextKey
-  if getObject(#messenger_component).pItemList[#messages].count > 0 then
-    return 1
-  end if
-  tText = getText(tTextKey)
-  tMsg = [#campaign: 1, #id: "3", #url: "http://www.fi", #message: tText]
-  getObject("messenger_component").receive_Message(tMsg)
-end
-
-on openGuestroomsTab me
-  executeMessage(#show_navigator)
-  getObject(#navigator_interface).ChangeWindowView("nav_gr0")
-  getObject(#navigator_component).expandHistoryItem(1)
-  executeMessage(#hide_navigator)
-end
-
 on getTopics me
   return me.pTopics
 end
 
 on showMenu me
-  me.clearTriggers()
-  me.clearRestrictions()
+  me.clearTriggers(1)
+  me.clearRestrictions(1)
   me.getInterface().showMenu()
 end
 
@@ -279,4 +316,64 @@ on getProperty me, tProp
     #statuses:
       return me.pTopicStatuses
   end case
+end
+
+on tryExit me
+  tPrerequisites = [:]
+  tPrerequisites.setaProp(#hide_navigator, VOID)
+  tPrerequisites.setaProp(#hide_purse, VOID)
+  tPrerequisites.setaProp(#hide_messenger, VOID)
+  tBubbles = [:]
+  tBubble = [:]
+  tBubble.setaProp(#textKey, "tutorial_help_button_bubble")
+  tBubble.setaProp(#targetID, "help_icon_image")
+  tBubble.setaProp(#direction, 5)
+  tBubble.setaProp(#offsetx, 0)
+  tBubble.setaProp(#offsety, 0)
+  tBubbles.setaProp(#help, tBubble)
+  tBubble = [:]
+  tBubble.setaProp(#textKey, "tutorial_restart_button_bubble")
+  tBubble.setaProp(#targetID, "help_restart_tutorial")
+  tBubble.setaProp(#direction, 6)
+  tBubble.setaProp(#offsetx, 50)
+  tBubble.setaProp(#offsety, 0)
+  tBubbles.setaProp(#restart, tBubble)
+  tTutor = [:]
+  tTutor.setaProp(#textKey, "tutorial_quit_confirmation")
+  tTutor.setaProp(#targetID, "tutor")
+  tTutor.setaProp(#direction, 1)
+  tTutor.setaProp(#offsetx, 20)
+  tTutor.setaProp(#offsety, 310)
+  tTutor.setaProp(#links, [#quit: "tutorial_quit", #Cancel: "cancel"])
+  me.clearTriggers()
+  me.clearRestrictions()
+  me.executePrerequisites(tPrerequisites)
+  me.getInterface().setBubbles(tBubbles)
+  me.getInterface().setTutor(tTutor)
+end
+
+on sendConsoleMessage me, tTextKey
+  if not objectExists(#messenger_component) then
+    return error(me, "Messenger component not found", #sendConsoleMessage, #major)
+  end if
+  if getObject(#messenger_component).pItemList[#messages].count > 0 then
+    return 1
+  end if
+  tText = getText(tTextKey)
+  tMsg = [#campaign: 1, #id: "3", #url: "http://www.fi", #message: tText]
+  getObject("messenger_component").receive_Message(tMsg)
+end
+
+on openGuestroomsTab me
+  executeMessage(#show_navigator)
+  getObject(#navigator_interface).ChangeWindowView("nav_gr0")
+  getObject(#navigator_component).expandHistoryItem(1)
+  executeMessage(#hide_navigator)
+end
+
+on openPublicroomsTab me
+  executeMessage(#show_navigator)
+  getObject(#navigator_interface).ChangeWindowView("nav_pr")
+  getObject(#navigator_component).expandHistoryItem(1)
+  executeMessage(#hide_navigator)
 end

@@ -430,7 +430,7 @@ on showHelpWindow me
       tWndObj.getElement("help_tutorial_link").setText(getText("reg_tutorial_txt") && ">>")
     end if
   end if
-  tTutorialEnabled = getObject(#session).GET("tutorial_enabled", 1)
+  tTutorialEnabled = getObject(#session).GET("tutorial_enabled", 0)
   if not tTutorialEnabled then
     tWndObj.getElement("help_restart_tutorial").hide()
   end if
@@ -500,6 +500,7 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
         me.helpChoiceMade()
       "help_restart_tutorial":
         executeMessage(#restart_tutorial)
+        return me.removeDialog(tWndID, pWindowList)
       otherwise:
         if stringp(tElemID) then
           if tElemID.char[1..11] = "help_radio_" then
