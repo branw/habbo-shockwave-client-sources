@@ -23,19 +23,19 @@ on beginSprite me
   currPartNumsTmp = (field(myField & "_specs_" & sex)).line[currPartNum].item[1]
   the itemDelimiter = ","
   repeat with c = 1 to currPartNumsTmp.item.count
-    currPartNums.add(currPartNumsTmp.item[c])
+    currPartNums.add(x_to(currPartNumsTmp.item[c]))
   end repeat
   the itemDelimiter = ","
   if allColors = EMPTY then
     allColors = "255,255,255"
   end if
   the itemDelimiter = "&"
-  currColorRgb = allColors.item[currColorNum]
+  currColorRgb = x_to(allColors.item[currColorNum])
   the itemDelimiter = ","
 end
 
 on changeMySex me
-  sex = field("charactersex_field")
+  sex = member(getmemnum("charactersex_field")).text
   totalParts = (field(myField & "_specs_" & sex)).line.count
   currPartNum = 1
   currColorNum = 1
@@ -47,14 +47,14 @@ on changeMySex me
   currPartNumsTmp = (field(myField & "_specs_" & sex)).line[currPartNum].item[1]
   the itemDelimiter = ","
   repeat with c = 1 to currPartNumsTmp.item.count
-    currPartNums.add(currPartNumsTmp.item[c])
+    currPartNums.add(x_to(currPartNumsTmp.item[c]))
   end repeat
   the itemDelimiter = ","
   if allColors = EMPTY then
     allColors = "255,255,255"
   end if
   the itemDelimiter = "&"
-  currColorRgb = allColors.item[currColorNum]
+  currColorRgb = x_to(allColors.item[currColorNum])
   the itemDelimiter = ","
   updatespr(me)
 end
@@ -68,7 +68,7 @@ on randomFigure me
   currPartNumsTmp = (field(myField & "_specs_" & sex)).line[currPartNum].item[1]
   the itemDelimiter = ","
   repeat with c = 1 to currPartNumsTmp.item.count
-    currPartNums.add(currPartNumsTmp.item[c])
+    currPartNums.add(x_to(currPartNumsTmp.item[c]))
   end repeat
   the itemDelimiter = "/"
   allColors = (field(myField & "_specs_" & sex)).line[randomPart].item[2]
@@ -79,7 +79,7 @@ on randomFigure me
   oldItemLimiter = the itemDelimiter
   the itemDelimiter = "&"
   currColorNum = random(allColors.item.count)
-  currColorRgb = allColors.item[currColorNum]
+  currColorRgb = x_to(allColors.item[currColorNum])
   the itemDelimiter = oldItemLimiter
   sendAllSprites(#UpdateMyRaodomizeSmallSpr, myField, currPartNums, currColorRgb, currPartNum, currColorNum, mySprs)
   updatespr(me)
@@ -101,7 +101,7 @@ end
 
 on updatespr me
   repeat with c = 1 to myParts.item.count
-    tmpNbr = EMPTY & currPartNums[c]
+    tmpNbr = EMPTY & x_from(currPartNums[c])
     repeat with t = 1 to 3
       if tmpNbr.length < 3 then
         tmpNbr = "0" & tmpNbr
@@ -109,15 +109,18 @@ on updatespr me
     end repeat
     the itemDelimiter = ","
     s = "h_std_" & myParts.item[c] & "_" & tmpNbr & "_2_0"
-    set the member of sprite integer(mySprs.item[c]) to s
-    set the width of sprite integer(mySprs.item[c]) to member(s).width * (1 + mag)
-    set the height of sprite integer(mySprs.item[c]) to member(s).height * (1 + mag)
-    if mag and myParts.item[c] <> "ey" then
-      r = integer(currColorRgb.item[1])
-      g = integer(currColorRgb.item[2])
-      b = integer(currColorRgb.item[3])
-      sprite(integer(mySprs.item[c])).bgColor = rgb(r, g, b)
-      sprite(myPreviewSprite).bgColor = rgb(r, g, b)
+    if getmemnum(s) > 1 then
+      set the member of sprite integer(mySprs.item[c]) to s
+      set the width of sprite integer(mySprs.item[c]) to member(s).width * (1 + mag)
+      set the height of sprite integer(mySprs.item[c]) to member(s).height * (1 + mag)
+      if mag and myParts.item[c] <> "ey" then
+        tCurrColorRgb = x_from(currColorRgb)
+        r = integer(tCurrColorRgb.item[1])
+        g = integer(tCurrColorRgb.item[2])
+        b = integer(tCurrColorRgb.item[3])
+        sprite(integer(mySprs.item[c])).bgColor = rgb(r, g, b)
+        sprite(myPreviewSprite).bgColor = rgb(r, g, b)
+      end if
     end if
   end repeat
   if mag and addSprs <> VOID then
@@ -141,7 +144,7 @@ on changeColor me, d
       currColorNum = 1
     end if
   end if
-  currColorRgb = allColors.item[currColorNum]
+  currColorRgb = x_to(allColors.item[currColorNum])
 end
 
 on changePart me, d
@@ -162,7 +165,7 @@ on changePart me, d
   currPartNumsTmp = (field(myField & "_specs_" & sex)).line[currPartNum].item[1]
   the itemDelimiter = ","
   repeat with c = 1 to currPartNumsTmp.item.count
-    currPartNums.add(currPartNumsTmp.item[c])
+    currPartNums.add(x_to(currPartNumsTmp.item[c]))
   end repeat
   currColorNum = 1
   the itemDelimiter = "/"
@@ -170,7 +173,7 @@ on changePart me, d
   if allColors = EMPTY then
     allColors = "255,255,255"
   end if
-  currColorRgb = allColors.item[currColorNum]
+  currColorRgb = x_to(allColors.item[currColorNum])
   the itemDelimiter = ","
 end
 
@@ -184,7 +187,7 @@ on initMeForChange me
     the itemDelimiter = "="
     tmpToAdd2 = integer(tmpToAdd.item[2])
     the itemDelimiter = ","
-    tmpCurrPartNums.add(tmpToAdd2)
+    tmpCurrPartNums.add(x_to(string(tmpToAdd2)))
     tmpToAdd = getaProp(figureColorList, myParts.item[c])
     the itemDelimiter = ","
     if tmpToAdd.item.count < 3 then
@@ -197,8 +200,7 @@ on initMeForChange me
         tmpToAdd = tmpColor.red & "," & tmpColor.green & "," & tmpColor.blue
       end if
     end if
-    currColorRgb = tmpToAdd
-    put currColorRgb && myParts.item[c]
+    currColorRgb = x_to(tmpToAdd)
   end repeat
   currPartNums = tmpCurrPartNums
 end
@@ -206,7 +208,7 @@ end
 on getMyFigureData me
   global MyfigurePartList, MyfigureColorList
   repeat with c = 1 to myParts.item.count
-    tmpNbr = EMPTY & currPartNums[c]
+    tmpNbr = EMPTY & x_from(currPartNums[c])
     repeat with t = 1 to 3
       if tmpNbr.length < 3 then
         tmpNbr = "0" & tmpNbr
@@ -214,9 +216,10 @@ on getMyFigureData me
     end repeat
     figurePartList.setaProp(myParts.item[c], myParts.item[c] & "=" & tmpNbr)
     if mag and myParts.item[c] <> "ey" then
-      r = integer(currColorRgb.item[1])
-      g = integer(currColorRgb.item[2])
-      b = integer(currColorRgb.item[3])
+      tCurrColorRgb = x_from(currColorRgb)
+      r = integer(tCurrColorRgb.item[1])
+      g = integer(tCurrColorRgb.item[2])
+      b = integer(tCurrColorRgb.item[3])
       figureColorList.setaProp(myParts.item[c], r & "," & g & "," & b)
     end if
   end repeat

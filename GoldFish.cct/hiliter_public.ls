@@ -158,6 +158,10 @@ on hiliteAvatar me, ChosenObject, whichSprite
     showSpecialInfo(ChosenObject)
     if ChosenObject.name = gMyName and listp(gpUiButtons) then
       sendSprite(getaProp(gpUiButtons, "dance"), #enable)
+    else
+      if getaProp(gpUiButtons, "ask_friend") > 0 then
+        sendSprite(getaProp(gpUiButtons, "ask_friend"), #enable)
+      end if
     end if
   else
     member("matchem.user_name").text = " "
@@ -191,6 +195,9 @@ on Hide_hilitedAvatar me, whichSpr
   end repeat
   if listp(gpUiButtons) then
     sendSprite(getaProp(gpUiButtons, "dance"), #disable)
+    if getaProp(gpUiButtons, "ask_friend") > 0 then
+      sendSprite(getaProp(gpUiButtons, "ask_friend"), #disable)
+    end if
   end if
 end
 

@@ -1,3 +1,0 @@
-on mouseUp
-  openUimakoppi()
-end

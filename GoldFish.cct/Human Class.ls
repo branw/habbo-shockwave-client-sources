@@ -1,5 +1,5 @@
 property name, Custom, locX, locY, height, direction, memberPrefix, memberModels, moving, destLScreen, startLScreen, moveStart, moveTime, talking, pModels, pDirections, pSprites, pInks, lParts, pActions, pColors, pLocZShifts, animFrame, danceLegAnim, danceHandAnim, dancing, pSleeping, counter, pAnimFixH, pAnimFixV, pFlipped, mainAction, restingHeight, changes, controller, userController, drink, food, drinkAnimFrame, drinkingAnimFrameDir, carryItem, carryItemSpr, drinking, pTrading, myEy, specialXtras, isModerator, pLocFix, iLocZFix, pHeadLooseH, pHeadLooseV, pModLevel
-global gMyModLevel, OOO, gpObjects, gUserSprites, gMyName, gXFactor, gYFactor, peopleSize, MeDancing, gBadgeOn, gMeModerator
+global gMyModLevel, OOO, gpObjects, gUserSprites, gMyName, gXFactor, gYFactor, peopleSize, MeDancing, gBadgeOn, gMeModerator, gModLevel
 
 on new me, tName, tMemberPrefix, tMemberModels, tLocX, tLocY, tHeight, tdir, tlDimensions, tSpr, tCustom
   if tName = gMyName then
@@ -196,9 +196,6 @@ on initiateForSync me
 end
 
 on fuseAction_mod me, prop
-  if me.name = gMyName then
-    gMeModerator = 1
-  end if
   if voidp(gBadgeOn) then
     gBadgeOn = 1
   end if
@@ -247,22 +244,22 @@ on fuseAction_drink me, props
     drinking = 1
     carryItem = "food"
     food = " " & word 3 of props
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   else
     drinking = 1
     carryItem = "drink"
-    drink = word 2 of props
+    drink = word 2 to props.word.count of props
   end if
 end
 
-on fuseAction_carryf me, props
+on fuseaction_carryf me, props
   carryItem = "food"
-  food = word 2 of props
+  food = word 2 to props.word.count of props
 end
 
-on fuseAction_eat me, props
+on fuseaction_eat me, props
   carryItem = "food"
-  food = word 2 of props
+  food = word 2 to props.word.count of props
 end
 
 on fuseAction_lay me, props
@@ -308,6 +305,9 @@ on showSpecialInfo me
     member("matchem.user_name").text = " "
   end if
   if isModerator = 1 or me.name = gMyName and gMeModerator = 1 then
+    if me.name = gMyName and gMeModerator then
+      pModLevel = gModLevel
+    end if
     sprite(726).castNum = getmemnum("sheriff_badge" & pModLevel)
     sprite(726).loc = point(694, 350)
     sprite(726).ink = 36
@@ -830,6 +830,6 @@ on fuseAction_trd me
   pTrading = 1
 end
 
-on fuseAction_sleep me
+on fuseaction_Sleep me
   pSleeping = 1
 end

@@ -6,5 +6,5 @@ on exitFrame
   gChosenUnitIp = "fuse.taivas.com"
   gEPIp = "fuse.taivas.com"
   gEPPort = 40288
-  Init()
+  init()
 end

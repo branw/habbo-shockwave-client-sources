@@ -9,17 +9,23 @@ on new me, tMode, tState
   end if
   pMode = tMode
   pCountryMan = new(script(getmemnum("Country Manager Class")))
-  me.Init()
+  me.init()
+  put EMPTY into field getmemnum("password_field")
+  put EMPTY into field getmemnum("passwordShow_field")
+  put EMPTY into field getmemnum("password_field2")
+  put EMPTY into field getmemnum("passwordcheck_field")
   return me
 end
 
-on Init me
-  global figurePartList, figureColorList
+on init me
+  global figurePartList, figureColorList, canSpam
   if pMode = #register then
     figurePartList = [:]
     figurePartList = [#sd: "sd=001", #hr: "hr=001", #hd: "hd=001", #ey: "ey=001", #fc: "fc=001", #bd: "bd=001", #lh: "lh=001", #rh: "rh=001", #ch: "ch=001", #ls: "ls=001", #rs: "rs=001", #lg: "lg=001", #sh: "sh=001"]
     figureColorList = [:]
     figureColorList = [#sd: "0", #hr: "0", #hd: "0", #ey: "0", #fc: "0", #bd: "0", #lh: "0", #rh: "0", #ch: "0", #ls: "0", #rs: "0", #lg: "0", #sh: "0"]
+    canSpam = 1
+    put canSpam into field getmemnum("can_spam_field")
     go("regist1")
   else
     if pMode = #update then
@@ -39,13 +45,15 @@ on setState me, tState
   case pState of
     1:
       if tState <> 0 then
-        if me.passwordCheck() = 0 then
-          return 
-        end if
         sendAllSprites(#getMyFigureData)
         me.getFigureResults()
       end if
     2:
+      if not (pMode = #register and tState = 1) then
+        if me.passwordCheck() = 0 then
+          return 
+        end if
+      end if
       if tState > pState then
         if me.BirthdayANDemailcheck() = 0 then
           return 
@@ -108,10 +116,16 @@ on getFigureResults me
   put figurePartList
   put figureColorList
   repeat with c = 1 to figurePartList.count
+    tColor = figureColorList[c]
+    tPartPrefix = figurePartList[c]
+    if tColor.length < 4 and not (tPartPrefix contains "sd=" or tPartPrefix contains "ey=") then
+      tColor = "255,255,255"
+      put tPartPrefix & " NO COLOR WAS SET"
+    end if
     if c < figurePartList.count then
-      tmpStr = tmpStr & figurePartList[c] & "/" & figureColorList[c] & "&"
+      tmpStr = tmpStr & tPartPrefix & "/" & tColor & "&"
     else
-      tmpStr = tmpStr & figurePartList[c] & "/" & figureColorList[c]
+      tmpStr = tmpStr & tPartPrefix & "/" & tColor
     end if
     MyfigurePartList.addProp(getPropAt(figurePartList, c), figurePartList[c].char[length(figurePartList[c]) - 2..length(figurePartList[c])])
     if figureColorList[c] = "0" or figureColorList[c] = EMPTY or voidp(figureColorList[c]) then
@@ -120,7 +134,8 @@ on getFigureResults me
     end if
     MyfigureColorList.addProp(getPropAt(figureColorList, c), value("color(#rgb," & figureColorList[c] & ")"))
   end repeat
-  put tmpStr into field "figure_field"
+  put "FIGURE RESULTS:", tmpStr
+  put x_to(tmpStr) into field "figure_field"
 end
 
 on passwordCheck me

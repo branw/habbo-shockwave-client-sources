@@ -2,8 +2,6 @@ property loginpw, loginpwshow, isLoginField
 global loginButton, gChosenFlatId
 
 on beginSprite me
-  put EMPTY into field loginpw
-  put EMPTY into field loginpwshow
 end
 
 on keyDown me

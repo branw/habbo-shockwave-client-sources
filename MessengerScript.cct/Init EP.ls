@@ -16,8 +16,8 @@ on exitFrame me
   gCountryPrefix = "gf"
   gStartLoadingTime = t1
   gEndLoadingTime = t2
-  gEPIp = "fuse-pc2.kultakalaglobal.com"
-  gEPPort = 37040
+  gEPIp = "fuse-sun2.kultakalaglobal.com"
+  gEPPort = 37140
   if the runMode <> "Author" then
     gHabboRep = getNetText("http://habborep.magenta.net/serverid.txt")
     hostInfo = externalParamValue("swText")

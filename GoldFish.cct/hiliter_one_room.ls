@@ -5,7 +5,7 @@ on beginSprite me
   hiliteSprite = 0
   hiliteSprite = 890
   if hiliteSprite < 1 then
-    Init()
+    init()
     hiliteSprite = sprMan_getPuppetSprite()
   end if
   set the member of sprite hiliteSprite to "memberhilite_0"
@@ -322,7 +322,7 @@ on hiliteAvatar me, ChosenObject, whichSprite
 end
 
 on setUserInfoTexts me
-  global gInfofieldIconSprite
+  global gInfofieldIconSprite, gpUiButtons
   emptyInfoFields(me)
   myMatchEmName = EMPTY
   put myMatchEmName
@@ -351,6 +351,9 @@ on setUserInfoTexts me
     else
       sprite(getaProp(gpUiButtons, "userrights")).member = getmemnum("enablerights_btn")
     end if
+    if getaProp(gpUiButtons, "ask_friend") > 0 then
+      sendSprite(getaProp(gpUiButtons, "ask_friend"), #enable)
+    end if
   else
     sendSprite(getaProp(gpUiButtons, "Dance"), #enable)
   end if
@@ -366,6 +369,9 @@ on emptyInfoFields me
   sendSprite(getaProp(gpUiButtons, "killuser"), #disable)
   sendSprite(getaProp(gpUiButtons, "userrights"), #disable)
   sendSprite(getaProp(gpUiButtons, "Dance"), #disable)
+  if getaProp(gpUiButtons, "ask_friend") > 0 then
+    sendSprite(getaProp(gpUiButtons, "ask_friend"), #disable)
+  end if
 end
 
 on limitLoc coordinate, top

@@ -6,11 +6,11 @@ on beginSprite me
     canSpam = 1
     put canSpam into field "can_spam_field"
   end if
-  if member("can_spam_field").text = "1" then
-    set the member of sprite the spriteNum of me to "checkbox on"
+  if member(getmemnum("can_spam_field")).text = "1" then
+    set the member of sprite the spriteNum of me to getmemnum("checkbox on")
     canSpam = 1
   else
-    set the member of sprite the spriteNum of me to "checkbox off"
+    set the member of sprite the spriteNum of me to getmemnum("checkbox off")
     canSpam = 0
   end if
   put canSpam into field "can_spam_field"
@@ -22,11 +22,11 @@ end
 
 on doSwitch me
   if canSpam then
-    set the member of sprite the spriteNum of me to "checkbox off"
+    set the member of sprite the spriteNum of me to getmemnum("checkbox off")
     canSpam = 0
   else
-    set the member of sprite the spriteNum of me to "checkbox on"
+    set the member of sprite the spriteNum of me to getmemnum("checkbox on")
     canSpam = 1
   end if
-  put canSpam into field "can_spam_field"
+  put canSpam into field getmemnum("can_spam_field")
 end

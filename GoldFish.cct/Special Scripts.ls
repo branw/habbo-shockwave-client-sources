@@ -1,7 +1,7 @@
 global gpStuffTypes, goUserStrip, gpObjects, gChosenStripLevel, gcatName, gWaitCatalog, gWaitCatStart, pictureNetId, pictureUrl, gChosenStuffSprite, gFloorHost, gFloorPort, gChosenFlatId, gGoTo, gUnits, gChosenFlat, gChosenFlatDoorMode, gFlats, gChosenUnitIp, gChosenUnitPort, gConnectionInstance, gpUiButtons, gMyName, gFlatLetIn, gWorldType, gUnit_otherRooms, gChosenRoomName, gPopUpContext2, gTraderWindow, gChosenFlatOwner
 
 on handleSpecialMessages data
-  global goJumper, gPellePlayer, gElevatorDoorSprite, gIAmOwner, gChosenFlatDoorMode, hiliter, gPopUpContext2, gpInteractiveItems, gPresentCard, gProps, NowinUnit, UnitsIDNum, gAd, gPurchaseCode, gConfirmPopUp, gCredits, gChosenTeleport
+  global goJumper, gPellePlayer, gElevatorDoorSprite, gIAmOwner, gChosenFlatDoorMode, hiliter, gPopUpContext2, gNoOfStuff, gpInteractiveItems, gPresentCard, gProps, NowinUnit, UnitsIDNum, gAd, gPurchaseCode, gConfirmPopUp, gCredits, gChosenTeleport, gMeModerator, gModLevel
   ln1 = line 1 of data
   data = doSpecialCharConversion(data)
   if ln1 contains "OPEN_UIMAKOPPI" then
@@ -128,7 +128,7 @@ on handleSpecialMessages data
                           end if
                           put gProps
                           setaProp(gProps, #doorMode, symbol(getaProp(p, "doormode")))
-                          setaProp(gProps, #showOwnerName, getaProp(p, "showOwnerName") = "true")
+                          setaProp(gProps, #showownername, getaProp(p, "showOwnerName") = "true")
                           setaProp(gProps, #superuser, getaProp(p, "allsuperuser") = "true")
                           sFrame = "roominfochange"
                           goContext(sFrame, gPopUpContext2)
@@ -190,10 +190,12 @@ on handleSpecialMessages data
                                     put s into field "stuff_type_list"
                                   else
                                     if ln1 contains "ACTIVE_OBJECTS" or ln1 contains "ACTIVEOBJECT_ADD" then
+                                      gNoOfStuff = 0
                                       repeat with i = 2 to the number of lines in data
                                         ln = line i of data
                                         if ln.length > 4 then
                                           createActiveObject(ln)
+                                          gNoOfStuff = gNoOfStuff + 1
                                         end if
                                       end repeat
                                     else
@@ -254,293 +256,308 @@ on handleSpecialMessages data
                                                     sendFuseMsg("GETSTRIP new")
                                                     gChosenStripLevel = "new"
                                                   else
-                                                    if ln1 contains "TRADE_ITEMS" then
-                                                      if not objectp(gTraderWindow) then
-                                                        gConfirmPopUp = new(script("PopUp Context Class"), 2000000000, 871, 887, point(0, 0))
-                                                        displayFrame(gConfirmPopUp, "tradeItem_dialog")
-                                                        sprite(882).initTrade()
-                                                        sendFuseMsg("GETSTRIP new")
-                                                      end if
-                                                      if objectp(gTraderWindow) then
-                                                        if gTraderWindow.pClosing then
-                                                          sprite(882).initTrade()
-                                                          sendFuseMsg("GETSTRIP new")
-                                                        else
-                                                          tradeItems(gTraderWindow, data)
-                                                        end if
+                                                    if ln1 contains "DICE_VALUE" then
+                                                      tDiceId = data.line[2].word[1]
+                                                      tDiceValue = integer(data.line[2].word[2] - tDiceId * 38)
+                                                      tLocalId = "edice" & tDiceId
+                                                      tSpr = gpObjects.getaProp(tLocalId)
+                                                      if tSpr > 0 then
+                                                        sendSprite(tSpr, #diceThrown, tDiceValue)
                                                       end if
                                                     else
-                                                      if ln1 contains "TRADE_ACCEPT" then
+                                                      if ln1 contains "TRADE_ITEMS" then
+                                                        if not objectp(gTraderWindow) then
+                                                          gConfirmPopUp = new(script("PopUp Context Class"), 2000000000, 871, 887, point(0, 0))
+                                                          displayFrame(gConfirmPopUp, "tradeItem_dialog")
+                                                          sprite(882).initTrade()
+                                                          sendFuseMsg("GETSTRIP new")
+                                                        end if
                                                         if objectp(gTraderWindow) then
-                                                          tradeAccept(gTraderWindow, data)
+                                                          if gTraderWindow.pClosing then
+                                                            sprite(882).initTrade()
+                                                            sendFuseMsg("GETSTRIP new")
+                                                          else
+                                                            tradeItems(gTraderWindow, data)
+                                                          end if
                                                         end if
                                                       else
-                                                        if ln1 contains "TRADE_CLOSE" then
+                                                        if ln1 contains "TRADE_ACCEPT" then
                                                           if objectp(gTraderWindow) then
-                                                            tradeClose(gTraderWindow, data)
+                                                            tradeAccept(gTraderWindow, data)
                                                           end if
                                                         else
-                                                          if ln1 contains "TRADE_COMPLETED" then
+                                                          if ln1 contains "TRADE_CLOSE" then
                                                             if objectp(gTraderWindow) then
-                                                              tradeCompleted(gTraderWindow, data)
+                                                              tradeClose(gTraderWindow, data)
                                                             end if
                                                           else
-                                                            if ln1 contains "PRESENT_NOTTIMEYET" then
-                                                              ShowAlert("Hands off! Christmas presents can't be opened until December 24th (6pm GMT).")
+                                                            if ln1 contains "TRADE_COMPLETED" then
+                                                              if objectp(gTraderWindow) then
+                                                                tradeCompleted(gTraderWindow, data)
+                                                              end if
                                                             else
-                                                              if ln1 contains "PRESENTOPEN" then
-                                                                presentType = line 2 of data
-                                                                merchandiseCode = line 3 of data
-                                                                displayFrame(gPresentCard, "xmas_packet_present")
-                                                                pictureMem = VOID
-                                                                if presentType starts "credits" then
-                                                                  pictureMem = getmemnum("credits_icon")
-                                                                else
-                                                                  if presentType starts "deal" then
-                                                                    dealName = presentType.char[6..presentType.length]
-                                                                    pictureMem = getmemnum("deal_icon_" & dealName)
-                                                                    if pictureMem < 0 then
-                                                                      pictureMem = getmemnum("poster_small")
-                                                                    end if
+                                                              if ln1 contains "PRESENT_NOTTIMEYET" then
+                                                                ShowAlert("Hands off! Christmas presents can't be opened until December 24th (6pm GMT).")
+                                                              else
+                                                                if ln1 contains "PRESENTOPEN" then
+                                                                  presentType = line 2 of data
+                                                                  merchandiseCode = line 3 of data
+                                                                  displayFrame(gPresentCard, "xmas_packet_present")
+                                                                  pictureMem = VOID
+                                                                  if presentType starts "credits" then
+                                                                    pictureMem = getmemnum("credits_icon")
                                                                   else
-                                                                    if presentType starts "poster" then
-                                                                      pictureMem = getmemnum("poster_small")
+                                                                    if presentType starts "deal" then
+                                                                      dealName = presentType.char[6..presentType.length]
+                                                                      pictureMem = getmemnum("deal_icon_" & dealName)
+                                                                      if pictureMem < 0 then
+                                                                        pictureMem = getmemnum("poster_small")
+                                                                      end if
                                                                     else
-                                                                      tryDealName = "deal_icon_" & merchandiseCode.word[2]
-                                                                      if getmemnum(tryDealName) > 0 then
-                                                                        pictureMem = getmemnum(tryDealName)
+                                                                      if presentType starts "poster" then
+                                                                        pictureMem = getmemnum("poster_small")
                                                                       else
-                                                                        if getmemnum(presentType & "_small") > 0 then
-                                                                          pictureMem = getmemnum(presentType & "_small")
+                                                                        tryDealName = "deal_icon_" & merchandiseCode.word[2]
+                                                                        if getmemnum(tryDealName) > 0 then
+                                                                          pictureMem = getmemnum(tryDealName)
                                                                         else
-                                                                          if presentType contains "*" then
-                                                                            a = offset("*", presentType)
-                                                                            pictureMem = getmemnum(presentType.char[1..a - 1] & "_small")
+                                                                          if getmemnum(presentType & "_small") > 0 then
+                                                                            pictureMem = getmemnum(presentType & "_small")
+                                                                          else
+                                                                            if presentType contains "*" then
+                                                                              a = offset("*", presentType)
+                                                                              pictureMem = getmemnum(presentType.char[1..a - 1] & "_small")
+                                                                            end if
                                                                           end if
                                                                         end if
                                                                       end if
                                                                     end if
                                                                   end if
-                                                                end if
-                                                                if pictureMem <> VOID and pictureMem > 0 then
-                                                                  sendAllSprites(#setPresentPic, member(pictureMem))
-                                                                else
-                                                                  sendAllSprites(#setPresentPic, member("packetcard_icon"))
-                                                                end if
-                                                              else
-                                                                if ln1 contains "CATALOGURL" then
-                                                                  gWaitCatStart = the ticks
-                                                                  loadCatalog(line 2 of data)
-                                                                  gWaitCatalog = 1
-                                                                else
-                                                                  if ln1 contains "ITEMS" then
-                                                                    handleAddItems(line 2 to the number of lines in data of data)
+                                                                  if pictureMem <> VOID and pictureMem > 0 then
+                                                                    sendAllSprites(#setPresentPic, member(pictureMem))
                                                                   else
-                                                                    if ln1 contains "ADDITEM" then
-                                                                      oldDelim = the itemDelimiter
-                                                                      createItem(line 2 to the number of lines in data of data)
-                                                                      the itemDelimiter = oldDelim
+                                                                    sendAllSprites(#setPresentPic, member("packetcard_icon"))
+                                                                  end if
+                                                                else
+                                                                  if ln1 contains "CATALOGURL" then
+                                                                    gWaitCatStart = the ticks
+                                                                    loadCatalog(line 2 of data)
+                                                                    gWaitCatalog = 1
+                                                                  else
+                                                                    if ln1 contains "ITEMS" then
+                                                                      handleAddItems(line 2 to the number of lines in data of data)
                                                                     else
-                                                                      if ln1 contains "UPDATEITEM" then
+                                                                      if ln1 contains "ADDITEM" then
                                                                         oldDelim = the itemDelimiter
-                                                                        createItem(line 2 to the number of lines in data of data, 1)
+                                                                        createItem(line 2 to the number of lines in data of data)
                                                                         the itemDelimiter = oldDelim
                                                                       else
-                                                                        if ln1 contains "STRIPINFO" then
-                                                                          if goUserStrip = VOID then
-                                                                            goUserStrip = new(script("UserStrip Class"))
-                                                                          end if
-                                                                          handleStripData(goUserStrip, line 2 to the number of lines in data of data)
-                                                                          if label(gWorldType & "_hand_open") > the frame then
-                                                                            gotoFrame(gWorldType & "_hand_open")
-                                                                          else
-                                                                            if label(gWorldType & "_hand_open") < the frame and label(gWorldType & "_hand_open_b") > the frame then
-                                                                              gotoFrame(gWorldType & "_hand_open_b")
-                                                                            else
-                                                                              prepareHandItems(goUserStrip)
-                                                                            end if
-                                                                          end if
+                                                                        if ln1 contains "UPDATEITEM" then
+                                                                          oldDelim = the itemDelimiter
+                                                                          createItem(line 2 to the number of lines in data of data, 1)
+                                                                          the itemDelimiter = oldDelim
                                                                         else
-                                                                          if ln1 contains "FLATCREATED" then
-                                                                            put "FLATCREATED"
-                                                                            id = word 1 of line 2 of data
-                                                                            gChosenFlatId = id
-                                                                            gFloorHost = word 2 of line 2 of data
-                                                                            gFloorPort = word 3 of line 2 of data
-                                                                            if getmemnum("roomkiosk.roomname") > 0 then
-                                                                              s = "description=" & field("roomkiosk.description")
-                                                                              s = s & RETURN & "password=" & field("room_password")
-                                                                              s = s & RETURN & "allsuperuser=" & getaProp(gProps, #superuser)
-                                                                              sendEPFuseMsg("SETFLATINFO /" & id & "/" & s)
-                                                                              roomName = line 3 of data
-                                                                              if roomName.length < 2 then
-                                                                                roomName = field("roomkiosk.roomname")
+                                                                          if ln1 contains "STRIPINFO" then
+                                                                            if goUserStrip = VOID then
+                                                                              goUserStrip = new(script("UserStrip Class"))
+                                                                            end if
+                                                                            handleStripData(goUserStrip, line 2 to the number of lines in data of data)
+                                                                            if label(gWorldType & "_hand_open") > the frame then
+                                                                              gotoFrame(gWorldType & "_hand_open")
+                                                                            else
+                                                                              if label(gWorldType & "_hand_open") < the frame and label(gWorldType & "_hand_open_b") > the frame then
+                                                                                gotoFrame(gWorldType & "_hand_open_b")
+                                                                              else
+                                                                                prepareHandItems(goUserStrip)
                                                                               end if
-                                                                              member("goingto_roomname").text = line 3 of data
-                                                                              NowinUnit = "Private Room:" && member("goingto_roomname").text
-                                                                              member(getmemnum("room.info")).text = AddTextToField("Room") && member("goingto_roomname").text & RETURN & AddTextToField("Owner") && gMyName
-                                                                              s = member("roomkiosk.confirmtext").text
-                                                                              put AddTextToField("RoomNum") && id into line 3 of s
-                                                                              put AddTextToField("Name") && roomName into line 4 of s
-                                                                              member("roomkiosk.confirmtext").text = s
-                                                                              goContext("confirm")
                                                                             end if
                                                                           else
-                                                                            if ln1 contains "ALLUNITS" then
-                                                                              UnitsIDNum = 0
-                                                                              the itemDelimiter = ","
-                                                                              gUnits = [:]
-                                                                              sort(gUnits)
-                                                                              num = 1
-                                                                              put data
-                                                                              repeat with i = 2 to the number of lines in data
-                                                                                unit = line i of data
-                                                                                if unit.length > 5 and not (unit contains "Floor1") then
-                                                                                  newUnit(unit, num)
-                                                                                  num = num + 1
-                                                                                  next repeat
+                                                                            if ln1 contains "FLATCREATED" then
+                                                                              put "FLATCREATED"
+                                                                              id = word 1 of line 2 of data
+                                                                              gChosenFlatId = id
+                                                                              gFloorHost = word 2 of line 2 of data
+                                                                              gFloorPort = word 3 of line 2 of data
+                                                                              if getmemnum("roomkiosk.roomname") > 0 then
+                                                                                s = "description=" & field("roomkiosk.description")
+                                                                                s = s & RETURN & "password=" & field("room_password")
+                                                                                s = s & RETURN & "allsuperuser=" & getaProp(gProps, #superuser)
+                                                                                sendEPFuseMsg("SETFLATINFO /" & id & "/" & s)
+                                                                                roomName = line 3 of data
+                                                                                if roomName.length < 2 then
+                                                                                  roomName = field("roomkiosk.roomname")
                                                                                 end if
-                                                                                if unit contains "Floor1" then
-                                                                                  member("privaterooms.load").text = item 2 of unit
-                                                                                end if
-                                                                              end repeat
+                                                                                member("goingto_roomname").text = line 3 of data
+                                                                                NowinUnit = "Private Room:" && member("goingto_roomname").text
+                                                                                member(getmemnum("room.info")).text = AddTextToField("Room") && member("goingto_roomname").text & RETURN & AddTextToField("Owner") && gMyName
+                                                                                s = member("roomkiosk.confirmtext").text
+                                                                                put AddTextToField("RoomNum") && id into line 3 of s
+                                                                                put AddTextToField("Name") && roomName into line 4 of s
+                                                                                member("roomkiosk.confirmtext").text = s
+                                                                                goContext("confirm")
+                                                                              end if
                                                                             else
-                                                                              if ln1 contains "UNITUPDATED" then
+                                                                              if ln1 contains "ALLUNITS" then
+                                                                                UnitsIDNum = 0
                                                                                 the itemDelimiter = ","
-                                                                                unit = line 2 of data
-                                                                                name = item 1 of unit
-                                                                                l = getaProp(gUnits, name)
-                                                                                if name contains "Floor1" then
-                                                                                  if the movieName contains "entry" then
+                                                                                gUnits = [:]
+                                                                                sort(gUnits)
+                                                                                num = 1
+                                                                                put data
+                                                                                repeat with i = 2 to the number of lines in data
+                                                                                  unit = line i of data
+                                                                                  if unit.length > 5 and not (unit contains "Floor1") then
+                                                                                    newUnit(unit, num)
+                                                                                    num = num + 1
+                                                                                    next repeat
+                                                                                  end if
+                                                                                  if unit contains "Floor1" then
                                                                                     member("privaterooms.load").text = item 2 of unit
                                                                                   end if
-                                                                                else
-                                                                                  if l = VOID then
-                                                                                    nothing()
-                                                                                  else
-                                                                                    num = l[5]
-                                                                                    activeUsers = integer(item 2 of unit)
-                                                                                    maxUsers = integer(item 3 of unit)
-                                                                                    host = item 4 of unit
-                                                                                    port = integer(item 5 of unit)
-                                                                                    description = item 6 of unit
-                                                                                    UnitPropL = getaProp(gUnits, name)
-                                                                                    UnitPropL.activeUsers = activeUsers
-                                                                                    UnitPropL.maxUsers = maxUsers
-                                                                                    UnitPropL.host = host
-                                                                                    UnitPropL.port = port
-                                                                                    UnitPropL.description = description
-                                                                                    setProp(gUnits, name, UnitPropL)
-                                                                                    if not (name contains "Floor") then
-                                                                                      setUnitActiveUsers(name)
-                                                                                    else
+                                                                                end repeat
+                                                                              else
+                                                                                if ln1 contains "UNITUPDATED" then
+                                                                                  the itemDelimiter = ","
+                                                                                  unit = line 2 of data
+                                                                                  name = item 1 of unit
+                                                                                  l = getaProp(gUnits, name)
+                                                                                  if name contains "Floor1" then
+                                                                                    if the movieName contains "entry" then
                                                                                       member("privaterooms.load").text = item 2 of unit
                                                                                     end if
-                                                                                  end if
-                                                                                end if
-                                                                              else
-                                                                                if ln1 contains "UNITMEMBERS" then
-                                                                                  s = line 2 to the number of lines in data of data
-                                                                                  s2 = EMPTY
-                                                                                  repeat with i = 1 to the number of lines in s
-                                                                                    put line i of s & " " after ln1
-                                                                                  end repeat
-                                                                                  if getmemnum("publicroom_peoplelist") > 0 then
-                                                                                    put s2 into field "publicroom_peoplelist"
-                                                                                  end if
-                                                                                  if the movieName contains "cr_entry" then
-                                                                                    put s2 into line 2 to the number of lines in field "crroom_who" of field "crroom_who"
+                                                                                  else
+                                                                                    if l = VOID then
+                                                                                      nothing()
+                                                                                    else
+                                                                                      num = l[5]
+                                                                                      activeUsers = integer(item 2 of unit)
+                                                                                      maxUsers = integer(item 3 of unit)
+                                                                                      host = item 4 of unit
+                                                                                      port = integer(item 5 of unit)
+                                                                                      description = item 6 of unit
+                                                                                      UnitPropL = getaProp(gUnits, name)
+                                                                                      UnitPropL.activeUsers = activeUsers
+                                                                                      UnitPropL.maxUsers = maxUsers
+                                                                                      UnitPropL.host = host
+                                                                                      UnitPropL.port = port
+                                                                                      UnitPropL.description = description
+                                                                                      setProp(gUnits, name, UnitPropL)
+                                                                                      if not (name contains "Floor") then
+                                                                                        setUnitActiveUsers(name)
+                                                                                      else
+                                                                                        member("privaterooms.load").text = item 2 of unit
+                                                                                      end if
+                                                                                    end if
                                                                                   end if
                                                                                 else
-                                                                                  if ln1 contains "REMOVEITEM" then
-                                                                                    itemId = integer(line 2 of data)
-                                                                                    sendAllSprites(#itemDie, itemId)
+                                                                                  if ln1 contains "UNITMEMBERS" then
+                                                                                    s = line 2 to the number of lines in data of data
+                                                                                    s2 = EMPTY
+                                                                                    repeat with i = 1 to the number of lines in s
+                                                                                      put line i of s & " " after ln1
+                                                                                    end repeat
+                                                                                    if getmemnum("publicroom_peoplelist") > 0 then
+                                                                                      put s2 into field "publicroom_peoplelist"
+                                                                                    end if
+                                                                                    if the movieName contains "cr_entry" then
+                                                                                      put s2 into line 2 to the number of lines in field "crroom_who" of field "crroom_who"
+                                                                                    end if
                                                                                   else
-                                                                                    if ln1 contains "FLATINFO" then
-                                                                                      the itemDelimiter = "="
-                                                                                      repeat with i = 2 to the number of lines in data
-                                                                                        ln = line i of data
-                                                                                        sfield = item 1 of ln
-                                                                                        sdata = item 2 of ln
-                                                                                        if getmemnum("flatinfoshow." & sfield) > 0 then
-                                                                                          member("flatinfoshow." & sfield).text = sdata
-                                                                                        end if
-                                                                                        put sfield, sdata
-                                                                                        if sfield = "image" then
-                                                                                          pictureUrl = sdata
-                                                                                          put pictureUrl
-                                                                                        end if
-                                                                                        if sfield = "isOpen" then
-                                                                                          if sdata = "true" then
-                                                                                            member("flatinfoshow.open_info").text = "Door is open"
-                                                                                            sprite(20).visible = 1
-                                                                                          else
-                                                                                            member("flatinfoshow.open_info").text = "Door is closed"
-                                                                                            sprite(20).visible = 0
-                                                                                          end if
-                                                                                        end if
-                                                                                        if sfield = "host" then
-                                                                                          gFloorHost = char offset("/", sdata) + 1 to sdata.length of sdata
-                                                                                        end if
-                                                                                        if sfield = "port" then
-                                                                                          gFloorPort = sdata
-                                                                                        end if
-                                                                                      end repeat
-                                                                                      the itemDelimiter = ","
+                                                                                    if ln1 contains "REMOVEITEM" then
+                                                                                      itemId = integer(line 2 of data)
+                                                                                      sendAllSprites(#itemDie, itemId)
                                                                                     else
-                                                                                      if ln1 contains "ADVERTISEMENT" then
-                                                                                        put "GOT AD", data
-                                                                                        gAd = new(script("FUSE Advertisement Class"), line 2 to the number of lines in data of data)
-                                                                                      else
-                                                                                        if ln1 contains "OPLOGO" then
-                                                                                          handleOpLogoMessage(data)
-                                                                                        else
-                                                                                          if ln1 contains "SYSTEMBROADCAST" then
-                                                                                            ShowAlert("MessageFromAdmin", line 2 of data)
-                                                                                          else
-                                                                                            if ln1 contains "PURCHASE_NOBALANCE" then
-                                                                                              ShowAlert("nobalance", "You don't have enough credits!")
+                                                                                      if ln1 contains "FLATINFO" then
+                                                                                        the itemDelimiter = "="
+                                                                                        repeat with i = 2 to the number of lines in data
+                                                                                          ln = line i of data
+                                                                                          sfield = item 1 of ln
+                                                                                          sdata = item 2 of ln
+                                                                                          if getmemnum("flatinfoshow." & sfield) > 0 then
+                                                                                            member("flatinfoshow." & sfield).text = sdata
+                                                                                          end if
+                                                                                          put sfield, sdata
+                                                                                          if sfield = "image" then
+                                                                                            pictureUrl = sdata
+                                                                                            put pictureUrl
+                                                                                          end if
+                                                                                          if sfield = "isOpen" then
+                                                                                            if sdata = "true" then
+                                                                                              member("flatinfoshow.open_info").text = "Door is open"
+                                                                                              sprite(20).visible = 1
                                                                                             else
-                                                                                              if ln1 contains "PURCHASE_OK" then
-                                                                                                ShowAlert("BuyingOK")
+                                                                                              member("flatinfoshow.open_info").text = "Door is closed"
+                                                                                              sprite(20).visible = 0
+                                                                                            end if
+                                                                                          end if
+                                                                                          if sfield = "host" then
+                                                                                            gFloorHost = char offset("/", sdata) + 1 to sdata.length of sdata
+                                                                                          end if
+                                                                                          if sfield = "port" then
+                                                                                            gFloorPort = sdata
+                                                                                          end if
+                                                                                        end repeat
+                                                                                        the itemDelimiter = ","
+                                                                                      else
+                                                                                        if ln1 contains "ADVERTISEMENT" then
+                                                                                          put "GOT AD", data
+                                                                                          gAd = new(script("FUSE Advertisement Class"), line 2 to the number of lines in data of data)
+                                                                                        else
+                                                                                          if ln1 contains "OPLOGO" then
+                                                                                            handleOpLogoMessage(data)
+                                                                                          else
+                                                                                            if ln1 contains "SYSTEMBROADCAST" then
+                                                                                              ShowAlert("MessageFromAdmin", line 2 of data)
+                                                                                            else
+                                                                                              if ln1 contains "PURCHASE_NOBALANCE" then
+                                                                                                ShowAlert("nobalance", "You don't have enough credits!")
                                                                                               else
-                                                                                                if ln1 contains "PURCHASE_ERROR" then
-                                                                                                  ShowAlert(data.line[2])
+                                                                                                if ln1 contains "PURCHASE_OK" then
+                                                                                                  ShowAlert("BuyingOK")
                                                                                                 else
-                                                                                                  if ln1 contains "ORDERINFO_ERROR" then
-                                                                                                    put data
+                                                                                                  if ln1 contains "PURCHASE_ERROR" then
+                                                                                                    ShowAlert(data.line[2])
                                                                                                   else
-                                                                                                    if ln1 contains "ORDERINFO" then
-                                                                                                      gPurchaseCode = line 2 of data
-                                                                                                      price = integer(value(line 3 of data))
-                                                                                                      description = line 5 of data
-                                                                                                      put description && "costs" && price && "credits" into field "purchase_item_txt_e"
-                                                                                                      put "You have" && gCredits && "in your purse." into field "purchase_confirm_txt_e"
-                                                                                                      gConfirmPopUp = new(script("PopUp Context Class"), 2000020000, 851, 875, point(0, 0))
-                                                                                                      if price > gCredits then
-                                                                                                        displayFrame(gConfirmPopUp, "purchase_confirm_nocredits")
-                                                                                                      else
-                                                                                                        displayFrame(gConfirmPopUp, "purchase_confirm")
-                                                                                                      end if
+                                                                                                    if ln1 contains "ORDERINFO_ERROR" then
+                                                                                                      put data
                                                                                                     else
-                                                                                                      if ln1 contains "WALLETBALANCE" then
-                                                                                                        if the movieName contains "entry" and the frame < 100 or the movieName contains "cr_entry" then
-                                                                                                          nothing()
+                                                                                                      if ln1 contains "ORDERINFO" then
+                                                                                                        gPurchaseCode = line 2 of data
+                                                                                                        price = integer(value(line 3 of data))
+                                                                                                        description = line 5 of data
+                                                                                                        put description && "costs" && price && "credits" into field "purchase_item_txt_e"
+                                                                                                        put "You have" && gCredits && "in your purse." into field "purchase_confirm_txt_e"
+                                                                                                        gConfirmPopUp = new(script("PopUp Context Class"), 2000020000, 851, 875, point(0, 0))
+                                                                                                        if price > gCredits then
+                                                                                                          displayFrame(gConfirmPopUp, "purchase_confirm_nocredits")
                                                                                                         else
-                                                                                                          puppetSound(1, getmemnum("cash1"))
+                                                                                                          displayFrame(gConfirmPopUp, "purchase_confirm")
                                                                                                         end if
-                                                                                                        gCredits = integer(value(line 2 of data))
-                                                                                                        member(getmemnum("habbo_credits")).text = integer(value(line 2 of data)) && AddTextToField("Credit(s)")
-                                                                                                        member(getmemnum("credits_amount_e")).text = "You have" && integer(value(line 2 of data)) && "Habbo Credits in your purse."
                                                                                                       else
-                                                                                                        if ln1 contains "DOORFLAT" then
-                                                                                                          gChosenTeleport.startTeleport(data)
-                                                                                                        else
-                                                                                                          if ln1 contains "DOORNOTINSTALLED" then
-                                                                                                            gChosenTeleport.error(data)
+                                                                                                        if ln1 contains "WALLETBALANCE" then
+                                                                                                          if the movieName contains "entry" and the frame < 100 or the movieName contains "cr_entry" then
+                                                                                                            nothing()
                                                                                                           else
-                                                                                                            if ln1 contains "DOORDELETED" then
+                                                                                                            puppetSound(1, getmemnum("cash1"))
+                                                                                                          end if
+                                                                                                          gCredits = integer(value(line 2 of data))
+                                                                                                          member(getmemnum("habbo_credits")).text = integer(value(line 2 of data)) && AddTextToField("Credit(s)")
+                                                                                                          member(getmemnum("credits_amount_e")).text = "You have" && integer(value(line 2 of data)) && "Habbo Credits in your purse."
+                                                                                                        else
+                                                                                                          if ln1 contains "DOORFLAT" then
+                                                                                                            gChosenTeleport.startTeleport(data)
+                                                                                                          else
+                                                                                                            if ln1 contains "DOORNOTINSTALLED" then
                                                                                                               gChosenTeleport.error(data)
+                                                                                                            else
+                                                                                                              if ln1 contains "DOORDELETED" then
+                                                                                                                gChosenTeleport.error(data)
+                                                                                                              else
+                                                                                                                if ln1 contains "YOUAREMOD" then
+                                                                                                                  gModLevel = data.line[2]
+                                                                                                                  gMeModerator = 1
+                                                                                                                end if
+                                                                                                              end if
                                                                                                             end if
                                                                                                           end if
                                                                                                         end if
@@ -770,6 +787,7 @@ on openFlatInfo num, gogo
           member("doortxt_buttonin").text = AddTextToField("InsidePassword")
         end if
       end if
+      return s
     end if
   end if
   the itemDelimiter = ","
@@ -800,11 +818,23 @@ on goToFlat flatId
 end
 
 on GoToFlatWithNavi flatId
-  global gPopUpContext2, gFlatWaitStart, gFloor, gWallPaper
+  global gPopUpContext2, gFlatWaitStart, gActiveRoomInfoString, gFlats, gFloor, gWallPaper
   put gChosenFlatDoorMode
   gFloor = 111
   gWallPaper = 201
   member("flat_load.status").text = EMPTY
+  if listp(gFlats) then
+    oldItemDelimiter = the itemDelimiter
+    the itemDelimiter = "/"
+    repeat with f in gFlats
+      temp = f[1]
+      if value(temp.item[1]) = flatId then
+        gActiveRoomInfoString = stringReplace(temp, "/", TAB)
+        exit repeat
+      end if
+    end repeat
+    the itemDelimiter = oldItemDelimiter
+  end if
   if gChosenFlatDoorMode = "password" then
     goContext("flat_load_password", gPopUpContext2)
   else
@@ -944,7 +974,7 @@ end
 
 on reserveRoom
   global gProps, gFloorHost, gFloorPort
-  if getaProp(gProps, #showOwnerName) = 0 then
+  if getaProp(gProps, #showownername) = 0 then
     showName = 0
   else
     showName = 1
@@ -956,7 +986,7 @@ end
 
 on updateFlatInfo
   global gProps, gFloorHost, gFloorPort
-  if getaProp(gProps, #showOwnerName) = 0 then
+  if getaProp(gProps, #showownername) = 0 then
     showName = 0
   else
     showName = 1

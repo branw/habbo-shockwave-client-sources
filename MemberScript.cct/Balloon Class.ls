@@ -1,7 +1,7 @@
 property takeOffTime, lSprites, user, followSprite, lines, dir, balloonTextmem, balloonmem, balloonSpr, balloonTextSpr, bPulsePhase, iBalloonZoomSize, bZoomPhase, bMoving, animStart, startY, destX, destY, width, pulsePhaseLength, zoomPhaseLength, myMemberName
 global gMyName, maxH, gXFactor, gballoonZ, gUserBalloons, gBalloons, gBalloonMembers
 
-on new me, spr, tuser, message, tdestX, tdestY, fcolor, Bordercolor, ttype
+on new me, spr, tUser, message, tdestX, tdestY, fcolor, Bordercolor, ttype
   if voidp(gballoonZ) then
     gballoonZ = 10000000
   end if
@@ -17,7 +17,7 @@ on new me, spr, tuser, message, tdestX, tdestY, fcolor, Bordercolor, ttype
   pulsePhaseLength = 10
   zoomPhaseLength = 30
   lSprites = []
-  user = tuser
+  user = tUser
   if gXFactor < 33.0 then
     destX = tdestX + 18
   else

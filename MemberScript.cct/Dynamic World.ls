@@ -136,3 +136,19 @@ on getWorldCoordinate locX, locY, ignoreObjectCoordinates
   end if
   return VOID
 end
+
+on getCoordinateEmpty xx, yy
+  global glObjectPlaceMap
+  if yy + 1 > 0 and yy + 1 <= count(glObjectPlaceMap) then
+    if xx + 1 > 0 and xx + 1 <= count(glObjectPlaceMap[yy + 1]) then
+      if glObjectPlaceMap[yy + 1][xx + 1] > 1000 then
+        return 0
+      end if
+    else
+      return 0
+    end if
+  else
+    return 0
+  end if
+  return 1
+end

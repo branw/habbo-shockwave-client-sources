@@ -1,4 +1,4 @@
-property sex, mysex, Init, isChange
+property sex, mysex, init, isChange
 
 on beginSprite me
   if isChange = 1 then
@@ -23,7 +23,7 @@ on mobileSexChange me, tsex
   else
     set the member of sprite the spriteNum of me to "radio_off_btn"
   end if
-  Init = 1
+  init = 1
   put tsex into field "charactersex_field"
 end
 
