@@ -147,7 +147,15 @@ on alertHook me, tErr, tMsgA, tMsgB
   tErrorData["hookmsgb"] = tMsgB
   tErrorData["lastexecute"] = getBrokerManager().getLastExecutedMessageId()
   tErrorData["lastclick"] = getWindowManager().getLastEvent()
-  tErrorData["lastmessage"] = getConnectionManager().getLastMessageData()
+  tErrorData["lastclick_time"] = getWindowManager().getLastEventTime()
+  tErrorData["eventbrokerclick"] = getObject(#session).GET("client_lastclick")
+  tErrorData["eventbrokerclick_time"] = getObject(#session).GET("client_lastclick_time")
+  tLastMessageData = getConnectionManager().getLastMessageData()
+  if listp(tLastMessageData) then
+    tErrorData["lastmessage"] = tLastMessageData[#id]
+    tLastMessageData = tLastMessageData[#message] & "-" & tLastMessageData[#isParsed]
+    tErrorData["server_errors"] = tLastMessageData
+  end if
   tSessionObj = getObject(#session)
   if objectp(tSessionObj) then
     tLastRoom = tSessionObj.GET("lastroom")
@@ -175,7 +183,7 @@ on zeroPadToString tNumber, tCount
 end
 
 on makeErrorId me
-  tSrc = integer(getObject(#session).GET("user_user_id")) mod 10000
+  tSrc = integer(getVariable("account_id")) mod 10000
   tSrc2 = random(10000) mod 10000
   tDst = zeroPadToString(tSrc, 4) & zeroPadToString(tSrc2, 4)
   return tDst
@@ -200,8 +208,8 @@ on handleFatalError me, tErrorData
   end if
   tErrorData["client_version"] = getMoviePath()
   tErrorData["client_process_list"] = string(getProcessTrackingList())
-  tErrorData["client_errors"] = getClientErrors()
-  tErrorData["server_errors"] = getServerErrors()
+  tErrorData["client_errors"] = getClientErrors() & "T=" & the long time
+  tErrorData["server_errors"] = getServerErrors() & "-" & tErrorData["server_errors"]
   if tErrorUrl contains "?" then
     tParams = "&"
   else
@@ -211,8 +219,12 @@ on handleFatalError me, tErrorData
   tErrorData["version"] = tEnv[#productVersion]
   tErrorData["build"] = tEnv[#productBuildVersion]
   tErrorData["os"] = tEnv[#osVersion]
-  tErrorData["neterr_cast"] = getCastLoadManager().GetLastError()
-  tErrorData["neterr_res"] = getDownloadManager().GetLastError()
+  if getCastLoadManager() <> 0 then
+    tErrorData["neterr_cast"] = getCastLoadManager().GetLastError()
+  end if
+  if getDownloadManager() <> 0 then
+    tErrorData["neterr_res"] = getDownloadManager().GetLastError()
+  end if
   tErrorData["client_uptime"] = getClientUpTime()
   tErrorData["error_id"] = makeErrorId()
   if variableExists("account_id") then

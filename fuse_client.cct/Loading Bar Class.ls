@@ -1,4 +1,4 @@
-property pTaskId, pBuffer, pBgColor, pcolor, pwidth, pheight, pBarRect, pOffRect, pTaskType, pPercent, pDrawPoint, pWindowID, pReadyFlag
+property pTaskId, pBuffer, pBgColor, pcolor, pwidth, pheight, pBarRect, pOffRect, pTaskType, pPercent, pDrawPoint, pWindowID, pExtraTasks, pReadyFlag
 
 on construct me
   tProps = [#bgColor: (the stage).bgColor, #color: rgb(128, 128, 128), #width: 128, #height: 16]
@@ -13,6 +13,8 @@ on construct me
   pDrawPoint = 0
   pWindowID = EMPTY
   pReadyFlag = 0
+  pExtraTasks = [:]
+  registerMessage(#loadingBarSetExtraTaskDone, me.getID(), #setExtraTaskDone)
   return 1
 end
 
@@ -23,6 +25,7 @@ on deconstruct me
     removeWindow(pWindowID)
     pWindowID = EMPTY
   end if
+  unregisterMessage(#loadingBarSetExtraTaskDone, me.getID())
   return 1
 end
 
@@ -38,20 +41,25 @@ on define me, tLoadID, tProps
     if ilk(tProps[#buffer]) = #image then
       pBuffer = tProps[#buffer]
     end if
-    if ilk(tProps[#width], #integer) then
+    if ilk(tProps[#width]) = #integer then
       pwidth = tProps[#width]
     end if
-    if ilk(tProps[#height], #integer) then
+    if ilk(tProps[#height]) = #integer then
       pheight = tProps[#height]
     end if
-    if ilk(tProps[#bgColor], #color) then
+    if ilk(tProps[#bgColor]) = #color then
       pBgColor = tProps[#bgColor]
     end if
-    if ilk(tProps[#color], #color) then
+    if ilk(tProps[#color]) = #color then
       pcolor = tProps[#color]
     end if
-    if ilk(tProps[#type], #symbol) then
+    if ilk(tProps[#type]) = #symbol then
       pTaskType = tProps[#type]
+    end if
+    if ilk(tProps[#extraTasks]) = #list then
+      repeat with tTask in tProps[#extraTasks]
+        pExtraTasks.setaProp(tTask, 0)
+      end repeat
     end if
     if tProps[#buffer] = #window then
       if pWindowID <> EMPTY then
@@ -85,6 +93,12 @@ on define me, tLoadID, tProps
   return receivePrepare(me.getID())
 end
 
+on setExtraTaskDone me, tTaskId
+  if not voidp(pExtraTasks.getaProp(tTaskId)) then
+    pExtraTasks.setaProp(tTaskId, 1)
+  end if
+end
+
 on prepare me
   if voidp(pTaskId) or pReadyFlag then
     return removeObject(me.getID())
@@ -95,6 +109,11 @@ on prepare me
     #file:
       tPercent = getDownloadManager().getLoadPercent(pTaskId)
   end case
+  repeat with tTask in pExtraTasks
+    if not tTask then
+      tPercent = tPercent - 0.10000000000000001 / pExtraTasks.count
+    end if
+  end repeat
   pDrawPoint = pDrawPoint + 1
   if pDrawPoint <= pPercent * pOffRect.width then
     tRect = rect(pOffRect[1] + pDrawPoint - 1, pOffRect[2], pOffRect[1] + pDrawPoint, pOffRect[4])

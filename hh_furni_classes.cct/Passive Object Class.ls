@@ -14,10 +14,17 @@ on construct me
   pLocH = 0
   pAltitude = 0
   pXFactor = getThread(#room).getInterface().getGeometry().pXFactor
-  if pXFactor = 32 then
-    pCorrectLocZ = 0
+  tRoomStruct = getObject(#session).GET("lastroom")
+  if not listp(tRoomStruct) then
+    error(me, "Room struct not saved in #session!", #construct)
+    ttype = #public
   else
+    ttype = tRoomStruct.getaProp(#type)
+  end if
+  if ttype = #private then
     pCorrectLocZ = 1
+  else
+    pCorrectLocZ = 0
   end if
   return 1
 end
@@ -57,6 +64,7 @@ on getInfo me
   tInfo[#name] = pClass
   tInfo[#class] = pClass
   tInfo[#custom] = pCustom
+  tInfo[#expire] = -1
   return tInfo
 end
 

@@ -18,7 +18,7 @@ end
 
 on Init me
   if voidp(me.pWindowID) then
-    me.pWindowID = getUniqueID()
+    me.pWindowID = "Bubble " & getUniqueID()
   end if
   createWindow(pWindowID, "bubble.window")
   me.pWindow = getWindow(pWindowID)

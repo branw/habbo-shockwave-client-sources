@@ -1,9 +1,9 @@
-property pCryptoParams, pBigJob
+property pCryptoParams, pClientSecret
 
 on construct me
   pCryptoParams = [:]
   pMD5ChecksumArr = []
-  pClientPrivKey = EMPTY
+  pSecCastNum = 0
   registerMessage(#hideLogin, me.getID(), #hideLogin)
   return me.regMsgList(1)
 end
@@ -37,11 +37,24 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  sendProcessTracking(21)
   me.getComponent().SetDisconnectErrorState("init_crypto")
-  return tMsg.connection.send("INIT_CRYPTO")
+  return tMsg.connection.send("INIT_CRYPTO", [#integer: 0])
 end
 
 on handleSessionParameters me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   tPairsCount = tMsg.connection.GetIntFrom()
   if integerp(tPairsCount) then
     if tPairsCount > 0 then
@@ -98,6 +111,13 @@ on handlePing me, tMsg
 end
 
 on handleLoginOK me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  executeMessage(#loadingBarSetExtraTaskDone, #login)
   sendProcessTracking(41)
   tMsg.connection.send("GET_INFO")
   tMsg.connection.send("GET_CREDITS")
@@ -105,6 +125,7 @@ on handleLoginOK me, tMsg
   tMsg.connection.send("GET_POSSIBLE_ACHIEVEMENTS")
   tMsg.connection.send("GET_SOUND_SETTING")
   me.getComponent().initLatencyTest()
+  getCastLoadManager().ResetOneDynamicCast(getMember("SecurityCode").castLibNum)
   if objectExists(#session) then
     getObject(#session).set("userLoggedIn", 1)
   end if
@@ -113,6 +134,12 @@ on handleLoginOK me, tMsg
 end
 
 on handleUserObj me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   tuser = [:]
   tConn = tMsg.connection
   tuser["user_id"] = tConn.GetStrFrom()
@@ -124,6 +151,8 @@ on handleUserObj me, tMsg
   tuser["ph_figure"] = tConn.GetStrFrom()
   tuser["photo_film"] = tConn.GetIntFrom()
   tuser["directMail"] = tConn.GetIntFrom()
+  tuser["respect_ticket_total"] = tConn.GetIntFrom()
+  tuser["respect_ticket_count"] = tConn.GetIntFrom()
   tuser["figure_string"] = tuser["figure"]
   tDelim = the itemDelimiter
   the itemDelimiter = "="
@@ -144,6 +173,7 @@ on handleUserObj me, tMsg
   end repeat
   tSession.set(#userName, tSession.GET("user_name"))
   executeMessage(#updateFigureData)
+  executeMessage(#respectCountUpdated)
   if getObject(#session).exists("user_logged") then
     return 
   else
@@ -199,11 +229,20 @@ on handleCheckSum me, tMsg
 end
 
 on handleAvailableBadges me, tMsg
+  if getObject(#session).exists("available_badges") then
+    tOldBadgeList = getObject(#session).GET("available_badges")
+  else
+    tOldBadgeList = []
+  end if
   tBadgeList = []
   tBadgeCount = tMsg.connection.GetIntFrom()
   repeat with i = 1 to tBadgeCount
     tBadgeID = tMsg.connection.GetStrFrom()
     tBadgeList.add(tBadgeID)
+    if listp(tOldBadgeList) then
+      if tOldBadgeList.findPos(tBadgeID) = 0 then
+      end if
+    end if
   end repeat
   tChosenBadgeCount = tMsg.connection.GetIntFrom()
   tChosenBadges = [:]
@@ -281,97 +320,94 @@ on handleModAlert me, tMsg
 end
 
 on handleCryptoParameters me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  sendProcessTracking(22)
+  tSecurityCastToken = tMsg.connection.GetStrFrom()
+  tConnection = getConnection(getVariable("connection.info.id"))
+  tConnection.SetToken(tSecurityCastToken)
   tClientToServer = 1
   tServerToClient = tMsg.connection.GetIntFrom() <> 0
   pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
-  if tClientToServer then
-    me.responseWithPublicKey()
-  else
-    if tServerToClient then
-      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters, #minor)
-      return tMsg.connection.disconnect(1)
-    end if
-    me.startNewSession()
+  if not variableExists("security.cast.load.url") then
+    return 0
   end if
+  tSecUrl = replaceChunks(getVariable("security.cast.load.url"), "%token%", tSecurityCastToken)
+  tLoadID = startCastLoad([tSecUrl], 1, VOID, VOID, 1)
+  registerCastloadCallback(tLoadID, #securityCastDownloadCallback, me.getID(), tSecUrl)
   return 1
 end
 
 on responseWithPublicKey me, tConnection
-  if _player <> VOID then
-    if _player.traceScript or _movie.traceScript then
-      return 0
-    end if
+  if the traceScript then
+    return 0
   end if
-  _player.traceScript = 0
+  the traceScript = 0
   _movie.traceScript = 0
+  _player.traceScript = 0
   tCastLibNum = member("Login Handler Class").castLibNum
-  if member("Login Subscript 2").castLibNum <> tCastLibNum then
+  if member("HugeInt15").castLibNum <> tCastLibNum then
     return 0
   end if
-  if castLib(tCastLibNum).member["Login Subscript 2"].script <> script("Login Subscript 2") then
+  if castLib(tCastLibNum).member["HugeInt15"].script <> script("HugeInt15") then
     return 0
   end if
-  tConnection = getConnection(getVariable("connection.info.id"))
-  tBigInt = script("Login Subscript 2")
-  tPublicKeyStr = EMPTY
-  tTries = 1
-  repeat while tPublicKeyStr.length < 72 and tTries < 5
-    tHex = EMPTY
-    tLength = 40
-    tHexChars = "012345679abcdef"
-    repeat with tNo = 1 to tLength * 2
-      tRandPos = random(tHexChars.length)
-      tHex = tHex & chars(tHexChars, tRandPos, tRandPos)
-    end repeat
-    tFakeBigJob = BigInt_str2bigInt(tHex, 16, tLength)
-    pBigJob = tBigInt.str2bigInt(tHex, 16, tLength)
-    _ob38729_p = BigInt_str2bigInt("A8EA077D4943CC98E53C21F5F7C7A0DB8BCE7506F8361A7C1690392F2B090C96EE8BC67BAA0DCB7183F16401F5CB838E3B6EE86B9EF2E5D0F3C49D4DC4EDC2B9", 16)
-    _ob38729_g = BigInt_str2bigInt("5", 16)
-    tJsPublicKey = script("Login Subscript").doPowmodMathCs(pBigJob)
-    tPublicKeyStr = tBigInt.bigInt2str(tJsPublicKey, 16)
-    tTries = tTries + 1
+  tHex = EMPTY
+  tLength = 24
+  tHexChars = "012345679"
+  repeat with tNo = 1 to tLength * 2
+    tRandPos = random(tHexChars.length)
+    if tRandPos = 1 and tNo = 1 then
+      tRandPos = 1 + random(tHexChars.length - 1)
+    end if
+    tHex = tHex & chars(tHexChars, tRandPos, tRandPos)
   end repeat
+  clientG = new script("HugeInt15")
+  clientP = new script("HugeInt15")
+  tSecurityCastObj = new script("SecurityCode", castLib(getMember("SecurityCode").castLibNum).name)
+  clientG.assign(tSecurityCastObj.getLoginParameter("testing", #g), VOID, 1)
+  clientP.assign(tSecurityCastObj.getLoginParameter("testing", #p), VOID, 1)
+  pClientSecret = new script("HugeInt15")
+  pClientSecret.assign(tHex)
+  tPublicKeyStr = clientG.powMod(pClientSecret, clientP).getString()
   if not (the platform contains "windows") and tPublicKeyStr.length < 2 then
     return me.forwardToRosettaDisablePage()
   end if
+  executeMessage(#loadingBarSetExtraTaskDone, #handshake1)
+  tConnection = getConnection(getVariable("connection.info.id"))
   tConnection.send("GENERATEKEY", [#string: tPublicKeyStr])
 end
 
 on handleServerSecretKey me, tMsg
-  if _player <> VOID then
-    if _player.traceScript or _movie.traceScript then
-      return 0
-    end if
+  if the traceScript then
+    return 0
   end if
-  _player.traceScript = 0
+  the traceScript = 0
   _movie.traceScript = 0
+  _player.traceScript = 0
   tCastLibNum = member("Login Handler Class").castLibNum
-  if member("Login Subscript 2").castLibNum <> tCastLibNum then
+  if member("HugeInt15").castLibNum <> tCastLibNum then
     return 0
   end if
-  if castLib(tCastLibNum).member["Login Subscript 2"].script <> script("Login Subscript 2") then
+  if castLib(tCastLibNum).member["HugeInt15"].script <> script("HugeInt15") then
     return 0
   end if
-  tConnection = tMsg.connection
-  tBigInt = script("Login Subscript 2")
-  _ob38729_p = BigInt_str2bigInt("A8EA077D4943CC98E53C21F5F7C7A0DB8BCE7506F8361A7C1690392F2B090C96EE8BC67BAA0DCB7183F16401F5CB838E3B6EE86B9EF2E5D0F3C49D4DC4EDC2B9", 16)
-  _ob38729_g = BigInt_str2bigInt("5", 16)
+  clientP = new script("HugeInt15")
+  tSecurityCastObj = new script("SecurityCode", castLib(getMember("SecurityCode").castLibNum).name)
+  clientP.assign(tSecurityCastObj.getLoginParameter("testing", #p), VOID, 1)
   t_sServerPublicKey = tMsg.content
-  tFakeServerPublic = BigInt_str2bigInt(t_sServerPublicKey, 16)
-  serverPublic = tBigInt.str2bigInt(t_sServerPublicKey, 16)
-  tShared = script("Login Subscript").doPowmodMathSc(pBigJob, serverPublic)
-  t_sSharedKey = tBigInt.bigInt2str(tShared, 16)
-  if t_sSharedKey.length mod 2 <> 0 then
-    t_sSharedKey = "0" & t_sSharedKey
+  if t_sServerPublicKey.length < 64 then
+    return 0
   end if
-  tSharedKeyString = EMPTY
-  tStrSrv = getStringServices()
-  repeat with a = 1 to length(t_sSharedKey)
-    t = tStrSrv.convertHexToInt(t_sSharedKey.char[a..a + 1])
-    tSharedKeyString = tSharedKeyString & numToChar(t)
-    a = a + 1
-  end repeat
-  tCryptoClass = "tYy1rX5j7e4PLYJLER"
+  tClientBig = new script("HugeInt15")
+  tClientBig.assign(t_sServerPublicKey)
+  tSharedKey = tClientBig.powMod(pClientSecret, clientP)
+  tByteArray = tSharedKey.getByteArray()
+  tCryptoClass = "Cryptography Class"
   tCastLibNum = 2
   if member(tCryptoClass).castLibNum <> tCastLibNum then
     return 0
@@ -380,22 +416,26 @@ on handleServerSecretKey me, tMsg
     return 0
   end if
   t_rDecoder = createObject(#temp, [tCryptoClass])
-  t_rDecoder.qe2AkKOGGKDTTnd1Nei(tSharedKeyString, #initMUS)
+  t_rDecoder.WvUrP88jJ4snglkrhCh3u9vHu0ADDS(tByteArray, #initByteArray)
+  t_rEncoder = createObject(#temp, [tCryptoClass])
+  t_rEncoder.WvUrP88jJ4snglkrhCh3u9vHu0ADDS(tByteArray, #initByteArray)
+  t_rHeaderDecoder = createObject(#temp, [tCryptoClass])
+  t_rHeaderDecoder.WvUrP88jJ4snglkrhCh3u9vHu0ADDS(tByteArray, #initByteArray)
+  t_rHeaderEncoder = createObject(#temp, [tCryptoClass])
+  t_rHeaderEncoder.WvUrP88jJ4snglkrhCh3u9vHu0ADDS(tByteArray, #initByteArray)
+  tConnection = getConnection(getVariable("connection.info.id"))
   tConnection.setDecoder(t_rDecoder)
-  tConnection.setEncryption(1)
-  tMsg.connection.setEncoder(createObject(#temp, [tCryptoClass]))
-  tMsg.connection.getEncoder().qe2AkKOGGKDTTnd1Nei(tSharedKeyString, #initMUS)
-  tMsg.connection.setEncryption(1)
+  tConnection.setEncoder(t_rEncoder)
+  tConnection.setHeaderDecoder(t_rHeaderDecoder)
+  tConnection.setHeaderEncoder(t_rHeaderEncoder)
+  tConnection.setEncryption(pCryptoParams.getaProp(#ClientToServer))
   if pCryptoParams.getaProp(#ServerToClient) = 1 then
-    me.makeServerToClientKey()
-  else
-    me.startNewSession()
+    tConnection.setProperty(#deciphering, 1)
   end if
-  return 1
-end
-
-on handleEndOfCryptoParams me, tMsg
+  sendProcessTracking(28)
+  executeMessage(#loadingBarSetExtraTaskDone, #handshake2)
   me.startNewSession()
+  return 1
 end
 
 on handleHotelLogout me, tMsg
@@ -447,52 +487,42 @@ on handleAchievementNotification me, tMsg
   tSession = getObject(#session)
   tAchievements = tSession.GET("possible_achievements")
   tNotify = 0
-  repeat with i = 1 to tAchievements.count
-    tAchievement = tAchievements[i]
-    if tAchievement.ilk <> #propList then
-      next repeat
-    end if
-    if tAchievement.type = ttype and tAchievement.level <= tLevel then
-      tAchievements.deleteAt(i)
-      i = i - 1
-      tNotify = 1
-    end if
-  end repeat
+  if ilk(tAchievements) = #propList then
+    repeat with i = 1 to tAchievements.count
+      tAchievement = tAchievements[i]
+      if tAchievement.ilk <> #propList then
+        next repeat
+      end if
+      if tAchievement.type = ttype and tAchievement.level <= tLevel then
+        tAchievements.deleteAt(i)
+        i = i - 1
+        tNotify = 1
+      end if
+    end repeat
+  end if
   if tNotify then
     executeMessage(#achievementsUpdated)
   end if
   tBadges = tSession.GET("available_badges")
-  tBadges.add(tBadgeID)
-  executeMessage(#badgeReceived, tBadgeID)
-  tPos = tBadges.getPos(tRemovedBadgeID)
-  if tPos > 0 then
-    tBadges.deleteAt(tPos)
-    executeMessage(#badgeRemoved, tRemovedBadgeID)
+  if listp(tBadges) then
+    tBadges.add(tBadgeID)
+    executeMessage(#badgeReceived, tBadgeID)
+    tPos = tBadges.getPos(tRemovedBadgeID)
+    if tPos > 0 then
+      tBadges.deleteAt(tPos)
+      executeMessage(#badgeRemoved, tRemovedBadgeID)
+    end if
   end if
   me.getComponent().sendGetBadges()
 end
 
-on makeServerToClientKey me
-  if _player <> VOID then
-    if _player.traceScript or _movie.traceScript then
-      return 0
-    end if
-  end if
-  _player.traceScript = 0
-  _movie.traceScript = 0
-  tConnection = getConnection(getVariable("connection.info.id"))
-  tDecoder = createObject(#temp, ["x3hSfgRdzsh7CfHKUPwqjndo3bOVnl"])
-  tPublicKey = tDecoder.o()
-  tConnection.send("SECRETKEY", [#string: tPublicKey])
-  tKey = secretDecode(tPublicKey)
-  tConnection.setDecoder(tDecoder)
-  tConnection.getDecoder().WvUrP88jJ4snglkrhCh3u9vHu0ADDS(tKey)
-  tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
-  tConnection.getDecoder().prMixEValueBin(tPremixChars, 17)
-  tConnection.setProperty(#deciphering, 1)
-end
-
 on startNewSession me
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   me.getComponent().SetDisconnectErrorState("start_session")
   tClientURL = getMoviePath()
   tExtVarsURL = getExtVarPath()
@@ -532,8 +562,27 @@ on handleLatencyTest me, tMsg
   me.getComponent().handleLatencyTest(tID)
 end
 
+on handleMachineId me, tMsg
+  getSpecialServices().setMachineId(tMsg.connection.GetStrFrom())
+end
+
 on forwardToRosettaDisablePage me
   openNetPage(getVariable("rosetta.warning.page.url"), "self")
+end
+
+on securityCastDownloadCallback me, tURL, tSuccess
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
+  if tSuccess then
+    sendProcessTracking(27)
+    me.responseWithPublicKey()
+  else
+    fatalError(["error": "security_cct"])
+  end if
 end
 
 on regMsgList me, tBool
@@ -554,11 +603,11 @@ on regMsgList me, tBool
   tMsgs.setaProp(229, #handleAvailableBadges)
   tMsgs.setaProp(257, #handleSessionParameters)
   tMsgs.setaProp(277, #handleCryptoParameters)
-  tMsgs.setaProp(278, #handleEndOfCryptoParams)
   tMsgs.setaProp(287, #handleHotelLogout)
   tMsgs.setaProp(308, #handleSoundSetting)
   tMsgs.setaProp(436, #handlePossibleAchievements)
   tMsgs.setaProp(437, #handleAchievementNotification)
+  tMsgs.setaProp(439, #handleMachineId)
   tMsgs.setaProp(354, #handleLatencyTest)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 756)
@@ -576,7 +625,6 @@ on regMsgList me, tBool
   tCmds.setaProp("GENERATEKEY", 2002)
   tCmds.setaProp("SSO", 204)
   tCmds.setaProp("INIT_CRYPTO", 206)
-  tCmds.setaProp("SECRETKEY", 207)
   tCmds.setaProp("GET_SOUND_SETTING", 228)
   tCmds.setaProp("SET_SOUND_SETTING", 229)
   tCmds.setaProp("GET_POSSIBLE_ACHIEVEMENTS", 370)

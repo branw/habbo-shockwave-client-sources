@@ -28,6 +28,7 @@ on construct me
   registerMessage(#showChatMessage, me.getID(), #insertChatMessage)
   registerMessage(#showObjectMessage, me.getID(), #insertObjectMessage)
   registerMessage(#showCustomMessage, me.getID(), #insertCustomMessage)
+  registerMessage(#showRespectInRoom, me.getID(), #insertRespectMessage)
 end
 
 on deconstruct me
@@ -39,6 +40,7 @@ on deconstruct me
   unregisterMessage(#showChatMessage, me.getID())
   unregisterMessage(#showObjectMessage, me.getID())
   unregisterMessage(#showCustomMessage, me.getID())
+  unregisterMessage(#showRespectInRoom, me.getID())
 end
 
 on startUpdate me
@@ -76,6 +78,18 @@ on insertCustomMessage me, tMsgProps
   if tMsgProps.findPos(#mode) = 0 then
     tMsgProps.setaProp(#mode, "CUSTOM")
   end if
+  pMessageBuffer.add(tMsgProps)
+end
+
+on insertRespectMessage me, tUserID
+  tUserObj = getThread(#room).getComponent().getUserObjectByWebID(tUserID)
+  if not tUserObj then
+    return 0
+  end if
+  tUserName = tUserObj.getInfo().getaProp(#name)
+  tMessage = getText("chat.respect.bubble.message", "%username% was respected")
+  tMessage = replaceChunks(tMessage, "%username%", tUserName)
+  tMsgProps = [#mode: "CUSTOM", #message: tMessage, #class: "Chat Bubble Info Respect", #color: rgb("#cc3d13"), #loc: tUserObj.getScrLocation()]
   pMessageBuffer.add(tMsgProps)
 end
 

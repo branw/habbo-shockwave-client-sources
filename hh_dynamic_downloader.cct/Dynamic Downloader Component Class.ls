@@ -1,4 +1,4 @@
-property pDynDownloadURL, pFurniCastNameTemplate, pSoundDownloadUrl, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading, pBinCastName
+property pDynDownloadURL, pFurniCastNameTemplate, pSoundDownloadUrl, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading, pBinCastName, pPersistentFurniDataID
 
 on construct me
   if variableExists("dynamic.download.url") then
@@ -28,6 +28,12 @@ on construct me
   pAliasListLoading = 0
   pBinCastName = "bin"
   pBypassList = value(getVariable("dyn.download.bypass.list", []))
+  pPersistentFurniDataID = "Persistent Furniture Data"
+  createTimeout(getUniqueID(), 10, #initPersistentFurnidata, me.getID(), VOID, 1)
+end
+
+on initPersistentFurnidata me
+  createObject(pPersistentFurniDataID, ["Persistent Furni Data Container"])
 end
 
 on isAssetDownloaded me, tAssetId
@@ -86,6 +92,13 @@ on handleCompletedCastDownload me, tAssetId
   pDownloadedAssets[tAssetId] = #downloaded
   tDownloadObj.purgeCallbacks(1)
   me.tryNextDownload()
+end
+
+on getPersistentFurniDataObject me
+  if voidp(pPersistentFurniDataID) then
+    error(me, "Persistent Furni Data Missing!", #getPersistentFurniDataObject, #major)
+  end if
+  return getObject(pPersistentFurniDataID)
 end
 
 on checkDownloadStatus me, tAssetId
@@ -383,7 +396,6 @@ on setFurniRevision me, tClass, tRevision, tIsFurni
   if voidp(tClass) then
     pRevisionsReceived = 1
     pRevisionsLoading = 0
-    me.tryNextDownload()
     return 1
   end if
   tOffset = offset("*", tClass)

@@ -23,7 +23,7 @@ on showLoadingScreen me
     tID = "ctlg_loading_bg"
     if tWinObj.elementExists(tID) then
       tWinObj.getElement(tID).setProperty(#visible, 1)
-      tWinObj.getElement(tID).setProperty(#blend, 70)
+      tWinObj.getElement(tID).setProperty(#blend, 100)
     end if
     repeat with tID in ["ctlg_loading_box", "ctlg_loading_anim", "ctlg_loading_text"]
       if tWinObj.elementExists(tID) then

@@ -11,6 +11,7 @@ on construct me
   pCacheFlag = getVariableValue("room.map.cache", 0)
   pTrgDoorID = VOID
   pPickedCryName = EMPTY
+  pPersistentFurniData = VOID
   pUserObjList = [:]
   pActiveObjList = [:]
   pPassiveObjList = [:]
@@ -58,6 +59,8 @@ on construct me
   registerMessage(#editRoomevent, me.getID(), #editRoomevent)
   registerMessage(#releaseSpritesLevel1, me.getID(), #releaseShadowSpritesFromUsers)
   registerMessage(#releaseSpritesLevel2, me.getID(), #releaseSpritesFromActiveObjects)
+  registerMessage(#showRespectInRoom, me.getID(), #showRespectFlashEffect)
+  registerMessage(#furniture_expired, me.getID(), #expireFurniture)
   pEnterDoorData = VOID
   pEnterDoorLocked = 0
   return 1
@@ -71,6 +74,8 @@ on deconstruct me
   unregisterMessage(#enterRoomDirect, me.getID())
   unregisterMessage(#show_hide_roomevents, me.getID())
   unregisterMessage(#editRoomevent, me.getID())
+  unregisterMessage(#showRespectInRoom, me.getID())
+  unregisterMessage(#furniture_expired, me.getID())
   removeConnection(pRoomConnID)
   if listp(pUserObjList) then
     call(#deconstruct, pUserObjList)
@@ -350,8 +355,23 @@ on createActiveObject me, tdata
   return me.createRoomObject(tdata, pActiveObjList, "active")
 end
 
-on removeActiveObject me, tID
-  return me.removeRoomObject(tID, pActiveObjList)
+on removeActiveObject me, tID, tExpired
+  return me.removeRoomObject(tID, pActiveObjList, tExpired)
+end
+
+on expireFurniture me, tObjID
+  tObjID = string(tObjID)
+  tObjMover = me.getInterface().getObjectMover()
+  if not voidp(tObjMover) then
+    if tObjMover.getProperty(#clientID) = tObjID then
+      tCloudEffect = createObject(#random, "Cloud Animation Effect Class")
+      if tCloudEffect <> 0 then
+        tCloudEffect.define(tObjMover.getProperty(#loc), 20000010, #large)
+      end if
+      me.getInterface().stopObjectMover()
+      return 1
+    end if
+  end if
 end
 
 on getActiveObject me, tID
@@ -575,6 +595,10 @@ on sendChat me, tChat
         if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tTemp = EMPTY
           return tTemp[#thisIsNotListAndWillCrash]
+        end if
+      ":ver":
+        if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
+          return me.getRoomConnection().send("WHISPER", [#string: "Test 0.01"])
         end if
       ":chooser":
         if getObject(#session).GET("user_rights").getOne("fuse_habbo_chooser") then
@@ -843,9 +867,11 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       if me.getInterface().getGeometry().getTileWidth() < 64 then
         tScale = #small
       end if
-      tChangeEffect = createObject(#random, "Change Clothes Effect Class")
-      tUserSprites = tUserObj.getSprites()
-      tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+      tChangeEffect = createObject(#random, "Cloud Animation Effect Class")
+      if tChangeEffect <> 0 then
+        tUserSprites = tUserObj.getSprites()
+        tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+      end if
       executeMessage(#updateInfostandAvatar, tUserObj)
     end if
   end if
@@ -1143,22 +1169,6 @@ on validateHeightMap me, tdata
 end
 
 on updateHeightMap me, tdata
-  tHeightMapData = pHeightMapData
-  if voidp(tHeightMapData) then
-    return error(me, "Height map update data sent but heightmap data not cached!", #updateHeightMap, #major)
-  else
-    a = 1
-    repeat with i = 1 to tdata.length
-      if tdata.char[i] = "!" then
-        i = i + 1
-        a = a + charToNum(tdata.char[i])
-        next repeat
-      end if
-      put tdata.char[i] into (tHeightMapData).char[a]
-      a = a + 1
-    end repeat
-    return validateHeightMap(me, tHeightMapData)
-  end if
 end
 
 on validateUserObjects me, tdata
@@ -1324,9 +1334,21 @@ on createRoomObject me, tdata, tList, tClass
   return 1
 end
 
-on removeRoomObject me, tID, tList
+on removeRoomObject me, tID, tList, tExpired
   if voidp(tList[tID]) then
     return error(me, "Object not found:" && tID, #removeRoomObject, #minor)
+  end if
+  if tExpired then
+    tCloudEffect = createObject(#random, "Cloud Animation Effect Class")
+    if tCloudEffect <> 0 then
+      tObj = me.getActiveObject(tID)
+      if objectp(tObj) then
+        tSprites = tObj.getSprites()
+        if listp(tSprites) then
+          tCloudEffect.defineWithSprite(tSprites[1], me.getRoomScale(pSaveData[#marker]))
+        end if
+      end if
+    end if
   end if
   tList[tID].deconstruct()
   tList.deleteProp(tID)
@@ -1440,4 +1462,18 @@ on addToCastDownloadList me, tCastVarPrefix, tCastList
     i = i + 1
   end repeat
   return tCastList
+end
+
+on showRespectFlashEffect me, tUserID
+  tUserObj = me.getUserObjectByWebID(tUserID)
+  if not tUserObj then
+    return 0
+  end if
+  tScale = #large
+  if me.getInterface().getGeometry().getTileWidth() < 64 then
+    tScale = #small
+  end if
+  tChangeEffect = createObject(#random, "Respect Flash Effect Class")
+  tUserSprites = tUserObj.getSprites()
+  tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
 end

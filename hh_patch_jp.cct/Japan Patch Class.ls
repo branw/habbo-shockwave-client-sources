@@ -44,6 +44,11 @@ on construct me
   tTool.setaProp(#fontSize, tSize)
   tTool.setaProp(#lineHeight, tLine)
   setVariable("struct.font.tooltip", string(tTool))
+  tGrey = getStructVariable("struct.font.grey")
+  tGrey.setaProp(#font, tFont)
+  tGrey.setaProp(#fontSize, tSize)
+  tGrey.setaProp(#lineHeight, tLine)
+  setVariable("struct.font.grey", string(tGrey))
   if objectExists(#layout_parser) then
     removeObject(#layout_parser)
   end if

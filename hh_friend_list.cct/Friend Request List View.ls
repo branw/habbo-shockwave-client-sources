@@ -113,7 +113,7 @@ on renderRequestItem me, tRequestData
       tItemImg.copyPixels(tRejectIconImg, tdestrect, tRejectIconRect, [#ink: 36])
     #accepted:
       tImg = tNameWriter.render(getText("friend_request_accepted"))
-      tSourceRect = tNameImg.rect
+      tSourceRect = tImg.rect
       tMargin = integer(getVariable("fr.requests.status.margin.h"))
       tPosH = pItemWidth - (tImg.width + tMargin)
       tPosV = (pItemHeight - tImg.height) / 2
@@ -121,7 +121,7 @@ on renderRequestItem me, tRequestData
       tItemImg.copyPixels(tImg, tdestrect, tImg.rect)
     #rejected:
       tImg = tNameWriter.render(getText("friend_request_declined"))
-      tSourceRect = tNameImg.rect
+      tSourceRect = tImg.rect
       tMargin = integer(getVariable("fr.requests.status.margin.h"))
       tPosH = pItemWidth - (tImg.width + tMargin)
       tPosV = (pItemHeight - tImg.height) / 2
@@ -129,7 +129,7 @@ on renderRequestItem me, tRequestData
       tItemImg.copyPixels(tImg, tdestrect, tImg.rect)
     #error:
       tImg = tNameWriter.render(getText("friend_request_failed"))
-      tSourceRect = tNameImg.rect
+      tSourceRect = tImg.rect
       tMargin = integer(getVariable("fr.requests.status.margin.h"))
       tPosH = pItemWidth - (tImg.width + tMargin)
       tPosV = (pItemHeight - tImg.height) / 2

@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadges, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadges, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pFlipPartList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pExtraObjsActive, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pXP, pFx, pFXManager, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp, pRawFigure, pTypingSprite, pUserIsTyping, pUserTypingStartTime, pCanvasName
 
 on construct me
   pFrozenAnimFrame = 0
@@ -27,6 +27,7 @@ on construct me
   pCarrying = 0
   pSleeping = 0
   pDancing = 0
+  pFx = 0
   pWaving = 0
   pTrading = 0
   pCtrlType = 0
@@ -74,6 +75,10 @@ on construct me
   if ilk(pPartListFull) <> #list then
     pPartListFull = []
   end if
+  pFlipPartList = getVariable("human.parts.flipList")
+  if ilk(pFlipPartList) <> #propList then
+    pFlipPartList = [:]
+  end if
   pPartActionList = VOID
   pLeftHandUp = 0
   pRightHandUp = 0
@@ -83,7 +88,9 @@ end
 on deconstruct me
   pGeometry = VOID
   pPartList = []
+  pPartIndex = [:]
   pInfoStruct = [:]
+  me.resetSpriteColors()
   if not voidp(pSprite) then
     releaseSprite(pSprite.spriteNum)
   end if
@@ -99,6 +106,11 @@ on deconstruct me
   if memberExists(me.getCanvasName()) then
     removeMember(me.getCanvasName())
   end if
+  if objectp(pFXManager) then
+    pFXManager.deconstruct()
+  end if
+  pFXManager = VOID
+  pFx = 0
   call(#deconstruct, pExtraObjs)
   pExtraObjsActive = [:]
   pExtraObjs = VOID
@@ -122,11 +134,8 @@ on define me, tdata
   pSprite.castNum = pMember.number
   pSprite.width = pMember.width
   pSprite.height = pMember.height
-  pSprite.ink = 36
   pMatteSpr = sprite(reserveSprite(me.getID()))
   pMatteSpr.castNum = pMember.number
-  pMatteSpr.ink = 8
-  pMatteSpr.blend = 0
   pShadowFix = 0
   pDefShadowMem = member(getmemnum(pPeopleSize & "_std_sd_1_0_0"))
   tTargetID = getThread(#room).getInterface().getID()
@@ -136,11 +145,10 @@ on define me, tdata
   pMatteSpr.registerProcedure(#eventProcUserRollOver, tTargetID, #mouseLeave)
   pShadowSpr = sprite(reserveSprite(me.getID()))
   if ilk(pShadowSpr) = #sprite then
-    pShadowSpr.blend = 16
-    pShadowSpr.ink = 8
     setEventBroker(pShadowSpr.spriteNum, me.getID())
     pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   end if
+  me.resetSpriteColors()
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
   pInfoStruct[#custom] = pCustom
@@ -164,10 +172,14 @@ on define me, tdata
 end
 
 on changeFigureAndData me, tdata
-  pSex = tdata[#sex]
-  pCustom = tdata[#custom]
-  tmodels = tdata[#figure]
-  me.setPartLists(tmodels)
+  if tdata <> VOID then
+    pSex = tdata[#sex]
+    pCustom = tdata[#custom]
+    tmodels = tdata[#figure]
+    me.setPartLists(tmodels)
+  else
+    me.setPartLists()
+  end if
   pPartOrderOld = EMPTY
   me.arrangeParts()
   tAnimating = pAnimating
@@ -202,7 +214,18 @@ on setup me, tdata
     error(me, "People size not found, using default!", #setup, #minor)
     pPeopleSize = "h"
   end if
-  pCorrectLocZ = pPeopleSize = "h"
+  tRoomStruct = getObject(#session).GET("lastroom")
+  if not listp(tRoomStruct) then
+    error(me, "Room struct not saved in #session!", #construct)
+    ttype = #public
+  else
+    ttype = tRoomStruct.getaProp(#type)
+  end if
+  if ttype = #private then
+    pCorrectLocZ = 1
+  else
+    pCorrectLocZ = 0
+  end if
   pCanvasSize = value(getVariable("human.canvas." & pPeopleSize))
   if not pCanvasSize then
     error(me, "Canvas size not found, using default!", #setup, #minor)
@@ -230,20 +253,44 @@ on update me
   end if
 end
 
-on resetValues me, tX, tY, tH, tDirHead, tDirBody
+on resetSpriteColors me
+  if ilk(pSprite) = #sprite then
+    pSprite.ink = 36
+    pSprite.blend = 100
+    pSprite.bgColor = paletteIndex(0)
+    pSprite.foreColor = 255
+  end if
+  if ilk(pMatteSpr) = #sprite then
+    pMatteSpr.ink = 8
+    pMatteSpr.blend = 0
+    pMatteSpr.bgColor = paletteIndex(0)
+    pMatteSpr.foreColor = 255
+  end if
+  if ilk(pShadowSpr) = #sprite then
+    pShadowSpr.blend = 16
+    pShadowSpr.ink = 8
+    pShadowSpr.bgColor = paletteIndex(0)
+    pShadowSpr.foreColor = 255
+  end if
+end
+
+on resetValues me, tX, tY, tH, tDirHead, tDirBody, tActionList
+  if tActionList = VOID then
+    tActionList = []
+  end if
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
   end if
   pMoving = 0
-  pDancing = 0
-  pTalking = 0
-  pCarrying = 0
-  pWaving = 0
-  pTrading = 0
+  pDancing = tActionList.findPos("dance") > 0
+  pTalking = tActionList.findPos("talk") > 0
+  pCarrying = tActionList.findPos("carryd") > 0
+  pWaving = tActionList.findPos("wave") > 0
+  pTrading = tActionList.findPos("trd") > 0
   pCtrlType = 0
-  pAnimating = 0
+  pAnimating = pDancing or pFx
   pModState = 0
-  pSleeping = 0
+  pSleeping = tActionList.findPos("sleep") > 0
   pQueuesWithObj = 0
   repeat with i = 1 to pExtraObjsActive.count
     pExtraObjsActive[i] = 0
@@ -257,9 +304,11 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pLocY = tY
   pLocH = tH
   pRestingHeight = 0.0
-  pDirection = tDirBody
-  pHeadDir = tDirHead
-  me.resetAction()
+  pDirection = (tDirBody + me.getEffectDirOffset()) mod 8
+  pHeadDir = (tDirHead + me.getEffectDirOffset()) mod 8
+  if not me.pAnimating then
+    me.resetAction()
+  end if
   if pExtraObjs.count > 0 then
     call(#Refresh, pExtraObjs)
   end if
@@ -269,7 +318,7 @@ on Refresh me, tX, tY, tH
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
   end if
-  if pDancing > 0 or pMainAction = "lay" then
+  if pFx > 0 or pDancing > 0 or pMainAction = "lay" then
     pHeadDir = pDirection
   end if
   call(#defineDir, pPartList, pDirection)
@@ -424,6 +473,7 @@ on getInfo me
     end if
   end if
   pInfoStruct.setaProp(#xp, pXP)
+  pInfoStruct.setaProp(#FX, me.getCurrentEffectState())
   return pInfoStruct
 end
 
@@ -441,10 +491,14 @@ end
 
 on getProperty me, tPropID
   case tPropID of
-    #dancing:
-      return pDancing
     #carrying:
       return pCarrying
+    #direction:
+      return pDirection
+    #dancing:
+      return pDancing
+    #FX:
+      return pFx
     #loc:
       return [pLocX, pLocY, pLocH]
     #mainAction:
@@ -550,9 +604,6 @@ on openEyes me
 end
 
 on startAnimation me, tMemName
-  if tMemName = "dance.2" then
-    pLeftHandUp = 1
-  end if
   if tMemName = pCurrentAnim then
     return 0
   end if
@@ -564,9 +615,21 @@ on startAnimation me, tMemName
   tTempDelim = the itemDelimiter
   the itemDelimiter = "/"
   repeat with i = 1 to tList.line.count
-    tPart = tList.line[i].item[1]
-    tAnim = tList.line[i].item[2]
-    call(#setAnimation, pPartList, tPart, tAnim)
+    tChar = tList.line[i].char[1]
+    if tChar <> "#" and tChar <> EMPTY then
+      tPart = tList.line[i].item[1]
+      tAnim = tList.line[i].item[2]
+      case tPart of
+        "leftHandUp":
+          pLeftHandUp = 1
+        "all":
+          call(#setAnimation, pPartList, "all", tAnim)
+          call(#setAnimation, [pFXManager], "all", tAnim)
+        otherwise:
+          call(#setAnimation, pPartList, tPart, tAnim)
+          call(#setAnimation, [pFXManager], tPart, tAnim)
+      end case
+    end if
   end repeat
   the itemDelimiter = tTempDelim
   pAnimating = 1
@@ -577,6 +640,7 @@ on stopAnimation me
   pAnimating = 0
   pCurrentAnim = EMPTY
   call(#remAnimation, pPartList)
+  me.resetSpriteColors()
 end
 
 on resumeAnimation me
@@ -592,6 +656,11 @@ on show me
     pShadowSpr.visible = 1
   end if
   me.updateTypingSpriteLoc()
+  tFXSprites = me.getEffectSpriteProps()
+  repeat with tProps in tFXSprites
+    tsprite = tProps.getaProp(#sprite)
+    tsprite.visible = 1
+  end repeat
 end
 
 on hide me
@@ -601,10 +670,15 @@ on hide me
     pShadowSpr.visible = 0
   end if
   me.updateTypingSpriteLoc()
+  tFXSprites = me.getEffectSpriteProps()
+  repeat with tProps in tFXSprites
+    tsprite = tProps.getaProp(#sprite)
+    tsprite.visible = 0
+  end repeat
 end
 
 on draw me, tRGB
-  if not ilk(tRGB, #color) then
+  if ilk(tRGB) <> #color then
     tRGB = rgb(255, 0, 0)
   end if
   pMember.image.draw(pMember.image.rect, [#shapeType: #rect, #color: tRGB])
@@ -643,7 +717,7 @@ on prepare me
     me.definePartListAction(pPartListSubSet["handLeft"], "wav")
     pChanges = 1
   end if
-  if pDancing then
+  if pDancing or pFx then
     pAnimating = 1
     pChanges = 1
   end if
@@ -660,20 +734,34 @@ on render me, tForceUpdate
   if not pChanges then
     return 
   end if
-  if pPeopleSize = "sh" then
-    tSkipFreq = 4
-  else
-    tSkipFreq = 5
-  end if
-  if random(tSkipFreq) = 2 and not pMoving and not tForceUpdate then
-    call(#skipAnimationFrame, pPartList)
-    return 1
+  if not (me.pFx or me.pMoving or tForceUpdate) then
+    if pPeopleSize = "sh" then
+      tSkipFreq = 4
+    else
+      tSkipFreq = 5
+    end if
+    if random(tSkipFreq) = 2 then
+      call(#skipAnimationFrame, pPartList)
+      return 1
+    end if
   end if
   pChanges = 0
   if pMainAction = "lay" then
     tSize = pCanvasSize[#lay]
   else
     tSize = pCanvasSize[#std]
+  end if
+  if pFXManager <> 0 then
+    tSize = tSize.duplicate()
+    tEffectSize = pFXManager.getEffectSizeParams()
+    if tEffectSize <> 0 then
+      if tEffectSize[1] > tSize[1] then
+        tSize[1] = tEffectSize[1]
+      end if
+      if tEffectSize[2] > tSize[2] then
+        tSize[2] = tEffectSize[2]
+      end if
+    end if
   end if
   if ilk(pShadowSpr) = #sprite then
     if pMainAction = "sit" then
@@ -683,8 +771,20 @@ on render me, tForceUpdate
         pShadowSpr.castNum = 0
         pShadowFix = 0
       else
-        if pShadowSpr.member <> pDefShadowMem then
-          pShadowSpr.member = pDefShadowMem
+        if me.pFx then
+          tShadowMem = me.getEffectShadowName()
+          if tShadowMem <> VOID then
+            tMemNum = getmemnum(pPeopleSize & "_" & tShadowMem & "_" & pDirection & "_0")
+            if tMemNum = 0 then
+              tMemNum = getmemnum(pPeopleSize & "_" & tShadowMem & "_" & pFlipList[pDirection + 1] & "_0")
+            end if
+            pShadowSpr.castNum = tMemNum
+          end if
+        end if
+        if tShadowMem = VOID then
+          if pShadowSpr.member <> pDefShadowMem then
+            pShadowSpr.member = pDefShadowMem
+          end if
         end if
       end if
     end if
@@ -742,6 +842,7 @@ on render me, tForceUpdate
   end repeat
   pMember.image.copyPixels(pBuffer, pUpdateRect, pUpdateRect)
   pUpdateRect = rect(0, 0, 0, 0)
+  me.updateEffects()
 end
 
 on reDraw me
@@ -772,6 +873,17 @@ on getSpecificClearedFigurePartList me, tmodels, tListName
       tPartList.add(tPartName)
     end if
   end repeat
+  tEffectParts = me.getEffectAddedPartIndex()
+  repeat with i = 1 to tEffectParts.count
+    tPartName = tEffectParts[i]
+    if tPartList.findPos(tPartName) = 0 then
+      tPartList.add(tPartName)
+    end if
+  end repeat
+  tExcludedParts = me.getEffectExcludedPartIndex()
+  repeat with tPartId in tExcludedParts
+    tPartList.deleteOne(tPartId)
+  end repeat
   return tPartList
 end
 
@@ -783,8 +895,12 @@ on setPartLists me, tmodels
   if voidp(pPartActionList) then
     me.resetAction()
   end if
-  tmodels = tmodels.duplicate()
-  pRawFigure = tmodels
+  if tmodels = VOID then
+    tmodels = pRawFigure
+  else
+    tmodels = tmodels.duplicate()
+    pRawFigure = tmodels
+  end if
   tPartDefinition = me.getClearedFigurePartList(tmodels)
   tCurrentPartList = [:]
   repeat with i = pPartList.count down to 1
@@ -799,10 +915,6 @@ on setPartLists me, tmodels
   end repeat
   pPartIndex = [:]
   pColors = [:]
-  tFlipList = getVariable("human.parts.flipList")
-  if ilk(tFlipList) <> #propList then
-    tFlipList = [:]
-  end if
   tAnimationList = getVariable("human.parts.animationList")
   if ilk(tAnimationList) <> #propList then
     tAnimationList = [:]
@@ -836,7 +948,16 @@ on setPartLists me, tmodels
       end if
       tmodel["color"][j] = tColor
     end repeat
-    tFlipPart = tFlipList[tPartSymbol]
+    if tmodels.findPos(tPartSymbol) > 0 then
+      tPartModels = tmodels[tPartSymbol]
+      repeat with k = 1 to tPartModels.count
+        tPropKey = tPartModels.getPropAt(k)
+        if tmodel.findPos(tPropKey) = 0 then
+          tmodel.setaProp(tPropKey, tPartModels[k])
+        end if
+      end repeat
+    end if
+    tFlipPart = pFlipPartList[tPartSymbol]
     tAction = pPartActionList[tPartSymbol]
     if voidp(tAction) then
       tAction = "std"
@@ -849,13 +970,24 @@ on setPartLists me, tmodels
       if pPartListSubSet["head"].findPos(tPartSymbol) > 0 then
         tDirection = pHeadDir
       end if
-      tPartObj.define(tPartSymbol, tmodel["model"], tmodel["color"], tDirection, tAction, me, tFlipPart)
+      tPartObj.define(tPartSymbol, tmodel["model"], tmodel["color"], tDirection, tAction, me, tFlipPart, tmodel.getaProp("ink"))
+      if tmodel.findPos("blend") > 0 then
+        tPartObj.defineBlend(tmodel.getaProp("blend"))
+      end if
       tPartObj.setAnimations(tAnimationList[tPartSymbol])
       pPartList.add(tPartObj)
     else
       if tmodel["model"].count > 0 then
         pPartList[i].clearGraphics()
-        tCurrentPartList[tPartSymbol].changePartData(tmodel["model"], tmodel["color"])
+        tPartObj = tCurrentPartList[tPartSymbol]
+        tPartObj.changePartData(tmodel["model"], tmodel["color"])
+        if tmodel.findPos("blend") > 0 then
+          tPartObj.defineBlend(tmodel.getaProp("blend"))
+        end if
+        if tmodel.findPos("ink") > 0 then
+          tPartObj.defineInk(tmodel.getaProp("ink"))
+        end if
+        tPartObj.setAnimations(tAnimationList[tPartSymbol])
       end if
     end if
     if tmodel["color"].count > 0 then
@@ -902,6 +1034,9 @@ on arrangeParts me, tOrderName
     error(me, "No human part order found" && tPartOrder, #arrangeParts, #major)
   else
     tPartDefinition = getVariableValue(tPartOrder)
+    if pFXManager <> 0 then
+      pFXManager.alignEffectBodyparts(tPartDefinition, pDirection)
+    end if
     tTempPartList = []
     repeat with tPartSymbol in tPartDefinition
       if not voidp(pPartIndex[tPartSymbol]) then
@@ -1139,20 +1274,27 @@ on useObject me, tProps, tDefaultItem, tDefaultItemPublic
 end
 
 on action_usei me, tProps
-  me.useObject(tProps, "1", "1")
+  if not me.pFx then
+    me.useObject(tProps, "1", "1")
+  end if
 end
 
 on action_drink me, tProps
-  me.useObject(tProps, "1", "1")
+  if not me.pFx then
+    me.useObject(tProps, "1", "1")
+  end if
 end
 
 on action_eat me, tProps
-  me.useObject(tProps, "1", "4")
+  if not me.pFx then
+    me.useObject(tProps, "1", "4")
+  end if
 end
 
 on action_talk me, tProps
   if pPeopleSize = "sh" then
     if pMainAction = "lay" then
+      pTalking = 0
       return 0
     end if
   end if
@@ -1184,6 +1326,7 @@ on action_wave me, tProps
 end
 
 on action_dance me, tProps
+  me.clearEffects()
   tStyleNum = tProps.word[2]
   pDancing = integer(tStyleNum)
   if pDancing = VOID then
@@ -1191,11 +1334,14 @@ on action_dance me, tProps
   end if
   tStyle = "dance." & pDancing
   me.startAnimation(tStyle)
+  executeMessage(#updateInfostandAvatar)
 end
 
 on action_ohd me
-  me.definePartListAction(pPartListSubSet["head"], "ohd")
-  me.definePartListAction(pPartListSubSet["handRight"], "ohd")
+  if not me.pFx then
+    me.definePartListAction(pPartListSubSet["head"], "ohd")
+    me.definePartListAction(pPartListSubSet["handRight"], "ohd")
+  end if
 end
 
 on action_trd me
@@ -1215,18 +1361,20 @@ on action_mod me, tProps
 end
 
 on action_sign me, props
-  tSignMem = "sign" & props.word[2]
-  if getmemnum(tSignMem) = 0 then
-    return 0
+  if not me.pFx then
+    tSignMem = "sign" & props.word[2]
+    if getmemnum(tSignMem) = 0 then
+      return 0
+    end if
+    me.definePartListAction(pPartListSubSet["handLeft"], "sig")
+    tSignObjID = "SIGN_EXTRA"
+    pExtraObjsActive.setaProp(tSignObjID, 1)
+    if voidp(pExtraObjs[tSignObjID]) then
+      pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))
+    end if
+    call(#show_sign, pExtraObjs, ["sprite": pSprite, "direction": pDirection, "signmember": tSignMem])
+    pLeftHandUp = 1
   end if
-  me.definePartListAction(pPartListSubSet["handLeft"], "sig")
-  tSignObjID = "SIGN_EXTRA"
-  pExtraObjsActive.setaProp(tSignObjID, 1)
-  if voidp(pExtraObjs[tSignObjID]) then
-    pExtraObjs.addProp(tSignObjID, createObject(#temp, "HumanExtra Sign Class"))
-  end if
-  call(#show_sign, pExtraObjs, ["sprite": pSprite, "direction": pDirection, "signmember": tSignMem])
-  pLeftHandUp = 1
 end
 
 on action_joingame me, tProps
@@ -1243,4 +1391,116 @@ on action_joingame me, tProps
     pExtraObjs.setaProp(tSignObjID, tObject)
   end if
   call(#show_ig_icon, pExtraObjs, ["userid": me.getID(), "gameid": tProps.word[2], "gametype": tProps.word[3], "locz": pSprite.locZ])
+end
+
+on action_fx me, tProps
+  if tProps = VOID then
+    return 0
+  end if
+  if tProps.length < 4 then
+    return 0
+  end if
+  tID = integer(tProps.char[4..tProps.length])
+  tManager = me.getEffectManager()
+  if tManager = 0 then
+    return 0
+  end if
+  if tManager.effectExists(tID) then
+    return 1
+  end if
+  me.clearEffects()
+  if not tManager.constructEffect(me, tID) then
+    return error(me, "Can not construct effect:" && tID, #action_fx, #minor)
+  end if
+  me.pFx = tID
+  executeMessage(#updateInfostandAvatar)
+  return 1
+end
+
+on validateFxForActionList me, tActionList
+  if tActionList.findPos("fx") = 0 then
+    if pFx then
+      me.clearEffects()
+    end if
+    return 0
+  else
+    repeat with tAction in tActionList
+      case tAction of
+        "std", "mv":
+          return 1
+        "lay", "sit":
+          tActionList.deleteOne("fx")
+          if pFx then
+            me.clearEffects()
+          end if
+          return 0
+      end case
+    end repeat
+    return 1
+  end if
+end
+
+on getEffectDirOffset me
+  if pFXManager = 0 then
+    return 0
+  end if
+  return pFXManager.getEffectDirOffset()
+end
+
+on getEffectShadowName me
+  if pFXManager = 0 then
+    return []
+  end if
+  return pFXManager.getEffectShadowName()
+end
+
+on getEffectSpriteProps me
+  if pFXManager = 0 then
+    return []
+  end if
+  return pFXManager.getEffectSpriteProps()
+end
+
+on getEffectAddedPartIndex me
+  if pFXManager = 0 then
+    return []
+  end if
+  return pFXManager.getEffectAddedPartIndex()
+end
+
+on getEffectExcludedPartIndex me
+  if pFXManager = 0 then
+    return []
+  end if
+  return pFXManager.getEffectExcludedPartIndex()
+end
+
+on updateEffects me
+  if pFXManager = 0 then
+    return 1
+  end if
+  pFXManager.updateEffects(me)
+end
+
+on clearEffects me
+  if pFXManager <> 0 then
+    pFXManager.clearEffects(me)
+  end if
+  me.pFx = 0
+  return 1
+end
+
+on getCurrentEffectState me
+  if pFXManager = 0 then
+    return VOID
+  end if
+  return pFXManager.getCurrentEffectState()
+end
+
+on getEffectManager me
+  if objectp(pFXManager) then
+    return pFXManager
+  end if
+  pFXManager = createObject(#temp, "Avatar Effect Manager")
+  return pFXManager
 end

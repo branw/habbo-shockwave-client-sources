@@ -119,11 +119,7 @@ on hideNavigator me, tHideOrRemove
     tHideOrRemove = #Remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #Remove then
-      removeWindow(pWindowTitle)
-    else
-      getWindow(pWindowTitle).hide()
-    end if
+    removeWindow(pWindowTitle)
   end if
   return 1
 end
@@ -244,6 +240,12 @@ on ChangeWindowView me, tWindowName
           tName = EMPTY
         end if
         tElem.setText(tName)
+      end if
+      if pLastWindowName = "nav_gr_mod_b" then
+        me.populateModifySecondPage()
+      end if
+      if pLastWindowName = "nav_gr_mod" then
+        me.populateModifyFirstPage()
       end if
   end case
   return 1

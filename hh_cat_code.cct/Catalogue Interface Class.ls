@@ -93,6 +93,14 @@ on getSelectedProduct me
   return pSelectedProduct
 end
 
+on getCurrentPageName me
+  if voidp(pCurrentPageData) then
+    return EMPTY
+  else
+    return pCurrentPageData["pageName"]
+  end if
+end
+
 on showOrderInfo me, tstate, tInfo
   if windowExists(pInfoWindowID) then
     return 0
@@ -255,12 +263,18 @@ on saveCatalogueIndex me, tdata
   pLoadingFlag = 0
 end
 
-on cataloguePageData me, tdata
+on cataloguePageData me, tdata, tForceDisplay
   if not windowExists(pCatalogID) then
     return 0
   end if
   if tdata.ilk <> #propList then
     return error(me, "Incorrect Catalogue page data", #cataloguePageData, #major)
+  end if
+  tChangeLayout = 1
+  if not voidp(pCurrentPageData) then
+    if pCurrentPageData["id"] contains tdata["id"] then
+      tChangeLayout = 0
+    end if
   end if
   pCurrentPageData = tdata.duplicate()
   tLayout = pCurrentPageData["layout"] & ".window"
@@ -284,7 +298,12 @@ on cataloguePageData me, tdata
       end if
     end if
   end if
-  ChangeWindowView(me, tLayout)
+  if tChangeLayout or tForceDisplay or objectExists(pPageProgramID) then
+    ChangeWindowView(me, tLayout)
+  else
+    me.feedPageData()
+  end if
+  pLoadingFlag = 0
 end
 
 on ChangeWindowView me, tWindowName
@@ -307,8 +326,6 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseUp)
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseDown)
       tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #keyDown)
-      tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseEnter)
-      tWndObj.registerProcedure(#eventProcCatalogue, me.getID(), #mouseLeave)
     end if
   end if
   me.updatePurseSaldo()
@@ -339,17 +356,30 @@ on ChangeWindowView me, tWindowName
     end if
     exit repeat
   end repeat
+  if tWndObj.elementExists("ctlg_header_img") then
+    tElement = tWndObj.getElement("ctlg_header_img")
+    tElement.feedImage(image(tElement.getProperty(#width), tElement.getProperty(#height), 32))
+  end if
+  t = 1
+  repeat while tWndObj.elementExists("ctlg_teaserimg_" & t)
+    tElement = tWndObj.getElement("ctlg_teaserimg_" & t)
+    tElement.feedImage(image(tElement.getProperty(#width), tElement.getProperty(#height), 32))
+    t = t + 1
+  end repeat
   case tWindowName of
     VOID, "ctlg_loading.window":
       renderPageList(me)
       me.getComponent().retrieveCatalogueIndex()
       return 1
     "frontpage.window":
+      nothing()
     "ctlg_layout1.window", "ctlg_layout2.window", "ctlg_soundmachine.window":
-      if not voidp(pCurrentPageData["teaserText"]) then
-        tText = pCurrentPageData["teaserText"]
-        if tWndObj.elementExists("ctlg_description") then
-          tWndObj.getElement("ctlg_description").setText(tText)
+      if not voidp(pCurrentPageData) then
+        if not voidp(pCurrentPageData["teaserText"]) then
+          tText = pCurrentPageData["teaserText"]
+          if tWndObj.elementExists("ctlg_description") then
+            tWndObj.getElement("ctlg_description").setText(tText)
+          end if
         end if
       end if
       if tWndObj.elementExists("ctlg_buy_button") then
@@ -362,6 +392,9 @@ on ChangeWindowView me, tWindowName
         tWndObj.getElement("ctlg_page_text").setText(getText("catalog_page"))
       end if
     "ctlg_productpage1.window", "ctlg_productpage2.window", "ctlg_productpage3.window", "ctlg_productpage4.window":
+      if voidp(pCurrentPageData) then
+        pCurrentPageData = [:]
+      end if
       if voidp(pCurrentPageData["teaserImgList"]) and not voidp(pCurrentPageData["productList"]) then
         if pCurrentPageData["productList"].ilk = #list then
           if pCurrentPageData["productList"].count > 0 then
@@ -374,6 +407,9 @@ on ChangeWindowView me, tWindowName
         end if
       end if
     "ctlg_collectibles.window":
+      if voidp(pCurrentPageData) then
+        pCurrentPageData = [:]
+      end if
       if not voidp(pCurrentPageData["textList"]) then
         tTextList = pCurrentPageData["textList"]
         if tTextList.ilk = #list then
@@ -429,42 +465,62 @@ on feedPageData me
         tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tSourceImg.width + tdestrect.width / 2, tdestrect.height / 2 + tSourceImg.height) + tMargins
         tDestImg.copyPixels(tSourceImg, tdestrect, tSourceImg.rect, [#ink: 8])
         tElem.feedImage(tDestImg)
+      else
+        tElem = tWndObj.getElement("ctlg_header_img")
+        tImage = image(tElem.getProperty(#width), tElem.getProperty(#height), 32)
+        tElem.feedImage(tImage)
       end if
     end if
   end if
   if tWndObj.elementExists("ctlg_header_text") then
     if not voidp(pCurrentPageData["headerText"]) then
       tWndObj.getElement("ctlg_header_text").setText(pCurrentPageData["headerText"])
+    else
+      tWndObj.getElement("ctlg_header_text").setText(EMPTY)
     end if
   end if
   if not voidp(pCurrentPageData["textList"]) then
     tTextList = pCurrentPageData["textList"]
     if tTextList.ilk = #list then
-      repeat with t = 1 to tTextList.count
+      t = 1
+      repeat while tWndObj.elementExists("ctlg_text_" & t) or t < tTextList.count
         if tWndObj.elementExists("ctlg_text_" & t) then
-          tWndObj.getElement("ctlg_text_" & t).setText(tTextList[t])
+          if tTextList.count >= t then
+            tWndObj.getElement("ctlg_text_" & t).setText(tTextList[t])
+          else
+            tWndObj.getElement("ctlg_text_" & t).setText(EMPTY)
+          end if
         end if
+        t = t + 1
       end repeat
     end if
   end if
-  if not voidp(pCurrentPageData["teaserImgList"]) then
-    tImgList = pCurrentPageData["teaserImgList"]
-    if tImgList.ilk = #list then
-      repeat with t = 1 to tImgList.count
-        if tWndObj.elementExists("ctlg_teaserimg_" & t) then
-          tElem = tWndObj.getElement("ctlg_teaserimg_" & t)
-          tmember = tImgList[t]
-          if tmember <> 0 then
-            tDestImg = tElem.getProperty(#image)
-            tSourceImg = member(tmember).image
-            tdestrect = tDestImg.rect - tSourceImg.rect
-            tMargins = rect(0, 0, 0, 0)
-            tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tSourceImg.width + tdestrect.width / 2, tdestrect.height / 2 + tSourceImg.height) + tMargins
-            tDestImg.copyPixels(tSourceImg, tdestrect, tSourceImg.rect, [#ink: 36])
-            tElem.feedImage(tDestImg)
+  if voidp(pSelectedProduct) then
+    if not voidp(pCurrentPageData["teaserImgList"]) then
+      tImgList = pCurrentPageData["teaserImgList"]
+      if tImgList.ilk = #list then
+        t = 1
+        repeat while tWndObj.elementExists("ctlg_teaserimg_" & t)
+          if tImgList.count >= t then
+            tElem = tWndObj.getElement("ctlg_teaserimg_" & t)
+            tmember = tImgList[t]
+            if tmember <> 0 then
+              tDestImg = tElem.getProperty(#image)
+              tSourceImg = member(tmember).image
+              tdestrect = tDestImg.rect - tSourceImg.rect
+              tMargins = rect(0, 0, 0, 0)
+              tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tSourceImg.width + tdestrect.width / 2, tdestrect.height / 2 + tSourceImg.height) + tMargins
+              tDestImg.copyPixels(tSourceImg, tdestrect, tSourceImg.rect, [#ink: 36])
+              tElem.feedImage(tDestImg)
+            end if
+          else
+            tElem = tWndObj.getElement("ctlg_teaserimg_" & t)
+            tImage = image(tElem.getProperty(#width), tElem.getProperty(#height), 32)
+            tElem.feedImage(tImage)
           end if
-        end if
-      end repeat
+          t = t + 1
+        end repeat
+      end if
     end if
   end if
   if not voidp(pCurrentPageData["teaserSpecialText"]) then
@@ -603,6 +659,9 @@ on showProductPageCounter me
     return 
   end if
   tWndObj = getWindow(pCatalogID)
+  if voidp(pCurrentPageData) then
+    return 0
+  end if
   if not voidp(pCurrentPageData["productList"]) then
     if pProductPerPage >= pCurrentPageData["productList"].count then
       if tWndObj.elementExists("ctlg_next_button") then
@@ -758,6 +817,19 @@ on ShowSmallIcons me, tstate, tPram
     return 
   end if
   tWndObj = getWindow(pCatalogID)
+  if objectExists(pPageProgramID) then
+    if getObject(pPageProgramID).handler(#renderSmallIcons) then
+      if getObject(pPageProgramID).renderSmallIcons(tstate, tPram) then
+        return 
+      end if
+    end if
+  end if
+  if ilk(pCurrentPageData) <> #propList then
+    return 0
+  end if
+  if ilk(pCurrentPageData["productList"]) <> #list then
+    return 0
+  end if
   case tstate of
     VOID:
       tFirst = pProductOffset + 1
@@ -776,66 +848,160 @@ on ShowSmallIcons me, tstate, tPram
     #hilite, #unhilite:
       tFirst = tPram
       tLast = tPram
+    #furniLoaded:
+      if voidp(pCurrentPageData) then
+        return 0
+      end if
+      tFurniName = tPram
+      tFirst = pCurrentPageData["productList"].count
+      tLast = 1
+      repeat with i = 1 to pCurrentPageData["productList"].count
+        if pCurrentPageData["productList"][i]["class"] contains tFurniName then
+          if tFirst > i then
+            tFirst = i
+          end if
+          if tLast < i then
+            tLast = i
+          end if
+        end if
+      end repeat
   end case
   return error(me, "unsupported mode", #ShowSmallIcons, #minor)
   if voidp(tFirst) or voidp(tLast) then
-    return 
+    return 0
   end if
   if tFirst < 1 or tLast < 1 then
-    return 
+    return 0
   end if
   tCount = 1
   repeat with f = tFirst to tLast
-    if not voidp(pCurrentPageData["productList"][f]["smallPrewImg"]) then
-      tmember = pCurrentPageData["productList"][f]["smallPrewImg"]
-      tClass = pCurrentPageData["productList"][f]["class"]
-      tpartColors = pCurrentPageData["productList"][f]["partColors"]
-      tDealNumber = pCurrentPageData["productList"][f]["dealNumber"]
-      tDealList = pCurrentPageData["productList"][f]["dealList"]
-      tID = "ctlg_small_img_" & f - pProductOffset
-      if tmember <> 0 or not voidp(tDealNumber) and listp(tDealList) then
-        if tWndObj.elementExists(tID) then
-          tElem = tWndObj.getElement(tID)
-          if not voidp(tstate) then
-            if tstate = #hilite and memberExists("ctlg_small_active_bg") then
-              tBgImage = getMember("ctlg_small_active_bg").image
-            end if
-          end if
-          tWid = tElem.getProperty(#width)
-          tHei = tElem.getProperty(#height)
-          if tClass <> EMPTY then
-            tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
-          else
-            if tmember <> 0 then
-              tRenderedImage = member(tmember).image
-            else
-              if not objectExists("ctlg_dealpreviewObj") then
-                tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
-                if tObj = 0 then
-                  return error(me, "Failed object creation!", #showHideDialog, #major)
-                end if
-              else
-                tObj = getObject("ctlg_dealpreviewObj")
+    if ilk(pCurrentPageData["productList"][f]) = #propList then
+      if not voidp(pCurrentPageData["productList"][f]["smallPrewImg"]) then
+        tmember = pCurrentPageData["productList"][f]["smallPrewImg"]
+        tClass = pCurrentPageData["productList"][f]["class"]
+        tpartColors = pCurrentPageData["productList"][f]["partColors"]
+        tDealNumber = pCurrentPageData["productList"][f]["dealNumber"]
+        tDealList = pCurrentPageData["productList"][f]["dealList"]
+        tID = "ctlg_small_img_" & f - pProductOffset
+        if tmember <> 0 or not voidp(tDealNumber) and listp(tDealList) then
+          if tWndObj.elementExists(tID) then
+            tElem = tWndObj.getElement(tID)
+            if not voidp(tstate) then
+              if tstate = #hilite and memberExists("ctlg_small_active_bg") then
+                tBgImage = getMember("ctlg_small_active_bg").image
               end if
-              tRenderedImage = tObj.renderDealPreviewImage(tDealNumber, tDealList, tWid, tHei)
             end if
+            tWid = tElem.getProperty(#width)
+            tHei = tElem.getProperty(#height)
+            if tClass <> EMPTY then
+              if me.getComponent().isProductLoading(tClass, pCurrentPageData["pageName"]) then
+                tRenderedImage = member(getmemnum("ctlg_loading_icon2")).image
+              else
+                tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
+              end if
+            else
+              if tmember <> 0 then
+                tRenderedImage = member(tmember).image
+              else
+                if not objectExists("ctlg_dealpreviewObj") then
+                  tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
+                  if tObj = 0 then
+                    return error(me, "Failed object creation!", #showHideDialog, #major)
+                  end if
+                else
+                  tObj = getObject("ctlg_dealpreviewObj")
+                end if
+                tRenderedImage = tObj.renderDealPreviewImage(tDealNumber, tDealList, tWid, tHei)
+              end if
+            end if
+            tCenteredImage = image(tWid, tHei, 32)
+            if tBgImage <> VOID then
+              tCenteredImage.copyPixels(tBgImage, tBgImage.rect, tBgImage.rect)
+            end if
+            tMatte = tRenderedImage.createMatte()
+            tXchange = (tCenteredImage.width - tRenderedImage.width) / 2
+            tYchange = (tCenteredImage.height - tRenderedImage.height) / 2
+            tRect1 = tRenderedImage.rect + rect(tXchange, tYchange, tXchange, tYchange)
+            tCenteredImage.copyPixels(tRenderedImage, tRect1, tRenderedImage.rect, [#maskImage: tMatte, #ink: 41])
+            tElem.feedImage(tCenteredImage)
+            tElem.setProperty(#cursor, "cursor.finger")
+            tCount = tCount + 1
           end if
-          tCenteredImage = image(tWid, tHei, 32)
-          if tBgImage <> VOID then
-            tCenteredImage.copyPixels(tBgImage, tBgImage.rect, tBgImage.rect)
-          end if
-          tMatte = tRenderedImage.createMatte()
-          tXchange = (tCenteredImage.width - tRenderedImage.width) / 2
-          tYchange = (tCenteredImage.height - tRenderedImage.height) / 2
-          tRect1 = tRenderedImage.rect + rect(tXchange, tYchange, tXchange, tYchange)
-          tCenteredImage.copyPixels(tRenderedImage, tRect1, tRenderedImage.rect, [#maskImage: tMatte, #ink: 41])
-          tElem.feedImage(tCenteredImage)
-          tElem.setProperty(#cursor, "cursor.finger")
-          tCount = tCount + 1
         end if
       end if
     end if
   end repeat
+end
+
+on renderPreviewImage me, tProps
+  if not voidp(tProps["dealList"]) then
+    if not objectExists("ctlg_dealpreviewObj") then
+      tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
+      if tObj = 0 then
+        return error(me, "Failed object creation!", #renderPreviewImage, #major)
+      end if
+    else
+      tObj = getObject("ctlg_dealpreviewObj")
+    end if
+    tObj.define(tProps["dealList"])
+    tImage = tObj.getPicture()
+  else
+    if voidp(tProps["class"]) then
+      return error(me, "Class property missing", #renderPreviewImage, #minor)
+    else
+      tClass = tProps["class"]
+    end if
+    if voidp(tProps["direction"]) then
+      return error(me, "Direction property missing", #renderPreviewImage, #minor)
+    else
+      tProps["direction"] = "2,2,2"
+      tDirection = value("[" & tProps["direction"] & "]")
+      if tDirection.count < 3 then
+        tDirection = [0, 0, 0]
+      end if
+    end if
+    if voidp(tProps["dimensions"]) then
+      return error(me, "Dimensions property missing", #renderPreviewImage, #minor)
+    else
+      tDimensions = value("[" & tProps["dimensions"] & "]")
+      if tDimensions.count < 2 then
+        tDimensions = [1, 1]
+      end if
+    end if
+    if voidp(tProps["partColors"]) then
+      return error(me, "PartColors property missing", #renderPreviewImage, #minor)
+    else
+      tpartColors = tProps["partColors"]
+      if tpartColors = EMPTY or tpartColors = "0,0,0" then
+        tpartColors = "*ffffff"
+      end if
+    end if
+    if voidp(tProps["objectType"]) then
+      return error(me, "objectType property missing", #renderPreviewImage, #minor)
+    else
+      tObjectType = tProps["objectType"]
+    end if
+    tdata = [:]
+    tdata[#id] = "ctlg_previewObj"
+    tdata[#class] = tClass
+    tdata[#name] = tClass
+    tdata[#custom] = tClass
+    tdata[#direction] = tDirection
+    tdata[#dimensions] = tDimensions
+    tdata[#colors] = tpartColors
+    tdata[#objectType] = tObjectType
+    if not objectExists("ctlg_previewObj") then
+      tObj = createObject("ctlg_previewObj", ["Product Preview Class"])
+      if tObj = 0 then
+        return error(me, "Failed object creation!", #renderPreviewImage, #major)
+      end if
+    else
+      tObj = getObject("ctlg_previewObj")
+    end if
+    tObj.define(tdata.duplicate())
+    tImage = tObj.getPicture()
+  end if
+  return tImage
 end
 
 on showPreviewImage me, tProps, tElemID
@@ -859,73 +1025,7 @@ on showPreviewImage me, tProps, tElemID
   if tProps["prewImage"] > 0 then
     tImage = member(tProps["prewImage"]).image
   else
-    if not voidp(tProps["dealList"]) then
-      if not objectExists("ctlg_dealpreviewObj") then
-        tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
-        if tObj = 0 then
-          return error(me, "Failed object creation!", #showHideDialog, #major)
-        end if
-      else
-        tObj = getObject("ctlg_dealpreviewObj")
-      end if
-      tObj.define(tProps["dealList"])
-      tImage = tObj.getPicture()
-    else
-      if voidp(tProps["class"]) then
-        return error(me, "Class property missing", #showPreviewImage, #minor)
-      else
-        tClass = tProps["class"]
-      end if
-      if voidp(tProps["direction"]) then
-        return error(me, "Direction property missing", #showPreviewImage, #minor)
-      else
-        tProps["direction"] = "2,2,2"
-        tDirection = value("[" & tProps["direction"] & "]")
-        if tDirection.count < 3 then
-          tDirection = [0, 0, 0]
-        end if
-      end if
-      if voidp(tProps["dimensions"]) then
-        return error(me, "Dimensions property missing", #showPreviewImage, #minor)
-      else
-        tDimensions = value("[" & tProps["dimensions"] & "]")
-        if tDimensions.count < 2 then
-          tDimensions = [1, 1]
-        end if
-      end if
-      if voidp(tProps["partColors"]) then
-        return error(me, "PartColors property missing", #showPreviewImage, #minor)
-      else
-        tpartColors = tProps["partColors"]
-        if tpartColors = EMPTY or tpartColors = "0,0,0" then
-          tpartColors = "*ffffff"
-        end if
-      end if
-      if voidp(tProps["objectType"]) then
-        return error(me, "objectType property missing", #showPreviewImage, #minor)
-      else
-        tObjectType = tProps["objectType"]
-      end if
-      tdata = [:]
-      tdata[#id] = "ctlg_previewObj"
-      tdata[#class] = tClass
-      tdata[#name] = tClass
-      tdata[#custom] = tClass
-      tdata[#direction] = tDirection
-      tdata[#dimensions] = tDimensions
-      tdata[#colors] = tpartColors
-      tdata[#objectType] = tObjectType
-      if not objectExists("ctlg_previewObj") then
-        tObj = createObject("ctlg_previewObj", ["Product Preview Class"])
-        if tObj = 0 then
-          return error(me, "Failed object creation!", #showHideDialog, #major)
-        end if
-      else
-        tObj = getObject("ctlg_previewObj")
-      end if
-      tObj.define(tdata.duplicate())
-      tImage = tObj.getPicture()
-    end if
+    tImage = me.renderPreviewImage(tProps)
   end if
   if tImage.ilk = #image then
     tDestImg = tElem.getProperty(#image)
@@ -938,6 +1038,33 @@ on showPreviewImage me, tProps, tElemID
     tElem.feedImage(tDestImg)
   end if
   return 1
+end
+
+on refreshPreviewImage me, tClass, tdata
+  if voidp(pCurrentPageData) then
+    return 0
+  end if
+  if not voidp(tdata) then
+    if tdata["id"] contains pCurrentPageData["id"] then
+      pCurrentPageData = tdata.duplicate()
+    end if
+  end if
+  if voidp(pSelectedProduct) then
+    return 0
+  else
+    pSelectedProduct["prewImage"] = 0
+  end if
+  if ilk(pCurrentPageData["productList"]) <> #list then
+    return 0
+  end if
+  if pSelectedProduct["class"] = tClass then
+    repeat with i = 1 to pCurrentPageData["productList"].count
+      if pCurrentPageData["productList"][i]["class"] contains tClass then
+        pSelectedProduct = pCurrentPageData["productList"][i]
+      end if
+    end repeat
+    me.showPreviewImage(pSelectedProduct)
+  end if
 end
 
 on renderPageList me, tPages
@@ -1059,11 +1186,14 @@ on selectPage me, tClickLine
 end
 
 on changeProductOffset me, tDirection
+  if voidp(pCurrentPageData) then
+    return 0
+  end if
   if voidp(pCurrentPageData["productList"].count) then
-    return 
+    return 0
   end if
   if pProductPerPage >= pCurrentPageData["productList"].count then
-    return 
+    return 0
   end if
   if tDirection = 1 then
     if pProductOffset + pProductPerPage < pCurrentPageData["productList"].count then
@@ -1080,6 +1210,9 @@ on changeProductOffset me, tDirection
 end
 
 on changeLinkPage me, tDirection
+  if voidp(pCurrentPageData) then
+    return 0
+  end if
   if not voidp(pPageLinkList) then
     tID = pCurrentPageData["id"]
     tPos = pPageLinkList.findPos(tID)
@@ -1112,6 +1245,9 @@ on selectProduct me, tOrderNum, tFeedFlag
   tWndObj = getWindow(pCatalogID)
   if not integerp(tOrderNum) then
     return error(me, "Incorrect value", #selectProduct, #major)
+  end if
+  if voidp(pCurrentPageData) then
+    return 0
   end if
   if voidp(pCurrentPageData["productList"]) then
     return 0

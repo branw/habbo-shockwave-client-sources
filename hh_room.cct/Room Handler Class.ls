@@ -1,6 +1,7 @@
-property pRemoteControlledUsers, pHighlightUser
+property pRemoteControlledUsers, pHighlightUser, pPersistentFurniData
 
 on construct me
+  pPersistentFurniData = VOID
   pRemoteControlledUsers = []
   return me.regMsgList(1)
 end
@@ -102,12 +103,16 @@ on handle_status me, tMsg
       tuser[#dirHead] = integer(tloc.item[4]) mod 8
       tuser[#dirBody] = integer(tloc.item[5]) mod 8
       tActions = []
+      tActionIndex = []
       the itemDelimiter = "/"
       repeat with j = 2 to tLine.item.count
         if length(tLine.item[j]) > 1 then
-          tActions.add([#name: tLine.item[j].word[1], #params: tLine.item[j]])
+          tActionName = tLine.item[j].word[1]
+          tActions.add([#name: tActionName, #params: tLine.item[j]])
+          tActionIndex.add(tActionName)
         end if
       end repeat
+      tuser[#actionIndex] = tActionIndex
       tuser[#actions] = tActions
       tList.add(tuser)
     end if
@@ -117,17 +122,27 @@ on handle_status me, tMsg
     if not (pRemoteControlledUsers.getOne(tuser[#id]) > 0) then
       tUserObj = me.getComponent().getUserObject(tuser[#id])
       if tUserObj <> 0 then
-        tUserObj.resetValues(tuser[#x], tuser[#y], tuser[#h], tuser[#dirHead], tuser[#dirBody])
+        tActionIndex = tuser.getaProp(#actionIndex)
+        tAllowFX = call(#validateFxForActionList, [tUserObj], tActionIndex)
+        if tAllowFX <> 1 then
+          tActionIndex.deleteOne("fx")
+        end if
+        tUserObj.resetValues(tuser.getaProp(#x), tuser.getaProp(#y), tuser.getaProp(#h), tuser.getaProp(#dirHead), tuser.getaProp(#dirBody), tActionIndex)
         tPrimaryActions = ["mv", "sit", "lay"]
         tActionList = []
-        repeat with i = tuser[#actions].count down to 1
-          tAction = tuser[#actions][i]
-          if tPrimaryActions.findPos(tAction[#name]) then
+        tUserActions = tuser.getaProp(#actions)
+        repeat with i = tUserActions.count down to 1
+          tAction = tUserActions[i]
+          tName = tAction.getaProp(#name)
+          if tPrimaryActions.findPos(tName) then
             tActionList.add(tAction)
-            tuser[#actions].deleteAt(i)
+            tUserActions.deleteAt(i)
+          end if
+          if tName = "fx" and not tAllowFX then
+            tUserActions.deleteAt(i)
           end if
         end repeat
-        repeat with tAction in tuser[#actions]
+        repeat with tAction in tUserActions
           tActionList.add(tAction)
         end repeat
         repeat with tAction in tActionList
@@ -310,29 +325,56 @@ on handle_OBJECTS me, tMsg
 end
 
 on parseActiveObject me, tConn
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   if not tConn then
     return 0
   end if
   tObj = [:]
   tObj[#id] = tConn.GetStrFrom()
-  tObj[#class] = tConn.GetStrFrom()
+  tClassID = tConn.GetIntFrom()
+  if tClassID > -1 then
+    tError = 0
+    tFurniData = pPersistentFurniData.getProps("s", tClassID)
+    if voidp(tFurniData) then
+      error(me, "Persistent properties missing for furni classid " & tClassID, #parseActiveObject, #major)
+      tError = 1
+    else
+      tObj[#class] = tFurniData[#class]
+      tObj[#colors] = tFurniData[#partColors]
+      tWidth = tFurniData[#xdim]
+      tHeight = tFurniData[#ydim]
+      tObj[#dimensions] = [tWidth, tHeight]
+      if tObj[#colors] = EMPTY then
+        tObj[#colors] = "0"
+      end if
+    end if
+  end if
   tObj[#x] = tConn.GetIntFrom()
   tObj[#y] = tConn.GetIntFrom()
-  tWidth = tConn.GetIntFrom()
-  tHeight = tConn.GetIntFrom()
   tDirection = tConn.GetIntFrom() mod 8
   tObj[#direction] = [tDirection, tDirection, tDirection]
-  tObj[#dimensions] = [tWidth, tHeight]
   tObj[#altitude] = getLocalFloat(tConn.GetStrFrom())
-  tObj[#colors] = tConn.GetStrFrom()
-  if tObj[#colors] = EMPTY then
-    tObj[#colors] = "0"
-  end if
   tRuntimeData = tConn.GetStrFrom()
   tExtra = tConn.GetIntFrom()
   tStuffData = tConn.GetStrFrom()
+  tExpireTime = tConn.GetIntFrom()
+  if tExpireTime > -1 then
+    tExpireTime = tExpireTime * 60 * 1000 + the milliSeconds
+  end if
+  tObj[#expire] = tExpireTime
+  if tClassID < 0 then
+    tObj[#class] = tConn.GetStrFrom()
+    tObj[#colors] = "0"
+    tObj[#dimensions] = [1, 1]
+  end if
   tObj[#props] = [#runtimedata: tRuntimeData, #extra: tExtra, #stuffdata: tStuffData]
-  return tObj
+  if tError then
+    return 0
+  else
+    return tObj
+  end if
 end
 
 on handle_activeobjects me, tMsg
@@ -361,7 +403,13 @@ on handle_activeobjects me, tMsg
 end
 
 on handle_activeobject_remove me, tMsg
-  me.getComponent().removeActiveObject(tMsg.content.word[1])
+  tConn = tMsg.connection
+  tObjID = tConn.GetStrFrom()
+  tExpired = tConn.GetIntFrom()
+  if tExpired then
+    executeMessage(#furniture_expired, tObjID)
+  end if
+  me.getComponent().removeActiveObject(tObjID, tExpired)
   executeMessage(#activeObjectRemoved)
   return 1
 end
@@ -403,6 +451,9 @@ on handle_activeobject_update me, tMsg
 end
 
 on handle_items me, tMsg
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   tList = []
   tDelim = the itemDelimiter
   repeat with i = 1 to tMsg.content.line.count
@@ -411,38 +462,47 @@ on handle_items me, tMsg
     if tLine <> EMPTY then
       tObj = [:]
       tObj[#id] = tLine.item[1]
-      tObj[#class] = tLine.item[2]
-      tObj[#owner] = tLine.item[3]
-      tObj[#type] = tLine.item[5]
-      if not (tLine.item[4].char[1] = ":") then
-        tObj[#direction] = tLine.item[4].word[1]
-        if tObj[#direction] = "frontwall" then
-          tObj[#direction] = "rightwall"
-        end if
-        tlocation = tLine.item[4].word[2..tLine.item[4].word.count]
-        the itemDelimiter = ","
-        tObj[#x] = 0
-        tObj[#y] = tlocation.item[1]
-        tObj[#h] = getLocalFloat(tlocation.item[2])
-        tObj[#z] = integer(tlocation.item[3])
-        tObj[#formatVersion] = #old
+      tClassID = value(tLine.item[2])
+      tFurniData = pPersistentFurniData.getProps("i", tClassID)
+      if voidp(tFurniData) then
+        error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
+        tObj[#class] = EMPTY
       else
-        tLocString = tLine.item[4]
-        tWallLoc = tLocString.word[1].char[4..length(tLocString.word[1])]
-        the itemDelimiter = ","
-        tObj[#wall_x] = value(tWallLoc.item[1])
-        tObj[#wall_y] = value(tWallLoc.item[2])
-        tLocalLoc = tLocString.word[2].char[3..length(tLocString.word[2])]
-        tObj[#local_x] = value(tLocalLoc.item[1])
-        tObj[#local_y] = value(tLocalLoc.item[2])
-        tDirChar = tLocString.word[3]
-        case tDirChar of
-          "r":
+        tObj[#class] = tFurniData[#class]
+        tObj[#owner] = tLine.item[3]
+        tObj[#type] = tLine.item[5]
+        if not (tLine.item[4].char[1] = ":") then
+          tObj[#direction] = tLine.item[4].word[1]
+          if tObj[#direction] = "frontwall" then
             tObj[#direction] = "rightwall"
-          "l":
-            tObj[#direction] = "leftwall"
-        end case
-        tObj[#formatVersion] = #new
+          end if
+          tlocation = tLine.item[4].word[2..tLine.item[4].word.count]
+          the itemDelimiter = ","
+          tObj[#x] = 0
+          tObj[#y] = tlocation.item[1]
+          tObj[#h] = getLocalFloat(tlocation.item[2])
+          tObj[#z] = integer(tlocation.item[3])
+          tObj[#formatVersion] = #old
+          tObj[#expire] = -1
+        else
+          tLocString = tLine.item[4]
+          tWallLoc = tLocString.word[1].char[4..length(tLocString.word[1])]
+          the itemDelimiter = ","
+          tObj[#wall_x] = value(tWallLoc.item[1])
+          tObj[#wall_y] = value(tWallLoc.item[2])
+          tLocalLoc = tLocString.word[2].char[3..length(tLocString.word[2])]
+          tObj[#local_x] = value(tLocalLoc.item[1])
+          tObj[#local_y] = value(tLocalLoc.item[2])
+          tDirChar = tLocString.word[3]
+          case tDirChar of
+            "r":
+              tObj[#direction] = "rightwall"
+            "l":
+              tObj[#direction] = "leftwall"
+          end case
+          tObj[#formatVersion] = #new
+          tObj[#expire] = -1
+        end if
       end if
       tList.add(tObj)
     end if
@@ -518,6 +578,9 @@ on handle_room_rights me, tMsg
 end
 
 on handle_stripinfo me, tMsg
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   tProps = [#objects: [], #count: 0]
   tDelim = the itemDelimiter
   tProps[#count] = integer(tMsg.content.line[tMsg.content.line.count])
@@ -541,21 +604,28 @@ on handle_stripinfo me, tMsg
     tObjectPos = integer(tItem.item[3])
     tObj[#striptype] = tItem.item[4]
     tObj[#id] = tItem.item[5]
-    tObj[#class] = tItem.item[6]
+    tClassID = value(tItem.item[6])
     case tObj[#striptype] of
       "S":
-        tObj[#name] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_name")
-        tObj[#striptype] = "active"
-        tObj[#custom] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_desc")
-        tObj[#dimensions] = [integer(tItem.item[7]), integer(tItem.item[8])]
-        tObj[#stuffdata] = tItem.item[9]
-        tObj[#colors] = tItem.item[10]
-        tObj[#isRecyclable] = tItem.item[11]
-        if tItem.item[12] <> EMPTY and tItem.item.count >= 12 then
-          tObj[#slotID] = tItem.item[12]
+        tFurniProps = pPersistentFurniData.getProps("s", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for furni classid " & tClassID, #handle_stripinfo, #major)
+          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #partColors: EMPTY]
         end if
-        if tItem.item[13] <> EMPTY and tItem.item.count >= 13 then
-          tObj[#songID] = tItem.item[13]
+        tObj[#class] = tFurniProps[#class]
+        tObj[#name] = tFurniProps[#localizedName]
+        tObj[#custom] = tFurniProps[#localizedDesc]
+        tObj[#dimensions] = [tFurniProps[#xdim], tFurniProps[#ydim]]
+        tObj[#colors] = tFurniProps[#partColors]
+        tObj[#striptype] = "active"
+        tObj[#stuffdata] = tItem.item[7]
+        tObj[#isRecyclable] = tItem.item[8]
+        tObj[#isTradeable] = tItem.item[9]
+        if tItem.item[10] <> EMPTY and tItem.item.count >= 10 then
+          tObj[#slotID] = tItem.item[10]
+        end if
+        if tItem.item[11] <> EMPTY and tItem.item.count >= 11 then
+          tObj[#songID] = tItem.item[11]
         end if
         the itemDelimiter = ","
         if tObj[#colors].char[1] = "#" then
@@ -568,14 +638,21 @@ on handle_stripinfo me, tMsg
           tObj[#stripColor] = 0
         end if
       "I":
+        tFurniProps = pPersistentFurniData.getProps("i", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for item classid " & tClassID, #handle_items, #major)
+          tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY, #colors: EMPTY]
+        end if
+        tObj[#class] = tFurniProps[#class]
         tObj[#striptype] = "item"
         tObj[#props] = tItem.item[7]
         tObj[#isRecyclable] = tItem.item[8]
+        tObj[#isTradeable] = tItem.item[9]
         case tObj[#class] of
           "poster":
             tObj[#name] = getText("poster_" & tObj[#props] & "_name", "poster_" & tObj[#props] & "_name")
           otherwise:
-            tObj[#name] = getText("wallitem_" & tObj[#class] & "_name", "wallitem_" & tObj[#class] & "_name")
+            tObj[#name] = tFurniProps[#localizedName]
         end case
     end case
     tProps[#objects].add(tObj)
@@ -1055,6 +1132,12 @@ on handle_ignore_list me, tMsg
   return executeMessage(#save_ignore_list, tList)
 end
 
+on handle_furni_expired me, tMsg
+  tConn = tMsg.getaProp(#connection)
+  tObjID = tConn.GetIntFrom()
+  executeMessage(#furni_expired, tObjID)
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(-1, #handle_disconnect)
@@ -1068,9 +1151,9 @@ on regMsgList me, tBool
   tMsgs.setaProp(33, #handle_error)
   tMsgs.setaProp(34, #handle_status)
   tMsgs.setaProp(41, #handle_flat_letin)
-  tMsgs.setaProp(45, #handle_items)
   tMsgs.setaProp(42, #handle_room_rights)
   tMsgs.setaProp(43, #handle_room_rights)
+  tMsgs.setaProp(45, #handle_items)
   tMsgs.setaProp(46, #handle_flatproperty)
   tMsgs.setaProp(47, #handle_room_rights)
   tMsgs.setaProp(48, #handle_idata)
@@ -1129,6 +1212,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(370, #handle_roomevent_info)
   tMsgs.setaProp(419, #handle_ignore_user_result)
   tMsgs.setaProp(420, #handle_ignore_list)
+  tMsgs.setaProp(999, #handle_furni_expired)
   tCmds = [:]
   tCmds.setaProp(#room_directory, 2)
   tCmds.setaProp("GETDOORFLAT", 28)
@@ -1203,6 +1287,7 @@ on regMsgList me, tBool
   tCmds.setaProp("EDIT_ROOMEVENT", 348)
   tCmds.setaProp("GET_ROOMEVENT_TYPE_COUNT", 349)
   tCmds.setaProp("GET_ROOMEVENTS_BY_TYPE", 350)
+  tCmds.setaProp("SET_AVATAR_EFFECT", 372)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

@@ -164,10 +164,21 @@ on unregisterCommands me, tID, tObjID, tCmdList
 end
 
 on registerLastMessage me, tmessageId, tMessage
+  if voidp(pLastMessageData) then
+    pLastMessageData = [:]
+  end if
   pLastMessageData[#id] = tmessageId
   pLastMessageData[#message] = tMessage
+  pLastMessageData[#isParsed] = 0
+end
+
+on lastMessageParsed me
+  if voidp(pLastMessageData) then
+    return 0
+  end if
+  pLastMessageData[#isParsed] = 0
 end
 
 on getLastMessageData me
-  return pLastMessageData[#id]
+  return pLastMessageData
 end

@@ -82,6 +82,10 @@ on defineBalloon me, tMode, tColor, tUserName, tMessage, tItemID, tUserImg, tUse
     createMember(pUserMemName, #bitmap)
   end if
   pItemId = tItemID
+  tMaxChars = 150
+  if tMessage.length > tMaxChars then
+    tMessage = chars(tMessage, 0, tMaxChars)
+  end if
   tTextImg = me.renderText(tUserName, tMessage, tMode)
   tTextWidth = tTextImg.width
   if ilk(tUserImg) = #image then

@@ -54,6 +54,7 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   me.pAnimating = 0
   me.pModState = 0
   me.pSleeping = 0
+  me.pFx = 0
   pSwim = 0
   pSwimAndStay = 0
   repeat with i = 1 to me.pExtraObjsActive.count
@@ -325,4 +326,8 @@ on action_mv me, tProps
   me.pStartLScreen = me.pGeometry.getScreenCoordinate(me.pLocX, me.pLocY, me.pLocH)
   me.pDestLScreen = me.pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
   me.pMoveStart = the milliSeconds
+end
+
+on action_fx me, tProps
+  return 1
 end

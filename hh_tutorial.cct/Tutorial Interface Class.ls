@@ -4,7 +4,7 @@ on construct me
   me.pMenuID = #tutorial_menu
   me.pWriterPlain = "tutorial_writer_plain"
   me.pFrameCount = 0
-  me.pTutor = createObject(getUniqueID(), "Tutor Character Class")
+  me.pTutor = createObject("Tutor Character Object", "Tutor Character Class")
   me.pBubbles = []
   me.createExitMenu()
   return 1

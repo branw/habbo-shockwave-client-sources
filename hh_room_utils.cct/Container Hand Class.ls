@@ -14,6 +14,7 @@ on construct me
   pIconPlaceholderName = "icon_placeholder"
   registerMessage(#roomReady, me.getID(), #checkContainerOnRoomForward)
   registerMessage(#requestContainerOpen, me.getID(), #showContainerItems)
+  registerMessage(#furniture_expired, me.getID(), #expireStripItem)
   return 1
 end
 
@@ -25,6 +26,7 @@ on deconstruct me
   end repeat
   unregisterMessage(#roomReady, me.getID())
   unregisterMessage(#requestContainerOpen, me.getID())
+  unregisterMessage(#furniture_expired, me.getID())
   removeWindow(pHandButtonsWnd)
   removeUpdate(me.getID())
   if visualizerExists(pHandVisID) then
@@ -227,6 +229,31 @@ end
 
 on removeStripItem me, tID
   return pItemList.deleteProp(tID)
+end
+
+on expireStripItem me, tObjID
+  tObjID = string(tObjID)
+  if not listp(pItemList) then
+    return 0
+  end if
+  tItemList = pItemList.duplicate()
+  repeat with tNo = 1 to tItemList.count
+    tItem = tItemList[tNo]
+    if tItem[#id] = tObjID then
+      tCloudEffect = createObject(#random, "Cloud Animation Effect Class")
+      if tCloudEffect <> 0 then
+        if visualizerExists(pHandVisID) then
+          tHand = getVisualizer(pHandVisID)
+          tHandSpr = tHand.getSprById("room_hand")
+          tLocZOffset = 500
+          tCloudEffect.defineWithSprite(tHandSpr, #large, point(-tHandSpr.width / 4, tHandSpr.height), tLocZOffset)
+        end if
+      end if
+      me.removeStripItem(tItem[#stripId])
+      me.Refresh()
+      exit repeat
+    end if
+  end repeat
 end
 
 on getStripItem me, tID
@@ -563,6 +590,27 @@ on setHandButtonsVisible me, tVisible
     if not createWindow(pHandButtonsWnd, "habbo_hand_buttons.window") then
       return 0
     end if
+    tWndObj = getWindow(pHandButtonsWnd)
+    if tWndObj = 0 then
+      return 0
+    end if
+    tWndObj.moveZ(-999)
+    tWndObj.lock()
+    tElem1 = tWndObj.getElement("habbo_hand_next")
+    if tElem1 = 0 then
+      return 0
+    end if
+    tElem2 = tWndObj.getElement("habbo_hand_close")
+    if tElem2 = 0 then
+      return 0
+    end if
+    tElem3 = tWndObj.getElement("habbo_hand_prev")
+    if tElem3 = 0 then
+      return 0
+    end if
+    tLocX3 = tElem3.getProperty(#locX)
+    tcenter = tLocX3 + (tElem1.getProperty(#locX) + tElem1.getProperty(#width) - tLocX3) / 2
+    tElem2.moveTo(tcenter - tElem2.getProperty(#width) / 2, tElem2.getProperty(#locY))
   end if
   tWndObj = getWindow(pHandButtonsWnd)
   if not tWndObj.elementExists("habbo_hand_next") or not tWndObj.elementExists("habbo_hand_next") then

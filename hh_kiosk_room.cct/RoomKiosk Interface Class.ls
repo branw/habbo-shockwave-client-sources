@@ -188,11 +188,11 @@ on setPageValues me, tWindowName
         me.updateRadioButton("roomatic_namedisplayed_yes_check", ["roomatic_namedisplayed_no_check"])
       end if
       tDropDown = tWndObj.getElement("roomatic_choosecategory")
-      if not ilk(tDropDown, #instance) then
+      if ilk(tDropDown) <> #instance then
         return error(me, "Unable to retrieve dropdown:" && tDropDown, #setPageValues, #major)
       end if
       tCatProps = getObject(#session).GET("user_flat_cats")
-      if not ilk(tCatProps, #propList) then
+      if ilk(tCatProps) <> #propList then
         return error(me, "Category list was not a property list:" && tCatProps, #setPageValues, #major)
       end if
       tCatTxtItems = []

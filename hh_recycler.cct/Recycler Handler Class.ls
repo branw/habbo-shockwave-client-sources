@@ -1,4 +1,7 @@
+property pPersistentFurniData
+
 on construct me
+  pPersistentFurniData = VOID
   return me.regMsgList(1)
 end
 
@@ -10,6 +13,9 @@ on handle_recycler_configuration me, tMsg
   tConn = tMsg.connection
   if not tConn then
     return 0
+  end if
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
   end if
   tServiceEnabled = tConn.GetIntFrom()
   tQuarantineMinutes = tConn.GetIntFrom()
@@ -23,15 +29,29 @@ on handle_recycler_configuration me, tMsg
     tItem[#type] = tConn.GetIntFrom()
     case tItem[#type] of
       0:
-        tItem[#class] = tConn.GetStrFrom()
-        tItem[#defaultDirection] = tConn.GetIntFrom()
-        tItem[#xDimension] = tConn.GetIntFrom()
-        tItem[#yDimension] = tConn.GetIntFrom()
-        tItem[#partColors] = tConn.GetStrFrom()
-        tItem[#name] = getText("furni_" & tItem[#class] & "_name")
+        tClassID = tConn.GetIntFrom()
+        tFurniProps = pPersistentFurniData.getProps("s", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for furni classid " & tClassID & " type s", #handle_recycler_status, #major)
+          tItem[#class] = EMPTY
+        else
+          tItem[#class] = tFurniProps[#class]
+          tItem[#defaultDirection] = tFurniProps[#defaultDir]
+          tItem[#xDimension] = tFurniProps[#xdim]
+          tItem[#yDimension] = tFurniProps[#ydim]
+          tItem[#partColors] = tFurniProps[#partColors]
+          tItem[#name] = tFurniProps[#localizedName]
+        end if
       1:
-        tItem[#class] = tConn.GetStrFrom()
-        tItem[#name] = getText("wallitem_" & tItem[#class] & "_name")
+        tClassID = tConn.GetIntFrom()
+        tFurniProps = pPersistentFurniData.getProps("i", tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent properties missing for furni classid " & tClassID & " type i", #handle_recycler_status, #major)
+          tItem[#class] = EMPTY
+        else
+          tItem[#class] = tFurniProps[#class]
+          tItem[#name] = tFurniProps[#localizedName]
+        end if
       2:
         tItem[#name] = tConn.GetStrFrom()
     end case
@@ -49,6 +69,9 @@ on handle_recycler_status me, tMsg
   if not tConn then
     return 0
   end if
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   tStatus = tConn.GetIntFrom()
   case tStatus of
     0:
@@ -56,27 +79,46 @@ on handle_recycler_status me, tMsg
     1:
       tStatus = "progress"
       tRewardType = tConn.GetIntFrom()
-      tFurniClass = tConn.GetStrFrom()
+      tClassID = tConn.GetIntFrom()
       tMinutesLeft = tConn.GetIntFrom()
       if tRewardType = 0 then
         tRewardType = #roomItem
+        ttype = "s"
       else
         tRewardType = #wallItem
+        ttype = "i"
       end if
-      me.getComponent().setRewardProps(tRewardType, tFurniClass)
+      tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+      if voidp(tFurniProps) then
+        error(me, "Persistent properties missing for furni classid " & tClassID & " type " & ttype, #handle_recycler_status, #major)
+        tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY]
+      end if
+      tFurniClass = tFurniProps[#class]
+      tFurniName = tFurniProps[#localizedName]
+      me.getComponent().setRewardProps(tRewardType, tFurniClass, tFurniName)
       me.getComponent().setTimeLeftProps(tMinutesLeft)
       tTimeoutTime = (tMinutesLeft + 1) * 60 * 1000
       createTimeout("recycler_status_request", tTimeoutTime, #statusRequestTimeout, me.getID(), VOID, 1)
     2:
       tStatus = "ready"
       tRewardType = tConn.GetIntFrom()
-      tFurniClass = tConn.GetStrFrom()
+      tClassID = tConn.GetIntFrom()
+      tMinutesLeft = tConn.GetIntFrom()
       if tRewardType = 0 then
         tRewardType = #roomItem
+        ttype = "s"
       else
         tRewardType = #wallItem
+        ttype = "i"
       end if
-      me.getComponent().setRewardProps(tRewardType, tFurniClass)
+      tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+      if voidp(tFurniProps) then
+        error(me, "Persistent properties missing for furni classid " & tClassID & " type " & ttype, #handle_recycler_status, #major)
+        tFurniProps = [#class: EMPTY, #localizedName: EMPTY, #localizedDesc: EMPTY]
+      end if
+      tFurniClass = tFurniProps[#class]
+      tFurniName = tFurniProps[#localizedName]
+      me.getComponent().setRewardProps(tRewardType, tFurniClass, tFurniName)
     3:
       tStatus = "timeout"
   end case

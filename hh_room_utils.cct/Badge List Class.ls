@@ -63,7 +63,7 @@ on render me, tBadges, tSelectedBadges, tNewBadges, tActiveBadge
         end if
         tCenteredImage = me.centerImage(tBadgeImage, tTargetRect)
         if tSelectedBadges.getPos(tBadgeID) = 0 then
-          tListImage.copyPixels(tCenteredImage, tTargetRect, tCenteredImage.rect, [#ink: 36])
+          tListImage.copyPixels(tCenteredImage, tTargetRect, tCenteredImage.rect, [#maskImage: tCenteredImage.createMatte()])
         else
           tListImage.copyPixels(tCenteredImage, tTargetRect, tCenteredImage.rect, [#ink: 36, #blend: 15])
         end if
@@ -106,7 +106,7 @@ on renderAchievements me, tAchievements
     tListImage.copyPixels(tBgImage, tbadgerect, tBgImage.rect)
     tBadgeImage = member(getmemnum("badge" && tBadgeID)).image
     tCenteredImage = me.centerImage(tBadgeImage, tbadgerect)
-    tListImage.copyPixels(tCenteredImage, tbadgerect, tCenteredImage.rect, [#ink: 36])
+    tListImage.copyPixels(tCenteredImage, tbadgerect, tCenteredImage.rect, [#maskImage: tCenteredImage.createMatte()])
     tWriter = me.getBoldWriter()
     tNameImage = tWriter.render(getText("badge_name_" & tBadgeID)).duplicate()
     tLeft = tbadgerect[3] + 7

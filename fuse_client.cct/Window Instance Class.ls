@@ -582,6 +582,7 @@ on buildVisual me, tLayout
     tID = tmemberlist.getPropAt(i)
     pMemberList.addProp(tID, tmemberlist[tID])
     pSpriteList.addProp(tID, tSpriteList[tID])
+    tSpriteList[i].locZ = pLocZ + (pSpriteList.count - 1)
   end repeat
   repeat with i = 1 to tElemList.count
     pElemList.addProp(tElemList.getPropAt(i), tElemList[i])

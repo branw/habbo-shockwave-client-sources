@@ -91,17 +91,20 @@ on update me
   end repeat
   tImgArray = []
   tObjStr = EMPTY
+  tCounter = 0
   repeat with i = 1 to pObjList.count
+    tCounter = tCounter + 1
     tObjStr = tObjStr && i & "." && pObjList[i] & RETURN
-    if i >= 100 then
+    if tCounter >= 100 then
       delete char -30003 of tObjStr
-      tImgArray.append(pWriterObj.render(tObjStr))
+      tImgArray.append(pWriterObj.render(tObjStr).duplicate())
       tObjStr = EMPTY
+      tCounter = 0
     end if
   end repeat
   if not (tObjStr = EMPTY) then
     delete char -30003 of tObjStr
-    tImgArray.append(pWriterObj.render(tObjStr))
+    tImgArray.append(pWriterObj.render(tObjStr).duplicate())
   end if
   tTotalHeight = 0
   tMaxWidth = 0

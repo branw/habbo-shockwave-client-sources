@@ -143,8 +143,8 @@ on removeFlagSet me, tSetID
     return 1
   end if
   tFlagSet = pFlagSetIndex.getaProp(tSetID)
-  repeat with tObjectID in tFlagSet
-    me.Remove(tObjectID)
+  repeat with tObjectId in tFlagSet
+    me.Remove(tObjectId)
   end repeat
   pFlagSetIndex.deleteProp(tSetID)
   return 1

@@ -1,4 +1,4 @@
-property pClass, pName, pCustom, pType, pSprList, pLocX, pLocY, pLocH, pLocZ, pXFactor, pWallX, pWallY, pLocalX, pLocalY, pFormatVer, pDirection, pParentWallLocZ
+property pClass, pName, pCustom, pType, pSprList, pLocX, pLocY, pLocH, pLocZ, pXFactor, pWallX, pWallY, pLocalX, pLocalY, pFormatVer, pDirection, pParentWallLocZ, pPersistentFurniData, pExpireTimeStamp
 
 on construct me
   pClass = EMPTY
@@ -17,6 +17,8 @@ on construct me
   pFormatVer = 0
   pDirection = 0
   pParentWallLocZ = VOID
+  pPersistentFurniData = VOID
+  pExpireTimeStamp = -1
   return 1
 end
 
@@ -30,6 +32,9 @@ on deconstruct me
 end
 
 on define me, tProps
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   pClass = tProps[#class]
   pLocX = tProps[#x]
   pLocY = tProps[#y]
@@ -43,16 +48,29 @@ on define me, tProps
   pDirection = tProps[#direction]
   pType = tProps[#type]
   pXFactor = getThread(#room).getInterface().getGeometry().pXFactor
+  pExpireTimeStamp = tProps[#expire]
   case pClass of
     "poster":
       pName = getText("poster_" & pType & "_name", "poster_" & pType & "_name")
       pCustom = getText("poster_" & pType & "_desc", "poster_" & pType & "_desc")
     "post.it.vd", "post.it":
-      pName = getText("wallitem_" & pClass & "_name", "wallitem_" & pClass & "_name")
-      pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
+      tFurniData = pPersistentFurniData.getPropsByClass("i", pClass)
+      if not voidp(tFurniData) then
+        pName = tFurniData[#localizedName]
+        pCustom = tFurniData[#localizedDesc]
+      else
+        pName = EMPTY
+        pCustom = EMPTY
+      end if
     "photo":
-      pName = getText("wallitem_" & pClass & "_name", "wallitem_" & pClass & "_name")
-      pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
+      tFurniData = pPersistentFurniData.getPropsByClass("i", pClass)
+      if not voidp(tFurniData) then
+        pName = pPersistentFurniData.getPropsByClass("i", pClass)[#localizedName]
+        pCustom = pPersistentFurniData.getPropsByClass("i", pClass)[#localizedDesc]
+      else
+        pName = getText("wallitem_photo_name")
+        pCustom = getText("wallitem_photo_desc")
+      end if
   end case
   if me.solveMembers() = 0 then
     return 0
@@ -78,6 +96,7 @@ on getInfo me
   tInfo[#class] = pClass
   tInfo[#custom] = pCustom
   tInfo[#smallmember] = pClass & "_small"
+  tInfo[#expire] = pExpireTimeStamp
   tMemName = pClass && pType & "_small"
   if pClass = "poster" and memberExists(tMemName) then
     tInfo[#image] = member(getmemnum(tMemName)).image

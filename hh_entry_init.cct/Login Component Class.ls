@@ -100,6 +100,12 @@ on initA me
 end
 
 on initB me
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   tUseSSO = 0
   if variableExists("use.sso.ticket") then
     tUseSSO = getVariable("use.sso.ticket")
@@ -119,6 +125,12 @@ on initB me
 end
 
 on sendLogin me, tConnection
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   me.SetDisconnectErrorState("login")
   if voidp(tConnection) then
     tConnection = getConnection(getVariable("connection.info.id"))
@@ -155,6 +167,12 @@ on openConnection me
 end
 
 on connect me
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   tHost = getVariable("connection.info.host")
   tPort = getIntVariable("connection.info.port")
   tConn = getVariable("connection.info.id", #Info)

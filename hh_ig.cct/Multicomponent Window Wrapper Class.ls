@@ -104,6 +104,7 @@ on addOneWindow me, tPartId, tLayout, tSetID, tProps
   if tWndObj = 0 then
     return 0
   end if
+  tWndObj.moveZ(me.pLocZ)
   tWndObj.lock()
   if not pVisible then
     tWndObj.hide()
@@ -309,6 +310,7 @@ on replaceOneWindow me, tPartId, tLayout, tRender
   if tWndObj = 0 then
     return error(me, "New window not found:" && tPartId, #replaceOneWindow)
   end if
+  tWndObj.moveZ(me.pLocZ)
   tWndObj.lock()
   me.addCurrentProceduresOnWindow(tWndObj)
   if not pVisible then

@@ -222,7 +222,9 @@ end
 
 on updateHeadImage me, tTabID, tFigure, tGender
   tHeadImage = me.renderHeadImage(tFigure, tGender)
-  pHeadImages.setaProp(tTabID, tHeadImage)
+  if ilk(pHeadImages) = #propList then
+    pHeadImages.setaProp(tTabID, tHeadImage)
+  end if
   me.renderTabs()
 end
 
@@ -232,7 +234,11 @@ on renderHeadImage me, tFigure, tGender
   end if
   tFigureParser = getObject("Figure_System")
   tPreviewObj = getObject("Figure_Preview")
-  tParsedFigure = tFigureParser.parseFigure(tFigure, tGender, "user")
-  tHeadImage = tPreviewObj.getHumanPartImg(#head, tParsedFigure, 2, "sh")
+  if objectp(tFigureParser) and objectp(tPreviewObj) then
+    tParsedFigure = tFigureParser.parseFigure(tFigure, tGender, "user")
+    tHeadImage = tPreviewObj.getHumanPartImg(#head, tParsedFigure, 2, "sh")
+  else
+    return 0
+  end if
   return tHeadImage
 end

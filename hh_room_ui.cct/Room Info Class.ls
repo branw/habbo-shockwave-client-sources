@@ -54,6 +54,7 @@ on createInfoWindow me
       return 0
     else
       tWndObj = getWindow(pWindowID)
+      tWndObj.moveZ(getIntVariable("window.default.locz") - 110)
       tWndObj.lock()
       tWndObj.registerProcedure(#eventProcInfo, me.getID())
       return tWndObj

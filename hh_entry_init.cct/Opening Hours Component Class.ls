@@ -21,7 +21,7 @@ on getHotelClosingStatus me, tList
   if pHotelClosingStatus = 1 then
     tValue = 1
   end if
-  if ilk(tList, #propList) then
+  if ilk(tList) = #propList then
     tList["retval"] = tValue
     if tValue and tList["showDialog"] then
       me.getInterface().showHotelClosingNotice()
@@ -35,7 +35,7 @@ on getHotelAvailabilityStatus me, tList
   if pHotelClosingStatus = 2 then
     tValue = 0
   end if
-  if ilk(tList, #propList) then
+  if ilk(tList) = #propList then
     tList["retval"] = tValue
   end if
   return tValue
@@ -43,7 +43,7 @@ end
 
 on getHotelClosedDisconnectStatus me, tList
   tValue = pHotelClosedDisconnectStatus
-  if ilk(tList, #propList) then
+  if ilk(tList) = #propList then
     tList["retval"] = tValue
   end if
   return tValue

@@ -294,7 +294,9 @@ on getChatRenderer me, tChatID
   tChatRenderer = pChatRenderers.getaProp(tChatID)
   if voidp(tChatRenderer) then
     tChatRenderer = createObject(#temp, "IM Chat Renderer Class")
-    pChatRenderers.setaProp(tChatID, tChatRenderer)
+    if objectp(tChatRenderer) then
+      pChatRenderers.setaProp(tChatID, tChatRenderer)
+    end if
   end if
   return tChatRenderer
 end
@@ -323,16 +325,31 @@ on updateInterface me
     return 0
   end if
   tChatRenderer = me.getChatRenderer(pActiveChatID)
-  tChatImage = tChatRenderer.getChatImage()
-  tChatOutput = tWnd.getElement("chat.output")
-  tChatOutput.feedImage(tChatImage)
-  tTabImage = pTabsObj.getImage()
-  tTabElement = tWnd.getElement("tabs")
-  tTabElement.feedImage(tTabImage)
-  tTitleElem = tWnd.getElement("tab.title")
-  tName = pNames.getaProp(pActiveChatID)
-  tTitleElem.setText(string(tName))
+  if objectp(tChatRenderer) then
+    tChatImage = tChatRenderer.getChatImage()
+    tChatOutput = tWnd.getElement("chat.output")
+    tChatOutput.feedImage(tChatImage)
+  else
+    return 0
+  end if
+  if objectp(pTabsObj) then
+    tTabImage = pTabsObj.getImage()
+    tTabElement = tWnd.getElement("tabs")
+    tTabElement.feedImage(tTabImage)
+  else
+    return 0
+  end if
+  if ilk(pNames) = #propList then
+    tTitleElem = tWnd.getElement("tab.title")
+    tName = pNames.getaProp(pActiveChatID)
+    tTitleElem.setText(string(tName))
+  else
+    return 0
+  end if
   tFriend = me.getComponent().getFriend(pActiveChatID)
+  if ilk(tFriend) <> #propList then
+    return 0
+  end if
   tCanFollow = tFriend.getaProp(#canfollow)
   if tCanFollow then
     tWnd.getElement("button.follow").show()
@@ -341,7 +358,9 @@ on updateInterface me
   end if
   tFigure = tFriend.getaProp(#figure)
   tGender = tFriend.getaProp(#sex)
-  pTabsObj.updateHeadImage(pActiveChatID, tFigure, tGender)
+  if objectp(pTabsObj) then
+    pTabsObj.updateHeadImage(pActiveChatID, tFigure, tGender)
+  end if
   me.scrollBottom()
 end
 
@@ -378,6 +397,9 @@ end
 
 on scrollBottom me
   tWnd = getWindow(pWindowID)
+  if not objectp(tWnd) then
+    return 0
+  end if
   if not tWnd.elementExists("chat.scroll") then
     return 0
   end if

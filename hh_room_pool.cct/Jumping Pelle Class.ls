@@ -351,7 +351,16 @@ on JumpingExitFrame me
   pSpr.locZ = myLocZ
   if name <> pMyName and pPlayerMode and pScreenUpOrDown = #up then
     pSpr.loc = point(660, 72)
-    pSpr.locZ = 33000
+    tInt = getObject(#room_interface)
+    if tInt <> 0 then
+      tVis = tInt.getRoomVisualizer()
+      if tVis <> 0 then
+        tsprite = tVis.getSprById("cam1")
+        if tsprite <> 0 then
+          pSpr.locZ = tsprite.locZ + 1
+        end if
+      end if
+    end if
     if voidp(pPelleBgImg) then
       pSpr.locH = 1000
     end if

@@ -101,6 +101,9 @@ on define me, tMetrics
 end
 
 on render me, tText, tRect
+  if tText = VOID then
+    tText = EMPTY
+  end if
   pMember.text = tText
   if tRect.ilk = #rect then
     if pMember.width <> tRect.width then

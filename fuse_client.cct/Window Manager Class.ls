@@ -91,7 +91,7 @@ on Remove me, tID
   getObjectManager().Remove(tID)
   me.pItemList.deleteOne(tID)
   if me.pActiveItem = tID then
-    tNextActive = me.pItemList.getLast()
+    tNextActive = VOID
   else
     tNextActive = me.pActiveItem
   end if
@@ -129,22 +129,42 @@ on Activate me, tID
       end if
     end if
   end if
-  if voidp(tID) then
-    tID = me.pItemList.getLast()
-  else
+  if not voidp(tID) then
     if not me.exists(tID) then
       return 0
     end if
+    if me.GET(tID).pLock then
+      tID = VOID
+    end if
+  end if
+  if voidp(tID) then
+    repeat with i = me.pItemList.count down to 1
+      tID = me.pItemList[i]
+      tWndObj = me.GET(tID)
+      if not tWndObj.pLock or tWndObj.getProperty(#modal) then
+        tNextActive = tID
+        exit repeat
+      end if
+    end repeat
   end if
   me.pItemList.deleteOne(tID)
   me.pItemList.append(tID)
   me.pAvailableLocZ = me.pDefaultLocZ
   repeat with tCurrID in me.pItemList
     tWndObj = me.GET(tCurrID)
-    tWndObj.setDeactive()
-    repeat with tSpr in tWndObj.getProperty(#spriteList)
-      tSpr.locZ = me.pAvailableLocZ
-      me.pAvailableLocZ = me.pAvailableLocZ + 1
+    if not tWndObj.pLock then
+      tWndObj.setDeactive()
+    end if
+    tSprList = tWndObj.getProperty(#spriteList)
+    repeat with tSpr in tSprList
+      if not tWndObj.pLock or tID = tCurrID then
+        tSpr.locZ = me.pAvailableLocZ
+        me.pAvailableLocZ = me.pAvailableLocZ + 1
+        next repeat
+      end if
+      if tSpr.locZ >= me.pAvailableLocZ then
+        me.pAvailableLocZ = tSpr.locZ + 1
+      end if
     end repeat
   end repeat
   me.pActiveItem = tID
@@ -225,8 +245,13 @@ on registerWindowEvent me, tTitle, tSprID, tEvent
   pLastEventData[#title] = tTitle
   pLastEventData[#sprite] = tSprID
   pLastEventData[#Event] = tEvent
+  pLastEventData[#time] = the long time
 end
 
 on getLastEvent me
   return pLastEventData[#title] & "-" & pLastEventData[#sprite] & "-" & pLastEventData[#Event]
+end
+
+on getLastEventTime me
+  return pLastEventData[#time]
 end

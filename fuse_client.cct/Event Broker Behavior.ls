@@ -124,7 +124,8 @@ end
 
 on mouseDown me
   if not voidp(pProcList) then
-    getObject(#session).set("client_lastclick", id && "->" && pProcList[#mouseDown][2] && "/" && the long time)
+    getObject(#session).set("client_lastclick", id & "->" & pProcList[#mouseDown][2])
+    getObject(#session).set("client_lastclick_time", the long time)
   end if
   tResult = me.redirectEvent(#mouseDown)
   if tResult then

@@ -1,4 +1,4 @@
-property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetCount, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pExternalSongTimer, pMusicIndexRoom, pMusicIndexEditor, pMusicIndexTop, pTimelineInstanceExternal, pExternalSongID, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId
+property pSoundMachineInstanceList, pTimelineInstance, pJukeboxManager, pSongControllerID, pSelectedSoundSet, pSelectedSoundSetSample, pHooveredSoundSet, pHooveredSoundSetSample, pHooveredSampleReady, pHooveredSoundSetTab, pSampleHorCount, pSampleVerCount, pSoundSetListPage, pSoundSetLimit, pSoundSetList, pSoundSetListPageSize, pSoundSetInventoryList, pTimeLineViewSlotCount, pTimeLineCursorX, pTimeLineCursorY, pTimeLineScrollX, pPlayHeadPosX, pDiskList, pSoundSetCount, pSoundSetInsertLocked, pEditorOpen, pEditFailure, pEditorSongStartTime, pEditorSongPlaying, pEditorSongLength, pEditorSongID, pTimeLineUpdateTimer, pRoomActivityUpdateTimer, pExternalSongTimer, pMusicIndexRoom, pMusicIndexEditor, pMusicIndexTop, pTimelineInstanceExternal, pExternalSongID, pSoundMachineFurniID, pConfirmedAction, pConfirmedActionParameter, pWriterID, pConnectionId, pPersistentFurniData
 
 on construct me
   pSoundMachineInstanceList = [:]
@@ -27,6 +27,7 @@ on construct me
   pTimeLineViewSlotCount = 24
   pSongControllerID = "song controller"
   createObject(pSongControllerID, "Song Controller Class")
+  pPersistenFurniData = VOID
   me.reset(1)
   registerMessage(#sound_machine_selected, me.getID(), #soundMachineSelected)
   registerMessage(#jukebox_selected, me.getID(), #jukeBoxSelected)
@@ -309,7 +310,15 @@ on getTimeStringBasic me, tSeconds
 end
 
 on getSoundSetName me, tID
-  return getText("furni_sound_set_" & tID & "_name")
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  tFurniProps = pPersistentFurniData.getPropsByClass("s", "sound_set_" & tID)
+  if voidp(tFurniProps) then
+    error(me, "Persistent properties missing for furni sound_set_" & tID, #handle_stripinfo, #major)
+    return EMPTY
+  end if
+  return tFurniProps[#localizedName]
 end
 
 on getEditorSongName me

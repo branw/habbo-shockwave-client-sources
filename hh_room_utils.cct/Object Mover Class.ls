@@ -51,13 +51,13 @@ on define me, tClientID, tStripID, tObjType, tProps
   if pSprList.count > 0 then
     error(me, "Sprites hanging in object mover! Clearing them out...", #define, #minor)
     repeat with i = 1 to pSprList.count
-      if ilk(pSprList[i], #sprite) then
+      if ilk(pSprList[i]) = #sprite then
         releaseSprite(pSprList[i].spriteNum)
       end if
     end repeat
     pSprList = []
   end if
-  if ilk(pSmallSpr, #sprite) then
+  if ilk(pSmallSpr) = #sprite then
     releaseSprite(pSmallSpr.spriteNum)
   end if
   pSmallSpr = VOID
@@ -189,7 +189,7 @@ on clear me, tRestart
     releaseSprite(pSprList[i].spriteNum)
   end repeat
   pSprList = []
-  if ilk(pSmallSpr, #sprite) then
+  if ilk(pSmallSpr) = #sprite then
     releaseSprite(pSmallSpr.spriteNum)
   end if
   pSmallSpr = VOID
@@ -412,14 +412,19 @@ on cancelMove me
       tObj.moveTo(tLocX, tLocY, tLocH)
       tObj.removeGhostEffect()
     "placeActive", "placeItem":
+      tComponent = getThread(#room).getComponent()
       if tClickAction = "placeActive" then
-        getThread(#room).getComponent().getComponent().removeActiveObject(pClientID)
+        if tComponent.activeObjectExists(pClientID) then
+          tComponent.removeActiveObject(pClientID)
+        end if
       else
         if tClickAction = "placeItem" then
-          getThread(#room).getComponent().getComponent().removeItemObject(pClientID)
+          if tComponent.itemObjectExists(pClientID) then
+            tComponent.removeItemObject(pClientID)
+          end if
         end if
       end if
-      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
+      tComponent.getRoomConnection().send("GETSTRIP", "update")
   end case
 end
 

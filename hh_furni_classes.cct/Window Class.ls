@@ -9,7 +9,7 @@ end
 
 on define me, tProps
   tReturnValue = callAncestor(#define, [me], tProps)
-  if ilk(me.pSprList, #list) then
+  if ilk(me.pSprList) = #list then
     tDefaultLocZ = getIntVariable("visualizer.default.locz", 0)
     repeat with tSpriteNum = 1 to me.pSprList.count
       me.pSprList[tSpriteNum].locZ = tDefaultLocZ + tSpriteNum - 50000

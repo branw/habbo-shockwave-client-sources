@@ -1,4 +1,4 @@
-property pStateSequenceList, pStateIndex, pState, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pLoczList, pLocShiftList, pNameBase, pInitialized
+property pStateSequenceList, pStateIndex, pState, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pLoczList, pLocShiftList, pNameBase, pPersistentFurniData, pInitialized
 
 on deconstruct me
   pStateSequenceList = []
@@ -19,6 +19,9 @@ on deconstruct me
 end
 
 on define me, tProps
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   pStateSequenceList = []
   pStateIndex = 1
   pState = 1
@@ -87,8 +90,19 @@ on define me, tProps
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
   pInitialized = 0
-  me.pName = getText("wallitem_" & tClass & "_name")
-  me.pCustom = getText("wallitem_" & tClass & "_desc")
+  tFurniData = pPersistentFurniData.getPropsByClass("i", tClass)
+  if voidp(tFurniData) then
+    me.pName = EMPTY
+    me.pCustom = EMPTY
+  else
+    if tClass contains "placeholder" then
+      me.pName = getText("wallitem_item_placeholder_name")
+      me.pCustom = getText("wallitem_item_placeholder_desc")
+    else
+      me.pName = tFurniData[#localizedName]
+      me.pCustom = tFurniData[#localizedDesc]
+    end if
+  end if
   return callAncestor(#define, [me], tProps)
 end
 

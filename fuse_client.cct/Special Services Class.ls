@@ -1,4 +1,4 @@
-property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pUniqueSeed, pDecoder, pProcessList
+property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pUniqueSeed, pProcessList, pSessionHash
 
 on construct me
   pCatchFlag = 0
@@ -10,6 +10,7 @@ on construct me
   pLastCursor = 0
   pUniqueSeed = 0
   pProcessList = []
+  pSessionHash = EMPTY
   if _player <> VOID then
     if _player.traceScript or _movie.traceScript then
       return 0
@@ -17,8 +18,6 @@ on construct me
   end if
   _player.traceScript = 0
   _movie.traceScript = 0
-  pDecoder = createObject(#temp, ["tYy1rX5j7e4PLYJLER"])
-  pDecoder.qe2AkKOGGKDTTnd1Nei("sulake1Unique2Key3Generator")
   return 1
 end
 
@@ -29,7 +28,6 @@ on deconstruct me
   if not voidp(pToolTipMem) then
     removeMember(pToolTipMem.name)
   end if
-  pDecoder = VOID
   return 1
 end
 
@@ -186,24 +184,13 @@ on getUniqueID me
   return "uid:" & pUniqueSeed & ":" & the milliSeconds
 end
 
+on setMachineId me, tString
+  setPref(getVariable("pref.value.id"), tString)
+end
+
 on getMachineID me
   tStoredMachineID = string(getPref(getVariable("pref.value.id")))
-  if tStoredMachineID <> EMPTY then
-    tWhiteList = getVariable("machine.id.white.list")
-    tMachineID = EMPTY
-    repeat with tCharNo = 1 to tStoredMachineID.length
-      tChar = chars(tStoredMachineID, tCharNo, tCharNo)
-      if tWhiteList contains tChar then
-        tMachineID = tMachineID & tChar
-      end if
-    end repeat
-    tMaxLength = getVariable("machine.id.max.length")
-    tMachineID = chars(tMachineID, 1, tMaxLength)
-  else
-    tMachineID = me.generateMachineId()
-    setPref(getVariable("pref.value.id"), "#" & tMachineID)
-  end if
-  return tMachineID
+  return tStoredMachineID
 end
 
 on getMoviePath me
@@ -419,7 +406,14 @@ on generateMachineId_ me, tMaxLength
 end
 
 on setExtVarPath me, tURL
+  if tURL contains "hash=" then
+    pSessionHash = chars(tURL, offset("hash=", tURL) + 5, tURL.length)
+  end if
   return setVariable("system.v2", obfuscate(tURL))
+end
+
+on getSessionHash me
+  return pSessionHash
 end
 
 on prepareToolTip me
@@ -464,6 +458,9 @@ end
 on getClientUpTime me
   tTimeNow = the long time
   tDateNow = the date
+  if not objectExists(#session) then
+    return 0
+  end if
   tTimeStart = getObject(#session).GET("client_starttime")
   tDateStart = getObject(#session).GET("client_startdate")
   tSeconds = 0
@@ -506,4 +503,8 @@ on getDelimiter me, a_string
     end if
   end repeat
   return ":"
+end
+
+on handlers me
+  return []
 end

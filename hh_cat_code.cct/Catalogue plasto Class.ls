@@ -74,6 +74,23 @@ on renderSmallIcons me, tstate, tPram
     #hilite, #unhilite:
       tFirst = tPram
       tLast = tPram
+    #furniLoaded:
+      if voidp(pPageData) then
+        return 
+      end if
+      tFurniName = tPram
+      tFirst = pPageData.count
+      tLast = 1
+      repeat with i = 1 to pPageData.count
+        if pPageData.getPropAt(i) contains tFurniName then
+          if tFirst > i then
+            tFirst = i
+          end if
+          if tLast < i then
+            tLast = i
+          end if
+        end if
+      end repeat
   end case
   return error(me, "unsupported mode", #ShowSmallIcons, #minor)
   if voidp(tFirst) or voidp(tLast) then
@@ -95,7 +112,7 @@ on renderSmallIcons me, tstate, tPram
               pSmallImg.copyPixels(tBgImage, tBgImage.rect, pSmallImg.rect)
             end if
           end if
-          tTempSmallImg = member(tmember).image
+          tTempSmallImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, EMPTY, pPageData.getPropAt(f))
           tdestrect = pSmallImg.rect - tTempSmallImg.rect
           tMargins = rect(0, 0, 0, 0)
           tdestrect = rect(tdestrect.width / 2, tdestrect.height / 2, tTempSmallImg.width + tdestrect.width / 2, tdestrect.height / 2 + tTempSmallImg.height) + tMargins

@@ -25,6 +25,7 @@ on parseActiveObject me, tConn
   tRuntimeData = tConn.GetStrFrom()
   tExtra = tConn.GetIntFrom()
   tStuffData = tConn.GetStrFrom()
+  tExpireTime = tConn.GetIntFrom()
   if tObj[#colors] = EMPTY then
     tObj[#colors] = "0"
   end if

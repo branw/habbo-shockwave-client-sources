@@ -1,7 +1,7 @@
 property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pLastContent, pContentChunk, pCommandsPntr, pListenersPntr, pBinDataCallback, pLogMode, pLogfield, pUnicodeDirector
 
 on construct me
-  if value(_player.productVersion) >= 11 then
+  if value(chars(_player.productVersion, 1, 2)) >= 11 then
     pUnicodeDirector = 1
   else
     pUnicodeDirector = 0
@@ -56,6 +56,12 @@ on connectionReady me
 end
 
 on send me, tMsg
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if pConnectionOk and objectp(pXtra) then
     if pLogMode > 0 then
       me.log("<--" && tMsg)
@@ -78,6 +84,12 @@ on send me, tMsg
 end
 
 on sendBinary me, tObject
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if pConnectionOk and objectp(pXtra) then
     return pXtra.sendNetMessage("*", "BINDATA", tObject)
   end if
@@ -154,6 +166,12 @@ on setLogMode me, tMode
 end
 
 on xtraMsgHandler me
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if pConnectionShouldBeKilled <> 0 then
     return 0
   end if
@@ -192,6 +210,12 @@ on xtraMsgHandler me
 end
 
 on forwardMsg me, tMessage
+  if the traceScript then
+    return 0
+  end if
+  the traceScript = 0
+  _movie.traceScript = 0
+  _player.traceScript = 0
   if pConnectionShouldBeKilled = 1 then
     return 0
   end if
@@ -228,12 +252,4 @@ on log me, tMsg
   if not (the runMode contains "Author") then
     return 1
   end if
-  case pLogMode of
-    1:
-      put "[Connection" && me.getID() & "] :" && tMsg
-    2:
-      if ilk(pLogfield, #member) then
-        put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
-      end if
-  end case
 end

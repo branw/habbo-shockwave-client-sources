@@ -15,7 +15,6 @@ on construct me
   if variableExists("disable.roomevents") then
     pDisableRoomevents = getIntVariable("disable.roomevents")
   end if
-  registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateFriendListIcon, me.getID(), #updateFriendListIcon)
   registerMessage(#soundSettingChanged, me.getID(), #updateSoundButton)
@@ -28,8 +27,6 @@ on deconstruct me
   if timeoutExists(pTypingTimeoutName) then
     removeTimeout(pTypingTimeoutName)
   end if
-  getThread(#room).getComponent().removeIconBarManager()
-  unregisterMessage(#notify, me.getID())
   unregisterMessage(#updateMessageCount, me.getID())
   unregisterMessage(#updateFriendListIcon, me.getID())
   unregisterMessage(#soundSettingChanged, me.getID())
@@ -41,6 +38,9 @@ end
 on showRoomBar me, tLayout
   if not windowExists(pBottomBarId) then
     createWindow(pBottomBarId, "empty.window", 0, 487)
+  end if
+  if not threadExists(#room) then
+    return 0
   end if
   tManager = getThread(#room).getComponent().getIconBarManager()
   tManager.define(pBottomBarId)
@@ -60,6 +60,8 @@ on showRoomBar me, tLayout
   if not tWndObj.merge(tLayout) then
     return 0
   end if
+  tWndObj.moveZ(getIntVariable("window.default.locz") - 100)
+  tWndObj.lock()
   if pDisableRoomevents then
     tEventsIcon = tWndObj.getElement("int_event_image")
     tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
@@ -121,6 +123,9 @@ on setSpeechDropdown me, tMode
 end
 
 on setRollOverInfo me, tInfo
+  if tInfo = VOID then
+    return 0
+  end if
   tWndObj = getWindow(pBottomBarId)
   if tWndObj = 0 then
     return 0

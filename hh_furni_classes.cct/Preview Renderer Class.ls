@@ -77,7 +77,7 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
       return member(getmemnum("no_icon_small")).image
     end if
     tColor = me.getSmallsColor(tMemStr, tColorList)
-    if tColor = 0 then
+    if tColor = 0 or tColor = EMPTY then
       return member(getmemnum(tMemStr)).image
     end if
     return me.applyDarkenColor(member(getmemnum(tMemStr)).image, tColor)

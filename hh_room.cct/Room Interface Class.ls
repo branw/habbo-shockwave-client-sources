@@ -1,20 +1,19 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pInfoStandId, pIgnoreListID, pWideScreenOffset
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pDoorBellID, pPreviewObjID, pRoomSpaceId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pSwapAnimations, pTradeTimeout, pRoomGuiID, pIgnoreListID, pRespectMgrID, pWideScreenOffset
 
 on construct me
-  pInfoConnID = getVariable("connection.info.id")
-  pRoomConnID = getVariable("connection.room.id")
+  pInfoConnID = getVariable("connection.info.id", #Info)
+  pRoomConnID = getVariable("connection.room.id", #Info)
   pObjMoverID = "Room_obj_mover"
   pHiliterId = "Room_hiliter"
   pGeometryId = "Room_geometry"
   pContainerID = "Room_container"
   pSafeTraderID = "Room_safe_trader"
   pArrowObjID = "Room_arrow_hilite"
-  pBadgeObjID = "Room_badge"
   pDoorBellID = "Room_doorbell"
   pPreviewObjID = "Preview_renderer"
-  pInfoStandId = "Room_info_stand"
   pIgnoreListID = "Room_ignore_list"
   pRoomGuiID = "Room_gui_program"
+  pRespectMgrID = "Room_respect_manager"
   pRoomSpaceId = "Room_visualizer"
   pInterfaceId = "Room_interface"
   pDelConfirmID = getText("win_delete_item", "Delete item?")
@@ -38,25 +37,32 @@ on construct me
   createObject(pSafeTraderID, "Safe Trader Class")
   createObject(pArrowObjID, "Select Arrow Class")
   createObject(pObjMoverID, "Object Mover Class")
-  createObject(pBadgeObjID, "Badge Manager Class")
   createObject(pPreviewObjID, "Preview Renderer Class")
   createObject(pDoorBellID, "Doorbell Class")
   createObject(pRoomGuiID, "Room GUI Class")
-  createObject(pInfoStandId, "Info Stand Class")
   createObject(pIgnoreListID, "Ignore List Class")
+  createObject(pRespectMgrID, "Respect Manager Class")
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
+  registerMessage(#notify, me.getID(), #notify)
   registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   me.updateScreenOffset()
   return 1
 end
 
 on deconstruct me
+  unregisterMessage(#objectFinalized, me.getID())
+  unregisterMessage(#notify, me.getID())
   pClickAction = #null
-  removeObject(pBadgeObjID)
+  removeObject(pGeometryId)
+  removeObject(pContainerID)
+  removeObject(pSafeTraderID)
+  removeObject(pArrowObjID)
+  removeObject(pObjMoverID)
+  removeObject(pPreviewObjID)
   removeObject(pDoorBellID)
-  removeObject(pInfoStandId)
   removeObject(pIgnoreListID)
   removeObject(pRoomGuiID)
+  removeObject(pRespectMgrID)
   return me.hideAll()
 end
 
@@ -415,7 +421,7 @@ on showTrashCover me, tlocz, tColor
     if not integerp(tlocz) then
       tlocz = 0
     end if
-    if not ilk(tColor, #color) then
+    if ilk(tColor) <> #color then
       tColor = rgb(0, 0, 0)
     end if
     pCoverSpr = sprite(reserveSprite(me.getID()))
@@ -462,9 +468,6 @@ on hideAll me
   if objectExists(#photo_interface) then
     getObject(#photo_interface).close()
   end if
-  if objectExists(pInfoStandId) then
-    getObject(pInfoStandId).hideInfoStand()
-  end if
   if objectExists(pRoomGuiID) then
     getObject(pRoomGuiID).hideInfoStand()
   end if
@@ -505,7 +508,15 @@ on getArrowHiliter me
 end
 
 on getBadgeObject me
-  return getObject(pBadgeObjID)
+  tGUI = me.getGUIObject()
+  if tGUI = 0 then
+    return 0
+  end if
+  return tGUI.getBadgeObject()
+end
+
+on getGUIObject me
+  return getObject(pRoomGuiID)
 end
 
 on getIgnoreListObject me

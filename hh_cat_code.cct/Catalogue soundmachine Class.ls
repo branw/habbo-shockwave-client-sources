@@ -75,6 +75,9 @@ on soundDownloadCompleted me, tPreviewPackage
   tThread = getThread(#catalogue)
   tCatInterface = tThread.getInterface()
   tSelectedProduct = tCatInterface.getSelectedProduct()
+  if voidp(tSelectedProduct) then
+    return 0
+  end if
   tDelim = the itemDelimiter
   the itemDelimiter = "_"
   tSelectedProductPreviewNo = tSelectedProduct[#class].item[3]

@@ -101,7 +101,7 @@ on handleRoomListClicked me, tParm
     return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeCount = tNodeList.count
-  if not ilk(tParm, #point) or tNodeCount = 0 then
+  if ilk(tParm) <> #point or tNodeCount = 0 then
     return 0
   end if
   tClickedLine = integer(tParm.locV / me.pListItemHeight) + 1
@@ -190,8 +190,12 @@ on modifyPrivateRoom me, tFlatInfo
 end
 
 on setModifyFirstPage me
-  tFlatInfo = pModifyFlatInfo
   me.ChangeWindowView("nav_gr_mod")
+  return me.populateModifyFirstPage()
+end
+
+on populateModifyFirstPage me
+  tFlatInfo = pModifyFlatInfo
   tWndObj = getWindow(me.pWindowTitle)
   tTempProps = [#name: "nav_modify_roomnamefield", #description: "nav_modify_roomdescription_field"]
   repeat with f = 1 to tTempProps.count
@@ -220,8 +224,13 @@ on setModifyFirstPage me
 end
 
 on setModifySecondPage me
-  tFlatInfo = pModifyFlatInfo
   me.ChangeWindowView("nav_gr_mod_b")
+  return me.populateModifySecondPage()
+end
+
+on populateModifySecondPage me
+  tFlatInfo = pModifyFlatInfo
+  pFlatPasswords = [:]
   tWndObj = getWindow(me.pWindowTitle)
   case tFlatInfo[#door] of
     "open":
@@ -269,9 +278,14 @@ end
 on hidePasswordFields me, tHidden
   tPassWordElements = ["nav_modify_door_pw", "nav_modify_door_pw2", "nav_pwfields", "nav_pwdescr"]
   tWndObj = getWindow(me.pWindowTitle)
+  if tWndObj = 0 then
+    return 0
+  end if
   repeat with tElemID in tPassWordElements
     tElem = tWndObj.getElement(tElemID)
-    tElem.setProperty(#visible, not tHidden)
+    if tElem <> 0 then
+      tElem.setProperty(#visible, not tHidden)
+    end if
   end repeat
 end
 
@@ -331,11 +345,11 @@ on prepareCategoryDropMenu me, tNodeId
   end if
   tDefaultCatId = me.getComponent().getNodeProperty(tNodeId, #parentid)
   tDropDown = tWndObj.getElement("nav_choosecategory")
-  if not ilk(tDropDown, #instance) then
+  if ilk(tDropDown) <> #instance then
     return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu, #major)
   end if
   tCatProps = getObject(#session).GET("user_flat_cats")
-  if not ilk(tCatProps, #propList) then
+  if ilk(tCatProps) <> #propList then
     return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu, #major)
   end if
   tCatTxtItems = []

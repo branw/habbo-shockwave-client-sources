@@ -1,4 +1,4 @@
-property pBody, pPart, pDirection, pAction, pXFix, pYFix, pLastLocFix, pLayerPropList, pAnimation, pAnimFrame, pTotalFrame, pAnimList, pFlipPart, pMemNumCache
+property pBody, pPart, pDirection, pAction, pXFix, pYFix, pLastLocFix, pLayerPropList, pAnimation, pAnimFrame, pTotalFrame, pFrameSkipCounter, pFrameSkipTotal, pAnimList, pFlipPart, pMemNumCache
 
 on construct me
   pMemNumCache = [:]
@@ -19,11 +19,11 @@ on resetMemberCache me
   end repeat
 end
 
-on define me, tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart
+on define me, tPart, tmodel, tColor, tDirection, tAction, tBody, tFlipPart, tInk
   pBody = tBody
   pPart = tPart
   me.setModel(tmodel)
-  me.defineInk()
+  me.defineInk(tInk)
   me.setColor(tColor)
   pDirection = tDirection
   pAction = tAction
@@ -72,7 +72,8 @@ on update me, tForcedUpdate, tRectMod
     tFlipHOld = tdata["flipH"]
     if pBody.pAnimating then
       tMemString = me.animate(i)
-    else
+    end if
+    if tMemString = VOID or tMemString = EMPTY then
       if pDirection = tdir then
         tdata["flipH"] = 0
       else
@@ -136,7 +137,15 @@ on update me, tForcedUpdate, tRectMod
     if tdata["cacheImage"] <> 0 then
       pBody.pBuffer.copyPixels(tdata["cacheImage"], tDrawArea, tdata["cacheImage"].rect, tDrawProps)
     end if
+    tMemString = VOID
   end repeat
+  if integerp(pFrameSkipTotal) then
+    if pFrameSkipCounter < pFrameSkipTotal - 1 then
+      pFrameSkipCounter = pFrameSkipCounter + 1
+      return 
+    end if
+    pFrameSkipCounter = 0
+  end if
   if pBody.pAnimating then
     pAnimFrame = pAnimFrame + 1
     if pAnimFrame > pTotalFrame then
@@ -171,6 +180,13 @@ end
 
 on defineAct me, tAct, tTargetPartList
   pAction = tAct
+end
+
+on defineBlend me, tBlend
+  repeat with i = 1 to pLayerPropList.count
+    tDrawProps = pLayerPropList[i]["drawProps"]
+    tDrawProps[#blend] = tBlend
+  end repeat
 end
 
 on defineInk me, tInk
@@ -353,11 +369,16 @@ on changePartData me, tmodel, tColor
 end
 
 on setAnimation me, tPart, tAnim
-  if tPart <> pPart then
+  if tPart <> pPart and tPart <> "all" then
     return 
   end if
   pAnimation = value(tAnim)
-  pTotalFrame = pAnimation[1].count
+  if pAnimation.findPos(#frm) = 0 then
+    pTotalFrame = 1
+  else
+    pTotalFrame = pAnimation.getaProp(#frm).count
+  end if
+  pFrameSkipTotal = pAnimation.getaProp(#skip)
   pAnimFrame = 1
 end
 
@@ -365,14 +386,50 @@ on remAnimation me
   pAnimation = 0
   pAnimFrame = 1
   pTotalFrame = 1
+  pXFix = 0
+  pYFix = 0
 end
 
 on animateUpdate me
   if ilk(pAnimation) <> #propList then
     return 
   end if
-  pXFix = pAnimation[#OffX][pAnimFrame]
-  pYFix = pAnimation[#OffY][pAnimFrame]
+  if pAnimation.findPos(#randomX) <> VOID then
+    if pAnimFrame > 1 then
+      return 1
+    end if
+    tXFixRandom = random(pBody.pBuffer.width)
+  else
+    tXFixRandom = 0
+  end if
+  tFixes = pAnimation.getaProp(#OffX)
+  if tFixes <> VOID then
+    if tFixes.count < pAnimFrame then
+      pXFix = tFixes[1] + tXFixRandom
+    else
+      pXFix = tFixes[pAnimFrame] + tXFixRandom
+    end if
+  else
+    pXFix = tXFixRandom
+  end if
+  if pAnimation.findPos(#randomY) <> VOID then
+    if pAnimFrame > 1 then
+      return 1
+    end if
+    tYFixRandom = -random(pBody.pBuffer.height)
+  else
+    tYFixRandom = 0
+  end if
+  tFixes = pAnimation.getaProp(#OffY)
+  if tFixes <> VOID then
+    if tFixes.count < pAnimFrame then
+      pYFix = tFixes[1] + tYFixRandom
+    else
+      pYFix = tFixes[pAnimFrame] + tYFixRandom
+    end if
+  else
+    pYFix = tYFixRandom
+  end if
   case pBody.pDirection of
     0:
       pYFix = pYFix + pXFix / 2
@@ -396,7 +453,7 @@ on animateUpdate me
       pXFix = -pXFix
   end case
   if pBody.pPeopleSize = "sh" then
-    tSizeMultiplier = 0.69999999999999996
+    tSizeMultiplier = 0.5
   else
     tSizeMultiplier = 1
   end if
@@ -416,7 +473,16 @@ on animate me, tLayerIndex
   end if
   tdata = pLayerPropList[tLayerIndex]
   tmodel = tdata["model"]
-  tdir = pDirection + pAnimation[#OffD][pAnimFrame]
+  tFixes = pAnimation.getaProp(#OffD)
+  if tFixes <> VOID then
+    if tFixes.count < pAnimFrame then
+      tdir = pDirection + tFixes[1]
+    else
+      tdir = pDirection + tFixes[pAnimFrame]
+    end if
+  else
+    tdir = pDirection
+  end if
   if tdir > 7 then
     tdir = min(tdir - 8, 7)
   else
@@ -424,13 +490,37 @@ on animate me, tLayerIndex
       tdir = max(7 + tdir + 1, 0)
     end if
   end if
-  tPart = pPart
+  if pAnimation.getaProp(#namebase) <> 0 then
+    tPart = pAnimation.getaProp(#namebase)
+  else
+    tPart = pPart
+  end if
+  tActions = pAnimation.getaProp(#act)
+  if tActions = VOID then
+    tAnimAct = pAction
+  else
+    if tActions.count < pAnimFrame then
+      tAnimAct = tActions[1]
+    else
+      tAnimAct = tActions[pAnimFrame]
+    end if
+  end if
+  tFrames = pAnimation.getaProp(#frm)
+  if tFrames <> VOID then
+    if tFrames.count < pAnimFrame then
+      tAnimFrame = tFrames[1]
+    else
+      tAnimFrame = tFrames[pAnimFrame]
+    end if
+  else
+    tAnimFrame = 0
+  end if
   if tdir <> pBody.pFlipList[tdir + 1] then
     tDirOrig = tdir
     tdir = pBody.pFlipList[tdir + 1]
     tdata["flipH"] = 1
     if pFlipPart <> EMPTY then
-      tMemString = pBody.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & tPart & "_" & tmodel & "_" & tDirOrig & "_" & pAnimation[#frm][pAnimFrame]
+      tMemString = pBody.pPeopleSize & "_" & tAnimAct & "_" & tPart & "_" & tmodel & "_" & tDirOrig & "_" & tAnimFrame
       tMemNum = me.getMemNumFast(tMemString)
       if tMemNum > 0 then
         tdir = tDirOrig
@@ -442,7 +532,7 @@ on animate me, tLayerIndex
   else
     tdata["flipH"] = 0
   end if
-  tMemName = pBody.pPeopleSize & "_" & pAnimation[#act][pAnimFrame] & "_" & tPart & "_" & tmodel & "_" & tdir & "_" & pAnimation[#frm][pAnimFrame]
+  tMemName = pBody.pPeopleSize & "_" & tAnimAct & "_" & tPart & "_" & tmodel & "_" & tdir & "_" & tAnimFrame
   return tMemName
 end
 

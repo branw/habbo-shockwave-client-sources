@@ -37,7 +37,6 @@ on deconstruct me
     tAnimation.deconstruct()
   end repeat
   pSwapAnimations = []
-  tManager = getThread(#room).getComponent().removeIconBarManager()
   return me.hideAll()
 end
 
@@ -126,7 +125,14 @@ on showEntryBar me
     tEventsIcon.setProperty(#member, getMember("event_icon_disabled"))
   end if
   me.updateIMIcon()
-  tManager = getThread(#room).getComponent().getIconBarManager()
+  tComponent = getObject(#room_component)
+  if tComponent = 0 then
+    return 0
+  end if
+  tManager = tComponent.getIconBarManager()
+  if tManager = 0 then
+    return 0
+  end if
   tManager.define(pBottomBar)
   registerMessage(#updateCreditCount, me.getID(), #updateCreditCount)
   registerMessage(#updateFriendListIcon, me.getID(), #updateFriendListIcon)
@@ -149,7 +155,14 @@ on hideEntrybar me
   if objectExists(pBouncerID) then
     removeObject(pBouncerID)
   end if
-  tManager = getThread(#room).getComponent().getIconBarManager()
+  tComponent = getObject(#room_component)
+  if tComponent = 0 then
+    return 0
+  end if
+  tManager = tComponent.getIconBarManager()
+  if tManager = 0 then
+    return 0
+  end if
   tManager.hideExtensions()
   return 1
 end

@@ -39,7 +39,7 @@ on render me
   tElement = tWrapObjRef.getElement("ig_gamelist", me.getWindowId("list"))
   if tElement <> 0 then
     tImage = me.renderListImage()
-    if ilk(tImage, #image) then
+    if ilk(tImage) = #image then
       tElement.feedImage(tImage)
     end if
   end if

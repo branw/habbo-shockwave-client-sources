@@ -5,7 +5,7 @@ on construct me
   pVisualizerId = "passive_tv_screen"
   pSpecCountId = "spec_count_id"
   pSpecCountTimerId = "spec_count_timer"
-  pWriterBold = "dialog_writer_bold"
+  pWriterBold = "spectator_writer_bold"
   tFontBold = getStructVariable("struct.font.bold")
   tFontBold.setaProp(#color, rgb(240, 240, 240))
   createWriter(pWriterBold, tFontBold)

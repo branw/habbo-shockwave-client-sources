@@ -1,4 +1,4 @@
-property pStateSequenceList, pStateIndex, pState, pStateStringList, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pNameBase, pInitialized
+property pStateSequenceList, pStateIndex, pState, pStateStringList, pLayerDataList, pFrameSequenceNumberList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pPaletteFramesLayers, pIsAnimatingList, pBlendList, pInkList, pNameBase, pInitialized
 
 on deconstruct me
   pStateSequenceList = []
@@ -6,9 +6,11 @@ on deconstruct me
   pState = 1
   pLayerDataList = [:]
   pStateStringList = []
+  pFrameSequenceNumberList = []
   pFrameNumberList = []
   pFrameNumberList2 = []
   pLoopCountList = []
+  pPaletteFramesLayers = []
   pBlendList = []
   pInkList = []
   pLoczList = []
@@ -25,9 +27,11 @@ on define me, tProps
   pState = 1
   pLayerDataList = [:]
   pStateStringList = []
+  pFrameSequenceNumberList = []
   pFrameNumberList = []
   pFrameNumberList2 = []
   pLoopCountList = []
+  pPaletteFramesLayers = []
   pBlendList = []
   pInkList = []
   pLoczList = []
@@ -55,6 +59,19 @@ on define me, tProps
         if voidp(pLayerDataList) then
           pLayerDataList = [:]
         end if
+        repeat with i = pLayerDataList.count down to 1
+          tFullId = string(pLayerDataList.getPropAt(i))
+          tCount = tFullId.length
+          if tCount > 1 then
+            tValue = pLayerDataList[i]
+            pLayerDataList.deleteAt(i)
+            repeat with j = 1 to tCount
+              tID = symbol(tFullId.char[j])
+              pLayerDataList.setaProp(tID, tValue)
+            end repeat
+          end if
+        end repeat
+        pLayerDataList.sort()
         tLayerDataList = [:]
         repeat with i = 1 to pLayerDataList.count
           tProp = string(pLayerDataList.getPropAt(i))
@@ -111,7 +128,7 @@ on select me
   if the doubleClick then
     me.getNextState()
   else
-    getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY])
+    return 0
   end if
   callAncestor(#select, [me])
   return 1
@@ -126,14 +143,26 @@ on update me
     tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
     tIsAnimatingList[tLayer] = pIsAnimatingList[tLayer]
     if not voidp(tFrameList) and tIsAnimatingList[tLayer] then
-      if not voidp(tFrameList[#frames]) then
+      if not voidp(tFrameList[#frames]) or not voidp(tFrameList[#sequences]) then
         tDelay = tFrameList[#delay]
         if voidp(tDelay) or voidp(integer(tDelay)) or tDelay < 1 then
           tDelay = 1
         end if
         if pFrameRepeatList[tLayer] >= tDelay then
           tLoop = 1
-          tFrameCount = tFrameList[#frames].count
+          tFrameCount = 0
+          tSequenceCount = 0
+          if tFrameList.findPos(#frames) > 0 then
+            tFrameCount = tFrameList[#frames].count
+          else
+            tSequences = tFrameList.getaProp(#sequences)
+            if listp(tSequences) then
+              if tSequences.count >= pFrameSequenceNumberList[tLayer] then
+                tFrameCount = tSequences[pFrameSequenceNumberList[tLayer]].count
+                tSequenceCount = tSequences.count
+              end if
+            end if
+          end if
           if tFrameCount > 0 then
             if pFrameNumberList[tLayer] = tFrameCount then
               if pLoopCountList[tLayer] > 0 then
@@ -145,7 +174,12 @@ on update me
               end if
             end if
             if pFrameNumberList[tLayer] < tFrameCount or tLoop then
-              pFrameNumberList[tLayer] = pFrameNumberList[tLayer] mod tFrameCount + 1
+              if tSequenceCount > 0 and pFrameNumberList[tLayer] = tFrameCount then
+                pFrameSequenceNumberList[tLayer] = random(tSequenceCount)
+                pFrameNumberList[tLayer] = 1
+              else
+                pFrameNumberList[tLayer] = pFrameNumberList[tLayer] mod tFrameCount + 1
+              end if
               tRandom = 0
               if not voidp(tFrameList[#random]) then
                 tRandom = 1
@@ -223,6 +257,7 @@ on solveMembers me
       tMemNum = getmemnum(tMemName)
       if tMemNum <> 0 then
         tMembersFound = tMembersFound + 1
+        tOldRect = tSpr.rect
         if tMemNum < 1 then
           tMemNum = abs(tMemNum)
           tSpr.rotation = 180
@@ -230,6 +265,9 @@ on solveMembers me
         else
           tSpr.rotation = 0
           tSpr.skew = 0
+        end if
+        if tOldRect <> tSpr.rect then
+          tUpdateLocation = 1
         end if
         tSpr.castNum = tMemNum
         tSpr.width = member(tMemNum).width
@@ -250,6 +288,12 @@ on solveMembers me
         tSpr.blend = pBlendList[tLayer]
       end if
       me.postProcessLayer(tLayer)
+      if pInitialized then
+        me.animatePaletteForLayer(tLayer, tSpr)
+      end if
+      if tUpdateLocation then
+        me.updateLocation()
+      end if
       next repeat
     end if
     if me.pSprList.count >= tLayer then
@@ -271,6 +315,51 @@ on postProcessLayer me, tLayer
   return 1
 end
 
+on animatePaletteForLayer me, tLayerIndex, tSpr
+  if pLayerDataList.count = 0 then
+    return 1
+  end if
+  tFrameList = me.getFrameList(tLayerIndex)
+  if not (tFrameList.findPos(#paletteFrames) > 0) then
+    return 1
+  end if
+  tFrames = tFrameList.getaProp(#paletteFrames)
+  tPalettes = tFrameList.getaProp(#paletteIndex)
+  tFrame = 0
+  if not voidp(tFrameList) and not voidp(tLayerIndex) then
+    if tFrameList.findPos(#frames) > 0 then
+      tFrameSequence = tFrameList[#frames]
+    else
+      tSequences = tFrameList.getaProp(#sequences)
+      if listp(tSequences) then
+        if tSequences.count >= pFrameSequenceNumberList[tLayerIndex] then
+          tFrameSequence = tSequences[pFrameSequenceNumberList[tLayerIndex]]
+        end if
+      end if
+    end if
+    if not voidp(tFrameSequence) then
+      tFrameNumber = pFrameNumberList2[tLayerIndex]
+      tFrame = tFrameSequence[tFrameNumber]
+      if tFrame < 0 then
+        tFrame = random(abs(tFrame))
+      end if
+    end if
+  end if
+  if tFrameNumber > tPalettes.count then
+    return 0
+  end if
+  if tFrameNumber < 1 then
+    return 0
+  end if
+  tPalette = tPalettes[tFrameNumber]
+  tMemNum = getmemnum(tPalette)
+  if tMemNum = 0 then
+    return 0
+  end if
+  tSpr.member.paletteRef = member(tMemNum)
+  return 1
+end
+
 on getMemberName me, tLayer
   tName = pNameBase
   tLayerIndex = pLayerDataList.findPos(tLayer)
@@ -283,7 +372,16 @@ on getMemberName me, tLayer
   end if
   tFrame = 0
   if not voidp(tFrameList) and not voidp(tLayerIndex) then
-    tFrameSequence = tFrameList[#frames]
+    if tFrameList.findPos(#frames) > 0 then
+      tFrameSequence = tFrameList[#frames]
+    else
+      tSequences = tFrameList.getaProp(#sequences)
+      if listp(tSequences) then
+        if tSequences.count >= pFrameSequenceNumberList[tLayerIndex] then
+          tFrameSequence = tSequences[pFrameSequenceNumberList[tLayerIndex]]
+        end if
+      end if
+    end if
     if not voidp(tFrameSequence) then
       tFrameNumber = pFrameNumberList2[tLayerIndex]
       tFrame = tFrameSequence[tFrameNumber]
@@ -452,7 +550,9 @@ on resetFrameNumbers me
   pIsAnimatingList = []
   pFrameNumberList = []
   pFrameNumberList2 = []
+  pFrameSequenceNumberList = []
   repeat with i = 1 to max(me.pLocShiftList.count, pLayerDataList.count)
+    pFrameSequenceNumberList[i] = 1
     pFrameNumberList[i] = 1
     pFrameNumberList2[i] = 1
     pFrameRepeatList[i] = 1

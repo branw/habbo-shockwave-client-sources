@@ -14,7 +14,7 @@ on createWithContent me, aWindow, atargetRect, aPreferSide
   if not stringp(aWindow) then
     return error(me, "Invalid window content!", #createWithContent, #minor)
   end if
-  if not ilk(atargetRect, #rect) then
+  if not (ilk(atargetRect) = #rect) then
     return error(me, "Invalid target rect!", #createWithContent, #minor)
   end if
   if voidp(aPreferSide) then
@@ -23,7 +23,7 @@ on createWithContent me, aWindow, atargetRect, aPreferSide
   if not (aPreferSide = #right or aPreferSide = #left) then
     error(me, "Invalid side, must be #left or #right", #createWithContent, #minor)
   end if
-  tWindowName = getUniqueID()
+  tWindowName = "Details bubble" && getUniqueID()
   if not createWindow(tWindowName, "details_generic.window") then
     return error(me, "Could not create window", #createWithContent, #minor)
   end if

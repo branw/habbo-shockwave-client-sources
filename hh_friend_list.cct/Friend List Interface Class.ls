@@ -1,7 +1,7 @@
 property pFriendListWindowID, pMaxCategories, pMaxFreeCategories, pWindowDefaultHeight, pViewsList, pCurrentCategoryID, pRemoveConfirmID, pConfirmDeleteFriend, pMinimized, pCategoryHighlBaseID, pHighlightedCategories, pInboxBlinkStep, pInfoPopupId
 
 on construct me
-  pFriendListWindowID = getUniqueID()
+  pFriendListWindowID = "Friend List"
   pRemoveConfirmID = getText("friend_list_confirm_remove")
   pConfirmDeleteFriend = VOID
   pCurrentCategoryID = getVariable("fr.window.default.category.id")

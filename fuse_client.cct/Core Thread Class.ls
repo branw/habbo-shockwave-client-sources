@@ -7,6 +7,7 @@ on construct me
   tSession.set("client_version", getVariable("system.version"))
   tSession.set("client_url", getMoviePath())
   tSession.set("client_lastclick", EMPTY)
+  tSession.set("client_lastclick_time", EMPTY)
   createObject(#headers, getClassVariable("variable.manager.class"))
   createObject(#classes, getClassVariable("variable.manager.class"))
   createObject(#cache, getClassVariable("variable.manager.class"))
@@ -274,7 +275,7 @@ on updateState me, tstate
       if count(tCastList) > 0 then
         tLoadID = startCastLoad(tCastList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
-          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300])
+          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300, #extraTasks: [#handshake1, #handshake2, #login]])
         end if
         return registerCastloadCallback(tLoadID, #assetDownloadCallbacks, me.getID(), tstate)
       else
@@ -304,7 +305,7 @@ on updateState me, tstate
       if count(tNewList) > 0 then
         tLoadID = startCastLoad(tNewList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
-          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300])
+          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300, #extraTasks: [#handshake1, #handshake2, #login]])
         end if
         return registerCastloadCallback(tLoadID, #assetDownloadCallbacks, me.getID(), tstate)
       else

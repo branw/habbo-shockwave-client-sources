@@ -1,7 +1,7 @@
 property pWindowID, pTimeOutID, pActivateID
 
 on construct me
-  pWindowID = getUniqueID()
+  pWindowID = "External Link" && getUniqueID()
   pTimeOutID = getUniqueID()
   pActivateID = getUniqueID()
   registerMessage(#externalLinkClick, me.getID(), #notifyExternalLinkClick)

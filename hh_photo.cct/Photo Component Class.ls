@@ -56,6 +56,10 @@ on binaryDataReceived me, tdata, tID
     pPhotoMember = member(createMember(getUniqueID(), #bitmap))
   end if
   pPhotoMember.media = tdata[#image]
+  if pPhotoMember.type <> #bitmap or pPhotoMember.scriptText <> EMPTY then
+    pPhotoMember.erase()
+    return 0
+  end if
   if tdata[#cs] <> VOID then
     tCheckSumOk = me.countCS(pPhotoMember.image) = tdata[#cs]
   else

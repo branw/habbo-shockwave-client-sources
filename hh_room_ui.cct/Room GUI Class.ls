@@ -1,17 +1,34 @@
-property pRoomBarID, pRoomInfoID, pObjectDispID
+property pRoomBarID, pRoomInfoID, pObjectDispID, pBadgeObjID, pFxInvObjID
 
 on construct me
   pRoomBarID = "RoomBarProgram"
   pRoomInfoID = "RoomInfoProgram"
   pObjectDispID = "ObjectDisplayerProgram"
+  pBadgeObjID = "room.obj.disp.badge.mngr"
+  pFxInvObjID = "room.obj.fx.inventory"
   createObject(pRoomInfoID, "Room Info Class")
   createObject(pRoomBarID, "Room Bar Class")
   createObject(pObjectDispID, "Room Object Displayer Class")
+  createObject(pBadgeObjID, "Badge Manager Class")
+  createObject(pFxInvObjID, "Effect Inventory Class")
   return 1
 end
 
 on deconstruct me
+  removeObject(pRoomInfoID)
+  removeObject(pRoomBarID)
+  removeObject(pObjectDispID)
+  removeObject(pBadgeObjID)
+  removeObject(pFxInvObjID)
   return 1
+end
+
+on getBadgeObject me
+  return getObject(pBadgeObjID)
+end
+
+on getFxInventory me
+  return getObject(pFxInvObjID)
 end
 
 on showRoomBar me, tLayout

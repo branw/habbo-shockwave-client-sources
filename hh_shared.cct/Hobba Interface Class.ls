@@ -105,7 +105,7 @@ on hideModtoolButton me
 end
 
 on hideAlert me
-  if ilk(pAlertSpr, #sprite) then
+  if ilk(pAlertSpr) = #sprite then
     releaseSprite(pAlertSpr.spriteNum)
     pAlertSpr = VOID
   end if
@@ -113,7 +113,7 @@ on hideAlert me
 end
 
 on stopAlert me
-  if ilk(pAlertSpr, #sprite) then
+  if ilk(pAlertSpr) = #sprite then
     pAlertSpr.memberNum = getmemnum("hobba_alert_0")
     removeUpdate(me.getID())
   end if

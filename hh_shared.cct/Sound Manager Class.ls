@@ -11,6 +11,7 @@ on construct me
       pChannelList.add(tObject)
     end if
   end repeat
+  pChannelCount = pChannelList.count
   registerMessage(#set_all_sounds, me.getID(), #setSoundState)
 end
 

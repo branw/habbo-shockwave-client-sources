@@ -1,4 +1,4 @@
-property pClass, pName, pCustom, pSprList, pDirection, pDimensions, pLoczList, pLocShiftList, pPartColors, pAnimFrame, pLocX, pLocY, pLocH, pAltitude, pXFactor, pCorrectLocZ, pSmallMember, pGeometry, pStartloc, pDestLoc, pSlideStartTime, pSlideEndTime, pSlideTimePerTile
+property pClass, pName, pCustom, pSprList, pDirection, pDimensions, pLoczList, pLocShiftList, pPartColors, pAnimFrame, pLocX, pLocY, pLocH, pAltitude, pXFactor, pCorrectLocZ, pSmallMember, pGeometry, pStartloc, pDestLoc, pSlideStartTime, pSlideEndTime, pSlideTimePerTile, pPersistentFurniData, pExpireTimeStamp
 
 on construct me
   pClass = EMPTY
@@ -15,12 +15,21 @@ on construct me
   pLocY = 0
   pLocH = 0
   pAltitude = 0.0
+  pPersistentFurniData = VOID
   pXFactor = getThread(#room).getInterface().getGeometry().pXFactor
-  if pXFactor = 32 then
-    pCorrectLocZ = 0
+  tRoomStruct = getObject(#session).GET("lastroom")
+  if not listp(tRoomStruct) then
+    error(me, "Room struct not saved in #session!", #construct)
+    ttype = #public
   else
-    pCorrectLocZ = 1
+    ttype = tRoomStruct.getaProp(#type)
   end if
+  if ttype = #private then
+    pCorrectLocZ = 1
+  else
+    pCorrectLocZ = 0
+  end if
+  pExpireTimeStamp = -1
   pSlideTimePerTile = 500
   return 1
 end
@@ -48,6 +57,7 @@ on define me, tdata
   pLocX = tdata[#x]
   pLocY = tdata[#y]
   pLocH = pAltitude
+  pExpireTimeStamp = tdata[#expire]
   me.solveColors(tdata[#colors])
   if me.solveMembers() = 0 then
     return 0
@@ -60,10 +70,25 @@ on define me, tdata
 end
 
 on getInfo me
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
   tInfo = [:]
   tInfo[#class] = pClass
-  tInfo[#name] = getText("furni_" & pClass & "_name", "furni_" & pClass & "_name")
-  tInfo[#custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  tFurniData = pPersistentFurniData.getPropsByClass("s", pClass)
+  if not voidp(tFurniData) then
+    tInfo[#name] = pPersistentFurniData.getPropsByClass("s", pClass)[#localizedName]
+    tInfo[#custom] = pPersistentFurniData.getPropsByClass("s", pClass)[#localizedDesc]
+  else
+    if pClass contains "placeholder" then
+      tInfo[#name] = getText("furni_active_placeholder_name")
+      tInfo[#custom] = getText("furni_active_placeholder_desc")
+    else
+      tInfo[#name] = EMPTY
+      tInfo[#custom] = EMPTY
+    end if
+  end if
+  tInfo[#expire] = pExpireTimeStamp
   tInfo[#smallmember] = pSmallMember
   tInfo[#image] = getObject("Preview_renderer").renderPreviewImage(VOID, pPartColors, VOID, pClass)
   return tInfo
@@ -74,7 +99,15 @@ on getLocation me
 end
 
 on getCustom me
-  tCustom = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  tFurniData = pPersistentFurniData.getPropsByClass("s", pClass)
+  if voidp(tFurniData) then
+    tCustom = EMPTY
+  else
+    tCustom = tFurniData[#localizedDesc]
+  end if
   return tCustom
 end
 
@@ -280,6 +313,28 @@ on solveBlend me, tPart, tClass
   return 100
 end
 
+on capturesEvents me, tPart, tClass
+  if voidp(tClass) then
+    tClass = pClass
+  end if
+  if not memberExists(tClass & ".props") then
+    return 1
+  end if
+  tPropList = value(field(getmemnum(tClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, tClass & ".props is not valid!", #capturesEvents, #minor)
+    return 1
+  else
+    if voidp(tPropList[tPart]) then
+      return 1
+    end if
+    if not voidp(tPropList[tPart][#events]) then
+      return tPropList[tPart][#events]
+    end if
+  end if
+  return 1
+end
+
 on solveLocZ me, tPart, tdir, tClass
   if voidp(tClass) then
     tClass = pClass
@@ -416,10 +471,15 @@ on solveMembers me
           return error(me, "Could not reserve sprite for: " && tClass, #solveMembers, #major)
         end if
         pSprList.add(tSpr)
-        setEventBroker(tSpr.spriteNum, me.getID())
-        tSpr.registerProcedure(#eventProcActiveObj, tTargetID, #mouseDown)
-        tSpr.registerProcedure(#eventProcActiveRollOver, tTargetID, #mouseEnter)
-        tSpr.registerProcedure(#eventProcActiveRollOver, tTargetID, #mouseLeave)
+        tCapturesEvents = me.capturesEvents(numToChar(i), tClass)
+        if tCapturesEvents then
+          setEventBroker(tSpr.spriteNum, me.getID())
+          tSpr.registerProcedure(#eventProcActiveObj, tTargetID, #mouseDown)
+          tSpr.registerProcedure(#eventProcActiveRollOver, tTargetID, #mouseEnter)
+          tSpr.registerProcedure(#eventProcActiveRollOver, tTargetID, #mouseLeave)
+        else
+          removeEventBroker(tSpr.spriteNum)
+        end if
       end if
       if pLoczList.count < pSprList.count then
         pLoczList.add([])

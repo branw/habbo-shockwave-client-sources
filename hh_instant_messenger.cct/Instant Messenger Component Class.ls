@@ -100,12 +100,21 @@ on addChat me, tChatID, tDontPlaySound
 end
 
 on updateChat me, tChatID
+  if voidp(tChatID) then
+    return 0
+  end if
   if voidp(pChats.findPos(tChatID)) then
-    return 1
+    return 0
   end if
   tFriend = pFriends.getaProp(tChatID)
+  if ilk(tFriend) <> #propList then
+    return 0
+  end if
   tOnline = tFriend.getaProp(#online)
   tFriendUpdated = me.updateFriend(tChatID)
+  if ilk(tFriendUpdated) <> #propList then
+    return 0
+  end if
   tOnlineUpdated = tFriendUpdated.getaProp(#online)
   if tOnlineUpdated <> tOnline then
     if tOnlineUpdated then

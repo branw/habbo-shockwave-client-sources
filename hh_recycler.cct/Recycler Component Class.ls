@@ -158,15 +158,10 @@ on removeFurniFromGivePool me, tGiveFurniIndex
   end if
 end
 
-on setRewardProps me, tObjectType, tFurniClass
+on setRewardProps me, tObjectType, tFurniClass, tFurniName
   pRewardProps[#objectType] = tObjectType
   pRewardProps[#class] = tFurniClass
-  if tObjectType = #roomItem then
-    tNameLocalizationKey = "furni_" & tFurniClass & "_name"
-  else
-    tNameLocalizationKey = "wallitem_" & tFurniClass & "_name"
-  end if
-  pRewardProps[#name] = getText(tNameLocalizationKey)
+  pRewardProps[#name] = tFurniName
 end
 
 on getRewardProps me, tProp

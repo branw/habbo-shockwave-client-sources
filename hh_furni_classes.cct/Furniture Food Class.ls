@@ -7,7 +7,7 @@ end
 
 on updateStuffdata me, tValue
   tCount = integer(tValue)
-  if not ilk(tCount, #integer) then
+  if ilk(tCount) <> #integer then
     tCount = 0
   end if
   repeat with i = 1 to me.pSprList.count

@@ -37,6 +37,8 @@ on prepare me, tOwnPlayerObj
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcPaalu, me.getID(), #mouseUp)
   tWndObj.moveTo(12, 288)
+  tWndObj.moveZ(1000)
+  tWndObj.lock()
   if windowExists(#modal) then
     getWindow(#modal).getElement("modal").setProperty(#blend, 0)
   else

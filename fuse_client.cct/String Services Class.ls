@@ -4,7 +4,7 @@ on construct me
   pConvList = [:]
   pDigits = "0123456789ABCDEF"
   pUsesUTF8 = VOID
-  if value(_player.productVersion) >= 11 then
+  if value(chars(_player.productVersion, 1, 2)) >= 11 then
     pUnicodeDirector = 1
   else
     pUnicodeDirector = 0
@@ -351,7 +351,7 @@ on decodeUTF8 me, tStr, tForceDecode
       tUnicodeData.add(tValue)
     else
       if tValue > 224 then
-        if i <= tBinData.count + 2 then
+        if i + 2 <= tBinData.count then
           tValue2 = tBinData[i + 1]
           tValue3 = tBinData[i + 2]
           tResVal = (bitAnd(tValue, 15) * 64 + bitAnd(tValue2, 63)) * 64 + bitAnd(tValue3, 63)
@@ -360,7 +360,7 @@ on decodeUTF8 me, tStr, tForceDecode
         i = i + 2
       else
         if tValue > 192 then
-          if i <= tBinData.count + 1 then
+          if i + 1 <= tBinData.count then
             tValue2 = tBinData[i + 1]
             tResVal = bitAnd(tValue, 31) * 64 + bitAnd(tValue2, 63)
             tUnicodeData.add(tResVal)

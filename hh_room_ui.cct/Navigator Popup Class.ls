@@ -1,7 +1,7 @@
 property pPopupWindowID, pVisible, pNodeInfo, pBlend, pTargetElementID
 
 on construct me
-  pPopupWindowID = getUniqueID()
+  pPopupWindowID = "Navigator popup" && getUniqueID()
   pHideTimeoutID = getUniqueID()
   pShowTimeOutID = getUniqueID()
   pVisible = 0

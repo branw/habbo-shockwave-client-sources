@@ -7,8 +7,8 @@ on construct me
   pAllowindexing = 0
 end
 
-on addCallbackListener me, tObjectID, tHandlerName, tCallbackParams
-  tNewListener = [#objectID: tObjectID, #handlerName: tHandlerName, #callbackParams: tCallbackParams]
+on addCallbackListener me, tObjectId, tHandlerName, tCallbackParams
+  tNewListener = [#objectID: tObjectId, #handlerName: tHandlerName, #callbackParams: tCallbackParams]
   pListenerList.add(tNewListener)
 end
 

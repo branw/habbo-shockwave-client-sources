@@ -318,6 +318,9 @@ on setLandscapePreview me, ttype, tChange
   if voidp(tCurrent) then
     tCurrent = 1 - tChange
   end if
+  if pLandscapeProducts.count < 1 then
+    return 0
+  end if
   if ttype = "pattern" then
     tNext = tCurrent + tChange
     if tNext > pLandscapeProducts.count then

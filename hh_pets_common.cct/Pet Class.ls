@@ -42,7 +42,7 @@ on construct me
   end if
   if pXFactor = 32 then
     pMemberNamePrefix = "s_p_"
-    pCorrectLocZ = 0
+    pCorrectLocZ = 1
   else
     pMemberNamePrefix = "p_"
     pCorrectLocZ = 1

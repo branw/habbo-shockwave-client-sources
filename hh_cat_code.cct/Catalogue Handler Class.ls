@@ -1,4 +1,8 @@
+property pPersistentFurniData, pPersistentCatalogData
+
 on construct me
+  pPersistentFurniData = VOID
+  pPersistentCatalogData = VOID
   return me.regMsgList(1)
 end
 
@@ -16,6 +20,16 @@ end
 
 on handle_purchase_nobalance me, tMsg
   me.getComponent().purchaseReady("NOBALANCE", tMsg.getaProp(#content))
+end
+
+on handle_tickets me, tMsg
+  tNum = integer(tMsg.content.line[1].word[1])
+  if not integerp(tNum) then
+    return 0
+  end if
+  getObject(#session).set("user_ph_tickets", tNum)
+  executeMessage(#updateTicketCount, tNum)
+  return 1
 end
 
 on handle_catalogindex me, tMsg
@@ -36,6 +50,12 @@ on handle_catalogindex me, tMsg
 end
 
 on handle_catalogpage me, tMsg
+  if voidp(pPersistentFurniData) then
+    pPersistentFurniData = getThread("dynamicdownloader").getComponent().getPersistentFurniDataObject()
+  end if
+  if voidp(pPersistentCatalogData) then
+    pPersistentCatalogData = me.getComponent().getPersistentCatalogDataObject()
+  end if
   tCount = tMsg.content.line.count
   tDelim = the itemDelimiter
   tList = [:]
@@ -89,34 +109,75 @@ on handle_catalogpage me, tMsg
       "p":
         the itemDelimiter = TAB
         tTemp = [:]
-        tTemp["name"] = tdata.item[1]
-        tTemp["description"] = tdata.item[2]
-        tTemp["price"] = tdata.item[3]
-        tTemp["specialText"] = tdata.item[4]
-        tTemp["objectType"] = tdata.item[5]
-        tTemp["class"] = tdata.item[6]
-        tTemp["direction"] = tdata.item[7]
-        tTemp["dimensions"] = tdata.item[8]
-        tTemp["purchaseCode"] = tdata.item[9]
-        tTemp["partColors"] = tdata.item[10]
-        if tdata.item.count > 10 then
-          tItemCount = tdata.item[11]
-          if tdata.item.count >= 11 + tItemCount * 3 then
-            tDealList = []
-            tDealItem = [:]
-            repeat with i = 0 to tItemCount - 1
-              tDealItem["class"] = tdata.item[11 + i * 3 + 1]
-              tDealItem["count"] = tdata.item[11 + i * 3 + 2]
-              tDealItem["partColors"] = tdata.item[11 + i * 3 + 3]
-              tDealList[i + 1] = tDealItem.duplicate()
-            end repeat
-            tTemp["dealList"] = tDealList
-            if tDealList.count > 1 then
-              tTemp["dealNumber"] = tDealNumber
-              tDealNumber = tDealNumber + 1
-            else
-              tTemp["dealNumber"] = 0
+        tCode = tdata.item[1]
+        tTemp["price"] = tdata.item[2]
+        ttype = tdata.item[3]
+        tClassID = value(tdata.item[4])
+        tTemp["purchaseCode"] = tCode
+        tCatalogProps = pPersistentCatalogData.getProps(tCode)
+        if voidp(tCatalogProps) then
+          error(me, "Persistent catalog data missing for " & tCode, #handle_catalogpage, #major)
+          tTemp["name"] = EMPTY
+        else
+          tTemp["name"] = tCatalogProps[#name]
+          tTemp["description"] = tCatalogProps[#description]
+          tTemp["specialText"] = tCatalogProps[#specialText]
+        end if
+        tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+        if voidp(tFurniProps) then
+          error(me, "Persistent furnidata missing for classid " & tClassID & " type " & ttype, #handle_catalogpage, #major)
+          tTemp["class"] = EMPTY
+        else
+          tTemp["class"] = tFurniProps[#class]
+          tTemp["objectType"] = tFurniProps[#type]
+          tTemp["direction"] = tFurniProps[#defaultDir]
+          tTemp["dimensions"] = tFurniProps[#xdim] & "," & tFurniProps[#ydim]
+          tTemp["partColors"] = tFurniProps[#partColors]
+        end if
+        if tdata.item[4] contains SPACE then
+          tTemp["class"] = tTemp["class"] & chars(tdata.item[4], offset(SPACE, tdata.item[4]), tdata.item[4].length)
+        end if
+        tThisFurniCount = value(tdata.item[5])
+        if tThisFurniCount > 1 or tdata.item.count > 5 then
+          tDealList = []
+          tDealItem = [:]
+          tDealItem["class"] = tTemp["class"]
+          tDealItem["count"] = tThisFurniCount
+          tDealItem["partColors"] = tTemp["partColors"]
+          tDealList[1] = tDealItem.duplicate()
+          tTemp["dealList"] = tDealList
+          tTemp["dealNumber"] = 0
+          tTemp["class"] = EMPTY
+        end if
+        if tdata.item.count > 5 then
+          tTemp["class"] = EMPTY
+          tDealList = []
+          tDealItem = [:]
+          repeat with i = 1 to (tdata.item.count - 5) / 3
+            ttype = tdata.item[5 + (i - 1) * 3 + 1]
+            tClassID = value(tdata.item[5 + (i - 1) * 3 + 2])
+            tFurniProps = pPersistentFurniData.getProps(ttype, tClassID)
+            if voidp(tFurniProps) then
+              error(me, "Persistent furnidata missing for classid " & tClassID & " type " & ttype, #handle_catalogpage, #major)
+              tTemp["class"] = EMPTY
+              next repeat
             end if
+            tDealItem["class"] = tFurniProps[#class]
+            tDealItem["count"] = tdata.item[5 + (i - 1) * 3 + 3]
+            tDealItem["partColors"] = tFurniProps[#partColors]
+            tDealList[i] = tDealItem.duplicate()
+          end repeat
+          if ilk(tTemp["dealList"]) <> #list then
+            tTemp["dealList"] = []
+          end if
+          repeat with i = 1 to tDealList.count
+            tTemp["dealList"].add(tDealList[i])
+          end repeat
+          if tDealList.count > 0 then
+            tTemp["dealNumber"] = tDealNumber
+            tDealNumber = tDealNumber + 1
+          else
+            tTemp["dealNumber"] = 0
           end if
         end if
         tProductList.add(tTemp)
@@ -160,14 +221,16 @@ end
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(6, #handle_purse)
-  tMsgs.setaProp(67, #handle_purchase_ok)
   tMsgs.setaProp(65, #handle_purchase_error)
+  tMsgs.setaProp(67, #handle_purchase_ok)
   tMsgs.setaProp(68, #handle_purchase_nobalance)
+  tMsgs.setaProp(72, #handle_tickets)
+  tMsgs.setaProp(124, #handle_tickets)
   tMsgs.setaProp(126, #handle_catalogindex)
   tMsgs.setaProp(127, #handle_catalogpage)
   tMsgs.setaProp(296, #handle_purchasenotallowed)
   tCmds = [:]
-  tCmds.setaProp("GPRC", 100)
+  tCmds.setaProp("PURCHASE_FROM_CATALOG", 100)
   tCmds.setaProp("GCIX", 101)
   tCmds.setaProp("GCAP", 102)
   if tBool then

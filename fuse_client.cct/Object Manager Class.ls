@@ -291,6 +291,10 @@ on resumeUpdate me
 end
 
 on prepareFrame me
+  the traceScript = 0
+  if (the activeWindow).name <> "stage" then
+    return stopMovie()
+  end if
   call(#prepare, pPrepareList)
   call(#update, pUpdateList)
 end

@@ -60,7 +60,11 @@ on createDetailsBubble me, tTargetRect
   if tDetailsBubble = 0 then
     return 0
   end if
-  tDetailsBubble.createWithContent("friendlist_userinfo.window", tTargetRect, #right)
+  tLayout = "friendlist_userinfo.window"
+  if not pFriendInfo.getaProp(#online) then
+    tLayout = "friendlist_userinfo_offline.window"
+  end if
+  tDetailsBubble.createWithContent(tLayout, tTargetRect, #right)
   tDetailsWindow = tDetailsBubble.getWindowObj()
   if tDetailsWindow = 0 then
     return 0
