@@ -152,7 +152,9 @@ on saveSortedScores me, tdata
     tSortedTeams.addAt(tPos, [#score: tdata[#score], #team_id: tTeamId, #players: tSortedPlayers])
   end repeat
   pScoreData = tSortedTeams
-  tOwnId = getObject(#session).get("user_game_index")
+  if getObject(#session).exists("user_game_index") then
+    tOwnId = getObject(#session).get("user_game_index")
+  end if
   tOwnPlayerWins = 0
   pPlayerData = [:]
   pBestPlayer = [:]

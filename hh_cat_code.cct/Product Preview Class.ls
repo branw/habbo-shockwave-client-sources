@@ -21,7 +21,7 @@ end
 on define me, tdata
   pClass = tdata[#class]
   pName = tdata[#name]
-  pCustom = tdata[#Custom]
+  pCustom = tdata[#custom]
   pDirection = tdata[#direction]
   pDimensions = tdata[#dimensions]
   pObjectType = tdata[#objectType]

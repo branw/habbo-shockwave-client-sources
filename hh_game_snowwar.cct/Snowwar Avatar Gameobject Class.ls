@@ -174,6 +174,9 @@ on executeGameObjectEvent me, tEvent, tdata
       if me.pGameObjectSyncValues[#activity_state] = 1 then
         return 1
       end if
+      if me.pGameObjectSyncValues[#snowball_count] >= getIntVariable("snowwar.snowball.maximum") then
+        return 1
+      end if
       me.pGameObjectSyncValues[#activity_state] = 1
       me.pGameObjectSyncValues[#activity_timer] = getIntVariable("ACTIVITY_TIMER_CREATING", 20)
       me.stopMovement()

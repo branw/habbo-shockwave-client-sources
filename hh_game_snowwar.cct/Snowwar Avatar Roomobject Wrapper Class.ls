@@ -108,7 +108,7 @@ on createRoomObject me, tdata
   else
     tAvatarStruct.setaProp(#h, tdata[#next_tile_z])
   end if
-  tAvatarStruct.setaProp(#Custom, tdata[#mission])
+  tAvatarStruct.setaProp(#custom, tdata[#mission])
   tFigure = tFigureSystemObj.parseFigure(tdata[#figure], tdata[#sex], "user")
   tAvatarStruct.setaProp(#figure, tFigure)
   if not tRoomComponentObj.validateUserObjects(tAvatarStruct) then
@@ -125,6 +125,9 @@ on removeRoomObject me
   end if
   if pRoomIndex = VOID then
     return 0
+  end if
+  if not tRoomComponentObj.userObjectExists(pRoomIndex) then
+    return 1
   end if
   return tRoomComponentObj.removeUserObject(pRoomIndex)
 end

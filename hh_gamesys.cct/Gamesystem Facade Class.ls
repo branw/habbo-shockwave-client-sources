@@ -315,7 +315,7 @@ on GetVelocityTable me
   if pThread = 0 then
     return 0
   end if
-  return pThread.getTurnManager().GetVelocityTable()
+  return pThread.getWorld().getGeometry().GetVelocityTable()
 end
 
 on convertTileToWorldCoordinate me, tX, tY, tZ

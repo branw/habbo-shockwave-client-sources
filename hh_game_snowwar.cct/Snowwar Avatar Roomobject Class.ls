@@ -11,7 +11,9 @@ on construct me
 end
 
 on deconstruct me
-  releaseSprite(pHiliteSpriteNum)
+  if pHiliteSpriteNum > 0 then
+    releaseSprite(pHiliteSpriteNum)
+  end if
   if not objectp(me.ancestor) then
     return 1
   end if
@@ -430,13 +432,13 @@ on setBlendInvincible me
   return 1
 end
 
-on arrangeParts me, tTemp1, tTemp2
+on arrangeParts me
   if me.pPartList = VOID then
     return 0
   end if
   case 1 of
     pAvatarAction[#tag] = "dead":
-      me.arrangeParts_Death(tTemp1, tTemp2)
+      me.arrangeParts_Death()
     me.pMainAction = "pck":
       me.arrangeParts_Pick()
     otherwise:
@@ -536,9 +538,9 @@ on arrangeParts_Death me
   end if
   repeat with tPart in me.pPartList
     if tPart <> tBD and tPart <> tSH then
+      tPart.pTalking = 0
       tPart.pXFix = tFace.locH
       tPart.pYFix = tFace.locV
-      tPart.pMemString = EMPTY
     end if
   end repeat
   me.pChanges = 1

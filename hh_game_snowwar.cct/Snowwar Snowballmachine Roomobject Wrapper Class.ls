@@ -66,5 +66,8 @@ on removeRoomObject me
   if pObjectId = VOID then
     return 0
   end if
+  if not tRoomComponentObj.activeObjectExists(pObjectId) then
+    return 1
+  end if
   return tRoomComponentObj.removeActiveObject(pObjectId)
 end

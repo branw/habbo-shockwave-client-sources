@@ -177,11 +177,9 @@ on handle_msgstruct_fullgamestatus me, tMsg
   tdata.addProp(#game_objects, tGameObjects)
   tGameSystem.getVarMgr().set(#tournament_flag, tConn.GetBoolFrom())
   tGameSystem.sendGameSystemEvent(#set_number_of_teams, tConn.GetIntFrom())
-  tGameSystem.startTurnManager()
   tGameSystem.sendGameSystemEvent(#fullgamestatus_time, tdata[#time])
   tGameSystem.clearTurnBuffer()
   tObjectIdList = []
-  put "* SERVER:" && tdata
   repeat with tGameObject in tdata[#game_objects]
     tObjectIdList.add(string(tGameObject[#id]))
     if tGameSystem.getGameObject(tGameObject[#id]) = 0 then
@@ -192,6 +190,7 @@ on handle_msgstruct_fullgamestatus me, tMsg
   end repeat
   tGameSystem.sendGameSystemEvent(#verify_game_object_id_list, tObjectIdList)
   tGameSystem.sendGameSystemEvent(#update_game_visuals)
+  tGameSystem.startTurnManager()
   return me.parse_gamestatus(tConn)
 end
 
