@@ -273,9 +273,12 @@ on _MinigameTestChecksum me, i_iChecksum
     put "*** TURN" && m_rCurrentTurn.GetNumber() && " - CHECKSUM MISMATCH! server says:" && i_iChecksum & ", we say:" && tMyChecksum && ". Previous turn:" && m_aLastTurnData
     put "Turn was " & m_syncLostTime & " seconds late."
     me.getComponent().dumpChecksumValues()
-    me._ClearCurrentTurn()
     me._ClearTurnBuffer()
-    me.getMessageSender().sendGameEventMessage([#integer: 4])
+    if me.getFacade().getSpectatorModeFlag() then
+      me.getMessageSender().sendRequestFullStatusUpdate()
+    else
+      me.getMessageSender().sendGameEventMessage([#integer: 4])
+    end if
     pWaitingForSync = 1
   end if
   if m_rCurrentTurn <> VOID then

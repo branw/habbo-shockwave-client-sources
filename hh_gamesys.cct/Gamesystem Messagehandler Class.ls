@@ -69,6 +69,7 @@ on regMsgList me, tBool
   tCmds.setaProp("STARTGAME", 170)
   tCmds.setaProp("GAMEEVENT", 171)
   tCmds.setaProp("REJOINGAME", 172)
+  tCmds.setaProp("REQUESTFULLSTATUSUPDATE", 173)
   if tBool then
     registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)

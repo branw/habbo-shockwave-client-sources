@@ -134,7 +134,7 @@ on changeFigureAndData me, tdata
   pChanges = 1
   me.render()
   if me.isInSwimsuit() then
-    me.setPartLists(tdata[#figure])
+    me.setPartLists(tdata[#figure], #preserveAnimation)
   else
     me.reDraw()
   end if
@@ -410,6 +410,12 @@ on openEyes me
   end if
   pEyesClosed = 0
   pChanges = 1
+end
+
+on resumeAnimation me
+  tMemName = pCurrentAnim
+  pCurrentAnim = EMPTY
+  me.startAnimation(tMemName)
 end
 
 on startAnimation me, tMemName
