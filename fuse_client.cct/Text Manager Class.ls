@@ -17,31 +17,36 @@ on dump me, tField, tDelimiter
   if not memberExists(tField) then
     return error(me, "Field member expected:" && tField, #dump, #major)
   end if
-  tStr = field(tField)
+  tRawStr = field(tField)
   tStrServices = getStringServices()
   tSpecialChunks = ["\r": RETURN, "\t": TAB, "\s": SPACE, "<BR>": RETURN]
+  tLineChunks = []
+  tMaxLinesPerChunk = 100
+  tTotalChunkCount = tRawStr.line.count / tMaxLinesPerChunk + 1
+  repeat with tChunk = 1 to tTotalChunkCount
+    tStartChunkIndex = (tChunk - 1) * tMaxLinesPerChunk + 1
+    tEndChunkIndex = tStartChunkIndex + tMaxLinesPerChunk - 1
+    tLines = tRawStr.line[tStartChunkIndex..tEndChunkIndex]
+    tLineChunks[tChunk] = tLines
+  end repeat
   tDelim = the itemDelimiter
-  if voidp(tDelimiter) then
-    tDelimiter = RETURN
-  end if
-  the itemDelimiter = tDelimiter
-  repeat with i = 1 to tStr.item.count
-    tPair = tStr.item[i]
-    if tPair.word[1].char[1] <> "#" and tPair <> EMPTY then
-      the itemDelimiter = "="
-      tProp = tPair.item[1].word[1..tPair.item[1].word.count]
-      tValue = tPair.item[2..tPair.item.count]
-      tValue = tValue.word[1..tValue.word.count]
-      tValue = tStrServices.convertSpecialChars(tValue)
-      repeat with k = 1 to tSpecialChunks.count
-        tMark = tSpecialChunks.getPropAt(k)
-        if tValue contains tMark then
-          tValue = tStrServices.replaceChunks(tValue, tMark, tSpecialChunks[k])
-        end if
-      end repeat
-      me.pItemList[tProp] = tValue
-    end if
-    the itemDelimiter = tDelimiter
+  the itemDelimiter = "="
+  repeat with tStr in tLineChunks
+    repeat with tLineNo = 1 to tStr.line.count
+      tPair = tStr.line[tLineNo]
+      if chars(tPair, 1, 1) <> "#" and tPair <> EMPTY then
+        tProp = tPair.item[1]
+        tValue = tPair.item[2..tPair.item.count]
+        tValue = tStrServices.convertSpecialChars(tValue)
+        repeat with k = 1 to tSpecialChunks.count
+          tMark = tSpecialChunks.getPropAt(k)
+          if tValue contains tMark then
+            tValue = tStrServices.replaceChunks(tValue, tMark, tSpecialChunks[k])
+          end if
+        end repeat
+        me.pItemList[tProp] = tValue
+      end if
+    end repeat
   end repeat
   the itemDelimiter = tDelim
   return 1

@@ -52,7 +52,7 @@ on createBaseWindows me
       createWindow(tID, "obj_disp_base.window", 999, 999)
       tWndObj = getWindow(tID)
       if tIndex = 1 then
-        pBaseLocZ = tWndObj.getProperty(#locZ)
+        pBaseLocZ = tWndObj.getProperty(#locZ) - 1000
       end if
     end if
     tWndObj.hide()
@@ -172,6 +172,9 @@ on clearWindowDisplayList me
     tWndObj.unmerge()
   end repeat
   pWindowList = []
+  if objectExists(pBadgeObjID) then
+    getObject(pBadgeObjID).removeBadgeEffect()
+  end if
 end
 
 on pushWindowToDisplayList me, tWindowID
@@ -202,7 +205,7 @@ on alignWindows me
   repeat with tIndex = pWindowList.count down to 1
     tWindowID = pWindowList[tIndex]
     tWindowObj = getWindow(tWindowID)
-    tWindowObj.moveZ(pBaseLocZ)
+    tWindowObj.moveZ(pBaseLocZ + (tIndex - 1) * 100)
     if tIndex = pWindowList.count then
       tWindowObj.moveTo(tDefLeftPos, tDefBottomPos - tWindowObj.getProperty(#height))
       next repeat
@@ -385,11 +388,11 @@ on eventProc me, tEvent, tSprID, tParam
         end if
         me.clearWindowDisplayList()
         tSelectedObj = EMPTY
-      "room_obj_disp_badge_sel":
+      "room_obj_disp_badge_sel", "room_obj_disp_icon_badge":
         if objectExists(pBadgeObjID) then
           getObject(pBadgeObjID).openBadgeWindow()
         end if
-      "room_obj_disp_home":
+      "room_obj_disp_home", "room_obj_disp_icon_home":
         if variableExists("link.format.userpage") then
           tWebID = tComponent.getUserObject(tSelectedObj).getWebID()
           if not voidp(tWebID) then
@@ -425,7 +428,7 @@ on eventProc me, tEvent, tSprID, tParam
       "room_obj_disp_close":
         pClosed = 1
         me.clearWindowDisplayList()
-      "room_obj_disp_looks":
+      "room_obj_disp_looks", "room_obj_disp_icon_avatar":
         tAllowModify = 1
         if getObject(#session).exists("allow_profile_editing") then
           tAllowModify = getObject(#session).GET("allow_profile_editing")

@@ -262,6 +262,19 @@ on createLinksWindow me, tID, tFormat
       tWindowModel = "obj_disp_links_peer.window"
   end case
   tWndObj = me.initWindow(tID, tWindowModel)
+  if tFormat = #own then
+    tBadgeList = getObject(#session).GET("available_badges")
+    if listp(tBadgeList) then
+      if tBadgeList.count = 0 then
+        tElem = tWndObj.getElement("room_obj_disp_badge_sel")
+        tElem.setProperty(#blend, 20)
+        tElem.setProperty(#cursor, 0)
+        tElem = tWndObj.getElement("room_obj_disp_icon_badge")
+        tElem.setProperty(#blend, 20)
+        tElem.setProperty(#cursor, 0)
+      end if
+    end if
+  end if
   tWndObj.lock()
   return tID
 end

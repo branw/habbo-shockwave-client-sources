@@ -326,7 +326,7 @@ on createBadgeEffect me, tElem
     return 0
   end if
   if createObject("BadgeEffect", "Badge Effect Class") <> 0 then
-    return getObject("BadgeEffect").Init(tElem.getProperty(#rect))
+    return getObject("BadgeEffect").Init(tElem)
   end if
 end
 
