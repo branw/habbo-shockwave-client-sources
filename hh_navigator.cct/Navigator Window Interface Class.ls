@@ -1,4 +1,4 @@
-property pWindowTitle, pOpenWindow, pProps, pGoLinkTextImg, pFullLinkTextImg, pOpenLinkTextImg, pHideFullLinkImages, pResourcesReady, pWriterPrivPlain, pWriterBackTabs, pWriterPlainNormLeft, pWriterPlainBoldLeft, pWriterPlainBoldCent, pWriterUnderNormLeft, pWriterPlainNormWrap, pCatBackImages, pRoomBackImages, pListItemHeight, pHistoryItemHeight, pRoomInfoHeight, pListAreaWidth, pBufferDepth, pLastWindowName
+property pWindowTitle, pOpenWindow, pProps, pGoLinkTextImg, pFullLinkTextImg, pOpenLinkTextImg, pHideFullLinkImages, pResourcesReady, pWriterPrivPlain, pWriterBackTabs, pWriterPlainNormLeft, pWriterPlainBoldLeft, pWriterPlainBoldCent, pWriterUnderNormLeft, pWriterPlainNormWrap, pCatBackImages, pRoomBackImages, pListItemHeight, pHistoryItemHeight, pRoomInfoHeight, pListAreaWidth, pBufferDepth, pLastWindowName, pDefaultPrivateRoomIcon
 
 on construct me
   pWindowTitle = getText("navigator", "Hotel Navigator")
@@ -8,7 +8,24 @@ on construct me
   pListItemHeight = 18
   pHistoryItemHeight = 18
   pBufferDepth = 32
-  pOpenWindow = "nav_pr"
+  pOpenWindow = "nav_gr0"
+  if variableExists("navigator.default.view") then
+    tDefView = getVariable("navigator.default.view")
+    case tDefView of
+      "public":
+        pOpenWindow = "nav_pr"
+      "private":
+        pOpenWindow = "nav_gr0"
+      otherwise:
+        pOpenWindow = "nav_gr0"
+    end case
+  end if
+  pDefaultPrivateRoomIcon = "nav_ico_def_gr"
+  if variableExists("navigator.private.room.default.icon") then
+    if memberExists(getVariable("navigator.private.room.default.icon")) then
+      pDefaultPrivateRoomIcon = getVariable("navigator.private.room.default.icon")
+    end if
+  end if
   pResourcesReady = 0
   pLastWindowName = EMPTY
   return me.createImgResources()
@@ -381,7 +398,7 @@ on showNodeInfo me, tNodeId
         tRoomDesc = getText("nav_ownrooms_helptext")
         tHeaderTxt = getText("nav_private_helptext_hd")
       otherwise:
-        tIconName = "nav_ico_def_gr"
+        tIconName = pDefaultPrivateRoomIcon
         tRoomDesc = getText("nav_private_helptext")
         tHeaderTxt = getText("nav_private_helptext_hd")
     end case
