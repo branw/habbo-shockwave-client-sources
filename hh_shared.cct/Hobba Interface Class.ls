@@ -373,9 +373,11 @@ on redrawCryWindow me
     end if
   end repeat
   if tCategory = 1 or tCategory = 2 then
+    tWndObj.getElement("hobba_header").setProperty(#color, rgb(0, 0, 0))
     tWndObj.getElement("hobba_header").setText(getText("hobba_emergency_help") && tName)
     tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_normal"))
   else
+    tWndObj.getElement("hobba_header").setProperty(#color, rgb(255, 0, 0))
     tWndObj.getElement("hobba_header").setText(getText("hobba_cryforhelp") && tName)
     tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_emergency"))
   end if

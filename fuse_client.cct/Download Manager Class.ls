@@ -1,4 +1,4 @@
-property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pOwnDomain
+property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pOwnDomain, pLastError
 
 on construct me
   pTaskQueue = [:]
@@ -8,6 +8,7 @@ on construct me
   pTypeDefList = [:]
   me.emptyCookies()
   pOwnDomain = getDomainPart(getMoviePath())
+  pLastError = 0
   return 1
 end
 
@@ -236,6 +237,10 @@ on print me
   return 1
 end
 
+on GetLastError me
+  return pLastError
+end
+
 on update me
   call(#update, pActiveTasks)
 end
@@ -273,13 +278,14 @@ end
 on updateQueue me
   if pActiveTasks.count < getIntVariable("net.operation.count") then
     if pTaskQueue.count > 0 then
+      pLastError = 0
       tTaskName = pTaskQueue.getPropAt(1)
       tTaskData = pTaskQueue[tTaskName]
       pTaskQueue.deleteProp(tTaskName)
       if tTaskData[#downloadMethod] = #httpcookie then
-        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("httpcookie.instance.class"))
+        pActiveTasks[tTaskName] = createObject(getUniqueID(), getClassVariable("httpcookie.instance.class"))
       else
-        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("download.instance.class"))
+        pActiveTasks[tTaskName] = createObject(getUniqueID(), getClassVariable("download.instance.class"))
       end if
       pActiveTasks[tTaskName].define(tTaskName, tTaskData)
       receiveUpdate(me.getID())
@@ -297,6 +303,9 @@ on removeActiveTask me, tMemName, tCallback, tSuccess
   end if
   repeat with i = 1 to pActiveTasks.count
     if pActiveTasks[i].pMemName = tMemName then
+      if not tSuccess then
+        pLastError = netError(pActiveTasks[i].pNetId)
+      end if
       pActiveTasks[i].deconstruct()
       pActiveTasks.deleteAt(i)
       pCompleteTasks.add(tMemName)

@@ -1,3 +1,3 @@
-on callJavascript
+on callJavaScript
   -- unk26
 end

@@ -52,7 +52,7 @@ on construct me
   if not objectExists("Oneclick_Buy_Window_Manager") then
     createObject("Oneclick_Buy_Window_Manager", "Game Oneclick Buy Window Manager Class")
   end if
-  pDisconnectErrorState = "socket_init"
+  pDisconnectErrorState = "init_unknown"
   registerMessage(#openConnection, me.getID(), #openConnection)
   registerMessage(#closeConnection, me.getID(), #disconnect)
   registerMessage(#performLogin, me.getID(), #sendLogin)
@@ -108,6 +108,8 @@ on initB me
       if tSsoTicket.length > 1 then
         getObject(#session).set(#SSO_ticket, tSsoTicket)
         return me.openConnection()
+      else
+        return fatalError(["error": "sso_ticket_empty"])
       end if
     end if
   end if
@@ -166,9 +168,6 @@ on connect me
   end if
   if not objectExists(#getServerDate) then
     createObject(#getServerDate, "Server Date Class")
-  end if
-  if not objectExists("nav_problem_obj") then
-    createObject("nav_problem_obj", "Connection Problem Class")
   end if
   if not threadExists(#hobba) then
     initThread("thread.hobba")

@@ -76,7 +76,7 @@ on showObjectInfo me, tObjType
       tElem.feedImage(tProps[#image])
     end if
     me.updateInfoStandBadge(tProps[#badge])
-    me.updateInfoStandGroup(tProps[#groupID])
+    me.updateInfoStandGroup(tProps[#groupid])
     if tObjType = "user" then
       pInfoStandName = tProps[#name]
     else
@@ -167,7 +167,7 @@ on groupLogoDownloaded me, tGroupId
   if tObj = 0 then
     return 0
   end if
-  tUsersGroup = tObj.getProperty(#groupID)
+  tUsersGroup = tObj.getProperty(#groupid)
   if tUsersGroup = tGroupId then
     me.updateInfoStandGroup(tGroupId)
   end if

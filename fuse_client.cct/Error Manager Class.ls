@@ -1,4 +1,4 @@
-property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList, pFatalReported, pFatalReportParamOrder
+property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList, pFatalReported, pFatalReportParamOrder, pClientErrorList, pServerErrorList
 
 on construct me
   if not (the runMode contains "Author") then
@@ -8,13 +8,19 @@ on construct me
   pErrorCache = EMPTY
   pCacheSize = 30
   pFatalReported = 0
+  pClientErrorList = []
+  pServerErrorList = []
   pErrorLevelList = [#minor, #major, #critical]
-  pErrorDialogLevel = getVariable("client.debug.level")
-  if ilk(pErrorDialogLevel) <> #symbol then
+  if not variableExists("client.debug.level") then
     pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
   else
-    if pErrorLevelList.findPos(pErrorDialogLevel) = 0 then
+    pErrorDialogLevel = getVariable("client.debug.level")
+    if ilk(pErrorDialogLevel) <> #symbol then
       pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
+    else
+      if pErrorLevelList.findPos(pErrorDialogLevel) = 0 then
+        pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
+      end if
     end if
   end if
   pFatalReportParamOrder = ["error", "version", "build", "os", "host", "port", "client_version", "mus_errorcode"]
@@ -45,6 +51,8 @@ on error me, tObject, tMsg, tMethod, tErrorLevel
   tError = tError & TAB && "Method: " && tMethod & RETURN
   tError = tError & TAB && "Object: " && tObject & RETURN
   tError = tError & TAB && "Message:" && tMsg.line[1] & RETURN
+  tErrorStr = the long time & "-" & tMethod & "-" & tObject & "-" & tMsg.line[1]
+  pClientErrorList.add(tErrorStr)
   if tMsg.line.count > 1 then
     repeat with i = 2 to tMsg.line.count
       tError = tError & TAB && "        " && tMsg.line[i] & RETURN
@@ -80,6 +88,33 @@ on error me, tObject, tMsg, tMethod, tErrorLevel
   return 0
 end
 
+on serverError me, tErrorList
+  if ilk(tErrorList) = #propList then
+    tErrorStr = tErrorList[#errorId] & "-" & tErrorList[#errorMsgId] & "-" & tErrorList[#time]
+    pServerErrorList.add(tErrorStr)
+  end if
+end
+
+on getClientErrors me
+  tErrorStr = EMPTY
+  repeat with tError in pClientErrorList
+    tErrorStr = tErrorStr & tError & ";"
+  end repeat
+  tMaxLength = 1000
+  tErrorStr = chars(tErrorStr, tErrorStr.length - tMaxLength, tErrorStr.length)
+  return tErrorStr
+end
+
+on getServerErrors me
+  tErrorStr = EMPTY
+  repeat with tError in pServerErrorList
+    tErrorStr = tErrorStr & tError & ";"
+  end repeat
+  tMaxLength = 1000
+  tErrorStr = chars(tErrorStr, tErrorStr.length - tMaxLength, tErrorStr.length)
+  return tErrorStr
+end
+
 on SystemAlert me, tObject, tMsg, tMethod
   return me.error(tObject, tMsg, tMethod)
 end
@@ -99,7 +134,6 @@ end
 
 on fatalError me, tErrorData
   if ilk(tErrorData) <> #propList then
-    error(me, "Invalid error parameters for fatal error!", #fatalError, #critical)
     tErrorData = [:]
   end if
   me.handleFatalError(tErrorData)
@@ -133,7 +167,8 @@ on handleFatalError me, tErrorData
   tErrorUrl = EMPTY
   tParams = EMPTY
   if ilk(tErrorData) <> #propList then
-    return error(me, "Invalid error data", #handleFatalError, #critical)
+    error(me, "Invalid error data", #handleFatalError, #major)
+    tErrorData = [:]
   end if
   tErrorType = tErrorData["error"]
   case tErrorType of
@@ -146,6 +181,16 @@ on handleFatalError me, tErrorData
         tErrorUrl = getVariable("client.fatal.error.url")
       end if
   end case
+  tConnection = getConnection(getVariable("connection.info.id", #Info))
+  if tConnection <> VOID then
+    tErrorData["host"] = tConnection.getProperty(#host)
+    tErrorData["port"] = tConnection.getProperty(#port)
+    tErrorData["mus_errorcode"] = tConnection.GetLastError()
+  end if
+  tErrorData["client_version"] = getMoviePath()
+  tErrorData["client_process_list"] = string(getProcessTrackingList())
+  tErrorData["client_errors"] = getClientErrors()
+  tErrorData["server_errors"] = getServerErrors()
   if tErrorUrl contains "?" then
     tParams = "&"
   else
@@ -155,21 +200,29 @@ on handleFatalError me, tErrorData
   tErrorData["version"] = tEnv[#productVersion]
   tErrorData["build"] = tEnv[#productBuildVersion]
   tErrorData["os"] = tEnv[#osVersion]
+  tErrorData["neterr_cast"] = getCastLoadManager().GetLastError()
+  tErrorData["neterr_res"] = getDownloadManager().GetLastError()
+  tErrorData["client_uptime"] = getClientUpTime()
+  if variableExists("account_id") then
+    tAccountID = getVariable("account_id")
+    tAccoutnID = tAccountID mod 9999
+  else
+    tAccountID = 0
+  end if
   tNuErrorData = [:]
-  t = 1
   repeat with i = 1 to pFatalReportParamOrder.count
     tKey = pFatalReportParamOrder[i]
     tValue = tErrorData.getaProp(tKey)
     if tErrorData.getaProp(tKey) <> VOID then
       tNuErrorData.setaProp(tKey, tValue)
-      t = t + 1
     end if
   end repeat
-  if tErrorData.count > t then
-    repeat with t = t + 1 to tErrorData.count
-      tNuErrorData.setaProp(tErrorData.getPropAt(t), tErrorData[t])
-    end repeat
-  end if
+  repeat with k = 1 to tErrorData.count
+    tKey = tErrorData.getPropAt(k)
+    if tNuErrorData.getaProp(tKey) = VOID then
+      tNuErrorData.setaProp(tKey, tErrorData.getaProp(tKey))
+    end if
+  end repeat
   tErrorData = tNuErrorData
   repeat with tItemNo = 1 to tErrorData.count
     tKey = string(tErrorData.getPropAt(tItemNo))
@@ -205,6 +258,6 @@ end
 
 on eventProcError me, tEvent, tSprID, tParam
   if tEvent = #mouseUp and tSprID = "error_close" then
-    resetClient()
+    removeWindow(#error)
   end if
 end

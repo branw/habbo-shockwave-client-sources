@@ -46,11 +46,7 @@ on construct me
   createObject(pIgnoreListID, "Ignore List Class")
   getObject(pObjMoverID).setProperty(#geometry, getObject(pGeometryId))
   registerMessage(#objectFinalized, me.getID(), #objectFinalized)
-  if (the stage).rect.width > 800 then
-    pWideScreenOffset = getVariable("widescreen.offset.x")
-  else
-    pWideScreenOffset = 0
-  end if
+  me.updateScreenOffset()
   return 1
 end
 
@@ -73,16 +69,7 @@ on showRoom me, tRoomID
     activateWindow(pLoaderBarID)
   end if
   tRoomField = tRoomID & ".room"
-  if pWideScreenOffset > 0 then
-    if variableExists(tRoomID & ".wide.offset.x") then
-      pWideScreenOffset = value(getVariable(tRoomID & ".wide.offset.x"))
-    end if
-  end if
-  if variableExists(tRoomID & ".wide.align.right") then
-    if value(getVariable(tRoomID & ".wide.align.right")) then
-      pWideScreenOffset = (the stage).rect.width - 720 - pWideScreenOffset
-    end if
-  end if
+  me.updateScreenOffset(tRoomID)
   createVisualizer(pRoomSpaceId, tRoomField, pWideScreenOffset)
   tVisObj = getVisualizer(pRoomSpaceId)
   tLocX = tVisObj.getProperty(#locX)
@@ -774,6 +761,24 @@ end
 
 on showCfhSenderDelayed me, tID
   return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tID, 1)
+end
+
+on updateScreenOffset me, tRoomID
+  if (the stage).rect.width > 800 then
+    pWideScreenOffset = getVariable("widescreen.offset.x")
+  else
+    pWideScreenOffset = 0
+  end if
+  if pWideScreenOffset <> 0 and not voidp(tRoomID) then
+    if variableExists(tRoomID & ".wide.offset.x") then
+      pWideScreenOffset = value(getVariable(tRoomID & ".wide.offset.x"))
+    end if
+  end if
+  if variableExists(tRoomID & ".wide.align.right") then
+    if value(getVariable(tRoomID & ".wide.align.right")) then
+      pWideScreenOffset = (the stage).rect.width - 720 - pWideScreenOffset
+    end if
+  end if
 end
 
 on highLightCfhSender me, tID

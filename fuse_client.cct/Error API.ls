@@ -33,6 +33,18 @@ on error tObject, tMsg, tMethod, tErrorLevel
   return getErrorManager().error(tObject, tMsg, tMethod, tErrorLevel)
 end
 
+on serverError tErrorList
+  return getErrorManager().serverError(tErrorList)
+end
+
+on getClientErrors
+  return getErrorManager().getClientErrors()
+end
+
+on getServerErrors
+  return getErrorManager().getServerErrors()
+end
+
 on fatalError tErrorData
   return getErrorManager().fatalError(tErrorData)
 end

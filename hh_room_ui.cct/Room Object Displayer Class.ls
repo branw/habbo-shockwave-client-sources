@@ -114,7 +114,7 @@ on showObjectInfo me, tObjType, tRefresh
       "human":
         tID = pBaseWindowIds[#avatar]
         pWindowCreator.createHumanWindow(tID, tProps, tSelectedObj, pBadgeObjID, pShowUserTags)
-        me.updateInfoStandGroup(tProps[#groupID])
+        me.updateInfoStandGroup(tProps[#groupid])
         me.pushWindowToDisplayList(tID)
       "bot":
         tID = pBaseWindowIds[#avatar]
@@ -293,7 +293,7 @@ on groupLogoDownloaded me, tGroupId
   if tObj = 0 then
     return 0
   end if
-  tUsersGroup = tObj.getProperty(#groupID)
+  tUsersGroup = tObj.getProperty(#groupid)
   if tUsersGroup = tGroupId then
     me.updateInfoStandGroup(tGroupId)
   end if

@@ -16,12 +16,14 @@ on construct me
   pFadingLogo = 0
   pLogoStartTime = 0
   pCrapFixSpr = sprite(reserveSprite())
-  pCrapFixSpr.member = member("crap.fixer")
-  pCrapFixSpr.width = 560
-  pCrapFixSpr.height = 75
-  pCrapFixSpr.locZ = -2000000000
-  pCrapFixSpr.loc = point(-1, 0)
-  pCrapFixSpr.visible = 0
+  if ilk(pCrapFixSpr) = #sprite then
+    pCrapFixSpr.member = member("crap.fixer")
+    pCrapFixSpr.width = 560
+    pCrapFixSpr.height = 75
+    pCrapFixSpr.locZ = -2000000000
+    pCrapFixSpr.loc = point(-1, 0)
+    pCrapFixSpr.visible = 0
+  end if
   pCrapFixing = 0
   pCrapFixRegionInvalidated = 1
   return me.updateState("load_variables")
@@ -88,21 +90,23 @@ on update me
       pFadingLogo = 0
       me.hideLogo()
       executeMessage(#showHotelView)
-      callJavascriptFunction("clientReady")
+      callJavaScriptFunction("clientReady")
     end if
   end if
   if pCrapFixing then
-    if pCrapFixRegionInvalidated then
-      pCrapFixSpr.visible = 1
-      case pCrapFixSpr.loc.locH of
-        0:
-          pCrapFixSpr.loc = point(-1, 0)
-        -1:
-          pCrapFixSpr.loc = point(0, 0)
-        otherwise:
-          pCrapFixSpr.loc = point(0, 0)
-      end case
-      pCrapFixRegionInvalidated = 0
+    if ilk(pCrapFixSpr) = #sprite then
+      if pCrapFixRegionInvalidated then
+        pCrapFixSpr.visible = 1
+        case pCrapFixSpr.loc.locH of
+          0:
+            pCrapFixSpr.loc = point(-1, 0)
+          -1:
+            pCrapFixSpr.loc = point(0, 0)
+          otherwise:
+            pCrapFixSpr.loc = point(0, 0)
+        end case
+        pCrapFixRegionInvalidated = 0
+      end if
     end if
   end if
 end
@@ -157,8 +161,12 @@ on updateState me, tstate
                       if tKey = "external.variables.txt" then
                         getSpecialServices().setExtVarPath(tValue)
                       else
-                        if tKey = "processlog.enabled" then
+                        if tKey = "processlog.url" then
                           getVariableManager().set(tKey, tValue)
+                        else
+                          if tKey = "account_id" then
+                            getVariableManager().set(tKey, tValue)
+                          end if
                         end if
                       end if
                     end if
@@ -185,8 +193,8 @@ on updateState me, tstate
           tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
-      sendProcessTracking(9)
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
+      sendProcessTracking(9)
       if tMemNum = 0 then
         fatalError(["error": tstate])
         return 0
@@ -244,8 +252,8 @@ on updateState me, tstate
           tURL = tURL & tParamDelim & the milliSeconds
         end if
       end if
-      sendProcessTracking(12)
       tMemNum = queueDownload(tURL, tMemName, #field)
+      sendProcessTracking(12)
       if tMemNum = 0 then
         fatalError(["error": tstate])
         return 0
@@ -261,6 +269,7 @@ on updateState me, tstate
           removeMember(tTxtFile)
         end if
       end if
+      sendProcessTracking(23)
       tCastList = []
       i = 1
       repeat while 1
@@ -311,6 +320,7 @@ on updateState me, tstate
         return me.updateState("init_threads")
       end if
     "init_threads":
+      sendProcessTracking(24)
       pState = tstate
       cursor(0)
       (the stage).title = getVariable("client.window.title")

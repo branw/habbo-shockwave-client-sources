@@ -206,8 +206,8 @@ on loadFigurePartList me, tURL
       tURL = tURL & tSeparator & "graphcount=" & tMemberCount
     end if
   end if
-  sendProcessTracking(13)
   tmember = queueDownload(tURL, tMem, #field, 1)
+  sendProcessTracking(13)
   return registerDownloadCallback(tmember, #partListLoaded, me.getID())
 end
 
@@ -292,8 +292,8 @@ on loadPartSetXML me
     return error(me, "Can't load partset XML - no URL configured", #loadPartSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(14)
   tmember = queueDownload(tURL, tMem, #field, 1)
+  sendProcessTracking(14)
   return registerDownloadCallback(tmember, #partSetLoaded, me.getID())
 end
 
@@ -308,8 +308,8 @@ on loadActionSetXML me
     return error(me, "Can't load action set XML - no URL configured", #loadActionSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(16)
   tmember = queueDownload(tURL, tMem, #field, 1)
+  sendProcessTracking(16)
   return registerDownloadCallback(tmember, #actionSetLoaded, me.getID())
 end
 
@@ -324,8 +324,8 @@ on loadAnimationSetXML me
     return error(me, "Can't load animation XML - no URL configured", #loadAnimationSetXML, #critical)
   end if
   tMem = tURL
-  sendProcessTracking(17)
   tmember = queueDownload(tURL, tMem, #field, 1)
+  sendProcessTracking(17)
   return registerDownloadCallback(tmember, #animationSetLoaded, me.getID())
 end
 
@@ -349,93 +349,95 @@ on partSetLoaded me, tParams, tSuccess
     tParserObject = new(xtra("xmlparser"))
     errCode = tParserObject.parseString(tdata)
     errorString = tParserObject.getError()
-    if voidp(errorString) then
-      repeat with i = 1 to tParserObject.child.count
-        tName = tParserObject.child[i].name
-        if tName = "partSets" then
-          repeat with j = 1 to tParserObject.child[i].child.count
-            tElementPartSet = tParserObject.child[i].child[j]
-            if tElementPartSet.name = "partSet" then
-              tFullList = []
-              tSwimList = []
-              tSmallList = []
-              tSwimSmallList = []
-              tFlipList = [:]
-              tRemoveList = [:]
+    if not voidp(errorString) then
+      fatalError(["error": "part_sets_invalid"])
+      return error(me, "Failure while parsing partset XML", #partSetLoaded, #critical)
+    end if
+    repeat with i = 1 to tParserObject.child.count
+      tName = tParserObject.child[i].name
+      if tName = "partSets" then
+        repeat with j = 1 to tParserObject.child[i].child.count
+          tElementPartSet = tParserObject.child[i].child[j]
+          if tElementPartSet.name = "partSet" then
+            tFullList = []
+            tSwimList = []
+            tSmallList = []
+            tSwimSmallList = []
+            tFlipList = [:]
+            tRemoveList = [:]
+            repeat with k = 1 to tElementPartSet.child.count
+              tElementPart = tElementPartSet.child[k]
+              if tElementPart.name = "part" then
+                tAttributes = ["swim": 1, "small": 1]
+                repeat with l = 1 to tElementPart.attributeName.count
+                  tName = tElementPart.attributeName[l]
+                  tValue = tElementPart.attributeValue[l]
+                  tAttributes[tName] = tValue
+                end repeat
+                if not voidp(tAttributes["set-type"]) then
+                  tFullList.add(tAttributes["set-type"])
+                  if value(tAttributes["swim"]) then
+                    tSwimList.add(tAttributes["set-type"])
+                    if value(tAttributes["small"]) then
+                      tSwimSmallList.add(tAttributes["set-type"])
+                    end if
+                  end if
+                  if value(tAttributes["small"]) then
+                    tSmallList.add(tAttributes["set-type"])
+                  end if
+                  if not voidp(tAttributes["flipped-set-type"]) then
+                    tFlipList.addProp(tAttributes["set-type"], tAttributes["flipped-set-type"])
+                  end if
+                  if not voidp(tAttributes["remove-set-type"]) then
+                    tRemoveList.addProp(tAttributes["set-type"], tAttributes["remove-set-type"])
+                  end if
+                  next repeat
+                end if
+                error(me, "missing set-type attribute for part in partSet element!", #loadPartSetXML, #major)
+              end if
+            end repeat
+            setVariable("human.parts." & tPeopleSize, tFullList)
+            setVariable("human.parts." & tPeopleSize50, tSmallList)
+            setVariable("swimmer.parts." & tPeopleSize, tSwimList)
+            setVariable("swimmer.parts." & tPeopleSize50, tSwimSmallList)
+            setVariable("human.parts.flipList", tFlipList)
+            setVariable("human.parts.removeList", tRemoveList)
+            next repeat
+          end if
+          if tElementPartSet.name = "activePartSet" then
+            tPartList = []
+            tID = VOID
+            repeat with l = 1 to tElementPartSet.attributeName.count
+              tName = tElementPartSet.attributeName[l]
+              tValue = tElementPartSet.attributeValue[l]
+              if tName = "id" then
+                tID = tValue
+              end if
+            end repeat
+            if not voidp(tID) then
               repeat with k = 1 to tElementPartSet.child.count
                 tElementPart = tElementPartSet.child[k]
-                if tElementPart.name = "part" then
-                  tAttributes = ["swim": 1, "small": 1]
+                if tElementPart.name = "activePart" then
+                  tAttributes = ["set-type": VOID]
                   repeat with l = 1 to tElementPart.attributeName.count
                     tName = tElementPart.attributeName[l]
                     tValue = tElementPart.attributeValue[l]
                     tAttributes[tName] = tValue
                   end repeat
                   if not voidp(tAttributes["set-type"]) then
-                    tFullList.add(tAttributes["set-type"])
-                    if value(tAttributes["swim"]) then
-                      tSwimList.add(tAttributes["set-type"])
-                      if value(tAttributes["small"]) then
-                        tSwimSmallList.add(tAttributes["set-type"])
-                      end if
-                    end if
-                    if value(tAttributes["small"]) then
-                      tSmallList.add(tAttributes["set-type"])
-                    end if
-                    if not voidp(tAttributes["flipped-set-type"]) then
-                      tFlipList.addProp(tAttributes["set-type"], tAttributes["flipped-set-type"])
-                    end if
-                    if not voidp(tAttributes["remove-set-type"]) then
-                      tRemoveList.addProp(tAttributes["set-type"], tAttributes["remove-set-type"])
-                    end if
-                    next repeat
+                    tPartList.add(tAttributes["set-type"])
                   end if
-                  error(me, "missing set-type attribute for part in partSet element!", #loadPartSetXML, #major)
                 end if
               end repeat
-              setVariable("human.parts." & tPeopleSize, tFullList)
-              setVariable("human.parts." & tPeopleSize50, tSmallList)
-              setVariable("swimmer.parts." & tPeopleSize, tSwimList)
-              setVariable("swimmer.parts." & tPeopleSize50, tSwimSmallList)
-              setVariable("human.parts.flipList", tFlipList)
-              setVariable("human.parts.removeList", tRemoveList)
+              setVariable("human.partset." & tID & "." & tPeopleSize, tPartList)
+              setVariable("human.partset." & tID & "." & tPeopleSize50, tPartList)
               next repeat
             end if
-            if tElementPartSet.name = "activePartSet" then
-              tPartList = []
-              tID = VOID
-              repeat with l = 1 to tElementPartSet.attributeName.count
-                tName = tElementPartSet.attributeName[l]
-                tValue = tElementPartSet.attributeValue[l]
-                if tName = "id" then
-                  tID = tValue
-                end if
-              end repeat
-              if not voidp(tID) then
-                repeat with k = 1 to tElementPartSet.child.count
-                  tElementPart = tElementPartSet.child[k]
-                  if tElementPart.name = "activePart" then
-                    tAttributes = ["set-type": VOID]
-                    repeat with l = 1 to tElementPart.attributeName.count
-                      tName = tElementPart.attributeName[l]
-                      tValue = tElementPart.attributeValue[l]
-                      tAttributes[tName] = tValue
-                    end repeat
-                    if not voidp(tAttributes["set-type"]) then
-                      tPartList.add(tAttributes["set-type"])
-                    end if
-                  end if
-                end repeat
-                setVariable("human.partset." & tID & "." & tPeopleSize, tPartList)
-                setVariable("human.partset." & tID & "." & tPeopleSize50, tPartList)
-                next repeat
-              end if
-              error(me, "missing id attribute for activePartSet!", #loadPartSetXML, #major)
-            end if
-          end repeat
-        end if
-      end repeat
-    end if
+            error(me, "missing id attribute for activePartSet!", #loadPartSetXML, #major)
+          end if
+        end repeat
+      end if
+    end repeat
   end if
   setVariable("partsets.xml.loaded", 1)
   me.checkDataLoaded()
@@ -461,60 +463,62 @@ on actionSetLoaded me, tParams, tSuccess
     tParserObject = new(xtra("xmlparser"))
     errCode = tParserObject.parseString(tdata)
     errorString = tParserObject.getError()
-    if voidp(errorString) then
-      repeat with i = 1 to tParserObject.child.count
-        tName = tParserObject.child[i].name
-        if tName = "actionSet" then
-          repeat with j = 1 to tParserObject.child[i].child.count
-            tElementAction = tParserObject.child[i].child[j]
-            if tElementAction.name = "action" then
-              tID = VOID
-              repeat with l = 1 to tElementAction.attributeName.count
-                tName = tElementAction.attributeName[l]
-                tValue = tElementAction.attributeValue[l]
-                if tName = "id" then
-                  tID = tValue
-                end if
-              end repeat
-              if not voidp(tID) then
-                repeat with k = 1 to tElementAction.child.count
-                  tElementDirection = tElementAction.child[k]
-                  if tElementDirection.name = "direction" then
-                    tDirection = VOID
-                    repeat with l = 1 to tElementDirection.attributeName.count
-                      tName = tElementDirection.attributeName[l]
-                      tValue = tElementDirection.attributeValue[l]
-                      if tName = "id" then
-                        tDirection = tValue
+    if not voidp(errorString) then
+      fatalError(["error": "action_set_invalid"])
+      return error(me, "Failure while parsing action set XML", #actionSetLoaded, #critical)
+    end if
+    repeat with i = 1 to tParserObject.child.count
+      tName = tParserObject.child[i].name
+      if tName = "actionSet" then
+        repeat with j = 1 to tParserObject.child[i].child.count
+          tElementAction = tParserObject.child[i].child[j]
+          if tElementAction.name = "action" then
+            tID = VOID
+            repeat with l = 1 to tElementAction.attributeName.count
+              tName = tElementAction.attributeName[l]
+              tValue = tElementAction.attributeValue[l]
+              if tName = "id" then
+                tID = tValue
+              end if
+            end repeat
+            if not voidp(tID) then
+              repeat with k = 1 to tElementAction.child.count
+                tElementDirection = tElementAction.child[k]
+                if tElementDirection.name = "direction" then
+                  tDirection = VOID
+                  repeat with l = 1 to tElementDirection.attributeName.count
+                    tName = tElementDirection.attributeName[l]
+                    tValue = tElementDirection.attributeValue[l]
+                    if tName = "id" then
+                      tDirection = tValue
+                    end if
+                  end repeat
+                  if not voidp(tDirection) then
+                    tPartList = []
+                    repeat with l = 1 to tElementDirection.child.count
+                      tElementPartList = tElementDirection.child[l]
+                      if tElementPartList.name = "partList" then
+                        tPartList = me.parsePartListXML(tElementPartList)
                       end if
                     end repeat
-                    if not voidp(tDirection) then
-                      tPartList = []
-                      repeat with l = 1 to tElementDirection.child.count
-                        tElementPartList = tElementDirection.child[l]
-                        if tElementPartList.name = "partList" then
-                          tPartList = me.parsePartListXML(tElementPartList)
-                        end if
-                      end repeat
-                      if tID = "std" then
-                        setVariable("human.parts." & tPeopleSize & "." & tDirection, tPartList)
-                        setVariable("human.parts." & tPeopleSize50 & "." & tDirection, tPartList)
-                      else
-                        setVariable("human.parts." & tPeopleSize & "." & tID & "." & tDirection, tPartList)
-                        setVariable("human.parts." & tPeopleSize50 & "." & tID & "." & tDirection, tPartList)
-                      end if
-                      next repeat
+                    if tID = "std" then
+                      setVariable("human.parts." & tPeopleSize & "." & tDirection, tPartList)
+                      setVariable("human.parts." & tPeopleSize50 & "." & tDirection, tPartList)
+                    else
+                      setVariable("human.parts." & tPeopleSize & "." & tID & "." & tDirection, tPartList)
+                      setVariable("human.parts." & tPeopleSize50 & "." & tID & "." & tDirection, tPartList)
                     end if
+                    next repeat
                   end if
-                end repeat
-                next repeat
-              end if
-              error(me, "missing id attribute for partSet!", #loadPartSetXML, #major)
+                end if
+              end repeat
+              next repeat
             end if
-          end repeat
-        end if
-      end repeat
-    end if
+            error(me, "missing id attribute for partSet!", #loadPartSetXML, #major)
+          end if
+        end repeat
+      end if
+    end repeat
   end if
   setVariable("draworder.xml.loaded", 1)
   me.checkDataLoaded()
@@ -541,50 +545,52 @@ on animationSetLoaded me, tParams, tSuccess
     tParserObject = new(xtra("xmlparser"))
     errCode = tParserObject.parseString(tdata)
     errorString = tParserObject.getError()
-    if voidp(errorString) then
-      repeat with i = 1 to tParserObject.child.count
-        tName = tParserObject.child[i].name
-        if tName = "animationSet" then
-          repeat with j = 1 to tParserObject.child[i].child.count
-            tElementAction = tParserObject.child[i].child[j]
-            if tElementAction.name = "action" then
-              tID = VOID
-              repeat with l = 1 to tElementAction.attributeName.count
-                tName = tElementAction.attributeName[l]
-                tValue = tElementAction.attributeValue[l]
-                if tName = "id" then
-                  tID = tValue
+    if not voidp(errorString) then
+      fatalError(["error": "animation_set_invalid"])
+      return error(me, "Failure while parsing animation XML", #animationSetLoaded, #critical)
+    end if
+    repeat with i = 1 to tParserObject.child.count
+      tName = tParserObject.child[i].name
+      if tName = "animationSet" then
+        repeat with j = 1 to tParserObject.child[i].child.count
+          tElementAction = tParserObject.child[i].child[j]
+          if tElementAction.name = "action" then
+            tID = VOID
+            repeat with l = 1 to tElementAction.attributeName.count
+              tName = tElementAction.attributeName[l]
+              tValue = tElementAction.attributeValue[l]
+              if tName = "id" then
+                tID = tValue
+              end if
+            end repeat
+            if not voidp(tID) then
+              repeat with k = 1 to tElementAction.child.count
+                tElementPart = tElementAction.child[k]
+                if tElementPart.name = "part" then
+                  tAttributes = ["set-type": VOID]
+                  repeat with l = 1 to tElementPart.attributeName.count
+                    tName = tElementPart.attributeName[l]
+                    tValue = tElementPart.attributeValue[l]
+                    tAttributes[tName] = tValue
+                  end repeat
+                  if not voidp(tAttributes["set-type"]) then
+                    tFrameList = me.parseFrameListXML(tElementPart)
+                    if voidp(tAnimationData[tAttributes["set-type"]]) then
+                      tAnimationData[tAttributes["set-type"]] = [:]
+                    end if
+                    tAnimationData[tAttributes["set-type"]][tID] = tFrameList
+                    next repeat
+                  end if
+                  error(me, "missing set-type attribute for part in action element!", #loadPartSetXML, #major)
                 end if
               end repeat
-              if not voidp(tID) then
-                repeat with k = 1 to tElementAction.child.count
-                  tElementPart = tElementAction.child[k]
-                  if tElementPart.name = "part" then
-                    tAttributes = ["set-type": VOID]
-                    repeat with l = 1 to tElementPart.attributeName.count
-                      tName = tElementPart.attributeName[l]
-                      tValue = tElementPart.attributeValue[l]
-                      tAttributes[tName] = tValue
-                    end repeat
-                    if not voidp(tAttributes["set-type"]) then
-                      tFrameList = me.parseFrameListXML(tElementPart)
-                      if voidp(tAnimationData[tAttributes["set-type"]]) then
-                        tAnimationData[tAttributes["set-type"]] = [:]
-                      end if
-                      tAnimationData[tAttributes["set-type"]][tID] = tFrameList
-                      next repeat
-                    end if
-                    error(me, "missing set-type attribute for part in action element!", #loadPartSetXML, #major)
-                  end if
-                end repeat
-              end if
-              next repeat
             end if
-            error(me, "missing id attribute in action element!", #loadPartSetXML, #major)
-          end repeat
-        end if
-      end repeat
-    end if
+            next repeat
+          end if
+          error(me, "missing id attribute in action element!", #loadPartSetXML, #major)
+        end repeat
+      end if
+    end repeat
   end if
   setVariable("human.parts.animationList", tAnimationData)
   setVariable("animation.xml.loaded", 1)

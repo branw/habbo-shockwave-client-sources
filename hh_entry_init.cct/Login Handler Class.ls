@@ -22,21 +22,16 @@ on handleDisconnect me, tMsg
   error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleDisconnect, #dummy)
   if tUserLoggedIn then
     return me.getInterface().showDisconnect()
+    openNetPage(getText("url_logged_out"), "self")
   else
     tErrorList = [:]
     tErrorList["error"] = me.getComponent().GetDisconnectErrorState()
-    tConnection = getConnection(getVariable("connection.info.id", #Info))
-    if tConnection <> VOID then
-      tErrorList["host"] = tConnection.getProperty(#host)
-      tErrorList["port"] = tConnection.getProperty(#port)
-    end if
-    tErrorList["client_version"] = getIntVariable("client.version.id")
-    tErrorList["mus_errorcode"] = tConnection.GetLastError()
     return fatalError(tErrorList)
   end if
 end
 
 on handleHello me, tMsg
+  sendProcessTracking(21)
   me.getComponent().SetDisconnectErrorState("init_crypto")
   return tMsg.connection.send("INIT_CRYPTO")
 end
@@ -98,6 +93,7 @@ on handlePing me, tMsg
 end
 
 on handleLoginOK me, tMsg
+  sendProcessTracking(41)
   tMsg.connection.send("GET_INFO")
   tMsg.connection.send("GET_CREDITS")
   tMsg.connection.send("GETAVAILABLEBADGES")
@@ -278,6 +274,7 @@ on handleModAlert me, tMsg
 end
 
 on handleCryptoParameters me, tMsg
+  sendProcessTracking(22)
   tClientToServer = 1
   tServerToClient = tMsg.connection.GetIntFrom() <> 0
   pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
@@ -293,16 +290,33 @@ on handleCryptoParameters me, tMsg
   return 1
 end
 
-on responseWithPublicKey me, tConnection
-  tConnection = getConnection(getVariable("connection.info.id"))
-  tHex = EMPTY
-  tLength = 30
+on getHexChars me, tLength
   tHexChars = "012345679ABCDEF"
+  tHex = EMPTY
   repeat with tNo = 1 to tLength * 2
     tRandPos = random(tHexChars.length)
     tHex = tHex & chars(tHexChars, tRandPos, tRandPos)
   end repeat
-  pBigJob = BigInt_str2bigInt(tHex, 0, tLength)
+  return tHex
+end
+
+on responseWithPublicKey me, tConnection
+  tConnection = getConnection(getVariable("connection.info.id"))
+  tLength = 10
+  tInvalidString1 = EMPTY
+  repeat with tNo = 1 to tLength * 2
+    tInvalidString1 = tInvalidString1 & "0"
+  end repeat
+  tInvalidString2 = EMPTY
+  repeat with tNo = 1 to tLength * 2 - 1
+    tInvalidString2 = tInvalidString2 & "0"
+  end repeat
+  tInvalidString2 = tInvalidString2 & "1"
+  tHex = me.getHexChars(tLength)
+  repeat while tHex = tInvalidString1 or tHex = tInvalidString2
+    tHex = me.getHexChars(tLength)
+  end repeat
+  pBigJob = BigInt_str2bigInt(tHex, 16, tLength)
   p = BigInt_str2bigInt("455de99a7bcd4cf7a2d2ed03ad35ee047750cea4b446cd7e297102ebec1daaad", 16)
   g = BigInt_str2bigInt("3ef9fba7796ba6145b4dac13739bb5604ee70e2dff95f9c5a846633a4e6e1a5b", 16)
   tJsPublicKey = BigInt_powMod(g, pBigJob, p)
@@ -364,6 +378,7 @@ on handleHotelLogout me, tMsg
     3:
       openNetPage(getText("url_logout_timeout"), "self")
   end case
+  return fatalError(["error": "logout_" & tLogoutMsgId])
 end
 
 on handleSoundSetting me, tMsg

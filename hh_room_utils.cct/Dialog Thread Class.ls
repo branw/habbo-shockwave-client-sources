@@ -544,7 +544,6 @@ on eventProcBan me, tEvent, tElemID, tParam, tWndID
           end if
         end if
         me.removeDialog(tWndID, pAlertList)
-        resetClient()
     end case
   end if
 end

@@ -29,13 +29,19 @@ on connect me, tHost, tPort
   sendProcessTracking(30)
   pHost = tHost
   pPort = tPort
+  if not checkForXtra("Multiusr") then
+    return fatalError(["error": "mus_xtra_not_found"])
+  end if
   pXtra = new(xtra("Multiuser"))
   pXtra.setNetBufferLimits(16 * 1024, 100 * 1024, 100)
   tErrCode = pXtra.setNetMessageHandler(#xtraMsgHandler, me)
   if tErrCode = 0 then
-    pXtra.connectToNetServer("*", "*", pHost, pPort, "*", 1)
+    tConnectErrorCode = pXtra.connectToNetServer("*", "*", pHost, pPort, "*", 1)
   else
     return error(me, "Creation of callback failed:" && tErrCode, #connect, #major)
+  end if
+  if tConnectErrorCode <> 0 then
+    return fatalError(["error": "connect_to_net_server"])
   end if
   pLastContent = EMPTY
   if pLogMode > 0 then
@@ -393,6 +399,9 @@ on xtraMsgHandler me
       me.log(tNewMsg)
     end if
     pLastError = tErrCode
+    if ilk(tNewMsg) = #propList then
+      pLastError = pLastError & "_" & tNewMsg[#subject]
+    end if
     me.disconnect()
     return 0
   end if

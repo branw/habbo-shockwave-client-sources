@@ -70,12 +70,21 @@ on sendProcessTracking tStepValue
   return getSpecialServices().sendProcessTracking(tStepValue)
 end
 
+on getProcessTrackingList
+  tListStr = implode(getSpecialServices().getProcessTrackingList(), ",")
+  return tListStr
+end
+
 on secretDecode tKey
   return getSpecialServices().secretDecode(tKey)
 end
 
 on readValueFromField tFieldName, tDelimiter, tSearchedKey
   return getSpecialServices().readValueFromField(tFieldName, tDelimiter, tSearchedKey)
+end
+
+on checkForXtra tXtraName
+  return getSpecialServices().checkForXtra(tXtraName)
 end
 
 on performance
@@ -90,6 +99,10 @@ on printMsg tObj, tMsg
   getSpecialServices().print(tObj, tMsg)
 end
 
-on callJavascriptFunction tCallString, tdata
-  getSpecialServices().callJavascriptFunction(tCallString, tdata)
+on callJavaScriptFunction tCallString, tdata
+  getSpecialServices().callJavaScriptFunction(tCallString, tdata)
+end
+
+on getClientUpTime
+  return getSpecialServices().getClientUpTime()
 end

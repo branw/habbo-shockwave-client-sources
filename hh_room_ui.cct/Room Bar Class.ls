@@ -287,6 +287,9 @@ on flashIMIcon me, tstate
         return 0
       end if
       tElem = tWnd.getElement("im_icon")
+      if not objectp(tElem) then
+        return 0
+      end if
       if pIMFlashState = 1 then
         tElem.setProperty(#member, "im.icon.highlighted.2")
       else

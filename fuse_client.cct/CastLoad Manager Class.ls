@@ -1,4 +1,4 @@
-property pWaitList, pTaskList, pAvailableDynCasts, pPermanentLevelList, pLatestTaskID, pCurrentDownLoads, pLoadedCasts, pTempWaitList, pCastLibCount, pSysCastNum, pBinCastNum, pNullCastName, pFileExtension
+property pWaitList, pTaskList, pAvailableDynCasts, pPermanentLevelList, pLatestTaskID, pCurrentDownLoads, pLoadedCasts, pTempWaitList, pCastLibCount, pSysCastNum, pBinCastNum, pNullCastName, pFileExtension, pLastError
 
 on construct me
   if the runMode = "Author" then
@@ -12,6 +12,7 @@ on construct me
   pNullCastName = "empty"
   pSysCastNum = castLib("fuse_client").number
   pBinCastNum = castLib(getVariable("dynamic.bin.cast")).number
+  pLastError = 0
   me.verifyReset()
   return 1
 end
@@ -29,6 +30,7 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing, tDoTracking
   if voidp(tDoTracking) then
     tDoTracking = 0
   end if
+  pLastError = 0
   if tDoTracking then
     tCastsStr = EMPTY & tCasts
     tCastsStr = replaceChunks(tCastsStr, QUOTE, EMPTY)
@@ -87,6 +89,7 @@ on startCastLoad me, tCasts, tPermanentFlag, tAdd, tDoIndexing, tDoTracking
   tProps[#callback] = VOID
   tProps[#doindexing] = tDoIndexing
   pTaskList[tID].define(tProps)
+  pLastError = 0
   repeat with i = 1 to getIntVariable("net.operation.count", 2)
     me.AddNextpreloadNetThing()
   end repeat
@@ -189,6 +192,10 @@ on print me
   end repeat
 end
 
+on GetLastError me
+  return pLastError
+end
+
 on prepare me
   if count(pTaskList) > 0 then
     me.AddNextpreloadNetThing()
@@ -260,6 +267,9 @@ on DoneCurrentDownLoad me, tFile, tURL, tID, tstate
   tTask = pTaskList[tID]
   if tTask = VOID then
     return error(me, "Task list item was lost!" && tFile && tID, #DoneCurrentDownLoad, #major)
+  end if
+  if tstate <> #done then
+    pLastError = netError(pCurrentDownLoads[tFile].pNetId)
   end if
   if tstate <> #error then
     tCastNumber = me.getAvailableEmptyCast()
@@ -399,7 +409,8 @@ on verifyReset me
   repeat with tEmptyCastNum = 1 to the number of castLibs
     if castLib(tEmptyCastNum).fileName contains pNullCastName then
       if the number of castMembers of castLib tEmptyCastNum > 0 then
-        return resetClient()
+        fatalError(["error": "empty_cast_failure"])
+        return 0
       end if
     end if
   end repeat

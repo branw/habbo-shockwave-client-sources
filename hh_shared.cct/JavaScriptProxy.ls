@@ -1,8 +1,8 @@
-on newJavaScriptLog
+on newJavaScriptProxy
   -- unk26
 end
 
-on JavaScriptLog
+on JavaScriptProxy
   -- unk26
 end
 

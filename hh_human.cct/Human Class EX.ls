@@ -186,7 +186,7 @@ on setup me, tdata
   pLocY = tdata[#y]
   pLocH = tdata[#h]
   pBadge = tdata[#badge]
-  pGroupId = tdata[#groupID]
+  pGroupId = tdata[#groupid]
   pStatusInGroup = tdata[#groupstatus]
   if not voidp(tdata.getaProp(#webID)) then
     pWebID = tdata[#webID]
@@ -389,7 +389,7 @@ on getInfo me
     pInfoStruct[#ctrl] = pCtrlType
   end if
   pInfoStruct[#badge] = me.pBadge
-  pInfoStruct[#groupID] = me.pGroupId
+  pInfoStruct[#groupid] = me.pGroupId
   if pTrading then
     pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
@@ -426,7 +426,7 @@ on getProperty me, tPropID
       return me.pBadge
     #swimming:
       return me.pSwim
-    #groupID:
+    #groupid:
       return pGroupId
     #groupstatus:
       return pStatusInGroup
@@ -440,7 +440,7 @@ end
 
 on setProperty me, tPropID, tValue
   case tPropID of
-    #groupID:
+    #groupid:
       pGroupId = tValue
     #groupstatus:
       pStatusInGroup = tValue

@@ -29,7 +29,7 @@ on sendJsMessage me, tMsg, tMsgType
   if tMsgType <> "hello" and not voidp(pDefaultCallTemplate) then
     tMsgContent = replaceChunks(pDefaultCallTemplate, "\TCODE", tMsg)
   end if
-  callJavascriptFunction(tMsgType, tMsgContent)
+  callJavaScriptFunction(tMsgType, tMsgContent)
 end
 
 on sendTrackingPoint me, tPointStr

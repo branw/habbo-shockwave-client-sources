@@ -1,4 +1,4 @@
-property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pUniqueSeed, pDecoder
+property pCatchFlag, pSavedHook, pToolTipAct, pToolTipSpr, pToolTipMem, pToolTipID, pToolTipDel, pCurrCursor, pLastCursor, pUniqueSeed, pDecoder, pProcessList
 
 on construct me
   pCatchFlag = 0
@@ -9,6 +9,7 @@ on construct me
   pCurrCursor = 0
   pLastCursor = 0
   pUniqueSeed = 0
+  pProcessList = []
   pDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
   pDecoder.setKey("sulake1Unique2Key3Generator")
   return 1
@@ -38,11 +39,11 @@ on catch me
   return 0
 end
 
-on callJavascriptFunction me, tCallString, tdata
+on callJavaScriptFunction me, tCallString, tdata
   if the runMode = "Author" then
     return 0
   end if
-  script("JavaScript Proxy").callJavascript(QUOTE & tCallString & QUOTE, QUOTE & tdata & QUOTE)
+  script("JavaScript Proxy").callJavaScript(QUOTE & tCallString & QUOTE, QUOTE & tdata & QUOTE)
 end
 
 on createToolTip me, tText
@@ -179,14 +180,20 @@ on getUniqueID me
 end
 
 on getMachineID me
-  tMachineID = string(getPref(getVariable("pref.value.id")))
-  tMachineID = replaceChunks(tMachineID, numToChar(10), EMPTY)
-  tMachineID = replaceChunks(tMachineID, numToChar(13), EMPTY)
-  tMaxLength = 24
-  if chars(tMachineID, 1, 1) = "#" then
-    tMachineID = chars(tMachineID, 2, tMachineID.length)
+  tStoredMachineID = string(getPref(getVariable("pref.value.id")))
+  if tStoredMachineID <> EMPTY then
+    tWhiteList = getVariable("machine.id.white.list")
+    tMachineID = EMPTY
+    repeat with tCharNo = 1 to tStoredMachineID.length
+      tChar = chars(tStoredMachineID, tCharNo, tCharNo)
+      if tWhiteList contains tChar then
+        tMachineID = tMachineID & tChar
+      end if
+    end repeat
+    tMaxLength = getVariable("machine.id.max.length")
+    tMachineID = chars(tMachineID, 1, tMaxLength)
   else
-    tMachineID = me.generateMachineId(tMaxLength)
+    tMachineID = me.generateMachineId()
     setPref(getVariable("pref.value.id"), "#" & tMachineID)
   end if
   return tMachineID
@@ -251,14 +258,27 @@ on getExtVarPath me
 end
 
 on sendProcessTracking me, tStepValue
-  if not variableExists("processlog.enabled") then
-    return 0
+  pProcessList.add(tStepValue)
+  if the runMode contains "Author" then
   end if
-  if not getVariable("processlog.enabled") then
-    return 0
+  if variableExists("processlog.url") then
+    tReportURL = string(getVariable("processlog.url"))
+    if tReportURL = "javascript" then
+      tJsHandler = script("javascriptLog").newJavaScriptLog()
+      if objectp(tJsHandler) then
+        tJsHandler.call(tStepValue)
+      end if
+    else
+      if tReportURL <> EMPTY and tReportURL <> VOID then
+        tParams = ["step": tStepValue, "account_id": getVariable("account_id")]
+        postNetText(tReportURL, tParams)
+      end if
+    end if
   end if
-  tJsHandler = script("javascriptLog").newJavaScriptLog()
-  tJsHandler.call(tStepValue)
+end
+
+on getProcessTrackingList me
+  return pProcessList
 end
 
 on secretDecode me, tKey
@@ -335,6 +355,26 @@ on addRandomParamToURL me, tURL
   return tURL
 end
 
+on checkForXtra me, tXtraName
+  tList = the xtraList
+  repeat with tXtra in tList
+    tXtraListName = EMPTY
+    if not voidp(tXtra[#name]) then
+      tXtraListName = tXtra[#name]
+    else
+      if not voidp(tXtra[#fileName]) then
+        tXtraListName = tXtra[#fileName]
+      end if
+    end if
+    if tXtraListName <> EMPTY then
+      if tXtraListName contains tXtraName then
+        return 1
+      end if
+    end if
+  end repeat
+  return 0
+end
+
 on print me, tObj, tMsg
   tObj = string(tObj)
   tObj = tObj.word[2..tObj.word.count - 2]
@@ -343,6 +383,25 @@ on print me, tObj, tMsg
 end
 
 on generateMachineId me, tMaxLength
+  tWhiteList = string(getVariable("machine.id.white.list"))
+  tRawMachineId = string(the milliSeconds) & string(the time) & string(the date)
+  tMachineID = EMPTY
+  repeat with tCharNo = 1 to tRawMachineId.length
+    tChar = chars(tRawMachineId, tCharNo, tCharNo)
+    if tWhiteList contains tChar then
+      tMachineID = tMachineID & tChar
+    end if
+  end repeat
+  tMachineID = replaceChunks(tMachineID, "AM", EMPTY)
+  tMachineID = replaceChunks(tMachineID, "PM", EMPTY)
+  tMachineID = replaceChunks(tMachineID, "am", EMPTY)
+  tMachineID = replaceChunks(tMachineID, "pm", EMPTY)
+  tMaxLength = getVariable("machine.id.max.length")
+  tMachineID = chars(tMachineID, 1, tMaxLength)
+  return tMachineID
+end
+
+on generateMachineId_ me, tMaxLength
   tMachineID = string(the milliSeconds) & string(the time) & string(the date)
   tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM", numToChar(10), numToChar(13)]
   repeat with tDelimiter in tLocaleDelimiters
@@ -393,4 +452,51 @@ on getReceipt me, tStamp
     tReceipt[tCharNo] = tChar
   end repeat
   return tReceipt
+end
+
+on getClientUpTime me
+  tTimeNow = the long time
+  tDateNow = the date
+  tTimeStart = getObject(#session).GET("client_starttime")
+  tDateStart = getObject(#session).GET("client_startdate")
+  tSeconds = 0
+  tTimeDelimiter = me.getDelimiter(tTimeNow)
+  if tDateNow <> tDateStart then
+    tDays = 1
+    tSeconds = tDays * 24 * 60 * 60 + me.calculateTimeDifference(tTimeStart, tTimeNow, tTimeDelimiter)
+  else
+    tSeconds = me.calculateTimeDifference(tTimeStart, tTimeNow, tTimeDelimiter)
+  end if
+  return tSeconds
+end
+
+on calculateTimeDifference me, a_from, a_to, a_delimiter
+  tItemDeLim = the itemDelimiter
+  the itemDelimiter = a_delimiter
+  tHours = integer(a_to.item[1]) - integer(a_from.item[1])
+  tMinutes = integer(a_to.item[2]) - integer(a_from.item[2])
+  tSeconds = integer(a_to.item[3]) - integer(a_from.item[3])
+  tAmPmMod = 0
+  if a_from contains "am" or a_from contains "pm" then
+    if a_from contains "am" and a_to contains "pm" then
+      tAmPmMod = 12 * 60 * 60
+    end if
+    if a_to contains "am" and a_from contains "pm" then
+      tAmPmMod = 12 * 60 * 60
+    end if
+  end if
+  the itemDelimiter = tItemDeLim
+  return tHours * 60 * 60 + tMinutes * 60 + tSeconds + tAmPmMod
+end
+
+on getDelimiter me, a_string
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", " ", "-", numToChar(10), numToChar(13)]
+  repeat with i = 1 to tLocaleDelimiters.count
+    tOffset = offset(tLocaleDelimiters[i], a_string)
+    if tOffset > 0 and tOffset < 5 then
+      temp = tLocaleDelimiters.duplicate()[i]
+      return temp
+    end if
+  end repeat
+  return ":"
 end

@@ -1,4 +1,4 @@
-property pMember, pDefRect, pTxtRect, pFntStru, pTextRenderMode
+property pMember, pDefRect, pTxtRect, pFntStru, pTextRenderMode, pUnderliningDisabled
 
 on construct me
   pDefRect = rect(0, 0, 480, 480)
@@ -9,6 +9,11 @@ on construct me
     pTextRenderMode = getVariable("text.render.compatibility.mode")
   else
     pTextRenderMode = 1
+  end if
+  if variableExists("text.underlining.disabled") then
+    pUnderliningDisabled = getVariable("text.underlining.disabled")
+  else
+    pUnderliningDisabled = 0
   end if
   if pMember.number = 0 then
     return 0
@@ -225,6 +230,13 @@ end
 on fakeAlphaRender me
   tColorWas = pMember.color
   tBgColorWas = pMember.bgColor
+  if pUnderliningDisabled then
+    if listp(pMember.fontStyle) then
+      if pMember.fontStyle.getPos(#underline) <> 0 then
+        pMember.fontStyle = [#plain]
+      end if
+    end if
+  end if
   pMember.color = rgb(0, 0, 0)
   pMember.bgColor = rgb(255, 255, 255)
   tFakeAlpha = image(pMember.width, pMember.height, 8)

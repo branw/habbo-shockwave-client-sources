@@ -1,4 +1,4 @@
-property pFontData, pTextMem, pNeedFill, pTextRenderMode
+property pFontData, pTextMem, pNeedFill, pTextRenderMode, pUnderliningDisabled
 
 on prepare me
   me.pOffX = 0
@@ -42,6 +42,11 @@ on prepare me
     pTextRenderMode = getVariable("text.render.compatibility.mode")
   else
     pTextRenderMode = 1
+  end if
+  if variableExists("text.underlining.disabled") then
+    pUnderliningDisabled = getVariable("text.underlining.disabled")
+  else
+    pUnderliningDisabled = 0
   end if
   me.initResources(pFontData)
   return me.createImgFromTxt()
@@ -133,6 +138,16 @@ on createImgFromTxt me
     end repeat
     the itemDelimiter = tDelim
     pFontData[#fontStyle] = tList
+  end if
+  if pUnderliningDisabled then
+    if listp(pFontData[#fontStyle]) then
+      if pFontData[#fontStyle].getPos(#underline) <> 0 then
+        pFontData[#fontStyle].deleteOne(#underline)
+        if pFontData[#fontStyle].count = 0 then
+          pFontData[#fontStyle].append(#plain)
+        end if
+      end if
+    end if
   end if
   if not voidp(pFontData[#text]) then
     pTextMem.text = pFontData[#text]

@@ -543,11 +543,11 @@ on sendChat me, tChat
     case tChat.word[1] of
       ":readytest":
         if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
-          return callJavascriptFunction("clientReady")
+          return callJavaScriptFunction("clientReady")
         end if
       ":jstest":
         if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
-          return callJavascriptFunction("hello", "JS Test")
+          return callJavaScriptFunction("hello", "JS Test")
         end if
       ":crashme":
         if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then

@@ -1,5 +1,11 @@
 property pStatus, pMemName, pMemNum, pURL, pType, pCallBack, pNetId, pPercent, ptryCount
 
+on deconstruct me
+  if timeoutExists("dl_timeout_" & pNetId) then
+    removeTimeout("dl_timeout_" & pNetId)
+  end if
+end
+
 on define me, tMemName, tdata
   pStatus = #initializing
   pMemName = tMemName
@@ -46,7 +52,21 @@ on Activate me
   return 1
 end
 
+on activateWithTimeout me
+  pStatus = #paused
+  pPercent = 0.0
+  if variableExists("download.retry.delay") then
+    tRetryTimeout = getVariable("download.retry.delay")
+  else
+    tRetryTimeout = 2000
+  end if
+  createTimeout("dl_timeout_" & pNetId, tRetryTimeout, #Activate, me.getID(), VOID, 1)
+end
+
 on update me
+  if pStatus = #paused then
+    return 0
+  end if
   if pStatus <> #LOADING then
     return 0
   end if
@@ -62,21 +82,24 @@ on update me
     end if
   end if
   if netDone(pNetId) = 1 then
-    if netError(pNetId) = "OK" then
+    if netError(pNetId) = "OK" and pPercent > 0 then
       me.importFileToCast()
       getDownloadManager().removeActiveTask(pMemName, pCallBack)
       pStatus = #complete
       return 1
     else
-      tError = getDownloadManager().solveNetErrorMsg(netError(pNetId))
-      error(me, "Download error:" & RETURN & pMemName & RETURN & tError, #update, #minor)
+      tErrorID = netError(pNetId)
+      tError = getDownloadManager().solveNetErrorMsg(tErrorID)
+      error(me, "Download error:" & RETURN & pMemName & RETURN & tErrorID & "-" & tError & "-" & pPercent & "percent", #update, #minor)
       case netError(pNetId) of
         6, 4159, 4165:
           if not (pURL contains getDownloadManager().getProperty(#defaultURL)) then
             pURL = getDownloadManager().getProperty(#defaultURL) & pURL
-            me.Activate()
+            me.activateWithTimeout()
+            return 0
           else
             getDownloadManager().removeActiveTask(pMemName, pCallBack, 0)
+            return 0
           end if
         4242:
           return getDownloadManager().removeActiveTask(pMemName, pCallBack)
@@ -86,13 +109,13 @@ on update me
       ptryCount = ptryCount + 1
       if ptryCount > getIntVariable("download.retry.count", 10) then
         getDownloadManager().removeActiveTask(pMemName, pCallBack, 0)
-        return error(me, "Download failed too many times:" & RETURN & pURL, #update, #minor)
+        return error(me, "Download failed too many times:" & RETURN & pURL & "-" & tErrorID & "-" & pPercent & "percent", #update, #major)
       else
-        tTriesBeforeRAndParams = 3
+        tTriesBeforeRAndParams = 2
         if ptryCount > tTriesBeforeRAndParams then
           pURL = getSpecialServices().addRandomParamToURL(pURL)
         end if
-        me.Activate()
+        me.activateWithTimeout()
       end if
     end if
   end if

@@ -75,7 +75,9 @@ on Execute me, tMessage, tArgA, tArgB, tArgC
       me.unregister(tMessage, tID)
       next repeat
     end if
-    pLastExecutedMessage = tMethod
+    if tMethod <> #invalidateCrapFixer then
+      pLastExecutedMessage = tMethod
+    end if
     call(tMethod, [tObject], tArgA, tArgB, tArgC)
   end repeat
   return 1
