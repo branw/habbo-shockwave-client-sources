@@ -54,7 +54,11 @@ on getPredefinedURL tURL
   return getSpecialServices().getPredefinedURL(tURL)
 end
 
-on getMoviePath me
+on getDomainPart tURL
+  return getSpecialServices().getDomainPart(tURL)
+end
+
+on getMoviePath
   return getSpecialServices().getMoviePath()
 end
 

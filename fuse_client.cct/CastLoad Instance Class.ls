@@ -56,11 +56,14 @@ on update me
       if ptryCount >= pCastLoadMaxRetryCount then
         pPercent = 1.0
         pState = #error
-        getCastLoadManager().DoneCurrentDownLoad(pFile, pURL, pGroupId, pState)
         pState = #failed
+        getCastLoadManager().DoneCurrentDownLoad(pFile, pURL, pGroupId, pState)
         return SystemAlert(me, "Failed download operation:" & RETURN & "Tried to load file" && QUOTE & pFile & QUOTE && ptryCount && "times.", #update)
       else
-        pURL = getSpecialServices().addRandomParamToURL(pURL)
+        tTriesBeforeRAndParams = 3
+        if ptryCount > tTriesBeforeRAndParams then
+          pURL = getSpecialServices().addRandomParamToURL(pURL)
+        end if
       end if
       getCastLoadManager().TellStreamState(pFile, pState, 0.0, pGroupId)
       me.Activate()

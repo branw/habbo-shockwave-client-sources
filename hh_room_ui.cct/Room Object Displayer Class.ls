@@ -83,7 +83,7 @@ on showObjectInfo me, tObjType, tRefresh
     "user":
       tObj = tRoomComponent.getUserObject(tSelectedObj)
       tWindowTypes = getVariableValue("object.display.windows.human")
-      if tObj <> 0 then
+      if tObj <> 0 and pShowUserTags then
         tUserID = integer(tObj.getWebID())
         me.updateUserTags(tUserID)
       end if
@@ -487,7 +487,6 @@ on eventProc me, tEvent, tSprID, tParam
       "room_obj_disp_bg":
         return 0
     end case
-    return error(me, "Unknown object interface command:" && tSprID, #eventProcInterface, #minor)
   else
     if tEvent = #mouseWithin then
       case tSprID of

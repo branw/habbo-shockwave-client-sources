@@ -24,7 +24,7 @@ on construct me
   return 1
 end
 
-on deconstruc me
+on deconstruct me
   removeWindow(me.pWindow.getProperty(#id))
 end
 

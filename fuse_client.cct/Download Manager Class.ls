@@ -1,4 +1,4 @@
-property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList
+property pTaskQueue, pActiveTasks, pReceivedTasks, pCompleteTasks, pTypeDefList, pOwnDomain
 
 on construct me
   pTaskQueue = [:]
@@ -7,6 +7,7 @@ on construct me
   pCompleteTasks = []
   pTypeDefList = [:]
   me.emptyCookies()
+  pOwnDomain = getDomainPart(getMoviePath())
   return 1
 end
 
@@ -39,6 +40,27 @@ on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
   end if
   if not ilk(ttype, #symbol) then
     ttype = me.recognizeMemberType(tURL)
+  end if
+  tURL = getPredefinedURL(tURL)
+  tOwnDomain = getDomainPart(getMoviePath())
+  tDownloadDomain = getDomainPart(tURL)
+  if tOwnDomain <> tDownloadDomain and (tURL contains "http://" or tURL contains "https://") and not (tURL contains "://localhost") then
+    tAllowCrossDomain = 0
+    if variableExists("client.allow.cross.domain") then
+      tAllowCrossDomain = value(getVariable("client.allow.cross.domain"))
+    end if
+    tNotifyCrossDomain = 1
+    if variableExists("client.notify.cross.domain") then
+      tNotifyCrossDomain = value(getVariable("client.notify.cross.domain"))
+    end if
+    if tNotifyCrossDomain then
+      executeMessage("crossDomainDownload", tURL)
+    end if
+    if not tAllowCrossDomain then
+      tPref = getPref("CrossDomainAlert.txt")
+      setPref("CrossDomainAlert.txt", tURL && date() && time() & RETURN & tPref)
+      return error(me, "Cross domain download not allowed:" && tURL, #queue, #minor)
+    end if
   end if
   if not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName]) then
     return error(me, "File already downloading:" && tMemName, #queue, #minor)
@@ -268,7 +290,10 @@ on updateQueue me
   return 1
 end
 
-on removeActiveTask me, tMemName, tCallback
+on removeActiveTask me, tMemName, tCallback, tSuccess
+  if voidp(tSuccess) then
+    tSuccess = 1
+  end if
   repeat with i = 1 to pActiveTasks.count
     if pActiveTasks[i].pMemName = tMemName then
       pActiveTasks[i].deconstruct()
@@ -280,7 +305,7 @@ on removeActiveTask me, tMemName, tCallback
   end repeat
   if not voidp(tCallback) then
     if objectExists(tCallback[#client]) then
-      call(tCallback[#method], getObject(tCallback[#client]), tCallback[#argument])
+      call(tCallback[#method], getObject(tCallback[#client]), tCallback[#argument], tSuccess)
     end if
   end if
   return 0

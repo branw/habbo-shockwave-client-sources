@@ -1,9 +1,10 @@
-property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pRunning, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial, pEnabledOnServer, pMessages
+property pTutorialID, pTutorialName, pTopics, pTopicStatuses, pTopicID, pSteps, pWaitingForPrefs, pEnabled, pRunning, pQuitting, pCurrentTopicID, pCurrentTopicNumber, pCurrentStepID, pCurrentStepNumber, pTriggerList, pRestrictionList, pUserSex, pUserName, pDefaultTutorial, pEnabledOnServer, pMessages
 
 on construct me
   me.pEnabled = 0
   me.pRunning = 0
   me.pWaitingForPrefs = 1
+  me.pQuitting = 0
   if variableExists("tutorial.name.new_user_flow") then
     me.pDefaultTutorial = getVariable("tutorial.name.new_user_flow")
   end if
@@ -124,7 +125,7 @@ on setTutorialConfig me, tConfigList
   end repeat
   me.pTopicStatuses = tConfigList.getaProp(#statuses)
   me.getInterface().show()
-  me.getInterface().showMenu(#welcome)
+  me.showMenu(#welcome)
 end
 
 on setTopicConfig me, tTopicConfig
@@ -149,7 +150,7 @@ end
 on selectTopic me, tTopicID
   case tTopicID of
     #menu, #Cancel:
-      me.getInterface().showMenu()
+      me.showMenu()
       return 1
     #quit:
       me.exitTutorial()
@@ -297,17 +298,18 @@ on exitTutorial me
 end
 
 on restriction me
-  me.getInterface().showMenu(#offtopic)
+  me.showMenu(#offtopic)
 end
 
 on getTopics me
   return me.pTopics
 end
 
-on showMenu me
+on showMenu me, tstate
+  me.pQuitting = 0
   me.clearTriggers(1)
   me.clearRestrictions(1)
-  me.getInterface().showMenu()
+  me.getInterface().showMenu(tstate)
 end
 
 on setTopicResult me, tBoolReward
@@ -350,6 +352,11 @@ on sendTrackingRequest me, tCase
 end
 
 on tryExit me
+  if me.pQuitting then
+    me.selectTopic(#quit)
+    return 1
+  end if
+  me.pQuitting = 1
   tPrerequisites = [:]
   tPrerequisites.setaProp(#hide_navigator, VOID)
   tPrerequisites.setaProp(#hide_purse, VOID)

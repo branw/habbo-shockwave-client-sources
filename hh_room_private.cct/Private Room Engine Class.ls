@@ -7,7 +7,15 @@ on construct me
   pFloorDefined = 0
   pWallModel = string(getVariable("room.default.wall", "201"))
   pFloorModel = string(getVariable("room.default.floor", "203"))
+  registerMessage(#colorizeRoom, me.getID(), #renderRoomBackground)
+  registerMessage(#setDimmerColor, me.getID(), #setRoomDimmerColor)
+  me.setRoomDimmerColor(rgb(255, 255, 255))
   return 1
+end
+
+on deconstruct me
+  unregisterMessage(#colorizeRoom, me.getID())
+  unregisterMessage(#setDimmerColor, me.getID())
 end
 
 on prepare me
@@ -170,4 +178,14 @@ on setFloorPattern me, tIndex
   the itemDelimiter = tDelim
   pFloorDefined = 1
   return 1
+end
+
+on renderRoomBackground me, tColor
+  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+  tVisualizer.renderWrappedParts(tColor)
+end
+
+on setRoomDimmerColor me, tColor
+  tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
+  tVisualizer.setDimmerColor(tColor)
 end

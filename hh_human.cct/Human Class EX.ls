@@ -1,6 +1,7 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pID, pWebID, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ, pGroupId, pStatusInGroup, pFrozenAnimFrame, pPartListSubSet, pPartListFull, pPartActionList, pPartOrderOld, pLeftHandUp, pRightHandUp
 
 on construct me
+  pFrozenAnimFrame = 0
   pID = 0
   pWebID = VOID
   pName = EMPTY
@@ -157,9 +158,9 @@ on changeFigureAndData me, tdata
   me.setPartLists(tmodels)
   pPartOrderOld = EMPTY
   me.arrangeParts()
-  if pAnimating then
-    me.resumeAnimation()
-  end if
+  tAnimating = pAnimating
+  me.resumeAnimation()
+  pAnimating = tAnimating
   pChanges = 1
   me.render(1)
   me.reDraw()
@@ -523,7 +524,11 @@ on draw me, tRGB
 end
 
 on prepare me
-  pAnimCounter = (pAnimCounter + 1) mod 4
+  if not pFrozenAnimFrame then
+    pAnimCounter = (pAnimCounter + 1) mod 4
+  else
+    pAnimCounter = pFrozenAnimFrame - 1
+  end if
   if pEyesClosed and not pSleeping then
     me.openEyes()
   else

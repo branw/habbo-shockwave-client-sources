@@ -1,4 +1,4 @@
-property pPartList, pImgMemberID, pTypeDef, pSprite, pLocZ, pWrapperStatus, pOffsets, pWrapID, pBoundingRect, pCapturesEvents, pSpriteProps, pOwnerID, pVisualizerLocZ
+property pPartList, pImgMemberID, pTypeDef, pSprite, pLocZ, pWrapperStatus, pOffsets, pWrapID, pBoundingRect, pCapturesEvents, pSpriteProps, pOwnerID, pVisualizerLocZ, pBgColor
 
 on construct me
   pPartList = []
@@ -9,6 +9,7 @@ on construct me
   pCapturesEvents = 0
   pSpriteProps = [#blend: 100, #ink: 41, #bgColor: rgb(255, 255, 255)]
   pVisualizerLocZ = 0
+  pBgColor = rgb(254, 254, 254)
   return 1
 end
 
@@ -269,6 +270,13 @@ on getBounds me
   return pBoundingRect + rect(pOffsets[1], pOffsets[2], pOffsets[1], pOffsets[2])
 end
 
+on renderWithColor me, tColor
+  if ilk(tColor) = #color then
+    pBgColor = tColor
+    me.renderImage()
+  end if
+end
+
 on getImagePointer me
   if not pWrapperStatus[#render] then
     me.renderImage()
@@ -366,7 +374,7 @@ on renderImage me
     end if
     tPartRect = rect(tPartRectX1, tPartRectY1, tPartRectX2, tPartRectY2)
     tMatte = tSourceImage.createMatte()
-    tBgColor = rgb(254, 254, 254)
+    tBgColor = pBgColor
     tTargetImage.copyPixels(tSourceImage, tPartRect, tSourceImage.rect, [#maskImage: tMatte, #ink: 41, #bgColor: tBgColor])
   end repeat
   tImgMember.image = tTargetImage

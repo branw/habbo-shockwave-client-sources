@@ -192,6 +192,9 @@ on startBadgeDownload me, tBadgeName
   else
     tBadgeMemNum = queueDownload(tSourceURL, "badge" && tBadgeName, #bitmap, 1)
   end if
+  if tBadgeMemNum = 0 then
+    return 0
+  end if
   member(tBadgeMemNum).image = image(1, 1, 32)
   member(tBadgeMemNum).trimWhiteSpace = 0
   registerDownloadCallback(tBadgeMemNum, #badgeLoaded, me.getID(), tBadgeName)

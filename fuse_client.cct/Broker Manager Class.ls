@@ -1,6 +1,7 @@
-property pItemList
+property pItemList, pLastExecutedMessage
 
 on construct me
+  pLastExecutedMessage = EMPTY
   pItemList = [:]
   pItemList.sort()
   return 1
@@ -74,6 +75,7 @@ on execute me, tMessage, tArgA, tArgB, tArgC
       me.unregister(tMessage, tID)
       next repeat
     end if
+    pLastExecutedMessage = tMethod
     call(tMethod, [tObject], tArgA, tArgB, tArgC)
   end repeat
   return 1
@@ -91,4 +93,8 @@ on print me, tMessage
     end repeat
   end repeat
   return 1
+end
+
+on getLastExecutedMessageId me
+  return pLastExecutedMessage
 end

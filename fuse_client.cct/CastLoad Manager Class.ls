@@ -273,7 +273,7 @@ on DoneCurrentDownLoad me, tFile, tURL, tID, tstate
   tTask.changeLoadingCount(-1)
   pCurrentDownLoads[tFile].deconstruct()
   me.delay(50, #removeCastLoadInstance, tFile)
-  me.removeCastLoadTask(tID)
+  me.removeCastLoadTask(tID, tstate)
   return 1
 end
 
@@ -288,10 +288,17 @@ on removeCastLoadInstance me, tFile
   end if
 end
 
-on removeCastLoadTask me, tID
-  if pTaskList[tID].getTaskState() = #ready then
-    pTaskList[tID].DoCallBack()
-    pTaskList[tID].deconstruct()
+on removeCastLoadTask me, tID, tstate
+  tTask = pTaskList[tID]
+  if tstate = #failed then
+    tTask.setFailed()
+  end if
+  if tTask.getTaskState() = #ready then
+    if tTask.getFailed() then
+      tstate = #failed
+    end if
+    tTask.DoCallBack(tstate)
+    tTask.deconstruct()
     pTaskList.deleteProp(tID)
     if count(pTaskList) = 0 then
       removePrepare(me.getID())

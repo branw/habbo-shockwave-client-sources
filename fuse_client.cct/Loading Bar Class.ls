@@ -65,6 +65,12 @@ on define me, tLoadID, tProps
       pBuffer = tWndObj.getElement("drag").getProperty(#buffer).image
     end if
   end if
+  if not voidp(tProps[#locY]) then
+    tWndObj.moveTo(tWndObj.getProperty(#locX), tProps[#locY])
+  end if
+  if not voidp(tProps[#locX]) then
+    tWndObj.moveTo(tProps[#locX], tWndObj.getProperty(#locY))
+  end if
   tRect = pBuffer.rect
   if pwidth > tRect.width then
     pwidth = tRect.width

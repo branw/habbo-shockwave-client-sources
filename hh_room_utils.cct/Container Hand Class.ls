@@ -12,7 +12,8 @@ on construct me
   pNextActive = 1
   pPrevActive = 1
   pIconPlaceholderName = "icon_placeholder"
-  registerMessage(#recyclerStateChange, me.getID(), #showContainerItems)
+  registerMessage(#roomReady, me.getID(), #checkContainerOnRoomForward)
+  registerMessage(#requestContainerOpen, me.getID(), #showContainerItems)
   return 1
 end
 
@@ -22,7 +23,8 @@ on deconstruct me
       removeMember("handcontainer_" & i)
     end if
   end repeat
-  unregisterMessage(#recyclerStateChange, me.getID())
+  unregisterMessage(#roomReady, me.getID())
+  unregisterMessage(#requestContainerOpen, me.getID())
   removeWindow(pHandButtonsWnd)
   removeUpdate(me.getID())
   if visualizerExists(pHandVisID) then
@@ -76,6 +78,16 @@ on openClose me
     return me.close()
   else
     return me.open()
+  end if
+end
+
+on checkContainerOnRoomForward me
+  tForwardVarId = "forward.open.hand"
+  if variableExists(tForwardVarId) then
+    if getVariable(tForwardVarId) = 1 then
+      me.open()
+      setVariable(tForwardVarId, 0)
+    end if
   end if
 end
 

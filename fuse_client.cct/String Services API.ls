@@ -67,6 +67,10 @@ on replaceChunks tString, tChunkA, tChunkB
   return getStringServices().replaceChunks(tString, tChunkA, tChunkB)
 end
 
+on urlEncode tString
+  return getStringServices().urlEncode(tString)
+end
+
 on obfuscate tString
   return getStringServices().obfuscate(tString)
 end

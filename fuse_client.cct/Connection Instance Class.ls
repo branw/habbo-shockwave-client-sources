@@ -425,6 +425,7 @@ on forwardMsg me, tSubject, tParams
     if tObject <> 0 then
       pMsgStruct.setaProp(#subject, tSubject)
       pMsgStruct.setaProp(#content, tParams)
+      getConnectionManager().registerLastMessage(tSubject, tParams)
       call(tCallback[2], tObject, pMsgStruct)
       next repeat
     end if

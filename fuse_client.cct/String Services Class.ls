@@ -181,6 +181,24 @@ on replaceChunks me, tString, tChunkA, tChunkB
   return tStr
 end
 
+on urlEncode me, tStr
+  tEncodedStr = EMPTY
+  tOkChars = "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+  repeat with i = 1 to tStr.length
+    tChar = tStr.char[i]
+    if offset(tChar, tOkChars) then
+      put tChar after tEncodedStr
+      next repeat
+    end if
+    if tChar = SPACE then
+      put "+" after tEncodedStr
+      next repeat
+    end if
+    put "%" & rgb(charToNum(tChar), 0, 0).hexString().char[2..3] after tEncodedStr
+  end repeat
+  return tEncodedStr
+end
+
 on obfuscate me, tStr
   tResult = EMPTY
   repeat with i = 1 to tStr.length

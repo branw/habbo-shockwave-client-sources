@@ -1,10 +1,12 @@
 property pState, pValidPartProps, pValidPartGroups
 
 on construct me
+  registerMessage(#userlogin, me.getID(), #checkWebShortcuts)
   return me.updateState("start")
 end
 
 on deconstruct me
+  unregisterMessage(#userlogin, me.getID())
   return me.updateState("reset")
 end
 
@@ -56,4 +58,21 @@ end
 
 on getState me
   return pState
+end
+
+on checkWebShortcuts me, tChecked
+  if tChecked = 1 then
+    executeMessage(#open_roomkiosk)
+    return 1
+  end if
+  if variableExists("shortcut.id") then
+    tShortcutID = getIntVariable("shortcut.id")
+    if tShortcutID = 1 then
+      tTimeOutId = #roommatic_opening_timeout
+      if not timeoutExists(tTimeOutId) then
+        createTimeout(#tTimeOutId, 2500, #checkWebShortcuts, me.getID(), 1, 1)
+      end if
+    end if
+  end if
+  return 1
 end

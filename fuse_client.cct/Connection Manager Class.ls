@@ -1,6 +1,7 @@
-property pListenerList, pCommandsList, pClassString
+property pListenerList, pCommandsList, pClassString, pLastMessageData
 
 on construct me
+  pLastMessageData = [:]
   me.pItemList = []
   me.pItemList.sort()
   pListenerList = [:]
@@ -160,4 +161,13 @@ on unregisterCommands me, tID, tObjID, tCmdList
     return 0
   end if
   return 1
+end
+
+on registerLastMessage me, tmessageId, tMessage
+  pLastMessageData[#id] = tmessageId
+  pLastMessageData[#message] = tMessage
+end
+
+on getLastMessageData me
+  return pLastMessageData[#id]
 end

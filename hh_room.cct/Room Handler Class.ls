@@ -689,19 +689,20 @@ on handle_door_in me, tMsg
   the itemDelimiter = tDelim
   tDoorObj = me.getComponent().getActiveObject(tDoor)
   if tDoorObj <> 0 then
-    tDoorObj.animate(18)
+    call(#animate, [tDoorObj], 18)
     if getObject(#session).GET("user_name") = tuser then
-      tDoorObj.prepareToKick(tuser)
+      call(#prepareToKick, [tDoorObj], tuser)
     end if
   end if
 end
 
 on handle_door_out me, tMsg
   tDelim = the itemDelimiter
-  tDoor = me.getComponent().getActiveObject(tMsg.content.item[1])
   the itemDelimiter = "/"
+  tDoor = me.getComponent().getActiveObject(tMsg.content.item[1])
+  the itemDelimiter = tDelim
   if tDoor <> 0 then
-    return tDoor.animate()
+    call(#animate, [tDoor])
   end if
 end
 
@@ -1110,6 +1111,7 @@ on regMsgList me, tBool
   tCmds.setaProp("SPIN_WHEEL_OF_FORTUNE", 247)
   tCmds.setaProp("RATEFLAT", 261)
   tCmds.setaProp("GET_USER_TAGS", 263)
+  tCmds.setaProp("SET_RANDOM_STATE", 314)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)

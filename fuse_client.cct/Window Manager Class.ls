@@ -1,6 +1,7 @@
-property pLockLocZ, pDefLocX, pDefLocY, pClsList, pModalID
+property pLockLocZ, pDefLocX, pDefLocY, pClsList, pModalID, pLastEventData
 
 on construct me
+  pLastEventData = [:]
   pLockLocZ = 0
   pDefLocX = getIntVariable("window.default.locx", 100)
   pDefLocY = getIntVariable("window.default.locy", 100)
@@ -218,4 +219,14 @@ on modal me, tID, tLayout, tPosition
   me.pActiveItem = tID
   me.Activate(tID)
   return 1
+end
+
+on registerWindowEvent me, tTitle, tSprID, tEvent
+  pLastEventData[#title] = tTitle
+  pLastEventData[#sprite] = tSprID
+  pLastEventData[#event] = tEvent
+end
+
+on getLastEvent me
+  return pLastEventData[#title] & "-" & pLastEventData[#sprite] & "-" & pLastEventData[#event]
 end

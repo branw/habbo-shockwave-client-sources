@@ -393,6 +393,7 @@ on supportedEvents me
 end
 
 on redirectEvent me, tEvent, tSprID
+  getWindowManager().registerWindowEvent(pTitle, tSprID, tEvent)
   tMethod = pProcedures[tEvent][1]
   tTarget = pProcedures[tEvent][2]
   tParam = call(tEvent, [pElemList[tSprID]], tSprID)

@@ -1,4 +1,4 @@
-property pDoorOpentimer, pProcessActive, pAnimActive, pAnimTime, pKickTime, pTargetData
+property pDoorOpentimer, pProcessActive, pAnimActive, pAnimTime, pKickTime, pTargetData, pCloseDoorTimer
 
 on prepare me, tdata
   pProcessActive = 0
@@ -6,12 +6,12 @@ on prepare me, tdata
   pAnimTime = 10
   pKickTime = 0
   pTargetData = [:]
-  if me.pSprList.count < 3 then
-    return 0
-  end if
-  me.pSprList[3].visible = 0
+  pDoorOpentimer = 0
+  pCloseDoorTimer = 0
   if tdata.count > 0 then
     me.updateStuffdata(tdata[#stuffdata])
+  else
+    me.updateStuffdata(EMPTY)
   end if
   if getObject(#session).exists("target_door_ID") then
     if getObject(#session).GET("target_door_ID") = me.getID() then
@@ -24,26 +24,16 @@ on prepare me, tdata
 end
 
 on updateStuffdata me, tValue
-  if me.pSprList.count < 2 then
-    return 0
-  end if
   if tValue = "TRUE" then
+    tValue = 2
     pDoorOpentimer = 18
   else
-    tCurName = me.pSprList[1].member.name
-    tNewName = tCurName.char[1..length(tCurName) - 1] & 0
-    tmember = member(abs(getmemnum(tNewName)))
-    me.pSprList[1].castNum = tmember.number
-    me.pSprList[1].width = tmember.width
-    me.pSprList[1].height = tmember.height
-    tMaskMem = me.pSprList[2].member.name
-    tNewMask = tMaskMem.char[1..length(tMaskMem) - 1] & 0
-    tmember = member(abs(getmemnum(tNewMask)))
-    me.pSprList[2].castNum = tmember.number
-    me.pSprList[2].width = tmember.width
-    me.pSprList[2].height = tmember.height
-    pDoorOpentimer = 0
+    if tValue = "FALSE" then
+      tValue = 1
+      pDoorOpentimer = 0
+    end if
   end if
+  me.setState(tValue)
 end
 
 on select me
@@ -56,32 +46,15 @@ on select me
       return me.tryDoor()
     end if
     tUserIsClose = 0
-    case me.pDirection[1] of
-      4:
-        if me.pLocX = tUserObj.pLocX and me.pLocY - tUserObj.pLocY = -1 then
-          tUserIsClose = 1
-        else
-          return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY + 1])
-        end if
-      0:
-        if me.pLocX = tUserObj.pLocX and me.pLocY - tUserObj.pLocY = 1 then
-          tUserIsClose = 1
-        else
-          return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY - 1])
-        end if
-      2:
-        if me.pLocY = tUserObj.pLocY and me.pLocX - tUserObj.pLocX = -1 then
-          tUserIsClose = 1
-        else
-          return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX + 1, #short: me.pLocY])
-        end if
-      6:
-        if me.pLocY = tUserObj.pLocY and me.pLocX - tUserObj.pLocX = 1 then
-          tUserIsClose = 1
-        else
-          return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX - 1, #short: me.pLocY])
-        end if
-    end case
+    tCloseList = ["0": [0, 1], "2": [-1, 0], "4": [0, -1], "6": [1, 0]]
+    tDelta = tCloseList[string(me.pDirection[1])]
+    if not voidp(tDelta) then
+      if me.pLocX - tUserObj.pLocX = tDelta[1] and me.pLocY - tUserObj.pLocY = tDelta[2] then
+        tUserIsClose = 1
+      else
+        return getThread(#room).getComponent().getRoomConnection().send("MOVE", [#short: me.pLocX - tDelta[1], #short: me.pLocY - tDelta[2]])
+      end if
+    end if
     if tUserIsClose then
       getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
       getThread(#room).getComponent().getRoomConnection().send("INTODOOR", me.getID())
@@ -92,6 +65,12 @@ on select me
 end
 
 on tryDoor me
+  if getObject(#session).exists("target_door_ID") then
+    tTargetDoorID = getObject(#session).GET("target_door_ID")
+    if tTargetDoorID <> 0 then
+      return 1
+    end if
+  end if
   getObject(#session).set("current_door_ID", me.getID())
   if connectionExists(getVariable("connection.info.id")) then
     getConnection(getVariable("connection.info.id")).send("GETDOORFLAT", me.getID())
@@ -120,11 +99,11 @@ end
 
 on kickOut me
   tRoom = getThread(#room).getComponent()
-  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
-  if me.pDirection[1] = 2 then
-    tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + 1, #short: me.pLocY])
-  else
-    tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX, #short: me.pLocY + 1])
+  tRoom.getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
+  tCloseList = ["0": [0, -1], "2": [1, 0], "4": [0, 1], "6": [-1, 0]]
+  tDelta = tCloseList[string(me.pDirection[1])]
+  if not voidp(tDelta) then
+    tRoom.getRoomConnection().send("MOVE", [#short: me.pLocX + tDelta[1], #short: me.pLocY + tDelta[2]])
   end if
 end
 
@@ -137,48 +116,36 @@ on animate me, tTime
 end
 
 on update me
-  if me.pSprList.count < 3 then
-    return 
-  end if
+  callAncestor(#update, [me])
   if pDoorOpentimer > 0 then
-    tCurName = me.pSprList[1].member.name
-    tNewName = tCurName.char[1..length(tCurName) - 1] & 1
-    tmember = member(abs(getmemnum(tNewName)))
-    me.pSprList[1].castNum = tmember.number
-    me.pSprList[1].width = tmember.width
-    me.pSprList[1].height = tmember.height
-    tCurName = me.pSprList[2].member.name
-    tNewName = tCurName.char[1..length(tCurName) - 1] & 1
-    tmember = member(abs(getmemnum(tNewName)))
-    me.pSprList[2].castNum = tmember.number
-    me.pSprList[2].width = tmember.width
-    me.pSprList[2].height = tmember.height
     pDoorOpentimer = pDoorOpentimer - 1
     if pDoorOpentimer = 0 then
       getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "FALSE"])
     end if
   end if
   if pAnimActive > 0 then
-    tName = me.pSprList[1].member.name
-    if tName.char[length(tName)] = "1" then
-      me.pSprList[3].visible = 0
-    else
-      pAnimActive = (pAnimActive + 1) mod pAnimTime
-      tVisible = pAnimActive mod 2
-      if tVisible and random(4) > 1 then
-        me.pSprList[3].visible = 1
-      else
-        me.pSprList[3].visible = 0
-      end if
+    pAnimActive = (pAnimActive + 1) mod pAnimTime
+    if me.pState = 1 then
+      me.setState(3)
     end if
   end if
-  if pProcessActive and pAnimActive = pAnimTime - 1 then
-    return me.doorLogin()
+  if pAnimActive = pAnimTime - 1 then
+    pAnimActive = 0
+    if pProcessActive then
+      pCloseDoorTimer = 20
+      return me.doorLogin()
+    end if
   end if
   if pKickTime > 0 then
     pKickTime = pKickTime - 1
     if pKickTime = 0 then
       me.kickOut()
+    end if
+  end if
+  if pCloseDoorTimer > 0 then
+    pCloseDoorTimer = pCloseDoorTimer - 1
+    if pCloseDoorTimer = 0 then
+      me.setState(1)
     end if
   end if
 end

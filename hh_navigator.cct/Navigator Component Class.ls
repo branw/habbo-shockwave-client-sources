@@ -18,8 +18,9 @@ on construct me
   pNodeCacheExpList = [:]
   pNaviHistory = []
   pHideFullRoomsFlag = 0
-  pUpdateInterval = getIntVariable("navigator.cache.duration") * 1000
-  if pUpdateInterval = 0 then
+  if variableExists("navigator.cache.duration") then
+    pUpdateInterval = getIntVariable("navigator.cache.duration") * 1000
+  else
     pUpdateInterval = getIntVariable("navigator.updatetime")
   end if
   if variableExists("navigator.recom.updatetime") then
@@ -68,8 +69,11 @@ on showNavigator me
   return me.getInterface().showNavigator()
 end
 
-on hideNavigator me
-  return me.getInterface().hideNavigator(#hide)
+on hideNavigator me, tHideOrRemove
+  if voidp(tHideOrRemove) then
+    tHideOrRemove = #hide
+  end if
+  return me.getInterface().hideNavigator(tHideOrRemove)
 end
 
 on showhidenavigator me
@@ -617,7 +621,7 @@ on sendSearchFlats me, tQuery
       return error(me, "Search query is void!", #sendSearchFlats, #minor)
     end if
     tQuery = convertSpecialChars(tQuery, 1)
-    return getConnection(pConnectionId).send("SRCHF", "%" & tQuery & "%")
+    return getConnection(pConnectionId).send("SRCHF", tQuery)
   else
     return 0
   end if
@@ -759,12 +763,12 @@ on updateState me, tstate, tProps
       me.updateRecomRooms()
       tForwardingHappening = variableExists("forward.id") and variableExists("forward.type")
       if tForwardingHappening then
-        me.delay(3000, #goStraightToRoom)
+        me.delay(1000, #goStraightToRoom)
       else
         if variableExists("friend.id") then
-          me.delay(3000, #followFriend)
+          me.delay(1000, #followFriend)
         else
-          me.delay(2000, #updateState, "openNavigator")
+          me.delay(1000, #updateState, "openNavigator")
         end if
       end if
       return 1

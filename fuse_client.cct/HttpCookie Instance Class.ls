@@ -296,6 +296,25 @@ on handleContentResponse me, tMsg, tContent
         tCompleteUrl = "http://" & pServer & tRedirectUrl
       end if
       if pRedirectType = #follow then
+        tOwnDomain = getDomainPart(getMoviePath())
+        tDownloadDomain = getDomainPart(tCompleteUrl)
+        if tOwnDomain <> tDownloadDomain and (tCompleteUrl contains "http://" or tCompleteUrl contains "https://") and not (tCompleteUrl contains "://localhost") then
+          tAllowCrossDomain = 0
+          if variableExists("client.allow.cross.domain") then
+            tAllowCrossDomain = getVariable("client.allow.cross.domain")
+          end if
+          tNotifyCrossDomain = 1
+          if variableExists("client.notify.cross.domain") then
+            tNotifyCrossDomain = value(getVariable("client.notify.cross.domain"))
+          end if
+          if tNotifyCrossDomain then
+            executeMessage("crossDomainDownload", tCompleteUrl)
+          end if
+          if not tAllowCrossDomain then
+            pNetDone = 1
+            return error(me, "Cross domain download not allowed:" && tCompleteUrl, #handleContentResponse, #minor)
+          end if
+        end if
         if pType = #bitmap then
           pRedirectUrl = tCompleteUrl
           pRedirectNetID = preloadNetThing(tCompleteUrl)
@@ -379,28 +398,10 @@ on parseCookieString me, tStr
   return tCookie
 end
 
-on urlEncode me, tStr
-  tEncodedStr = EMPTY
-  tOkChars = "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_"
-  repeat with i = 1 to tStr.length
-    tChar = tStr.char[i]
-    if offset(tChar, tOkChars) then
-      put tChar after tEncodedStr
-      next repeat
-    end if
-    if tChar = SPACE then
-      put "+" after tEncodedStr
-      next repeat
-    end if
-    put "%" & rgb(charToNum(tChar), 0, 0).hexString().char[2..3] after tEncodedStr
-  end repeat
-  return tEncodedStr
-end
-
 on getDataString me, tdata
   tDataStr = EMPTY
   repeat with i = 1 to tdata.count
-    put me.urlEncode(tdata.getPropAt(i)) & "=" & me.urlEncode(tdata[i]) after tDataStr
+    put urlEncode(tdata.getPropAt(i)) & "=" & urlEncode(tdata[i]) after tDataStr
     if i < tdata.count then
       put "&" after tDataStr
     end if

@@ -106,7 +106,7 @@ on update me, tForcedUpdate, tRectMod
         tmember = member(tMemNum)
         tRegPnt = tmember.regPoint
         tX = -tRegPnt[1]
-        tY = pBody.pBuffer.rect.height - tRegPnt[2] - 10
+        tY = pBody.pBuffer.rect.height - tRegPnt[2] - 20
         pBody.pUpdateRect = union(pBody.pUpdateRect, tdata["cacheRect"])
         tdata["cacheImage"] = tmember.image
         tLocFix = pBody.pLocFix.duplicate()

@@ -175,6 +175,32 @@ on getMoviePath me
   return deobfuscate(getVariable(tVariableID))
 end
 
+on getDomainPart me, tPath
+  if voidp(tPath) then
+    return EMPTY
+  end if
+  if chars(tPath, 1, 8) = "https://" then
+    tPath = chars(tPath, 9, tPath.length)
+  else
+    if chars(tPath, 1, 7) = "http://" then
+      tPath = chars(tPath, 8, tPath.length)
+    end if
+  end if
+  tDelim = the itemDelimiter
+  the itemDelimiter = "/"
+  tPath = tPath.item[1]
+  the itemDelimiter = "."
+  tMaxItemCount = 2
+  if tPath contains ".co." then
+    tMaxItemCount = tMaxItemCount + 1
+  end if
+  tPath = tPath.item[tPath.item.count - tMaxItemCount + 1..tPath.item.count]
+  the itemDelimiter = ":"
+  tPath = tPath.item[1]
+  the itemDelimiter = tDelim
+  return tPath
+end
+
 on getPredefinedURL me, tURL
   if tURL contains "http://%predefined%/" then
     if variableExists("url.prefix") then

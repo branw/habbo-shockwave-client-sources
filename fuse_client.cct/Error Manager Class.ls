@@ -95,9 +95,73 @@ on print me
   return 1
 end
 
+on fatalError me, tErrorType, tErrorValue
+  if voidp(tErrorType) or voidp(tErrorValue) then
+    error(me, "Invalid error parameters for fatal error!", #fatalError, #major)
+    tErrorData = [:]
+  else
+    tErrorData = [:]
+    tErrorData[string(tErrorType)] = string(tErrorValue)
+  end if
+  me.handleFatalError(tErrorData)
+end
+
 on alertHook me, tErr, tMsgA, tMsgB
+  tErrorData = [:]
+  tErrorData["hookErr"] = tErr
+  tErrorData["hookMsgA"] = tMsgA
+  tErrorData["hookMsgB"] = tMsgB
+  tEnv = the environment
+  tErrorData["version"] = tEnv[#productVersion]
+  tErrorData["build"] = tEnv[#productBuildVersion]
+  tErrorData["os"] = tEnv[#osVersion]
+  tErrorData["lastExecute"] = getBrokerManager().getLastExecutedMessageId()
+  tErrorData["lastClick"] = getWindowManager().getLastEvent()
+  tErrorData["lastMessage"] = getConnectionManager().getLastMessageData()
+  tSessionObj = getObject(#session)
+  if objectp(tSessionObj) then
+    tLastRoom = tSessionObj.GET("lastroom")
+    if stringp(tLastRoom) then
+      tErrorData["lastRoom"] = tLastRoom
+    else
+      if listp(tLastRoom) then
+        tErrorData["lastRoom"] = string(tLastRoom[#id])
+      end if
+    end if
+    me.handleFatalError(tErrorData)
+  end if
+  return 1
+end
+
+on handleFatalError me, tErrorData
+  tErrorUrl = EMPTY
+  tParams = EMPTY
+  if variableExists("client.fatal.error.url") then
+    tErrorUrl = getVariable("client.fatal.error.url")
+    if tErrorUrl contains "?" then
+      tParams = "&"
+    else
+      tParams = "?"
+    end if
+  end if
+  repeat with tItemNo = 1 to tErrorData.count
+    tKey = string(tErrorData.getPropAt(tItemNo))
+    tKey = urlEncode(tKey)
+    tValue = string(tErrorData[tKey])
+    tValue = urlEncode(tValue)
+    if tItemNo = 1 then
+      tParams = tParams & tKey & "=" & tValue
+      next repeat
+    end if
+    tParams = tParams & "&" & tKey & "=" & tValue
+  end repeat
+  tPrefTxt = date() && time() & RETURN & replaceChunks(tParams, "&", RETURN)
+  setPref("ClientFatalParams", tPrefTxt)
   me.showErrorDialog()
   pauseUpdate()
+  if tErrorUrl <> EMPTY then
+    openNetPage(tErrorUrl & tParams, "self")
+  end if
   return 1
 end
 

@@ -36,7 +36,6 @@ on getProperty me, tProp
 end
 
 on Activate me
-  pURL = getPredefinedURL(pURL)
   if pType = #text or pType = #field then
     pNetId = getNetText(pURL)
   else
@@ -77,7 +76,7 @@ on update me
             pURL = getDownloadManager().getProperty(#defaultURL) & pURL
             me.Activate()
           else
-            getDownloadManager().removeActiveTask(pMemName, pCallBack)
+            getDownloadManager().removeActiveTask(pMemName, pCallBack, 0)
           end if
         4242:
           return getDownloadManager().removeActiveTask(pMemName, pCallBack)
@@ -86,10 +85,13 @@ on update me
       end case
       ptryCount = ptryCount + 1
       if ptryCount > getIntVariable("download.retry.count", 10) then
-        getDownloadManager().removeActiveTask(pMemName, pCallBack)
+        getDownloadManager().removeActiveTask(pMemName, pCallBack, 0)
         return error(me, "Download failed too many times:" & RETURN & pURL, #update, #minor)
       else
-        pURL = getSpecialServices().addRandomParamToURL(pURL)
+        tTriesBeforeRAndParams = 3
+        if ptryCount > tTriesBeforeRAndParams then
+          pURL = getSpecialServices().addRandomParamToURL(pURL)
+        end if
         me.Activate()
       end if
     end if

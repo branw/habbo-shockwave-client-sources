@@ -1,4 +1,4 @@
-property pState, pLogoSpr
+property pState, pLogoSpr, pFadingLogo, pLogoStartTime
 
 on construct me
   tSession = createObject(#session, getClassVariable("variable.manager.class"))
@@ -11,6 +11,9 @@ on construct me
   createObject(#classes, getClassVariable("variable.manager.class"))
   createObject(#cache, getClassVariable("variable.manager.class"))
   createBroker(#Initialize)
+  registerMessage(#requestHotelView, me.getID(), #initTransferToHotelView)
+  pFadingLogo = 0
+  pLogoStartTime = 0
   return me.updateState("load_variables")
 end
 
@@ -27,6 +30,7 @@ on showLogo me
     pLogoSpr.blend = 90
     pLogoSpr.locZ = -20000001
     pLogoSpr.loc = point((the stage).rect.width / 2, (the stage).rect.height / 2 - tmember.height)
+    pLogoStartTime = the milliSeconds
   end if
   return 1
 end
@@ -37,6 +41,57 @@ on hideLogo me
     pLogoSpr = VOID
   end if
   return 1
+end
+
+on initTransferToHotelView me
+  tShowLogoForMs = 1000
+  tLogoNowShownMs = the milliSeconds - pLogoStartTime
+  if tLogoNowShownMs >= tShowLogoForMs then
+    createTimeout("logo_timeout", 2000, #initUpdate, me.getID(), VOID, 1)
+  else
+    createTimeout("init_timeout", tShowLogoForMs - tLogoNowShownMs + 1, #initTransferToHotelView, me.getID(), VOID, 1)
+  end if
+end
+
+on initUpdate me
+  pFadingLogo = 1
+  receiveUpdate(me.getID())
+end
+
+on update me
+  if pFadingLogo then
+    tBlend = 0
+    if pLogoSpr <> VOID then
+      pLogoSpr.blend = pLogoSpr.blend - 10
+      tBlend = pLogoSpr.blend
+    end if
+    if tBlend <= 0 then
+      removeUpdate(me.getID())
+      pFadingLogo = 0
+      me.hideLogo()
+      executeMessage(#showHotelView)
+    end if
+  end if
+end
+
+on assetDownloadCallbacks me, tAssetId, tSuccess
+  if tSuccess = 0 then
+    case tAssetId of
+      "load_variables", "load_texts", "load_casts":
+        fatalError("loadFailed", tAssetId)
+    end case
+    return 0
+  end if
+  case tAssetId of
+    "load_variables":
+      me.updateState("load_params")
+    "load_texts":
+      me.updateState("load_casts")
+    "load_casts":
+      me.updateState("validate_resources")
+    "validate_resources":
+      me.updateState("validate_resources")
+  end case
 end
 
 on updateState me, tstate
@@ -57,11 +112,23 @@ on updateState me, tstate
               if tParam.item.count > 1 then
                 tKey = tParam.item[1]
                 tValue = tParam.item[2..tParam.item.count]
-                if tKey = "external.variables.txt" then
-                  getSpecialServices().setExtVarPath(tValue)
+                if tKey = "client.fatal.error.url" then
+                  getVariableManager().set(tKey, tValue)
                 else
-                  if tKey = "processlog.enabled" then
-                    getVariableManager().set("processlog.enabled", tValue)
+                  if tKey = "client.allow.cross.domain" then
+                    getVariableManager().set(tKey, tValue)
+                  else
+                    if tKey = "client.notify.cross.domain" then
+                      getVariableManager().set(tKey, tValue)
+                    else
+                      if tKey = "external.variables.txt" then
+                        getSpecialServices().setExtVarPath(tValue)
+                      else
+                        if tKey = "processlog.enabled" then
+                          getVariableManager().set(tKey, tValue)
+                        end if
+                      end if
+                    end if
                   end if
                 end if
               end if
@@ -87,7 +154,12 @@ on updateState me, tstate
       end if
       sendProcessTracking(9)
       tMemNum = queueDownload(tURL, tMemName, #field, 1)
-      return registerDownloadCallback(tMemNum, #updateState, me.getID(), "load_params")
+      if tMemNum = 0 then
+        fatalError("loadFailed", tstate)
+        return 0
+      else
+        return registerDownloadCallback(tMemNum, #assetDownloadCallbacks, me.getID(), tstate)
+      end if
     "load_params":
       pState = tstate
       dumpVariableField(getExtVarPath())
@@ -138,7 +210,12 @@ on updateState me, tstate
       end if
       sendProcessTracking(12)
       tMemNum = queueDownload(tURL, tMemName, #field)
-      return registerDownloadCallback(tMemNum, #updateState, me.getID(), "load_casts")
+      if tMemNum = 0 then
+        fatalError("loadFailed", tstate)
+        return 0
+      else
+        return registerDownloadCallback(tMemNum, #assetDownloadCallbacks, me.getID(), tstate)
+      end if
     "load_casts":
       pState = tstate
       tTxtFile = getVariable("external.texts.txt")
@@ -161,9 +238,9 @@ on updateState me, tstate
       if count(tCastList) > 0 then
         tLoadID = startCastLoad(tCastList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
-          showLoadingBar(tLoadID, [#buffer: #window])
+          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300])
         end if
-        return registerCastloadCallback(tLoadID, #updateState, me.getID(), "validate_resources")
+        return registerCastloadCallback(tLoadID, #assetDownloadCallbacks, me.getID(), tstate)
       else
         return me.updateState("init_threads")
       end if
@@ -191,9 +268,9 @@ on updateState me, tstate
       if count(tNewList) > 0 then
         tLoadID = startCastLoad(tNewList, 1, VOID, VOID, 1)
         if getVariable("loading.bar.active") then
-          showLoadingBar(tLoadID, [#buffer: #window])
+          showLoadingBar(tLoadID, [#buffer: #window, #locY: 500, #width: 300])
         end if
-        return registerCastloadCallback(tLoadID, #updateState, me.getID(), "validate_resources")
+        return registerCastloadCallback(tLoadID, #assetDownloadCallbacks, me.getID(), tstate)
       else
         return me.updateState("init_threads")
       end if

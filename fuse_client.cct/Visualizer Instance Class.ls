@@ -308,6 +308,22 @@ on getWallPartUnderRect me, tRect, tSlope
   return [#insideWall: 0]
 end
 
+on renderWrappedParts me, tColor
+  repeat with tWrapper in pWrappedParts
+    tWrapper.renderWithColor(tColor)
+  end repeat
+end
+
+on setDimmerColor me, tColor
+  if ilk(tColor) <> #color then
+    return 
+  end if
+  tColor = rgb(255 - tColor.red, 255 - tColor.green, 255 - tColor.blue)
+  if member("room_dimmer_image").name = "room_dimmer_image" then
+    member("room_dimmer_image").image.setPixel(0, 0, tColor)
+  end if
+end
+
 on moveX me, tOffX
   repeat with i = 1 to pSpriteList.count
     pSpriteList[i].locH = pSpriteList[i].locH + tOffX
@@ -364,6 +380,14 @@ on Refresh me
 end
 
 on buildVisual me, tLayout
+  tLayoutName = tLayout
+  tPrivate = 0
+  if tLayoutName.length >= 7 then
+    put "x" into (tLayoutName).char[7]
+    if tLayoutName = "model_x.room" then
+      tPrivate = 1
+    end if
+  end if
   tLayout = getObjectManager().GET(#layout_parser).parse(tLayout)
   if not listp(tLayout) then
     return error(me, "Invalid visualizer definition:" && tLayout, #buildVisual, #major)
@@ -488,6 +512,24 @@ on buildVisual me, tLayout
       error(me, "Animation had no ID", #buildVisual, #minor)
     end if
   end repeat
+  if tPrivate then
+    tThread = getThread(#room)
+    if tThread <> 0 then
+      tSpr = sprite(getSpriteManager().reserveSprite(me.getID()))
+      tSpr.member = member("room_dimmer_image").number
+      tSpr.ink = 35
+      tSpr.locH = 0
+      tSpr.locV = 0
+      tSpr.width = 800
+      tSpr.height = 600
+      tSpr.blend = 100
+      tGeometry = tThread.getInterface().getGeometry()
+      tScreenLoc = tGeometry.getScreenCoordinate(2, 2, 0)
+      tSpr.locZ = tSpriteList[tSpriteList.count].locZ + 100 * 1000
+      tSpriteList.append(tSpr)
+      pSpriteData.append([:])
+    end if
+  end if
   repeat with tSpr in tSpriteList
     pSpriteList.append(tSpr)
   end repeat

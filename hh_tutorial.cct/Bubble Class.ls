@@ -53,9 +53,10 @@ on setText me, tText
   me.pText = tText
   tTextImage = me.pWriter.render(tText).duplicate()
   tElem = me.pWindow.getElement("bubble_text")
+  tMarginH = me.pWindow.getProperty(#height) - tElem.getProperty(#height)
   tElem.feedImage(tTextImage)
   tElem.resizeTo(tTextImage.width, tTextImage.height, 1)
-  me.pWindow.resizeTo(me.pEmptySizeX, me.pEmptySizeY + tTextImage.height)
+  me.pWindow.resizeTo(me.pEmptySizeX, tMarginH + tTextImage.height)
   me.updatePointer()
 end
 

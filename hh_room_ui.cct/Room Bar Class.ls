@@ -1,4 +1,4 @@
-property pBottomBarId, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount
+property pBottomBarId, pFloodblocking, pFloodTimer, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodEnterCount, pTextIsHelpTExt, pBouncerID
 
 on construct me
   pBottomBarId = "RoomBarID"
@@ -8,6 +8,8 @@ on construct me
   pNewMsgCount = 0
   pNewBuddyReq = 0
   pFloodEnterCount = 0
+  pTextIsHelpTExt = 0
+  pBouncerID = #roombar_messenger_icon_bouncer
   registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
@@ -60,6 +62,19 @@ on hideRoomBar me
   if windowExists(pBottomBarId) then
     removeWindow(pBottomBarId)
   end if
+  if objectExists(pBouncerID) then
+    removeObject(pBouncerID)
+  end if
+end
+
+on applyChatHelpText me
+  if not windowExists(pBottomBarId) then
+    return 0
+  end if
+  tWindowObj = getWindow(pBottomBarId)
+  tChatElem = tWindowObj.getElement("chat_field")
+  tChatElem.setText(getText("NUH_chat"))
+  pTextIsHelpTExt = 1
 end
 
 on setSpeechDropdown me, tMode
@@ -84,6 +99,9 @@ end
 
 on updateMessageCount me, tMsgCount
   if windowExists(pBottomBarId) then
+    if value(tMsgCount) > pNewMsgCount then
+      me.bounceMessengerIcon(1)
+    end if
     pNewMsgCount = value(tMsgCount)
     me.flashMessengerIcon()
   end if
@@ -92,10 +110,34 @@ end
 
 on updateBuddyrequestCount me, tReqCount
   if windowExists(pBottomBarId) then
+    if value(tReqCount) > pNewBuddyReq then
+      me.bounceMessengerIcon(1)
+    end if
     pNewBuddyReq = value(tReqCount)
     me.flashMessengerIcon()
   end if
   return 1
+end
+
+on bounceMessengerIcon me, tstate
+  if variableExists("bounce.messenger.icon") then
+    if not getVariable("bounce.messenger.icon") then
+      return 0
+    end if
+  end if
+  if not objectExists(pBouncerID) then
+    createObject(pBouncerID, "Element Bouncer Class")
+  end if
+  tBouncer = getObject(pBouncerID)
+  if tstate = tBouncer.getState() then
+    return 1
+  end if
+  if tstate then
+    tBouncer.registerElement(pBottomBarId, ["int_messenger_image", "messenger_icon_shadow"])
+    tBouncer.setBounce(1)
+  else
+    tBouncer.setBounce(0)
+  end if
 end
 
 on flashMessengerIcon me
@@ -114,6 +156,7 @@ on flashMessengerIcon me
     pMessengerFlash = 1
   end if
   if pNewMsgCount = 0 and pNewBuddyReq = 0 then
+    me.bounceMessengerIcon(0)
     tmember = "mes_dark_icon"
     if timeoutExists(#flash_messenger_icon) then
       removeTimeout(#flash_messenger_icon)
@@ -171,6 +214,13 @@ on updateSoundButton me
 end
 
 on eventProcRoomBar me, tEvent, tSprID, tParam
+  if tSprID = "chat_field" and (tEvent = #keyDown or tEvent = #mouseUp) then
+    if pTextIsHelpTExt then
+      tChatField = getWindow(pBottomBarId).getElement(tSprID)
+      tChatField.setText(EMPTY)
+      pTextIsHelpTExt = 0
+    end if
+  end if
   if tEvent = #keyDown and tSprID = "chat_field" then
     tChatField = getWindow(pBottomBarId).getElement(tSprID)
     if the commandDown and (the keyCode = 8 or the keyCode = 9) then
@@ -213,6 +263,10 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
           end if
         end if
         getThread(#room).getComponent().sendChat(tChatField.getText())
+        if threadExists("new_user_help") then
+          tComponent = getThread("new_user_help").getComponent()
+          tComponent.setHelpItemClosed("chat")
+        end if
         tChatField.setText(EMPTY)
         return 1
       117:
@@ -284,6 +338,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         end if
       "int_messenger_image":
         if tEvent = #mouseUp then
+          me.bounceMessengerIcon(0)
           executeMessage(#show_hide_messenger)
         end if
         if tEvent = #mouseEnter then

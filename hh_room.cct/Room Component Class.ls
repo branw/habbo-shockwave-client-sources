@@ -480,6 +480,11 @@ on sendChat me, tChat
   tChat = convertSpecialChars(tChat, 1)
   if tChat.char[1] = ":" then
     case tChat.word[1] of
+      ":crashme":
+        if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
+          tTemp = EMPTY
+          return tTemp[#thisIsNotListAndWillCrash]
+        end if
       ":chooser":
         if getObject(#session).GET("user_rights").getOne("fuse_habbo_chooser") then
           return createObject(#chooser, "User Chooser Class")

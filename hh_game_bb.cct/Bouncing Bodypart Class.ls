@@ -23,7 +23,7 @@ on update me
       tmember = member(tMemNum)
       tRegPnt = tmember.regPoint
       tX = -tRegPnt[1]
-      tY = me.pBody.pBuffer.rect.height - tRegPnt[2] - 10
+      tY = me.pBody.pBuffer.rect.height - tRegPnt[2] - 20
       me.pBody.pUpdateRect = union(me.pBody.pUpdateRect, tdata["cacheRect"])
       tdata["cacheImage"] = tmember.image
       tdata["cacheRect"] = rect(tX, tY, tX + tdata["cacheImage"].width, tY + tdata["cacheImage"].height)

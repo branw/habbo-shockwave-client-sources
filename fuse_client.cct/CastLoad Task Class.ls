@@ -1,4 +1,4 @@
-property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount, pAllowindexing
+property pGroupId, pStatus, pLoadedSoFar, pCastList, pCastcount, pCallBack, pCurrPercent, pTempPercent, pLastPercent, pTmpLoadCount, pCurLoadCount, pAllowindexing, pContainsFailedItems
 
 on define me, tdata
   pGroupId = tdata[#id]
@@ -12,6 +12,7 @@ on define me, tdata
   pLastPercent = 0
   pCurLoadCount = 0
   pTmpLoadCount = 0
+  pContainsFailedItems = 0
   pCastList = [:]
   repeat with tCast in tdata[#casts]
     pCastList[tCast] = 0
@@ -77,12 +78,16 @@ on getIndexingAllowed me
   return pAllowindexing
 end
 
-on DoCallBack me
+on DoCallBack me, tstate
+  tSuccess = 1
+  if tstate <> #done then
+    tSuccess = 0
+  end if
   if pStatus = #ready then
     if listp(pCallBack) then
       repeat with tCall in pCallBack
         if objectExists(tCall[#client]) then
-          call(tCall[#method], getObject(tCall[#client]), tCall[#argument])
+          call(tCall[#method], getObject(tCall[#client]), tCall[#argument], tSuccess)
         end if
       end repeat
     end if
@@ -112,4 +117,12 @@ on addCallBack me, tID, tMethod, tClientID, tArgument
     end if
   end if
   return 1
+end
+
+on setFailed
+  pContainsFailedItems = 1
+end
+
+on getFailed
+  return pContainsFailedItems
 end

@@ -1317,19 +1317,22 @@ on eventProcUserObj me, tEvent, tSprID, tParam
   if tObject.select() then
     if tObject.getClass() = "user" then
       executeMessage(#userClicked, tObject.getName())
-      if tEvent = #mouseDown then
-        executeMessage(#tutorial_userClicked)
+    end if
+    if tObject.getClass() = "user" and tEvent = #mouseDown then
+      executeMessage(#tutorial_userClicked)
+    end if
+    if pSelectedObj <> tSprID then
+      pSelectedObj = tSprID
+      pSelectedType = tObject.getClass()
+      if tParam <> #userEnters then
+        executeMessage(#showObjectInfo, pSelectedType)
       end if
+      me.showInterface(pSelectedType)
+      me.showArrowHiliter(tSprID)
     end if
-    pSelectedObj = tSprID
-    pSelectedType = tObject.getClass()
-    if tParam <> #userEnters then
-      executeMessage(#showObjectInfo, pSelectedType)
-    end if
-    me.showArrowHiliter(tSprID)
     tloc = tObject.getLocation()
     if tParam = #userEnters then
-      tloc = [5, 5]
+      tloc[1] = tloc[1] + 4
     end if
     if tObject <> me.getComponent().getOwnUser() or (tObject.getProperty(#moving) or tParam = #userEnters) then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
@@ -1370,10 +1373,13 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
     return error(me, "Active object not found:" && tSprID, #eventProcActiveObj, #major)
   end if
   if me.getComponent().getRoomData().type = #private then
-    pSelectedObj = tSprID
-    pSelectedType = "active"
-    executeMessage(#showObjectInfo, pSelectedType)
-    me.hideArrowHiliter()
+    if pSelectedObj <> tSprID then
+      pSelectedObj = tSprID
+      pSelectedType = "active"
+      executeMessage(#showObjectInfo, pSelectedType)
+      me.showInterface(pSelectedType)
+      me.hideArrowHiliter()
+    end if
   end if
   tIsController = getObject(#session).GET("room_controller")
   if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
@@ -1436,10 +1442,13 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     return error(me, "Item object not found:" && tSprID, #eventProcItemObj, #major)
   end if
   if me.getComponent().getItemObject(tSprID).select() then
-    pSelectedObj = tSprID
-    pSelectedType = "item"
-    executeMessage(#showObjectInfo, pSelectedType)
-    me.hideArrowHiliter()
+    if pSelectedObj <> tSprID then
+      pSelectedObj = tSprID
+      pSelectedType = "item"
+      executeMessage(#showObjectInfo, pSelectedType)
+      me.showInterface(pSelectedType)
+      me.hideArrowHiliter()
+    end if
   else
     pSelectedObj = tSprID
     pSelectedType = "item"

@@ -329,9 +329,11 @@ on processCataloguePage me, tdata
     if not memberExists(tHeaderImgName) then
       tSourceURL = pImageLibraryURL & "catalogue/" & tHeaderImgName & "_" & me.getLanguage() & ".gif"
       tHeaderMemNum = queueDownload(tSourceURL, tHeaderImgName, #bitmap, 1)
-      registerDownloadCallback(tHeaderMemNum, #catalogImgDownloaded, me.getID(), tHeaderImgName)
-      if tObjectLoadList.findPos(tHeaderImgName) = 0 then
-        tObjectLoadList.add(tHeaderImgName)
+      if tHeaderMemNum > 0 then
+        registerDownloadCallback(tHeaderMemNum, #catalogImgDownloaded, me.getID(), tHeaderImgName)
+        if tObjectLoadList.findPos(tHeaderImgName) = 0 then
+          tObjectLoadList.add(tHeaderImgName)
+        end if
       end if
     end if
   end if
@@ -341,9 +343,11 @@ on processCataloguePage me, tdata
         if not memberExists(tTeaserImg) then
           tSourceURL = pImageLibraryURL & "catalogue/" & tTeaserImg & "_" & me.getLanguage() & ".gif"
           tTeaserMemNum = queueDownload(tSourceURL, tTeaserImg, #bitmap, 1)
-          registerDownloadCallback(tTeaserMemNum, #catalogImgDownloaded, me.getID(), tTeaserImg)
-          if tObjectLoadList.findPos(tTeaserImg) = 0 then
-            tObjectLoadList.add(tTeaserImg)
+          if tTeaserMemNum > 0 then
+            registerDownloadCallback(tTeaserMemNum, #catalogImgDownloaded, me.getID(), tTeaserImg)
+            if tObjectLoadList.findPos(tTeaserImg) = 0 then
+              tObjectLoadList.add(tTeaserImg)
+            end if
           end if
         end if
       end if

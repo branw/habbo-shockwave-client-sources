@@ -365,6 +365,12 @@ on redrawCryWindow me
     tShowRoomID = EMPTY
   end if
   tWndObj = getWindow(pCryWindowID)
+  tNeededElements = ["hobba_header", "hobba_change_cfh_type", "hobba_pickedby", "hobba_cry_text", "page_num"]
+  repeat with tElem in tNeededElements
+    if not tWndObj.elementExists(tElem) then
+      return 0
+    end if
+  end repeat
   if tCategory = 1 then
     tWndObj.getElement("hobba_header").setText(getText("hobba_emergency_help") && tName)
     tWndObj.getElement("hobba_change_cfh_type").setText(getText("hobba_mark_normal"))

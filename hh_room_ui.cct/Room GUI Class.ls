@@ -23,6 +23,12 @@ on showRoomBar me
   if not voidp(tRoomBarObj) and not tRoomBarObj = 0 then
     tRoomBarObj.showRoomBar()
   end if
+  if threadExists("new_user_help") then
+    tComponent = getThread("new_user_help").getComponent()
+    if tComponent.isChatHelpOn() then
+      tRoomBarObj.applyChatHelpText()
+    end if
+  end if
 end
 
 on hideRoomBar me

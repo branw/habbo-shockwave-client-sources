@@ -33,6 +33,10 @@ on error tObject, tMsg, tMethod, tErrorLevel
   return getErrorManager().error(tObject, tMsg, tMethod, tErrorLevel)
 end
 
+on fatalError tErrorType, tErrorValue
+  return getErrorManager().fatalError(tErrorType, tErrorValue)
+end
+
 on SystemAlert tObject, tMsg, tMethod
   return getErrorManager().SystemAlert(tObject, tMsg, tMethod)
 end
