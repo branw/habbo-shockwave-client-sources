@@ -13,10 +13,10 @@ end
 
 on create me, tMessage
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #create)
+    return error(me, "Symbol or string expected:" && tMessage, #create, #major)
   end if
   if not voidp(me.pItemList[tMessage]) then
-    return error(me, "Broker task already exists:" && tMessage, #create)
+    return error(me, "Broker task already exists:" && tMessage, #create, #major)
   end if
   me.pItemList[tMessage] = [:]
   return 1
@@ -24,20 +24,20 @@ end
 
 on Remove me, tMessage
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #Remove)
+    return error(me, "Symbol or string expected:" && tMessage, #Remove, #minor)
   end if
   if voidp(me.pItemList[tMessage]) then
-    return error(me, "Broker task not found:" && tMessage, #Remove)
+    return error(me, "Broker task not found:" && tMessage, #Remove, #minor)
   end if
   return me.pItemList.deleteProp(tMessage)
 end
 
 on register me, tMessage, tClientID, tMethod
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #register)
+    return error(me, "Symbol or string expected:" && tMessage, #register, #major)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #register)
+    return error(me, "Object not found:" && tClientID, #register, #major)
   end if
   if voidp(me.pItemList[tMessage]) then
     me.pItemList[tMessage] = [:]
@@ -48,7 +48,7 @@ end
 
 on unregister me, tMessage, tClientID
   if not symbolp(tMessage) and not stringp(tMessage) then
-    return error(me, "Symbol or string expected:" && tMessage, #unregister)
+    return error(me, "Symbol or string expected:" && tMessage, #unregister, #major)
   end if
   tList = me.pItemList[tMessage]
   if voidp(tList) then

@@ -82,7 +82,7 @@ end
 
 on createStatusWindow me
   if not createWindow(pStatusWindowID, "habbo_full.window") then
-    return error(me, "Failed to create status window", #createStatusWindow)
+    return error(me, "Failed to create status window", #createStatusWindow, #major)
   end if
   tWindowObj = getWindow(pStatusWindowID)
   tWindowObj.merge("recycler_notification.window")

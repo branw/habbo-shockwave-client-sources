@@ -65,14 +65,14 @@ on Init me, tSourceURL, tClickURL, tRegisteredLayout
   if tSourceURL <> 0 then
     if not (tSourceURL starts "http") then
       pState = 0
-      return error(me, "Incorrect URL!", #Init)
+      return error(me, "Incorrect URL!", #Init, #minor)
     end if
     pDLCounter = pDLCounter + 1
     pMemberID = pMemberIDBase & pDLCounter
     pAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
     if not (pAdMemNum > 0) then
       pState = 0
-      return error(me, "Incorrect URL!", #Init)
+      return error(me, "Incorrect URL!", #Init, #major)
     end if
     pRegisteredLayout = tRegisteredLayout
     member(pAdMemNum).image = image(1, 1, 32)

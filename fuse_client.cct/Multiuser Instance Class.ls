@@ -24,7 +24,7 @@ on connect me, tHost, tPort
   if tErrCode = 0 then
     pXtra.connectToNetServer("*", "*", pHost, pPort, "*", 0)
   else
-    return error(me, "Creation of callback failed:" && tErrCode, #connect)
+    return error(me, "Creation of callback failed:" && tErrCode, #connect, #major)
   end if
   return 1
 end
@@ -41,7 +41,7 @@ on disconnect me, tControlled
   end if
   pXtra = VOID
   if not tControlled then
-    error(me, "Connection disconnected:" && me.getID(), #disconnect)
+    error(me, "Connection disconnected:" && me.getID(), #disconnect, #minor)
   end if
   return 1
 end
@@ -61,7 +61,7 @@ on send me, tMsg
     end repeat
     pXtra.sendNetMessage("*", tMsg.word[1], tMsg.word[2..tMsg.word.count])
   else
-    return error(me, "Connection not ready:" && me.getID(), #send)
+    return error(me, "Connection not ready:" && me.getID(), #send, #major)
   end if
   return 1
 end
@@ -128,7 +128,7 @@ end
 
 on setLogMode me, tMode
   if tMode.ilk <> #integer then
-    return error(me, "Invalid argument:" && tMode, #setLogMode)
+    return error(me, "Invalid argument:" && tMode, #setLogMode, #minor)
   end if
   pLogMode = tMode
   if pLogMode = 2 then
@@ -150,7 +150,7 @@ on xtraMsgHandler me
   tNewMsg = pXtra.getNetMessage()
   if tNewMsg = VOID then
     me.disconnect()
-    return error(me, "getNetMessage() returned VOID.", #xtraMsgHandler)
+    return error(me, "getNetMessage() returned VOID.", #xtraMsgHandler, #major)
   end if
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
@@ -167,14 +167,14 @@ on xtraMsgHandler me
       me.forwardMsg(tNewMsg.subject & RETURN & tContent)
     #void:
       if tSubject <> "ConnectToNetServer" then
-        error(me, "Message content is VOID!!!", #xtraMsgHandler)
+        error(me, "Message content is VOID!!!", #xtraMsgHandler, #major)
       end if
     otherwise:
       if voidp(pBinDataCallback.method) then
-        return error(me, "No callback registered!", #xtraMsgHandler)
+        return error(me, "No callback registered!", #xtraMsgHandler, #major)
       end if
       if not objectExists(pBinDataCallback.client) then
-        return error(me, "Callback client not found!", #xtraMsgHandler)
+        return error(me, "Callback client not found!", #xtraMsgHandler, #major)
       end if
       call(pBinDataCallback.method, getObject(pBinDataCallback.client), tContent)
   end case
@@ -190,7 +190,7 @@ on forwardMsg me, tMessage
   if pMsgStruct.ilk <> #struct then
     pMsgStruct = getStructVariable("struct.message")
     pMsgStruct.setaProp(#connection, me)
-    error(me, "Multiuser instance had problems...", #forwardMsg)
+    error(me, "Multiuser instance had problems...", #forwardMsg, #major)
   end if
   if listp(tCallbackList) then
     tObjMngr = getObjectManager()
@@ -204,12 +204,12 @@ on forwardMsg me, tMessage
         call(tCallback[2], tObject, pMsgStruct)
         next repeat
       end if
-      error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg)
+      error(me, "Listening obj not found, removed:" && tCallback[1], #forwardMsg, #minor)
       tCallbackList.deleteAt(1)
       i = i - 1
     end repeat
   else
-    error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg)
+    error(me, "Listener not found:" && tSubject && "/" && me.getID(), #forwardMsg, #minor)
   end if
 end
 

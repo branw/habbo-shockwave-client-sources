@@ -148,9 +148,12 @@ end
 
 on showLoadingBar me, tLoadID, tProps
   tObj = createObject(#random, getClassVariable("loading.bar.class"))
+  if tObj = 0 then
+    return error(me, "Couldn't create loading bar instance!", #showLoadingBar, #major)
+  end if
   if not tObj.define(tLoadID, tProps) then
     removeObject(tObj.getID())
-    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar)
+    return error(me, "Couldn't initialize loading bar instance!", #showLoadingBar, #major)
   end if
   return tObj.getID()
 end
@@ -161,14 +164,18 @@ on getUniqueID me
 end
 
 on getMachineID me
-  tMachineID = string(getPref(getVariable("pref.value.id")))
+  tMachineID = getPref(getVariable("pref.value.id"))
   tMaxLength = 24
-  tMinLength = 10
-  if chars(tMachineID, 1, 1) = "#" then
-    tMachineID = chars(tMachineID, 2, tMachineID.length)
-  else
+  if voidp(tMachineID) or tMachineID = EMPTY or string(tMachineID).char.count > tMaxLength then
     tMachineID = me.generateMachineId(tMaxLength)
-    setPref(getVariable("pref.value.id"), "#" & tMachineID)
+    setPref(getVariable("pref.value.id"), tMachineID)
+  end if
+  if string(tMachineID).length < 10 then
+    tMachineID = tMachineID & string(random(9999999999.0))
+  end if
+  if string(tMachineID).char[1..4] = "uid:" then
+    tMachineID = me.generateMachineId(tMaxLength)
+    setPref(getVariable("pref.value.id"), tMachineID)
   end if
   return tMachineID
 end
@@ -191,7 +198,7 @@ on getPredefinedURL me, tURL
       end if
       tURL = replaceChunks(tURL, tReplace, tPrefix)
     else
-      return error(me, "URL prefix not defined, invalid link.", #openNetPage)
+      return error(me, "URL prefix not defined, invalid link.", #getPredefinedURL, #minor)
     end if
   end if
   return tURL
@@ -293,8 +300,8 @@ on print me, tObj, tMsg
 end
 
 on generateMachineId me, tMaxLength
-  tMachineID = string(the milliSeconds) & string(the time) & string(the date)
-  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-", "AM", "PM"]
+  tMachineID = string(the milliSeconds) & string(the date) & string(the time)
+  tLocaleDelimiters = [".", ",", ":", ";", "/", "\", "am", "pm", " ", "-"]
   repeat with tDelimiter in tLocaleDelimiters
     tMachineID = replaceChunks(tMachineID, tDelimiter, EMPTY)
   end repeat

@@ -21,12 +21,12 @@ end
 
 on define me, tPageProps
   if tPageProps.ilk <> #propList then
-    return error(me, "Incorrect Catalogue page data", #define)
+    return error(me, "Incorrect Catalogue page data", #define, #major)
   end if
   tWallPatterns = field("catalog_wallpattern_patterns")
   tWndObj = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tWndObj then
-    return error(me, "Couldn't access catalogue window!", #define)
+    return error(me, "Couldn't access catalogue window!", #define, #major)
   end if
   tProdList = tPageProps["productList"]
   if not voidp(tProdList) then
@@ -93,7 +93,7 @@ end
 on setWallPaper me, ttype, tChange
   tWndObj = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tWndObj then
-    return error(me, "Couldn't access catalogue window!", #setWallPaper)
+    return error(me, "Couldn't access catalogue window!", #setWallPaper, #major)
   end if
   if ttype = "pattern" then
     pWallPattern = pWallPattern + tChange
@@ -151,7 +151,7 @@ on setWallPaper me, ttype, tChange
       end if
       next repeat
     end if
-    error(me, "Wall member not found:" && "catalog_spaces_wall" & ttype & "_" & tPiece)
+    error(me, "Wall member not found:" && "catalog_spaces_wall" & ttype & "_" & tPiece, #setWallPaper, #minor)
   end repeat
   the itemDelimiter = tDelim
   tPrice = tWallData["price"]
@@ -204,7 +204,7 @@ on setFloorPattern me, ttype, tChange
   the itemDelimiter = "_"
   tWndObj = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tWndObj then
-    return error(me, "Couldn't access catalogue window!", #setFloorPattern)
+    return error(me, "Couldn't access catalogue window!", #setFloorPattern, #major)
   end if
   repeat with tid in pFloorPreviewIdList
     tPiece = tid.item[tid.item.count]
@@ -223,7 +223,7 @@ on setFloorPattern me, ttype, tChange
       end if
       next repeat
     end if
-    error(me, "Wall member not found:" && "catalog_spaces_floor" & ttype & "_" & tPiece)
+    error(me, "Wall member not found:" && "catalog_spaces_floor" & ttype & "_" & tPiece, #setFloorPattern, #minor)
   end repeat
   the itemDelimiter = tDelim
   tPrice = pFloorProps["price"]

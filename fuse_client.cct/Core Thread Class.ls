@@ -197,5 +197,5 @@ on updateState me, tstate
       getThreadManager().initAll()
       return executeMessage(#Initialize, "initialize")
   end case
-  return error(me, "Unknown state:" && tstate, #updateState)
+  return error(me, "Unknown state:" && tstate, #updateState, #major)
 end

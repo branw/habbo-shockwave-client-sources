@@ -12,7 +12,7 @@ on construct me
   pLoaderObjID = "Catalogue_loader"
   tLoaderObj = createObject(pLoaderObjID, "Catalogue Loader Class")
   if tLoaderObj = 0 then
-    return error(me, "Failed to create LoaderObj", #construct)
+    return error(me, "Failed to create LoaderObj", #construct, #major)
   end if
   pLoadingFlag = 1
   pWriterPages = getUniqueID()
@@ -118,14 +118,15 @@ on showOrderInfo me, tstate, tInfo
     end if
   end if
   if not memberExists("habbo_" & tWndType & "_dialog.window") then
-    return error(me, "Window description not found:" && "habbo_" & tWndType & "_dialog.window")
+    return error(me, "Window description not found:" && "habbo_" & tWndType & "_dialog.window", #showOrderInfo, #major)
   end if
   if not createWindow(pInfoWindowID, "habbo_simple.window", VOID, VOID, #modal) then
-    return error(me, "Couldn't create window to show purchase info!")
+    return error(me, "Couldn't create window to show purchase info!", #showOrderInfo, #major)
   end if
   tWndObj = getWindow(pInfoWindowID)
   if not tWndObj.merge("habbo_" & tWndType & "_dialog.window") then
-    return tWndObj.close()
+    tWndObj.close()
+    return error(me, "Couldn't create window to show purchase info!", #showOrderInfo, #major)
   end if
   tWndObj.center()
   tWndObj.getElement("habbo_" & tWndType & "_text_a").setText(tMsgA)
@@ -169,11 +170,12 @@ on showNoBalance me, tInfo, tGeneralText
     tWndFile = "habbo_orderinfo_cantbuycredits.window"
   end if
   if not createWindow(pInfoWindowID, "habbo_simple.window", VOID, VOID, #modal) then
-    return error(me, "Couldn't create window to show purchase info!")
+    return error(me, "Couldn't create window to show purchase info!", #showNoBalance, #major)
   end if
   tWndObj = getWindow(pInfoWindowID)
   if not tWndObj.merge(tWndFile) then
-    return tWndObj.close()
+    tWndObj.close()
+    return error(me, "Couldn't create window to show purchase info!", #showNoBalance, #major)
   end if
   tWndObj.center()
   tWndObj.getElement("habbo_message_text_a").setText(tMsgA)
@@ -258,12 +260,12 @@ on cataloguePageData me, tdata
     return 0
   end if
   if tdata.ilk <> #propList then
-    return error(me, "Incorrect Catalogue page data", #cataloguePageData)
+    return error(me, "Incorrect Catalogue page data", #cataloguePageData, #major)
   end if
   pCurrentPageData = tdata.duplicate()
   tLayout = pCurrentPageData["layout"] & ".window"
   if not memberExists(tLayout) then
-    error(me, "Catalogue page Layout not found: " & tLayout, #cataloguePageData)
+    error(me, "Catalogue page Layout not found: " & tLayout, #cataloguePageData, #minor)
     tLayout = "ctlg_layout1.window"
   end if
   if not voidp(pCurrentPageData["linkList"]) then
@@ -296,7 +298,7 @@ on ChangeWindowView me, tWindowName
     end if
   else
     if not createWindow(pCatalogID, "habbo_catalogue.window") then
-      return error(me, "Failed to open Catalogue window!!!", #ChangeWindowView)
+      return error(me, "Failed to open Catalogue window!!!", #ChangeWindowView, #major)
     else
       tWndObj = getWindow(pCatalogID)
       tWndObj.center()
@@ -314,7 +316,7 @@ on ChangeWindowView me, tWindowName
     tResult = tWndObj.merge(tWindowName)
     if catch() or tResult = 0 then
       tWndObj.close()
-      return error(me, "Incorrect Window Format", #ChangeWindowView)
+      return error(me, "Incorrect Window Format", #ChangeWindowView, #major)
     end if
     pOpenWindow = tWindowName
   else
@@ -387,7 +389,7 @@ on ChangeWindowView me, tWindowName
       if memberExists(tClassMem) then
         tPageObj = createObject(pPageProgramID, tClassMem)
         if tPageObj = 0 then
-          return error(me, "Failed to create pageProgram", #ChangeWindowView)
+          return error(me, "Failed to create pageProgram", #ChangeWindowView, #major)
         end if
         if getObject(pPageProgramID).handler(#define) then
           getObject(pPageProgramID).define(pCurrentPageData)
@@ -400,7 +402,7 @@ end
 
 on feedPageData me
   if pCurrentPageData.ilk <> #propList then
-    return error(me, "Incorrect Data Format", #feedPageData)
+    return error(me, "Incorrect Data Format", #feedPageData, #major)
   end if
   if not windowExists(pCatalogID) then
     return 
@@ -686,7 +688,7 @@ end
 
 on showSubPageCounter me
   if not windowExists(pCatalogID) then
-    return error(me, "Catalogue window not exists", #showSubPageCounter)
+    return error(me, "Catalogue window not exists", #showSubPageCounter, #major)
   end if
   tWndObj = getWindow(pCatalogID)
   if not voidp(pPageLinkList) then
@@ -765,7 +767,7 @@ on ShowSmallIcons me, tstate, tPram
       tFirst = tPram
       tLast = tPram
   end case
-  return error(me, "unsupported mode", #ShowSmallIcons)
+  return error(me, "unsupported mode", #ShowSmallIcons, #minor)
   if voidp(tFirst) or voidp(tLast) then
     return 
   end if
@@ -800,7 +802,7 @@ on ShowSmallIcons me, tstate, tPram
               if not objectExists("ctlg_dealpreviewObj") then
                 tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
                 if tObj = 0 then
-                  return error(me, "Failed object creation!", #showHideDialog)
+                  return error(me, "Failed object creation!", #showHideDialog, #major)
                 end if
               else
                 tObj = getObject("ctlg_dealpreviewObj")
@@ -851,7 +853,7 @@ on showPreviewImage me, tProps, tElemID
       if not objectExists("ctlg_dealpreviewObj") then
         tObj = createObject("ctlg_dealpreviewObj", ["Deal Preview Class"])
         if tObj = 0 then
-          return error(me, "Failed object creation!", #showHideDialog)
+          return error(me, "Failed object creation!", #showHideDialog, #major)
         end if
       else
         tObj = getObject("ctlg_dealpreviewObj")
@@ -860,12 +862,12 @@ on showPreviewImage me, tProps, tElemID
       tImage = tObj.getPicture()
     else
       if voidp(tProps["class"]) then
-        return error(me, "Class property missing", #showPreviewImage)
+        return error(me, "Class property missing", #showPreviewImage, #minor)
       else
         tClass = tProps["class"]
       end if
       if voidp(tProps["direction"]) then
-        return error(me, "Direction property missing", #showPreviewImage)
+        return error(me, "Direction property missing", #showPreviewImage, #minor)
       else
         tProps["direction"] = "2,2,2"
         tDirection = value("[" & tProps["direction"] & "]")
@@ -874,7 +876,7 @@ on showPreviewImage me, tProps, tElemID
         end if
       end if
       if voidp(tProps["dimensions"]) then
-        return error(me, "Dimensions property missing", #showPreviewImage)
+        return error(me, "Dimensions property missing", #showPreviewImage, #minor)
       else
         tDimensions = value("[" & tProps["dimensions"] & "]")
         if tDimensions.count < 2 then
@@ -882,7 +884,7 @@ on showPreviewImage me, tProps, tElemID
         end if
       end if
       if voidp(tProps["partColors"]) then
-        return error(me, "PartColors property missing", #showPreviewImage)
+        return error(me, "PartColors property missing", #showPreviewImage, #minor)
       else
         tpartColors = tProps["partColors"]
         if tpartColors = EMPTY or tpartColors = "0,0,0" then
@@ -890,7 +892,7 @@ on showPreviewImage me, tProps, tElemID
         end if
       end if
       if voidp(tProps["objectType"]) then
-        return error(me, "objectType property missing", #showPreviewImage)
+        return error(me, "objectType property missing", #showPreviewImage, #minor)
       else
         tObjectType = tProps["objectType"]
       end if
@@ -906,7 +908,7 @@ on showPreviewImage me, tProps, tElemID
       if not objectExists("ctlg_previewObj") then
         tObj = createObject("ctlg_previewObj", ["Product Preview Class"])
         if tObj = 0 then
-          return error(me, "Failed object creation!", #showHideDialog)
+          return error(me, "Failed object creation!", #showHideDialog, #major)
         end if
       else
         tObj = getObject("ctlg_previewObj")
@@ -935,11 +937,11 @@ on renderPageList me, tPages
     tIndexVertMargin = 0
   end if
   if not windowExists(pCatalogID) then
-    return error(me, "Failed to render the list of Catalogue pages!!!", #renderPageList)
+    return error(me, "Failed to render the list of Catalogue pages!!!", #renderPageList, #major)
   end if
   tWndObj = getWindow(pCatalogID)
   if not tWndObj.elementExists("ctlg_pages") then
-    return error(me, "Element not exists, failed to render Catalogue index!", #f)
+    return error(me, "Element not exists, failed to render Catalogue index!", #renderPageList, #major)
   end if
   tElem = tWndObj.getElement("ctlg_pages")
   tWidth = tElem.getProperty(#width)
@@ -980,7 +982,7 @@ end
 
 on renderSelectPage me, tClickLine, tLastSelectLine
   if not windowExists(pCatalogID) then
-    return error(me, "Catalogue window not exists", #selectPage)
+    return error(me, "Catalogue window not exists", #renderSelectPage, #major)
   end if
   tWndObj = getWindow(pCatalogID)
   tScrollOffset = 0
@@ -1023,10 +1025,10 @@ end
 
 on selectPage me, tClickLine
   if pPagePropList.ilk <> #propList then
-    return error(me, "Incorrect PagePropList", #selectPage)
+    return error(me, "Incorrect PagePropList", #selectPage, #major)
   end if
   if tClickLine > pPagePropList.count or tClickLine < 1 then
-    return error(me, "Failed to select Catalogue page!!!", #selectPage)
+    return error(me, "Failed to select Catalogue page!!!", #selectPage, #minor)
   end if
   tPageID = pPagePropList.getPropAt(tClickLine)
   if not voidp(pActivePageID) then
@@ -1095,11 +1097,11 @@ end
 
 on selectProduct me, tOrderNum, tFeedFlag
   if not windowExists(pCatalogID) then
-    return error(me, "Catalogue window not exists", #selectProduct)
+    return error(me, "Catalogue window not exists", #selectProduct, #major)
   end if
   tWndObj = getWindow(pCatalogID)
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #selectProduct)
+    return error(me, "Incorrect value", #selectProduct, #major)
   end if
   if voidp(pCurrentPageData["productList"]) then
     return 0
@@ -1113,7 +1115,7 @@ on selectProduct me, tOrderNum, tFeedFlag
   end if
   pSelectedProduct = pCurrentPageData["productList"][tProductNum]
   if pSelectedProduct.ilk <> #propList then
-    return error(me, "Incorrect product data", #selectProduct)
+    return error(me, "Incorrect product data", #selectProduct, #major)
   end if
   if voidp(tFeedFlag) then
     tFeedFlag = 0
@@ -1251,7 +1253,7 @@ on eventProcInfoWnd me, tEvent, tSprID, tParam, tWndID
         if tGiftProps["gift_msg"].length > 150 then
         end if
         if tGiftProps["gift_receiver"] = EMPTY then
-          return error(me, "User name missing!", #eventProcInfoWnd)
+          return error(me, "User name missing!", #eventProcInfoWnd, #minor)
         end if
       else
         tGiftProps["gift"] = 0

@@ -57,7 +57,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(294, #handleLoginFailedHotelClosed)
   tCmds = [:]
   tCmds.setaProp("GET_AVAILABILITY_TIME", 212)
-  tConn = getVariable("connection.info.id", #info)
+  tConn = getVariable("connection.info.id", #Info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)
     registerCommands(tConn, me.getID(), tCmds)

@@ -41,7 +41,7 @@ on initThread me, tCastNumOrMemName, tid
   if stringp(tCastNumOrMemName) then
     tMemNum = getResourceManager().getmemnum(tCastNumOrMemName)
     if tMemNum = 0 then
-      return error(me, "Thread index field not found:" && tCastNumOrMemName, #initThread)
+      return error(me, "Thread index field not found:" && tCastNumOrMemName, #initThread, #major)
     else
       tThreadField = tCastNumOrMemName
       tCastNum = member(tMemNum).castLibNum
@@ -63,10 +63,10 @@ on initThread me, tCastNumOrMemName, tid
       end if
     else
       if not integerp(tCastNumOrMemName) then
-        return error(me, "Cast number expected:" && tCastNumOrMemName, #initThread)
+        return error(me, "Cast number expected:" && tCastNumOrMemName, #initThread, #major)
       else
         if tCastNumOrMemName < 1 or tCastNumOrMemName > the number of castLibs then
-          return error(me, "Cast doesn't exist:" && tCastNumOrMemName, #initThread)
+          return error(me, "Cast doesn't exist:" && tCastNumOrMemName, #initThread, #major)
         end if
       end if
       tThreadField = pIndexField
@@ -84,7 +84,7 @@ on initThread me, tCastNumOrMemName, tid
     tThreadID = symbol(pVarMngrObj.GET("thread.id"))
   end if
   if not symbolp(tThreadID) then
-    return error(me, "Invalid thread ID:" && tThreadID, #initThread)
+    return error(me, "Invalid thread ID:" && tThreadID, #initThread, #major)
   end if
   tMultipleDef = 0
   if listp(value(pVarMngrObj.GET("thread.id"))) then
@@ -146,13 +146,13 @@ on closeThread me, tCastNumOrID
     if symbolp(tCastNumOrID) then
       tThreadKeys = [tCastNumOrID]
     else
-      return error(me, "Invalid argument:" && tCastNumOrID, #closeThread)
+      return error(me, "Invalid argument:" && tCastNumOrID, #closeThread, #major)
     end if
   end if
   repeat with tid in tThreadKeys
     tThread = pThreadList[tid]
     if voidp(tThread) then
-      return error(me, "Thread not found:" && tid, #closeThread)
+      return error(me, "Thread not found:" && tid, #closeThread, #minor)
     end if
     tObjMgr = getObjectManager()
     if objectp(tThread.interface) then
@@ -201,7 +201,7 @@ on buildThreadObj me, tid, tClassList, tThreadObj
       tMemNum = tResMgr.getmemnum(tClass)
       if tMemNum < 1 then
         tObjMgr.unregisterObject(tid)
-        return error(me, "Script not found:" && tMemNum, #buildThreadObj)
+        return error(me, "Script not found:" && tMemNum, #buildThreadObj, #major)
       end if
       tObject = script(tMemNum).new()
       tInitFlag = tObject.handler(#construct)

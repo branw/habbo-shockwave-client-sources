@@ -41,7 +41,7 @@ end
 
 on checkConnection me
   if not multiuserExists(pConnectionId) then
-    return error(me, "MUS connection not found:" && pConnectionId, #checkConnection)
+    return error(me, "MUS connection not found:" && pConnectionId, #checkConnection, #minor)
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
     tUserID = getObject(#session).GET(#user_user_id)

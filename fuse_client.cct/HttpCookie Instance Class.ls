@@ -177,11 +177,7 @@ on createNetRequest me
   tCmd = EMPTY
   tHeaders = []
   tBody = EMPTY
-  tPort = ":" & pPort
-  if tPort = ":80" then
-    tPort = EMPTY
-  end if
-  tHeaders.add("Host: " & pServer & tPort)
+  tHeaders.add("Host: " & pServer & ":" & pPort)
   tHeaders.add("User-Agent:" && pUserAgent)
   tHeaders.add("Accept: text/*")
   tHeaders.add("Accept-Charset: ISO-8859-1")

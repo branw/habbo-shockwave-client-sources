@@ -3,7 +3,7 @@ property pPageData, pSmallImg, pSelectedOrderNum, pSelectedColorNum, pSelectedPr
 on construct me
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #construct)
+    return error(me, "Couldn't access catalogue window!", #construct, #major)
   end if
   tPetClass = value(readValueFromField("fuse.object.classes", RETURN, "pet"))
   pPetTemplateObj = createObject(#temp, tPetClass)
@@ -14,7 +14,7 @@ on construct me
   pPetDefinitions = value(tPetDEfText)
   if ilk(pPetDefinitions) <> #propList then
     pPetDefinitions = [:]
-    error(me, "Pet definitions has invalid data!", me.getID(), #construct)
+    error(me, "Pet definitions has invalid data!", me.getID(), #construct, #major)
   end if
   i = 0
   repeat while 1
@@ -48,7 +48,7 @@ on construct me
               end if
             end repeat
           else
-            error(me, "Couldn't find pet colors member!" && tPetColorId, #construct)
+            error(me, "Couldn't find pet colors member!" && tPetColorId, #construct, #major)
             return 0
           end if
           pPetRacesList[tPetType] = ["races": tTempRaces, "colors": tColorList]
@@ -72,7 +72,7 @@ end
 
 on define me, tPageProps
   if tPageProps.ilk <> #propList then
-    return error(me, "Incorrect Catalogue page data", #define)
+    return error(me, "Incorrect Catalogue page data", #define, #major)
   end if
   if not voidp(tPageProps["productList"]) then
     tProducts = tPageProps["productList"]
@@ -141,14 +141,14 @@ end
 on selectProduct me, tOrderNum
   tCataloguePage = getThread(#catalogue).getInterface().getCatalogWindow()
   if not tCataloguePage then
-    return error(me, "Couldn't access catalogue window!", #selectProduct)
+    return error(me, "Couldn't access catalogue window!", #selectProduct, #major)
   end if
   tWndObj = tCataloguePage
   if not integerp(tOrderNum) then
-    return error(me, "Incorrect value", #selectProduct)
+    return error(me, "Incorrect value", #selectProduct, #major)
   end if
   if voidp(pPageData) then
-    return error(me, "product not found", #selectProduct)
+    return error(me, "product not found", #selectProduct, #major)
   end if
   if pPageData.count = 0 then
     return 
@@ -202,7 +202,7 @@ end
 
 on nextProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #nextProduct)
+    return error(me, "Incorrect data", #nextProduct, #major)
   end if
   tNext = pLastProductNum + 1
   if tNext > pPageData.count then
@@ -214,7 +214,7 @@ end
 
 on prevProduct me
   if pPageData.ilk <> #propList then
-    return error(me, "Incorrect data", #prewProduct)
+    return error(me, "Incorrect data", #prewProduct, #major)
   end if
   tPrev = pLastProductNum - 1
   if tPrev < 1 then
@@ -248,7 +248,7 @@ on eventProc me, tEvent, tSprID, tProp
       tText = tText.char[1..15]
       tText = convertSpecialChars(tText, 1)
       if pSelectedProduct.ilk <> #propList then
-        return error(me, "incorrect Selected Product Data", #eventProc)
+        return error(me, "incorrect Selected Product Data", #eventProc, #major)
       end if
       tPet = numToChar(2) & pSelectedProduct["petRace"] & numToChar(2) & pSelectedProduct["petColor"]
       pSelectedProduct["extra_parm"] = tText & tPet

@@ -422,7 +422,7 @@ on setFieldType me, tValue
   end if
   tFieldTxtItems = []
   tFieldKeyItems = []
-  repeat with i = 1 to 5
+  repeat with i = 1 to 7
     tFieldTxtItems[i] = getText("sw_fieldname_" & i)
     tFieldKeyItems[i] = string(i)
   end repeat

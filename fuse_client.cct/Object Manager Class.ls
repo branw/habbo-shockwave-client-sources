@@ -35,16 +35,16 @@ end
 
 on create me, tid, tClassList
   if not symbolp(tid) and not stringp(tid) then
-    return error(me, "Symbol or string expected:" && tid, #create)
+    return error(me, "Symbol or string expected:" && tid, #create, #major)
   end if
   if objectp(pObjectList[tid]) then
-    return error(me, "Object already exists:" && tid, #create)
+    return error(me, "Object already exists:" && tid, #create, #major)
   end if
   if tid = #random then
     tid = getUniqueID()
   end if
   if voidp(tClassList) then
-    return error(me, "Class member name expected!", #create)
+    return error(me, "Class member name expected!", #create, #major)
   end if
   if not listp(tClassList) then
     tClassList = [tClassList]
@@ -73,7 +73,7 @@ on create me, tid, tClassList
         if tid <> #temp then
           pObjectList.deleteProp(tid)
         end if
-        return error(me, "Script not found:" && tMemNum, #create)
+        return error(me, "Script not found:" && tMemNum, #create, #major)
       end if
       tObject = script(tMemNum).new()
       tInitFlag = tObject.handler(#construct)
@@ -149,10 +149,10 @@ end
 
 on registerObject me, tid, tObject
   if not objectp(tObject) then
-    return error(me, "Invalid object:" && tObject, #register)
+    return error(me, "Invalid object:" && tObject, #register, #major)
   end if
   if not voidp(pObjectList[tid]) then
-    return error(me, "Object already exists:" && tid, #register)
+    return error(me, "Object already exists:" && tid, #register, #minor)
   end if
   pObjectList[tid] = tObject
   pInstanceList.append(tid)
@@ -161,7 +161,7 @@ end
 
 on unregisterObject me, tid
   if voidp(pObjectList[tid]) then
-    return error(me, "Referred object not found:" && tid, #unregister)
+    return error(me, "Referred object not found:" && tid, #unregister, #minor)
   end if
   tObj = pObjectList[tid]
   pObjectList.deleteProp(tid)
@@ -174,10 +174,10 @@ end
 
 on registerManager me, tid
   if not me.exists(tid) then
-    return error(me, "Referred object not found:" && tid, #registerManager)
+    return error(me, "Referred object not found:" && tid, #registerManager, #major)
   end if
   if pManagerList.getOne(tid) <> 0 then
-    return error(me, "Manager alreay registered:" && tid, #registerManager)
+    return error(me, "Manager already registered:" && tid, #registerManager, #minor)
   end if
   pInstanceList.deleteOne(tid)
   pManagerList.append(tid)
@@ -186,10 +186,10 @@ end
 
 on unregisterManager me, tid
   if not me.exists(tid) then
-    return error(me, "Referred object not found:" && tid, #unregisterManager)
+    return error(me, "Referred object not found:" && tid, #unregisterManager, #minor)
   end if
   if pInstanceList.getOne(tid) <> 0 then
-    return error(me, "Manager already unregistered:" && tid, #unregisterManager)
+    return error(me, "Manager already unregistered:" && tid, #unregisterManager, #minor)
   end if
   pManagerList.deleteOne(tid)
   pInstanceList.append(tid)
@@ -198,7 +198,7 @@ end
 
 on getManager me, tid
   if not pManagerList.getOne(tid) then
-    return error(me, "Manager not found:" && tid, #getManager)
+    return error(me, "Manager not found:" && tid, #getManager, #major)
   end if
   return pObjectList[tid]
 end

@@ -25,7 +25,7 @@ on openBadgeWindow me
     return 0
   end if
   if not createWindow("badge_choice_window", VOID, 360, 195) then
-    return 0
+    return error(me, "Badge choice window not found!", #openBadgeWindow, #major)
   end if
   tWndObj = getWindow("badge_choice_window")
   tWndObj.setProperty(#title, getText("room_badge_window_title"))
@@ -35,7 +35,7 @@ on openBadgeWindow me
   tMerged = tWndObj.merge("habbo_badge_select.window")
   if not tMerged then
     removeWindow("badge_choice_window")
-    return error(me, "Badge selection window not found!", #openBadgeWindow)
+    return error(me, "Badge selection window not found!", #openBadgeWindow, #major)
   end if
   registerMessage(#leaveRoom, tWndObj.getID(), #close)
   registerMessage(#changeRoom, tWndObj.getID(), #close)

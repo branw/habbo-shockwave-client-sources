@@ -18,7 +18,7 @@ end
 
 on showLogin me
   getObject(#session).set(#userName, EMPTY)
-  getObject(#session).set(#password, EMPTY)
+  getObject(#session).set(#Password, EMPTY)
   pTempPassword = EMPTY
   tRegistrationDisabled = 0
   if variableExists("registration.disabled") then
@@ -94,7 +94,7 @@ end
 
 on tryLogin me
   if not windowExists(#login_b) then
-    return error(me, "Window not found:" && #login_b, #eventProcLogin)
+    return error(me, "Window not found:" && #login_b, #tryLogin, #major)
   end if
   tWndObj = getWindow(#login_b)
   tUserName = tWndObj.getElement("login_username").getText()
@@ -106,7 +106,7 @@ on tryLogin me
     return 0
   end if
   getObject(#session).set(#userName, tUserName)
-  getObject(#session).set(#password, tPassword)
+  getObject(#session).set(#Password, tPassword)
   tWndObj.getElement("login_ok").hide()
   tWndObj.getElement("login_connecting").setProperty(#blend, 100)
   tElem = tWndObj.getElement("login_forgotten")

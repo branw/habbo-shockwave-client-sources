@@ -47,7 +47,7 @@ on handleUserCreated me, tName, tUserStrId
   if tRoomInt = 0 then
     return 0
   end if
-  if tName = getObject(#session).GET(#userName) then
+  if tName = getObject(#session).get(#userName) then
     tRoomInt.showArrowHiliter(tUserStrId)
   end if
   return 1

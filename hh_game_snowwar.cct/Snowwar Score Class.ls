@@ -54,7 +54,7 @@ on getOwnScore me
   if not getObject(#session).exists("user_game_index") then
     return 0
   end if
-  tObjectID = getObject(#session).GET("user_game_index")
+  tObjectID = getObject(#session).get("user_game_index")
   tScore = me.getGameSystem().getGameObjectProperty(tObjectID, #score)
   return tScore
 end

@@ -1,4 +1,4 @@
-property pDebugLevel, pErrorCache, pCacheSize
+property pDebugLevel, pErrorCache, pCacheSize, pErrorDialogLevel, pErrorLevelList
 
 on construct me
   if not (the runMode contains "Author") then
@@ -7,6 +7,15 @@ on construct me
   pDebugLevel = 1
   pErrorCache = EMPTY
   pCacheSize = 30
+  pErrorLevelList = [#minor, #major, #critical]
+  pErrorDialogLevel = getVariable("client.debug.level")
+  if ilk(pErrorDialogLevel) <> #symbol then
+    pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
+  else
+    if pErrorLevelList.findPos(pErrorDialogLevel) = 0 then
+      pErrorDialogLevel = pErrorLevelList[pErrorLevelList.count]
+    end if
+  end if
   return 1
 end
 
@@ -15,11 +24,11 @@ on deconstruct me
   return 1
 end
 
-on error me, tObject, tMsg, tMethod
+on error me, tObject, tMsg, tMethod, tErrorLevel
   if objectp(tObject) then
     tObject = string(tObject)
     tObject = tObject.word[2..tObject.word.count - 2]
-    tObject = tObject.char[2..length(tObject)]
+    tObject = tObject.char[2..length(tObject) - 1]
   else
     tObject = "Unknown"
   end if
@@ -53,6 +62,19 @@ on error me, tObject, tMsg, tMethod
     otherwise:
       put "Error:" & tError
   end case
+  if voidp(tErrorLevel) then
+    tErrorLevel = pErrorLevelList[1]
+  else
+    if ilk(tErrorLevel) <> #symbol then
+      tErrorLevel = pErrorLevelList[1]
+    end if
+  end if
+  if pErrorLevelList.findPos(tErrorLevel) >= pErrorLevelList.findPos(pErrorDialogLevel) then
+    tError = "Method: " && tMethod & RETURN
+    tError = tError & "Object: " && tObject & RETURN
+    tError = tError & "Message:" && tMsg.line[1] & RETURN
+    executeMessage(#showErrorMessage, "client", tError)
+  end if
   return 0
 end
 

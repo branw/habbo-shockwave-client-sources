@@ -37,7 +37,7 @@ on define me, tGameObject
   end if
   me.reserveSpaceForObject()
   PLAYER_HEIGHT = me.getGameObjectProperty(#gameobject_height)
-  if tGameObject[#name] = getObject(#session).GET(#userName) then
+  if tGameObject[#name] = getObject(#session).get(#userName) then
     pIsOwnPlayer = 1
     me.getGameSystem().sendGameSystemEvent(#statusbar_health_update, me.pGameObjectSyncValues[#hit_points])
     me.getGameSystem().sendGameSystemEvent(#statusbar_ballcount_update, me.pGameObjectSyncValues[#snowball_count])

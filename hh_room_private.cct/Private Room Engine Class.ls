@@ -32,16 +32,16 @@ end
 on setWallPaper me, tIndex
   tField = pWallPatterns.line[integer(tIndex.char[1..length(tIndex) - 2])]
   if tField = EMPTY then
-    return error(me, "Invalid wall color index:" && tIndex, #setWallPaper)
+    return error(me, "Invalid wall color index:" && tIndex, #setWallPaper, #major)
   end if
   if not memberExists(tField) then
-    error(me, "Invalid wall color index:" && tIndex, #setWallPaper)
+    error(me, "Invalid wall color index:" && tIndex, #setWallPaper, #minor)
     return me.setWallPaper(string(getVariable("room.default.wall")))
   end if
   tmodel = field(tField)
   tPattern = tmodel.line[integer(tIndex.char[length(string(tIndex)) - 1..length(string(tIndex))])]
   if tPattern = EMPTY then
-    return error(me, "Invalid wall color index:" && tIndex, #setWallPaper)
+    return error(me, "Invalid wall color index:" && tIndex, #setWallPaper, #major)
   end if
   tDelim = the itemDelimiter
   the itemDelimiter = ","
@@ -82,7 +82,7 @@ on setWallPaper me, tIndex
         end if
         next repeat
       end if
-      error(me, "Wall member not found:" && tdir & "_" & tName & "_" & ttype & tdata, #setWallPaper)
+      error(me, "Wall member not found:" && tdir & "_" & tName & "_" & ttype & tdata, #setWallPaper, #minor)
     end repeat
   end repeat
   the itemDelimiter = tDelim
@@ -115,16 +115,16 @@ end
 on setFloorPattern me, tIndex
   tField = pFloorPatterns.line[integer(tIndex.char[1..length(tIndex) - 2])]
   if tField = EMPTY then
-    return error(me, "Invalid floor color index:" && tIndex, #setFloorPattern)
+    return error(me, "Invalid floor color index:" && tIndex, #setFloorPattern, #major)
   end if
   if not memberExists(tField) then
-    error(me, "Invalid floor color index:" && tIndex, #setFloorPatterns)
+    error(me, "Invalid floor color index:" && tIndex, #setFloorPatterns, #minor)
     return me.setFloorPattern(string(getVariable("room.default.floor")))
   end if
   tmodel = field(tField)
   tPattern = tmodel.line[integer(tIndex.char[length(string(tIndex)) - 1..length(string(tIndex))])]
   if tPattern = EMPTY then
-    return error(me, "Invalid floor color index:" && tIndex, #setFloorPattern)
+    return error(me, "Invalid floor color index:" && tIndex, #setFloorPattern, #major)
   end if
   tDelim = the itemDelimiter
   the itemDelimiter = ","

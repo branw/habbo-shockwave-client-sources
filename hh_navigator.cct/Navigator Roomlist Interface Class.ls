@@ -61,7 +61,7 @@ on checkFlatAccess me, tFlatData
       me.setProperty(#passwordNodeId, tFlatData[#id])
     otherwise:
       if voidp(tFlatData) then
-        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo)
+        return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo, #major)
       end if
       return me.getComponent().executeRoomEntry(tFlatData[#id])
   end case
@@ -72,11 +72,11 @@ on handleRoomListClicked me, tParm
   tCategoryId = me.getProperty(#categoryId)
   tNodeInfo = me.getComponent().getNodeInfo(tCategoryId)
   if not listp(tNodeInfo) then
-    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked)
+    return error(me, "Nodeinfo not found, id:" && tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeList = tNodeInfo[#children]
-  if not listp(tNodeInfo) then
-    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked)
+  if not listp(tNodeList) then
+    return error(me, "Node content not found, id:" & tCategoryId, #handleRoomListClicked, #major)
   end if
   tNodeCount = tNodeList.count
   if not ilk(tParm, #point) or tNodeCount = 0 then
@@ -145,7 +145,7 @@ on modifyPrivateRoom me, tFlatInfo
   end if
   tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id], #own)
   if tFlatInfo = 0 then
-    return error(me, "Flat info is VOID", #modifyPrivateRoom)
+    return error(me, "Flat info is VOID", #modifyPrivateRoom, #major)
   else
     pModifyFlatInfo = tFlatInfo
   end if
@@ -218,7 +218,7 @@ on leaveModifyPage me
       pModifyFlatInfo[#description] = getWindow(me.pWindowTitle).getElement("nav_modify_roomdescription_field").getText()
       pModifyFlatInfo[#maxVisitors] = getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").getText()
     "nav_gr_mod_b":
-      pModifyFlatInfo[#password] = me.getPasswordFromField("nav_modify_door_pw")
+      pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
   end case
 end
 
@@ -288,11 +288,11 @@ on prepareCategoryDropMenu me, tNodeId
   tDefaultCatId = me.getComponent().getNodeProperty(tNodeId, #parentid)
   tDropDown = tWndObj.getElement("nav_choosecategory")
   if not ilk(tDropDown, #instance) then
-    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu)
+    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu, #major)
   end if
   tCatProps = getObject(#session).GET("user_flat_cats")
   if not ilk(tCatProps, #propList) then
-    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu)
+    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu, #major)
   end if
   tCatTxtItems = []
   tCatKeyItems = []
@@ -401,7 +401,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           if tFlatData = 0 then
             return 0
           end if
-          tFlatData[#password] = tTemp
+          tFlatData[#Password] = tTemp
           me.getComponent().updateSingleSubNodeInfo(tFlatData)
           me.ChangeWindowView("nav_gr_trypassword")
           me.getComponent().executeRoomEntry(tLastClickedId)
@@ -521,7 +521,7 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
             return 0
           end if
           tFlatData[#description] = pModifyFlatInfo[#description]
-          tFlatData[#password] = pModifyFlatInfo[#password]
+          tFlatData[#Password] = pModifyFlatInfo[#Password]
           tFlatData[#name] = convertSpecialChars(tFlatData[#name], 1)
           tFlatData[#description] = convertSpecialChars(tFlatData[#description], 1)
           me.getComponent().sendupdateFlatInfo(tFlatData)
@@ -588,7 +588,7 @@ end
 
 on passwordFieldTypeEvent me, tSprID, tCheckLength
   if voidp(tSprID) then
-    return error(me, "No password field defined!", #passwordFieldTypeEvent)
+    return error(me, "No password field defined!", #passwordFieldTypeEvent, #minor)
   end if
   if voidp(tCheckLength) then
     tCheckLength = 1

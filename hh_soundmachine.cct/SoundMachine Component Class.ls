@@ -48,8 +48,6 @@ end
 on reset me, tInitialReset
   pSoundMachineFurniOn = 0
   me.closeEdit(tInitialReset)
-  me.clearSoundSets()
-  pSoundSetInventoryList = []
 end
 
 on closeEdit me, tInitialReset
@@ -73,6 +71,8 @@ on closeEdit me, tInitialReset
   pInitialProcessTime = 0
   pSongLength = 0
   me.clearTimeLine()
+  me.clearSoundSets()
+  pSoundSetInventoryList = []
   if not tInitialReset then
     if getConnection(pConnectionId) <> 0 then
       return getConnection(pConnectionId).send("GET_SOUND_DATA")
@@ -859,7 +859,14 @@ on getSampleLength me, tSampleID
     tSongController = getObject(pSongController)
     tReady = tSongController.getSampleLoadingStatus(tSampleName)
     if not tReady then
-      tSongController.preloadSounds([tSampleName])
+      tDelim = the itemDelimiter
+      the itemDelimiter = "_"
+      tSampleno = tSampleName.item[4]
+      tSamplesPerSEt = 9
+      tParentNo = integer(tSampleno / tSamplesPerSEt + 1)
+      tParentId = "sound_set_" & tParentNo
+      the itemDelimiter = tDelim
+      tSongController.preloadSounds([[#sound: tSampleName, #parent: tParentId]])
     else
       tLength = tSongController.getSampleLength(tSampleName)
       tLength = (tLength + (pTimeLineSlotLength - 1)) / pTimeLineSlotLength

@@ -59,9 +59,9 @@ on flatcreated me, tFlatName, tFlatID
   pRoomProps[#id] = tFlatID
   pRoomProps[#name] = tFlatName
   if pRoomProps[#door] = "password" then
-    pRoomProps[#password] = me.getPassword()
+    pRoomProps[#Password] = me.getPassword()
   else
-    pRoomProps[#password] = EMPTY
+    pRoomProps[#Password] = EMPTY
   end if
   tText = getText("roomatic_roomnumber", "Room number:") && pRoomProps[#id]
   if tWndObj.elementExists("roomatic_newnumber") then
@@ -77,7 +77,7 @@ end
 on sendFlatInfo me
   tFlatMsg = "/" & replaceChars(string(pRoomProps[#id]), "/", SPACE) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & replaceChars(pRoomProps[#description], "/", SPACE) & RETURN
-  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#password] & RETURN
+  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#Password] & RETURN
   tFlatMsg = tFlatMsg & "allsuperuser=" & pRoomProps[#ableothersmovefurniture]
   me.getComponent().sendSetFlatInfo(tFlatMsg)
 end
@@ -189,11 +189,11 @@ on setPageValues me, tWindowName
       end if
       tDropDown = tWndObj.getElement("roomatic_choosecategory")
       if not ilk(tDropDown, #instance) then
-        return error(me, "Unable to retrieve dropdown:" && tDropDown, #setPageValues)
+        return error(me, "Unable to retrieve dropdown:" && tDropDown, #setPageValues, #major)
       end if
       tCatProps = getObject(#session).GET("user_flat_cats")
       if not ilk(tCatProps, #propList) then
-        return error(me, "Category list was not a property list:" && tCatProps, #setPageValues)
+        return error(me, "Category list was not a property list:" && tCatProps, #setPageValues, #major)
       end if
       tCatTxtItems = []
       tCatKeyItems = []
@@ -266,7 +266,7 @@ end
 on showPasswordFields me, tVisible
   tWndObj = getWindow(pWindowTitle)
   if tWndObj = 0 then
-    return error(me, "No window!", #showPasswordFields)
+    return error(me, "No window!", #showPasswordFields, #minor)
   end if
   tElems = ["roomatic_password2_field", "roomatic_password_field", "roomatic_pwdfieldsbg", "roomatic_pwd_desc"]
   repeat with tElemID in tElems

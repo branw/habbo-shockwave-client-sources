@@ -91,13 +91,13 @@ end
 
 on addCallBack me, tid, tMethod, tClientID, tArgument
   if not symbolp(tMethod) then
-    return error(me, "Symbol referring to handler expected:" && tMethod, #addCallBack)
+    return error(me, "Symbol referring to handler expected:" && tMethod, #addCallBack, #major)
   end if
   if not objectExists(tClientID) then
-    return error(me, "Object not found:" && tClientID, #addCallBack)
+    return error(me, "Object not found:" && tClientID, #addCallBack, #major)
   end if
   if not getObject(tClientID).handler(tMethod) then
-    return error(me, "Handler not found in object:" && tMethod & "/" & tClientID, #addCallBack)
+    return error(me, "Handler not found in object:" && tMethod & "/" & tClientID, #addCallBack, #major)
   end if
   if pStatus = #ready then
     call(tMethod, getObject(tClientID), tArgument)

@@ -16,13 +16,13 @@ on requestRoomData me, tRoomID, ttype, tCallback
     return 0
   end if
   if tRoomID = VOID then
-    return error(me, "Must specify room ID.", #requestRoomData)
+    return error(me, "Must specify room ID.", #requestRoomData, #major)
   end if
   if not listp(tCallback) then
-    return error(me, "Callback list in format [obj, handler] expected.", #requestRoomData)
+    return error(me, "Callback list in format [obj, handler] expected.", #requestRoomData, #major)
   end if
   if voidp(tCallback[1]) or voidp(tCallback[2]) then
-    return error(me, "Callback list in format [obj, handler] expected.", #requestRoomData)
+    return error(me, "Callback list in format [obj, handler] expected.", #requestRoomData, #major)
   end if
   if ttype = #private and not (tRoomID contains "f_") then
     tid = "f_" & tRoomID
@@ -63,7 +63,7 @@ end
 on getNavComponent me
   tObject = getObject(#navigator_component)
   if tObject = 0 then
-    return error(me, "Navigator component not found!", #getNavigator)
+    return error(me, "Navigator component not found!", #getNavigator, #major)
   end if
   return tObject
 end

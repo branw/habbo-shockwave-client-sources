@@ -46,7 +46,7 @@ on send_changeCfhType me, tCryID, tCategoryNum
       tNewCategory = 2
       executeMessage(#alert, [#Msg: "hobba_sent_to_helpers"])
     else
-      return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType)
+      return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType, #major)
     end if
   end if
   getConnection(getVariable("connection.info.id")).send("CHANGECALLCATEGORY", [#string: tCryID, #integer: tNewCategory])
@@ -71,7 +71,7 @@ on send_cryPick me, tCryID, tGoHelp
     tOk = tdata[#type].ilk = #symbol and tOk
     tOk = tdata[#Msg].ilk = #string and tOk
     if not tOk then
-      return error(me, "Invalid or missing data in saved help cry!", #send_cryPick)
+      return error(me, "Invalid or missing data in saved help cry!", #send_cryPick, #major)
     end if
     if tdata[#room_id] = 0 then
       tdata[#id] = tdata[#roomname]
@@ -114,14 +114,14 @@ on send_cryForHelp me, tMsg, ttype
     if ttype = #emergency then
       tSendType = 1
     else
-      return error(me, "Illegal type for CFH!", #send_cryForHelp)
+      return error(me, "Illegal type for CFH!", #send_cryForHelp, #major)
     end if
   end if
   tPropList = [#string: tMsg, #integer: tSendType]
   if connectionExists(getVariable("connection.room.id")) then
     return getConnection(getVariable("connection.room.id")).send("CRYFORHELP", tPropList)
   else
-    return error(me, "Failed to access room connection!", #send_cryForHelp)
+    return error(me, "Failed to access room connection!", #send_cryForHelp, #major)
   end if
 end
 

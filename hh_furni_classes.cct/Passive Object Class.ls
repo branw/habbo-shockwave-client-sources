@@ -98,7 +98,7 @@ on solveInk me, tPart
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveInk)
+    error(me, pClass & ".props is not valid!", #solveInk, #minor)
     return 8
   else
     if voidp(tPropList[tPart]) then
@@ -117,7 +117,7 @@ on solveBlend me, tPart
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveBlend)
+    error(me, pClass & ".props is not valid!", #solveBlend, #minor)
     return 100
   else
     if voidp(tPropList[tPart]) then
@@ -136,7 +136,7 @@ on solveLocZ me, tPart, tdir
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
   if ilk(tPropList) <> #propList then
-    error(me, pClass & ".props is not valid!", #solveLocZ)
+    error(me, pClass & ".props is not valid!", #solveLocZ, #minor)
     return 0
   else
     if voidp(tPropList[tPart]) then
@@ -202,7 +202,7 @@ on solveMembers me
             return 0
           end if
         else
-          return error(me, "No good object:" && pClass, #solveMembers)
+          return error(me, "No good object:" && pClass, #solveMembers, #major)
         end if
         next repeat
       end if
@@ -246,7 +246,7 @@ on solveMembers me
           end if
         end if
       else
-        return error(me, "Out of sprites!!!", #solveMembers)
+        return error(me, "Out of sprites!!!", #solveMembers, #major)
       end if
     end if
     i = i + 1
@@ -282,7 +282,7 @@ on solveMembers me
   if pSprList.count > 0 then
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveMembers)
+    return error(me, "Couldn't define members:" && pClass, #solveMembers, #major)
   end if
 end
 

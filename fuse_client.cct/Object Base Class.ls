@@ -20,7 +20,7 @@ on setID me, tid
   if voidp(me.id) then
     id = tid
   else
-    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tid, #setID)
+    error(me, "Attempted to redefine object's ID:" & RETURN & me.id && "->" && tid, #setID, #minor)
   end if
 end
 
@@ -30,10 +30,10 @@ end
 
 on delay me, tTime, tMethod, tArgument
   if not integerp(tTime) then
-    return error(me, "Integer expected:" && tTime, #delay)
+    return error(me, "Integer expected:" && tTime, #delay, #major)
   end if
   if not symbolp(tMethod) then
-    return error(me, "Symbol expected:" && tMethod, #delay)
+    return error(me, "Symbol expected:" && tMethod, #delay, #major)
   end if
   tUniqueId = "Delay" && me.getID() && the milliSeconds
   timeout(tUniqueId).new(tTime, #executeDelay, me)

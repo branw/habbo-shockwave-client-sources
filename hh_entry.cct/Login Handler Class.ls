@@ -13,7 +13,7 @@ on deconstruct me
 end
 
 on handleDisconnect me, tMsg
-  error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleMsg)
+  error(me, "Connection was disconnected:" && tMsg.connection.getID(), #handleDisconnect, #dummy)
   return me.getInterface().showDisconnect()
 end
 
@@ -125,7 +125,7 @@ on handleUserObj me, tMsg
     tSession.set("user_" & tuser.getPropAt(i), tuser[i])
   end repeat
   tSession.set(#userName, tSession.GET("user_name"))
-  tSession.set("user_password", tSession.GET(#password))
+  tSession.set("user_password", tSession.GET(#Password))
   executeMessage(#updateFigureData)
   if getObject(#session).exists("user_logged") then
     return 
@@ -133,7 +133,7 @@ on handleUserObj me, tMsg
     getObject(#session).set("user_logged", 1)
   end if
   if getIntVariable("quickLogin", 0) and the runMode contains "Author" then
-    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#password)]))
+    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).GET(#userName), getObject(#session).GET(#Password)]))
     me.getInterface().hideLogin()
   else
     me.getInterface().showUserFound()
@@ -166,7 +166,7 @@ on handleEPSnotify me, tMsg
   case ttype of
     580:
       if not createObject("lang_test", "CLangTest") then
-        return error(me, "Failed to init lang tester!", #handle_eps_notify)
+        return error(me, "Failed to init lang tester!", #handleEPSnotify, #minor)
       else
         return getObject("lang_test").setWord(tdata)
       end if
@@ -221,7 +221,7 @@ on handleRights me, tMsg
 end
 
 on handleErr me, tMsg
-  error(me, "Error from server:" && tMsg.content, #handle_error)
+  error(me, "Error from server:" && tMsg.content, #handleErr, #dummy)
   case 1 of
     tMsg.content contains "login incorrect":
       removeConnection(tMsg.connection.getID())
@@ -253,11 +253,18 @@ on handleErr me, tMsg
 end
 
 on handleModAlert me, tMsg
-  if not voidp(tMsg.content) then
-    executeMessage(#alert, [#title: "alert_warning", #Msg: tMsg.content])
-  else
-    error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
+  tTest = tMsg.getaProp(#content)
+  tConn = tMsg.connection
+  if not tConn then
+    error(me, "Error in moderation alert.", #handleModerationAlert, #minor)
+    return 0
   end if
+  tMessageText = tConn.GetStrFrom()
+  tURL = tConn.GetStrFrom()
+  if tURL = EMPTY then
+    tURL = VOID
+  end if
+  executeMessage(#alert, [#title: "alert_warning", #Msg: tMessageText, #modal: 1, #url: tURL])
 end
 
 on handleCryptoParameters me, tMsg
@@ -268,7 +275,7 @@ on handleCryptoParameters me, tMsg
     tMsg.connection.send("GENERATEKEY")
   else
     if tServerToClient then
-      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters)
+      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters, #minor)
       return tMsg.connection.disconnect(1)
     end if
     me.startSession()
@@ -405,7 +412,7 @@ on regMsgList me, tBool
   tCmds.setaProp("SECRETKEY", 207)
   tCmds.setaProp("GET_SOUND_SETTING", 228)
   tCmds.setaProp("SET_SOUND_SETTING", 229)
-  tConn = getVariable("connection.info.id", #info)
+  tConn = getVariable("connection.info.id", #Info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)
     registerCommands(tConn, me.getID(), tCmds)

@@ -23,7 +23,7 @@ on define me, tProps
     tProps = ["type": "url", "source": tURL]
   end if
   if voidp(tProps["type"]) then
-    error(me, "source type of figure list is void", #define)
+    error(me, "source type of figure list is void", #define, #major)
   end if
   case tProps["type"] of
     "url":
@@ -35,7 +35,7 @@ on define me, tProps
       tProlist = tProps["source"]
       initializeValidPartLists(tProlist)
     otherwise:
-      error(me, "incorret source type, can«t run define ", #define)
+      error(me, "incorret source type, can«t run define ", #define, #major)
   end case
 end
 
@@ -148,7 +148,7 @@ on generateFigureDataToOldServerMode me, tFigure, tsex, tCheckValidParts
       end if
     end repeat
   else
-    error(me, "Weirdness in figure data!!!", #generateFigureDataToOldServerMode)
+    error(me, "Weirdness in figure data!!!", #generateFigureDataToOldServerMode, #minor)
     tNewFigure = tFigureData
   end if
   the itemDelimiter = tTemp
@@ -302,7 +302,7 @@ on parseNewTypeFigure me, tFigure, tsex
       if not listp(tColorList) then
         tColor = rgb("#EEEEEE")
         tColorId = 1
-        error(me, "Weirdness in the list of figure parts!", #parseNewTypeFigure)
+        error(me, "Weirdness in the list of figure parts!", #parseNewTypeFigure, #minor)
       else
         if tColorId > tColorList.count then
           tColorId = 1
@@ -347,7 +347,7 @@ end
 
 on getCountOfPart me, tPart, tsex
   if voidp(tPart) or voidp(tsex) then
-    return error(me, "can«t get part count becouse tPart or tSex is VOID:" && tPart && tsex, #getCountOfPart)
+    return error(me, "can«t get part count because tPart or tSex is VOID:" && tPart && tsex, #getCountOfPart, #major)
   end if
   if tsex.char[1] = "F" or tsex.char[1] = "f" then
     tsex = "F"
@@ -360,13 +360,13 @@ on getCountOfPart me, tPart, tsex
   if not voidp(pSelectablePartsList[tsex][tPart]) then
     return pSelectablePartsList[tsex][tPart].count
   else
-    return error(me, "Can«t get part count:" && tPart && tsex, #getCountOfPart)
+    return error(me, "Can«t get part count:" && tPart && tsex, #getCountOfPart, #major)
   end if
 end
 
 on getCountOfPartColors me, tPart, tSetID, tsex
   if voidp(tPart) or voidp(tSetID) or voidp(tsex) then
-    return error(me, "Can«t get part color count because tPart or setid or tSex is VOID" && tPart && tsex, #getCountOfPartColors)
+    return error(me, "Can«t get part color count because tPart or setid or tSex is VOID" && tPart && tsex, #getCountOfPartColors, #major)
   end if
   if tsex.char[1] = "F" or tsex.char[1] = "f" then
     tsex = "F"
@@ -377,22 +377,22 @@ on getCountOfPartColors me, tPart, tSetID, tsex
     return 0
   end if
   if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "Figure part not found" && tPart, #getCountOfPartColors)
+    return error(me, "Figure part not found" && tPart, #getCountOfPartColors, #major)
   end if
   if voidp(pSelectableSetIDList[tsex].getaProp(tSetID)) then
-    return error(me, "SetID not found" && tSetID, #getCountOfPartColors)
+    return error(me, "SetID not found" && tSetID, #getCountOfPartColors, #major)
   end if
   tSetOrderNum = pSelectableSetIDList[tsex].getProp(tSetID)[#location]
   if not voidp(pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"]) then
     return pSelectablePartsList[tsex][tPart][tSetOrderNum]["c"].count
   else
-    return error(me, "Can«t get part color count" && tPart && tSetID && tsex, #getCountOfPartColors)
+    return error(me, "Can«t get part color count" && tPart && tSetID && tsex, #getCountOfPartColors, #major)
   end if
 end
 
 on getModelOfPartByOrderNum me, tPart, tOrderNum, tsex
   if voidp(tOrderNum) or voidp(tPart) or voidp(tsex) then
-    return error(me, "Can«t get the model of part becouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getModelOfPartByOrderNum)
+    return error(me, "Can«t get the model of part becouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getModelOfPartByOrderNum, #major)
   end if
   if tsex.char[1] = "F" or tsex.char[1] = "f" then
     tsex = "F"
@@ -403,7 +403,7 @@ on getModelOfPartByOrderNum me, tPart, tOrderNum, tsex
     return 0
   end if
   if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "figure part not found" && tPart)
+    return error(me, "figure part not found" && tPart, #getModelOfPartByOrderNum, #major)
   end if
   if tOrderNum < 1 then
     tOrderNum = pSelectablePartsList[tsex][tPart].count
@@ -422,10 +422,10 @@ end
 
 on getColorOfPartByOrderNum me, tPart, tOrderNum, tSetID, tsex
   if voidp(tOrderNum) or voidp(tPart) or voidp(tsex) then
-    return error(me, "Can«t get part color beaouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getColorOfPartByOrderNum)
+    return error(me, "Can«t get part color beaouse tOrderNum or tPart or tSex is VOID:" && tOrderNum && tPart && tsex, #getColorOfPartByOrderNum, #major)
   end if
   if voidp(tSetID) then
-    return error(me, "Can«t get part color because tSetID is VOID" && tsex, #getColorOfPartByOrderNum)
+    return error(me, "Can«t get part color because tSetID is VOID" && tsex, #getColorOfPartByOrderNum, #major)
   end if
   if tsex.char[1] = "F" or tsex.char[1] = "f" then
     tsex = "F"
@@ -436,10 +436,10 @@ on getColorOfPartByOrderNum me, tPart, tOrderNum, tSetID, tsex
     return 0
   end if
   if voidp(pSelectablePartsList[tsex][tPart]) then
-    return error(me, "Figure part not found:" && tPart, #getColorOfPartByOrderNum)
+    return error(me, "Figure part not found:" && tPart, #getColorOfPartByOrderNum, #major)
   end if
   if voidp(pSelectableSetIDList[tsex].getaProp(tSetID)) then
-    return error(me, "SetID not found:" && tSetID, #getCountOfPartColors)
+    return error(me, "SetID not found:" && tSetID, #getCountOfPartColors, #major)
   end if
   tSetOrderNum = pSelectableSetIDList[tsex].getProp(tSetID)[#location]
   if tOrderNum < 1 then
@@ -488,7 +488,7 @@ on partListLoaded me
   end if
   if not memberExists(tMemName) then
     tValidpartList = VOID
-    error(me, "Failure while loading part list", #updateState)
+    error(me, "Failure while loading part list", #partListLoaded, #major)
   else
     try()
     tValidpartList = value(member(getmemnum(tMemName)).text)
@@ -563,7 +563,7 @@ on createValidPartList me, tmember
   tTempItemdelimiter = the itemDelimiter
   repeat with tsex in ["Male", "Female"]
     if not memberExists(tmember & tsex) then
-      error(me, "Can't create list of valid figure parts, member not found:" && tmember & tsex, #createValidPartList)
+      error(me, "Can't create list of valid figure parts, member not found:" && tmember & tsex, #createValidPartList, #major)
       next repeat
     end if
     tFigureIds = member(getmemnum(tmember & tsex)).text
@@ -629,11 +629,11 @@ end
 
 on initializeValidPartLists me, tPlist
   if not (tPlist.ilk = #propList) then
-    error(me, "Can't initialize valid part list", #initializeValidPartLists)
+    error(me, "Can't initialize valid part list", #initializeValidPartLists, #minor)
     if memberExists("DefaultPartList") then
       tPlist = value(member(getmemnum("DefaultPartList")).text)
     else
-      return error(me, "not found default part list")
+      return error(me, "not found default part list", #initializeValidPartLists, #major)
     end if
   end if
   pValidPartsList = tPlist
@@ -653,7 +653,7 @@ end
 
 on initializeSelectablePartList me, tSetIDList
   if not (tSetIDList.ilk = #list) then
-    return error(me, "Can't initialize selectable partlist", #initializeSelectablePartList)
+    return error(me, "Can't initialize selectable partlist", #initializeSelectablePartList, #major)
   end if
   tTempSetIDList = [:]
   tTempSetIDList["M"] = []

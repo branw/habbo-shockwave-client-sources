@@ -158,7 +158,7 @@ end
 
 on handle_error me, tMsg
   tErr = tMsg.content
-  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error)
+  error(me, tMsg.connection.getID() & ":" && tErr, #handle_error, #dummy)
   case tErr of
     "Only 10 favorite rooms allowed!", "nav_error_toomanyfavrooms":
       executeMessage(#alert, [#Msg: getText("nav_error_toomanyfavrooms")])
@@ -363,11 +363,11 @@ on regMsgList me, tBool
   tCmds.setaProp("REMOVEALLRIGHTS", 155)
   tCmds.setaProp("GETPARENTCHAIN", 156)
   if tBool then
-    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
   end if
   return 1
 end

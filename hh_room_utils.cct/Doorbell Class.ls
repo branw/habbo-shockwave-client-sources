@@ -14,11 +14,12 @@ on addDoorbellRinger me, tName
   end if
   if not windowExists(pDoorbellWinID) then
     if not createWindow(pDoorbellWinID, "habbo_basic.window", 250, 200) then
-      return error(me, "Couldn't create window to show ringing doorbell!", #showDoorBell)
+      return error(me, "Couldn't create window to show ringing doorbell!", #addDoorbellRinger, #major)
     end if
     tWndObj = getWindow(pDoorbellWinID)
     if not tWndObj.merge("habbo_doorbell.window") then
-      return tWndObj.close()
+      tWndObj.close()
+      return error(me, "Couldn't create window to show ringing doorbell!", #addDoorbellRinger, #major)
     end if
     tWndObj.setProperty(#locZ, 2000000)
     tWndObj.lock(1)

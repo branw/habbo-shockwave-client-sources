@@ -10,12 +10,12 @@ end
 
 on setWord me, tWord
   if tWord.ilk <> #string then
-    return error(me, "String expected!", #setWord)
+    return error(me, "String expected!", #setWord, #minor)
   end if
   m_cWindowID = "lang_test_wnd"
   if not windowExists(m_cWindowID) then
     if not createWindow(m_cWindowID) then
-      return error(me, "Failed to create window!", #construct)
+      return error(me, "Failed to create window!", #construct, #major)
     end if
   end if
   tWndObj = getWindow(m_cWindowID)

@@ -13,7 +13,7 @@ on construct me
   pPwdEmailUpdateForced = 0
   pPasswordErrors = EMPTY
   if not dumpVariableField("registration.props") then
-    error(me, "registration props field not found!", #construct)
+    error(me, "registration props field not found!", #construct, #minor)
   end if
   if not variableExists("permitted.name.chars") then
     setVariable("permitted.name.chars", "1234567890qwertyuiopasdfghjklzxcvbnm_-=+?!@<>:.,")
@@ -56,7 +56,7 @@ on openFigureCreator me, tMode
   tRegPages = getVariableValue(tMode & ".process")
   if tRegPages.ilk <> #list then
     tWindow = "reg_namepage.window"
-    error(me, "registration process variable not found", #openFigureCreator)
+    error(me, "registration process variable not found", #openFigureCreator, #minor)
   else
     if tRegPages.count > 0 then
       pRegProcessLocation = 1
@@ -141,7 +141,7 @@ end
 
 on userPasswordResult me, tResult
   if voidp(tResult) then
-    return error(me, "Invalid password result!", #userPasswordResult)
+    return error(me, "Invalid password result!", #userPasswordResult, #major)
   end if
   case tResult of
     0:
@@ -241,7 +241,7 @@ on parentEmailIncorrect me
 end
 
 on openPasswordUpdate me, tForced, tMsg
-  me.openPwdEmailUpdate(#password, tForced, tMsg)
+  me.openPwdEmailUpdate(#Password, tForced, tMsg)
 end
 
 on openEmailUpdate me, tForced, tMsg
@@ -252,7 +252,7 @@ on openPwdEmailUpdate me, ttype, tForced, tMsg
   if tForced then
     pPwdEmailUpdateForced = 1
   end if
-  if ttype = #password then
+  if ttype = #Password then
     tWindowTitleStr = getText("reg_changePassword")
     tWndType = "reg_update_password.window"
   else
@@ -527,7 +527,7 @@ on getMyDataFromFields me
     "reg_infopage.window":
       tDay = integer(tWndObj.getElement("char_dd_field").getText())
       if not tWndObj.elementExists("monthDrop") then
-        return error(me, "No month drop!", #leavePage)
+        return error(me, "No month drop!", #getMyDataFromFields, #major)
       end if
       tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
       tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
@@ -608,7 +608,7 @@ end
 
 on createDefaultFigure me, tRandom
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found", #createDefaultFigure)
+    return error(me, "Figure system object not found", #createDefaultFigure, #major)
   end if
   pPropsToServer["figure"] = [:]
   if not voidp(pOldFigure) and pOldSex = pPropsToServer["sex"] then
@@ -690,10 +690,10 @@ end
 
 on getSetID me, tPart
   if voidp(pPropsToServer["figure"][tPart]) then
-    return error(me, "Part missing:" && tPart, #getSetID)
+    return error(me, "Part missing:" && tPart, #getSetID, #major)
   end if
   if voidp(pPropsToServer["figure"][tPart]["setid"]) then
-    return error(me, "Part setid missing:" && tPart, #getSetID)
+    return error(me, "Part setid missing:" && tPart, #getSetID, #major)
   end if
   return pPropsToServer["figure"][tPart]["setid"]
 end
@@ -843,11 +843,11 @@ end
 
 on changePart me, tPart, tButtonDir
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found", #changePart)
+    return error(me, "Figure system object not found", #changePart, #major)
   end if
   tSetID = me.getSetID(tPart)
   if tSetID = 0 then
-    return error(me, "Incorrect part data", #changePart)
+    return error(me, "Incorrect part data", #changePart, #major)
   end if
   tMaxValue = getObject("Figure_System").getCountOfPart(tPart, pPropsToServer["sex"])
   tPartIndexNum = me.setIndexNumOfPartOrColor("partmodel", tPart, tButtonDir, tMaxValue)
@@ -892,11 +892,11 @@ end
 
 on changePartColor me, tPart, tButtonDir
   if not objectExists("Figure_System") then
-    return error(me, "Figure system object not found", #changePartColor)
+    return error(me, "Figure system object not found", #changePartColor, #major)
   end if
   tSetID = me.getSetID(tPart)
   if tSetID = 0 then
-    return error(me, "Incorrect part data", #changePartColor)
+    return error(me, "Incorrect part data", #changePartColor, #major)
   end if
   tMaxValue = getObject("Figure_System").getCountOfPartColors(tPart, tSetID, pPropsToServer["sex"])
   tColorIndexNum = me.setIndexNumOfPartOrColor("partcolor", tPart, tButtonDir, tMaxValue)
@@ -936,7 +936,7 @@ on checkName me
   if pmode = "registration" or pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
     tField = getWindow(pWindowTitle).getElement("char_name_field")
     if tField = 0 then
-      return error(me, "Couldn't perform name check!", #checkName)
+      return error(me, "Couldn't perform name check!", #checkName, #major)
     end if
     tName = tField.getText().word[1]
     tField.setText(tName)
@@ -1080,7 +1080,7 @@ end
 
 on registrationReady me
   getObject(#session).set(#userName, pPropsToServer["name"])
-  getObject(#session).set(#password, pPropsToServer["password"])
+  getObject(#session).set(#Password, pPropsToServer["password"])
   getObject(#session).set("user_figure", pPropsToServer["figure"].duplicate())
   if pmode = "registration" or pmode = "parent_email" or pmode = "parent_email_strong_coppa" then
     if objectExists("Figure_Preview") then
@@ -1097,7 +1097,7 @@ on changePage me, tParm
     tParm = 1
   end if
   if pRegProcess = 0 then
-    return error(me, "registration process not found", #changePage)
+    return error(me, "registration process not found", #changePage, #minor)
   end if
   if tParm.ilk = #string then
     me.getMyDataFromFields()
@@ -1153,7 +1153,7 @@ on leavePage me, tCurrentWindow
       tWndObj = getWindow(pWindowTitle)
       tDay = integer(tWndObj.getElement("char_dd_field").getText())
       if not tWndObj.elementExists("monthDrop") then
-        return error(me, "No month drop!", #leavePage)
+        return error(me, "No month drop!", #leavePage, #major)
       end if
       tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
       tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
@@ -1285,7 +1285,7 @@ on leavePage me, tCurrentWindow
       tWndObj = getWindow(pWindowTitle)
       tDay = integer(tWndObj.getElement("char_dd_field").getText())
       if not tWndObj.elementExists("monthDrop") then
-        return error(me, "No month drop!", #leavePage)
+        return error(me, "No month drop!", #leavePage, #major)
       end if
       tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
       tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
@@ -1432,7 +1432,7 @@ on responseToAccountUpdate me, tStatus
       tWndObj.getElement("updateaccount_topic").setText(getText("reg_verification_incorrectBirthday"))
       me.highlightVerifyTopic()
   end case
-  return error(me, "Invalid parameter in ACCOUNT_UPDATE_STATUS", #responseToAccountUpdate)
+  return error(me, "Invalid parameter in ACCOUNT_UPDATE_STATUS", #responseToAccountUpdate, #minor)
   if pPwdEmailUpdateForced and tWndObj.elementExists("update_cancel_button") then
     tWndObj.getElement("update_cancel_button").deactivate()
   end if
@@ -1569,7 +1569,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
       "reg_parentemail_link2":
         openNetPage("reg_parentemail_link_url2")
       "update_change_pwd":
-        me.openPwdEmailUpdate(#password)
+        me.openPwdEmailUpdate(#Password)
       "update_change_email":
         me.openPwdEmailUpdate(#email)
       "reg_tutorial_link":
@@ -1811,7 +1811,7 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
         end if
         tDay = integer(tWndObj.getElement("char_dd_field").getText())
         if not tWndObj.elementExists("monthDrop") then
-          return error(me, "No month drop!", #leavePage)
+          return error(me, "No month drop!", #eventProcVerifyWindow, #major)
         end if
         tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
         tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
@@ -1852,7 +1852,7 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
         tEmail = tWndObj.getElement("char_newemail_field").getText()
         tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
         if not tWndObj.elementExists("monthDrop") then
-          return error(me, "No month drop!", #leavePage)
+          return error(me, "No month drop!", #eventProcVerifyWindow, #major)
         end if
         tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
         tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))

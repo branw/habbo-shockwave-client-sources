@@ -49,21 +49,21 @@ on isAssetDownloaded me, tAssetId
   return 0
 end
 
-on downloadCastDynamically me, tAssetId, tAssetType, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tCallbackParams
+on downloadCastDynamically me, tAssetId, tAssetType, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tCallbackParams, tParentId
   if tAssetId = EMPTY or voidp(tAssetId) then
-    error(me, "tAssetId was empty, returning with true just to prevent download sequence!", #downloadCastDynamically)
+    error(me, "tAssetId was empty, returning with true just to prevent download sequence!", #downloadCastDynamically, #minor)
     return 1
   end if
   tStatus = me.checkDownloadStatus(tAssetId)
   case tStatus of
     #nodata, #downloading, #inqueue:
-      me.addToDownloadQueue(tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, 0, tCallbackParams, tAssetType)
+      me.addToDownloadQueue(tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, 0, tCallbackParams, tAssetType, tParentId)
       me.tryNextDownload()
       return 1
     #downloaded, #failed:
       return 0
   end case
-  return error(me, "Invalid status type found:" && tStatus, #downloadCastDynamically)
+  return error(me, "Invalid status type found:" && tStatus, #downloadCastDynamically, #major)
 end
 
 on handleCompletedCastDownload me, tAssetId
@@ -75,12 +75,12 @@ on handleCompletedCastDownload me, tAssetId
     pDownloadedAssets[tAssetId] = #failed
     pCurrentDownLoads.deleteProp(tAssetId)
     me.tryNextDownload()
-    return error(me, "Cast " & tCastName & " was not available", #handleCompletedCastDownload)
+    return error(me, "Cast " & tCastName & " was not available", #handleCompletedCastDownload, #minor)
   end if
   me.acquireAssetsFromCast(tCastNum, tAssetId)
   tResetOk = getCastLoadManager().ResetOneDynamicCast(tCastNum)
   if not tResetOk then
-    error(me, "Cast reset failed:" && tCastNum, #handleCompletedCastDownload)
+    error(me, "Cast reset failed:" && tCastNum, #handleCompletedCastDownload, #major)
   end if
   pCurrentDownLoads.deleteProp(tAssetId)
   pDownloadedAssets[tAssetId] = #downloaded
@@ -108,7 +108,7 @@ on checkDownloadStatus me, tAssetId
   return #nodata
 end
 
-on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tAllowIndexing, tCallbackParams, tAssetType
+on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriorityDownload, tAllowIndexing, tCallbackParams, tAssetType, tParentId
   if voidp(tAllowIndexing) then
     tAllowIndexing = 0
   end if
@@ -124,12 +124,13 @@ on addToDownloadQueue me, tAssetId, tCallbackObjectID, tCallBackHandler, tPriori
       else
         tDownloadObj = createObject("dyndownload-" & tAssetId, getClassVariable("dyn.download.instance"))
         if not tDownloadObj then
-          error(me, "Could not create download object. Could it be a duplicate:" && tAssetId, #addToDownloadQueue)
+          error(me, "Could not create download object. Could it be a duplicate:" && tAssetId, #addToDownloadQueue, #major)
           return 0
         end if
         tDownloadObj.setAssetId(tAssetId)
         tDownloadObj.setAssetType(tAssetType)
         tDownloadObj.setIndexing(tAllowIndexing)
+        tDownloadObj.setParentId(tParentId)
         if tPriorityDownload then
           pPriorityDownloadQueue.addProp(tAssetId, tDownloadObj)
         else
@@ -188,7 +189,12 @@ on tryNextDownload me
   end if
   tDownloadURL = pDynDownloadURL & pFurniCastNameTemplate
   if tDownloadObj.getAssetType() = #sound then
-    tDownloadURL = pSoundDownloadUrl
+    tParentId = tDownloadObj.getParentId()
+    if not voidp(tParentId) then
+      if variableExists("dynamic.download.samples.template") then
+        tDownloadURL = pDynDownloadURL & getVariable("dynamic.download.samples.template")
+      end if
+    end if
   end if
   tFixedAssetId = replaceChunks(tAliasedAssetId, " ", "_")
   tDownloadURL = replaceChunks(tDownloadURL, "%typeid%", tFixedAssetId)
@@ -196,13 +202,17 @@ on tryNextDownload me
   if chars(tAssetId, 1, 2) = "s_" then
     tRawAssetId = chars(tAssetId, 3, tAssetId.length)
   end if
-  if not voidp(pFurniRevisionList.findPos(tRawAssetId)) then
-    tRevision = string(pFurniRevisionList[tRawAssetId])
+  if not voidp(tParentId) then
+    tRevision = string(pFurniRevisionList[tParentId])
   else
-    if tAssetId contains "poster" then
-      tRevision = string(pFurniRevisionList["poster"])
+    if not voidp(pFurniRevisionList.findPos(tRawAssetId)) then
+      tRevision = string(pFurniRevisionList[tRawAssetId])
     else
-      tRevision = EMPTY
+      if tAssetId contains "poster" then
+        tRevision = string(pFurniRevisionList["poster"])
+      else
+        tRevision = EMPTY
+      end if
     end if
   end if
   tDownloadURL = replaceChunks(tDownloadURL, "%revision%", tRevision)
@@ -230,7 +240,7 @@ on acquireAssetsFromCast me, tCastNum, tAssetId
   end if
   tCast = castLib(tCastNum)
   if ilk(tCast) <> #castLib then
-    error(me, "Download seems invalid, item is not a cast!", #acquireAssetsFromCast)
+    error(me, "Download seems invalid, item is not a cast!", #acquireAssetsFromCast, #minor)
     return 0
   end if
   tSavedPaletteRefs = [:]
@@ -329,7 +339,7 @@ on copyMemberToBin me, tSourceMember, tTargetAssetClass
       tTargetMemName = me.doAliasReplacing(tSourceMemName, tTargetAssetClass)
       tTargetMemberNum = createMember(tTargetMemName, tSourceMember.type, 0)
       if tTargetMemberNum = 0 then
-        return error(me, "Could not create a new member for copying: " & tTargetMemName, #copyMemberToBin)
+        return error(me, "Could not create a new member for copying: " & tTargetMemName, #copyMemberToBin, #major)
       end if
       tTargetMember = member(tTargetMemberNum)
       tTargetMember.media = tSourceMember.media
