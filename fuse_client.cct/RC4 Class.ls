@@ -1,8 +1,11 @@
 property pSbox, pKey, i, j
+global _player
 
 on setKey me, tMyKey, tMode
-  if _player.traceScript then
-    return 0
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
   end if
   tMyKeyS = string(tMyKey)
   pSbox = []

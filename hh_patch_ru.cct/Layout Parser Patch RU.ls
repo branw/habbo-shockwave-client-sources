@@ -95,6 +95,9 @@ on parse_window me, tFieldName
       end if
       if the platform contains "windows" then
         tElem[#fixedLineSpace] = getVariable("win.fixedLineSpace")
+        if tElem[#fontSize] > tElem[#fixedLineSpace] then
+          tElem[#fixedLineSpace] = tElem[#fontSize] + 3
+        end if
       else
         tElem[#fixedLineSpace] = getVariable("mac.fixedLineSpace")
       end if
