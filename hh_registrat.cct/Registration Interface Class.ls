@@ -1556,7 +1556,12 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
                   executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
                 end if
               else
-                executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
+                if tValidKeys = EMPTY then
+                  executeMessage(#helptooltip, [#msg: getText("reg_use_western_chars"), #pos: tRect])
+                  pTempPassword[tSprID] = []
+                else
+                  executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
+                end if
               end if
           end case
           tStr = EMPTY
@@ -1647,7 +1652,12 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
               executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
             end if
           else
-            executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
+            if tValidKeys = EMPTY then
+              executeMessage(#helptooltip, [#msg: getText("reg_use_western_chars"), #pos: tRect])
+              pTempPassword[tSprID] = []
+            else
+              executeMessage(#helptooltip, [#msg: getText("reg_use_allowed_chars") && tValidKeys, #pos: tRect])
+            end if
           end if
           tStr = EMPTY
           repeat with tChar in pTempPassword[tSprID]

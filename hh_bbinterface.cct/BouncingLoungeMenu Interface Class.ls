@@ -19,9 +19,9 @@ on construct me
   if tVisual = 0 then
     return 
   end if
-  tSprite = tVisual.getSprById("bb_ticket_box")
-  if ilk(tSprite, #sprite) then
-    tSprite.registerProcedure(#eventProcTicketBox, me.getID(), #mouseUp)
+  tsprite = tVisual.getSprById("bb_ticket_box")
+  if ilk(tsprite, #sprite) then
+    tsprite.registerProcedure(#eventProcTicketBox, me.getID(), #mouseUp)
   end if
   registerMessage(#alert, me.getID(), #delayedMenuToBack)
   me.delayedMenuToBack()
@@ -39,9 +39,9 @@ on deconstruct me
   if tVisual = 0 then
     return 
   end if
-  tSprite = tVisual.getSprById("bb_ticket_box")
-  if ilk(tSprite, #sprite) then
-    call(#removeProcedure, [tSprite], #eventProcTicketBox, me.getID(), #mouseUp)
+  tsprite = tVisual.getSprById("bb_ticket_box")
+  if ilk(tsprite, #sprite) then
+    call(#removeProcedure, [tsprite], #eventProcTicketBox, me.getID(), #mouseUp)
   end if
   return 1
 end

@@ -41,6 +41,10 @@ on Init me, tSourceURL, tClickURL
   end if
   pAdError = 0
   pAdLoaded = 0
+  if memberExists(pMemberID) then
+    removeMember(pMemberID)
+  end if
+  pDLCounter = pDLCounter + 1
   pMemberID = pMemberIDBase & pDLCounter
   if tSourceURL contains "?" then
     tSeparator = "&"
@@ -92,10 +96,6 @@ on hideTooltip me
 end
 
 on adClosed me
-  if memberExists(pMemberID) then
-    removeMember(pMemberID)
-  end if
-  pDLCounter = pDLCounter + 1
   me.hideTooltip()
 end
 

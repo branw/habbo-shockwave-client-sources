@@ -29,11 +29,9 @@ end
 
 on storeSkillLevels me, tdata
   repeat with tuser in tdata
-    if me.showSkillLevel(tuser) then
-      return 1
-      next repeat
+    if not me.showSkillLevel(tuser) then
+      pSkillLevelList.addProp(string(tuser[#id]), tuser)
     end if
-    pSkillLevelList.addProp(string(tuser[#id]), tuser)
   end repeat
   return 1
 end

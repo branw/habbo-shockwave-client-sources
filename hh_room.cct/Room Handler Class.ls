@@ -726,7 +726,7 @@ on handle_userbadge me, tMsg
   tUserID = string(tMsg.connection.GetIntFrom())
   tBadge = tMsg.connection.GetStrFrom()
   tUserObj = me.getComponent().getUserObject(tUserID)
-  if not objectp(tUserObj) then
+  if tUserObj = 0 then
     return 0
   end if
   tUserObj.pBadge = tBadge

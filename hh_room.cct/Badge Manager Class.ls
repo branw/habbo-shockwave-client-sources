@@ -53,7 +53,7 @@ end
 
 on closeBadgeWindow me
   tWndObj = getWindow("badge_choice_window")
-  if voidp(tWndObj) then
+  if tWndObj = 0 then
     return 0
   end if
   unregisterMessage(#leaveRoom, tWndObj.getID())

@@ -30,7 +30,7 @@ on refresh me, tTopic, tdata
           0:
             me.createRoomObject(tEvent[#Data])
           1:
-            me.deleteRoomObject(tdata)
+            me.deleteRoomObject(tEvent[#id])
           2:
             me.updateRoomObjectGoal(tEvent)
         end case

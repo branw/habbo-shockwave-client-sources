@@ -54,6 +54,9 @@ end
 
 on checkFlatAccess me, tFlatData
   unregisterMessage(symbol("receivedFlatStruct" & tFlatData[#id]), me.getID())
+  if me.getProperty(#viewedNodeId) <> tFlatData[#id] then
+    return 1
+  end if
   if tFlatData[#owner] = getObject(#session).get("user_name") then
     tDoor = "open"
   else
@@ -143,6 +146,9 @@ on modifyPrivateRoom me, tFlatInfo
     return me.getComponent().sendGetFlatInfo(tFlatInfo)
   end if
   unregisterMessage(symbol("receivedFlatStruct" & tFlatInfo[#id]), me.getID())
+  if tFlatInfo[#id] <> me.getProperty(#viewedNodeId) then
+    return 1
+  end if
   tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id])
   if tFlatInfo = 0 then
     return error(me, "Flat info is VOID", #modifyPrivateRoom)

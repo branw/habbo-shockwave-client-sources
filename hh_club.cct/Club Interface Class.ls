@@ -221,7 +221,7 @@ on eventProcDialogMousedown me, tEvent, tSprID, tParam
       openNetPage(tURL)
     "club_intro_link", "club_general_infolink":
       openNetPage("club_info_url")
-    "button_paycash", "club_link_paycash":
+    "club_isp_buy":
       tSession = getObject(#session)
       tURL = getText("club_paybycash_url")
       tURL = tURL & urlEncode(tSession.get("user_name"))
