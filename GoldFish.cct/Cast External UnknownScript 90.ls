@@ -1,2 +1,0 @@
-property UNKNOWN_NAME_-4348, UNKNOWN_NAME_-1
-global UNKNOWN_NAME_-4348, UNKNOWN_NAME_-1, beginSprite
