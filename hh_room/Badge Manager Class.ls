@@ -295,17 +295,22 @@ on updateInfoStandBadge me, tInfoStandID, tSelectedObj, tBadgeID, tUserID
     tElem.setProperty(#blend, 100)
     tElem.setProperty(#cursor, 0)
   end if
-  tBadgeMember = member(getmemnum("badge" && tBadgeID))
+  if memberExists("badge" && tBadgeID && "localized") then
+    tBadgeMember = member(getmemnum("badge" && tBadgeID && "localized"))
+    return tElem.feedImage(tBadgeMember.image)
+  else
+    if memberExists("badge" && tBadgeID) then
+      tBadgeMember = member(getmemnum("badge" && tBadgeID))
+      return tElem.feedImage(tBadgeMember.image)
+    else
+      me.startBadgeDownload(tBadgeID)
+      return 0
+    end if
+  end if
   if tBadgeID = "HC2" then
     me.createBadgeEffect(tElem)
   else
     me.removeBadgeEffect()
-  end if
-  if tBadgeMember.type = #bitmap and pUpdatedBadges[tBadgeID] = 1 then
-    return tElem.feedImage(tBadgeMember.image)
-  else
-    me.startBadgeDownload(tBadgeID)
-    return 0
   end if
 end
 
