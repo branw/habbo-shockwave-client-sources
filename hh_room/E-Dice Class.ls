@@ -1,15 +1,13 @@
-property pActive, pValue, pAnimStart
+property pActive, pValue
 
 on prepare me, tdata
   pActive = 1
-  pAnimStart = 0
-  if not voidp(tdata[#stuffdata]) then
-    pValue = tdata[#stuffdata]
-  else
-    pValue = 0
+  pValue = integer(tdata[#stuffdata])
+  if not integerp(pValue) then
+    pValue = 1
   end if
   if pValue > 6 then
-    pValue = 0
+    pValue = 6
   end if
   return 1
 end
@@ -36,11 +34,13 @@ on select me
           end repeat
         end repeat
       else
-        getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+        if pActive = 0 then
+          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+        end if
       end if
     end if
   else
-    if rollover(me.pSprList[1]) and the doubleClick then
+    if rollover(me.pSprList[1]) and the doubleClick and pActive = 0 then
       getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
       return 1
     end if
@@ -49,10 +49,11 @@ on select me
 end
 
 on diceThrown me, tValue
-  pActive = 1
-  pValue = tValue
-  if pValue > 0 then
-    pAnimStart = the milliSeconds
+  if tValue > 0 then
+    pValue = tValue
+  else
+    pActive = 1
+    pValue = 0
   end if
 end
 
@@ -65,7 +66,7 @@ on update me
       return 
     end if
     tsprite = me.pSprList[2]
-    if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
+    if pValue <= 0 then
       if tsprite.castNum = getmemnum(tClass & "_b_0_1_1_0_7") then
         tmember = member(getmemnum(tClass & "_b_0_1_1_0_0"))
       else

@@ -90,7 +90,7 @@ on ShowAlert me, tProps
   tWndObj.merge(pDefWndType)
   if stringp(tProps[#title]) then
     tWndObj.merge("habbo_alert_a.window")
-    tTitle = getText(tProps[#title], "...")
+    tTitle = getText(tProps[#title])
     getWriter(pWriterBold).define([#alignment: #center])
     tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
     tTitleElem = tWndObj.getElement("alert_title")

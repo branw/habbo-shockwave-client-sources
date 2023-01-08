@@ -24,6 +24,7 @@ on handle_cryforhelp me, tMsg
     tProps[#casts] = tMarker
     tProps[#port] = tConn.GetIntFrom()
     tProps[#door] = tConn.GetIntFrom()
+    tProps[#room_id] = #public
   else
     if ttype = 1 then
       tProps[#type] = #private
@@ -34,9 +35,9 @@ on handle_cryforhelp me, tMsg
       if ttype = 2 then
         tProps[#type] = #game
         tProps[#casts] = tMarker
-        tProps[#room_id] = tConn.GetStrFrom()
         tProps[#port] = tConn.GetIntFrom()
         tProps[#door] = tConn.GetIntFrom()
+        tProps[#room_id] = #public
       end if
     end if
   end if
@@ -61,8 +62,9 @@ end
 
 on handle_cry_reply me, tMsg
   tConn = tMsg.getaProp(#connection)
-  tText = tConn.GetStrFrom()
-  executeMessage(#alert, [#title: getText("hobba_message_from"), #msg: tText])
+  tText = convertSpecialChars(tConn.GetStrFrom(), 0)
+  tText = replaceChunks(tText, "<br>", RETURN)
+  executeMessage(#alert, [#title: "hobba_message_from", #msg: tText])
   return 1
 end
 

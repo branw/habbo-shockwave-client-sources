@@ -3,15 +3,13 @@ property pActive, pValue, pAnimStart, pChanges
 on prepare me, tdata
   pChanges = 1
   pAnimStart = 0
-  if not voidp(tdata[#stuffdata]) then
-    pValue = tdata[#stuffdata]
-  else
-    pValue = 0
+  pValue = integer(tdata[#stuffdata])
+  if not integerp(pValue) then
+    pValue = 1
   end if
   if pValue > 6 then
     pValue = 0
   end if
-  pActive = integer(pValue) > 0
   me.update()
   return 1
 end
@@ -38,11 +36,13 @@ on select me
           end repeat
         end repeat
       else
-        getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+        if pActive = 0 then
+          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
+        end if
       end if
     end if
   else
-    if rollover(me.pSprList[1]) and the doubleClick then
+    if rollover(me.pSprList[1]) and the doubleClick and pActive = 0 then
       getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
       return 1
     end if
@@ -53,12 +53,11 @@ end
 on diceThrown me, tValue
   pChanges = 1
   pValue = tValue
-  if pValue > 0 then
+  if pValue < 0 then
+    pValue = 0
     pActive = 1
-    pAnimStart = the milliSeconds
-  else
-    pActive = 0
   end if
+  return 1
 end
 
 on update me
@@ -77,7 +76,7 @@ on update me
     tSprite1 = me.pSprList[2]
     tSprite2 = me.pSprList[3]
     tMember2 = member(getmemnum(tClass & "_c_0_1_1_0_1"))
-    if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
+    if pValue <= 0 then
       if tSprite1.castNum = getmemnum(tClass & "_b_0_1_1_0_7") then
         tMember1 = member(getmemnum(tClass & "_b_0_1_1_0_0"))
       else
@@ -106,4 +105,5 @@ on update me
   tSprite2.member = tMember2
   tSprite2.width = tMember2.width
   tSprite2.height = tMember2.height
+  return 1
 end

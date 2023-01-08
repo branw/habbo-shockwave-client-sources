@@ -121,7 +121,7 @@ end
 
 on userEmailOk me
   pEmailChecked = 1
-  me.leavePage(pOpenWindow)
+  me.changePage(1)
   return 1
 end
 
@@ -375,6 +375,7 @@ on setMyDataToFields me
       the itemDelimiter = "."
       tWndObj.getElement("char_dd_field").setText(integer(pPropsToServer["birthday"].item[1]))
       if not voidp(pPropsToServer["birthday"]) then
+        tWndObj.getElement("monthDrop").setOrdering(0)
         tWndObj.getElement("monthDrop").setSelection(integer(pPropsToServer["birthday"].item[2]), 1)
       end if
       tWndObj.getElement("char_yyyy_field").setText(pPropsToServer["birthday"].item[3])
@@ -1002,9 +1003,9 @@ on validateBirthday me, tYear, tMonth, tDay
     tServerDate = getObject(#session).get("server_date")
     tDelim = the itemDelimiter
     the itemDelimiter = "."
-    tServerDay = integer(tServerDate.item[3])
+    tServerDay = integer(tServerDate.item[1])
     tServerMonth = integer(tServerDate.item[2])
-    tServerYear = integer(tServerDate.item[1])
+    tServerYear = integer(tServerDate.item[3])
     if tYear > tServerYear then
       tBirthOK = 0
     else
