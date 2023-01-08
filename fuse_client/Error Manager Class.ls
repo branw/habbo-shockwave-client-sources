@@ -65,11 +65,6 @@ on setDebugLevel me, tDebugLevel
     return 0
   end if
   pDebugLevel = tDebugLevel
-  if float((the productVersion).char[1..3]) >= 8.5 then
-    if pDebugLevel > 0 then
-      the debugPlaybackEnabled = 1
-    end if
-  end if
   return 1
 end
 

@@ -67,11 +67,11 @@ on regMsgList me, tBool
   tCmds.setaProp("GAMEEVENT", 171)
   tCmds.setaProp("REJOINGAME", 172)
   if tBool then
-    registerListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    registerCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    registerListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   else
-    unregisterListener(getVariable("connection.info.id", #Info), me.getID(), tMsgs)
-    unregisterCommands(getVariable("connection.info.id", #Info), me.getID(), tCmds)
+    unregisterListener(getVariable("connection.info.id", #info), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id", #info), me.getID(), tCmds)
   end if
   return 1
 end

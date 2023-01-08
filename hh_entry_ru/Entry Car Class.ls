@@ -70,7 +70,7 @@ on update me
     pSprite.width = pSprite.member.width
     pSprite.height = pSprite.member.height
   end if
-  if pSprite.locV < 283 or pSprite.locV < 300 and pOffset[2] < 0 or pSprite.locV > 499 or pSprite.locH > 730 then
+  if pSprite.locV < 283 or pSprite.locV > 499 or pSprite.locH > 730 then
     return me.reset()
   end if
 end

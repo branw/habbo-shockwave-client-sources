@@ -169,11 +169,20 @@ on handle_messenger_error me, tMsg
         return me.getInterface().openBuddyMassremoveWindow()
       else
         if tReason = 2 then
-          executeMessage(#alert, [#Msg: "console_buddylimit_requester", #modal: 1])
+          executeMessage(#alert, [#msg: "console_buddylimit_requester", #modal: 1])
+        else
+          if tReason = 42 then
+            return me.getComponent().handleFriendlistConcurrency()
+          end if
         end if
       end if
     39:
       return me.getInterface().openBuddyMassremoveWindow()
+    40:
+      tReason = tConn.GetIntFrom()
+      if tReason = 42 then
+        return me.getComponent().handleFriendlistConcurrency()
+      end if
   end case
   return error(me, "Messenger error, failed c->s message:" && tErrorCode, #handle_messenger_error)
   return 1
@@ -300,7 +309,7 @@ on get_console_message me, tMsg
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#senderID] = string(tConn.GetIntFrom())
   tdata[#time] = tConn.GetStrFrom()
-  tdata[#Message] = tConn.GetStrFrom()
+  tdata[#message] = tConn.GetStrFrom()
   return tdata
 end
 
@@ -313,7 +322,7 @@ on get_campaign_message me, tMsg
   tdata[#id] = string(tConn.GetIntFrom())
   tdata[#url] = tConn.GetStrFrom()
   tdata[#link] = tConn.GetStrFrom()
-  tdata[#Message] = tConn.GetStrFrom()
+  tdata[#message] = tConn.GetStrFrom()
   return tdata
 end
 

@@ -15,10 +15,10 @@ on setID me, tid, tFacadeId
 end
 
 on handleUpdate me, tTopic, tdata
-  return me.Refresh(tTopic, tdata)
+  return me.refresh(tTopic, tdata)
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   return 1
 end
 

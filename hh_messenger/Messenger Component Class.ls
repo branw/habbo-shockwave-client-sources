@@ -238,7 +238,7 @@ on receive_UserNotFound me, tMsg
 end
 
 on receive_CampaignMsg me, tMsg
-  if tMsg[#Message].char[1..12] = "[dialog_msg]" then
+  if tMsg[#message].char[1..12] = "[dialog_msg]" then
     if memberExists(tMsg[#link] && "Class") then
       tObjID = getUniqueID()
       if not createObject(tObjID, tMsg[#link] && "Class") then
@@ -476,4 +476,11 @@ end
 on resume me
   pPaused = 0
   return 1
+end
+
+on handleFriendlistConcurrency me
+  executeMessage(#alert, [#msg: "console_buddylist_concurrency", #modal: 1])
+  if connectionExists(getVariable("connection.info.id")) then
+    getConnection(getVariable("connection.info.id")).send("MESSENGER_UPDATE", [#integer: 0])
+  end if
 end
