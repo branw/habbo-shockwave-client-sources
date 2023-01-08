@@ -43,7 +43,7 @@ end
 on showSpectatorView me
   tRoomInt = getObject(#room_interface)
   if objectp(tRoomInt) then
-    tRoomInt.hideInterface(#Remove)
+    tRoomInt.hideInterface(#remove)
     tRoomInt.hideObjectInfo()
     tRoomInt.hideInfoStand()
     tRoomInt.showRoomBar()

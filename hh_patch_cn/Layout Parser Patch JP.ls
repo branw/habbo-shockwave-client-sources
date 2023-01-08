@@ -150,9 +150,9 @@ on parse_window me, tFieldName
           tElem[#scaleH] = #scale
         #strechV:
           tElem[#scaleV] = #scale
-        #centerh:
+        #centerH:
           tElem[#scaleH] = #center
-        #centerv:
+        #centerV:
           tElem[#scaleV] = #center
         #moveHV:
           tElem[#scaleH] = #move

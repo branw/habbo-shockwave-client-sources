@@ -52,10 +52,10 @@ on select me
 end
 
 on diceThrown me, tValue
-  pActive = 1
   if tValue > 0 then
     pValue = tValue
   else
+    pActive = 1
     pValue = tValue
   end if
 end

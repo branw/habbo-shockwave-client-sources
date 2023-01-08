@@ -1,8 +1,12 @@
 on construct me
+  registerMessage(#performLogin, me.getID(), #login)
+  registerMessage(#hideLogin, me.getID(), #hideLogin)
   return me.regMsgList(1)
 end
 
 on deconstruct me
+  unregisterMessage(#performLogin, me.getID())
+  unregisterMessage(#hideLogin, me.getID())
   return me.regMsgList(0)
 end
 
@@ -48,6 +52,9 @@ on handleSessionParameters me, tMsg
             if not (tDateForm = 0) then
               tDateForm.define(tValue)
             end if
+          6:
+            tValue = tMsg.connection.GetIntFrom()
+            tSession.set("conf_partner_integration", tValue > 0)
         end case
       end repeat
     end if
@@ -68,10 +75,6 @@ on handleSecretKey me, tMsg
   end if
   if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
     tClientURL = EMPTY
-  end if
-  if not (the runMode contains "Plugin") then
-    tClientURL = EMPTY
-    tExtVarsURL = EMPTY
   end if
   tMsg.connection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
   tMsg.connection.send("UNIQUEID", [#string: getMachineID()])
@@ -102,15 +105,13 @@ on handlePing me, tMsg
 end
 
 on handleRegistrationOK me, tMsg
-  tUserName = getObject(#session).get(#userName)
-  tPassword = getObject(#session).get(#password)
-  if not stringp(tUserName) or not stringp(tPassword) then
-    return removeConnection(tMsg.connection.getID())
+  tTmp = [:]
+  executeMessage(#partnerRegistrationRequired, tTmp)
+  if tTmp["retval"] then
+    executeMessage(#partnerRegistration, tMsg)
+  else
+    me.login(tMsg.connection)
   end if
-  if tUserName = EMPTY or tPassword = EMPTY then
-    return removeConnection(tMsg.connection.getID())
-  end if
-  return tMsg.connection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
 end
 
 on handleLoginOK me, tMsg
@@ -134,12 +135,18 @@ end
 
 on handleUserObj me, tMsg
   tuser = [:]
+  tConn = tMsg.connection
+  tuser["user_id"] = tConn.GetStrFrom()
+  tuser["name"] = tConn.GetStrFrom()
+  tuser["figure"] = tConn.GetStrFrom()
+  tuser["sex"] = tConn.GetStrFrom()
+  tuser["customData"] = tConn.GetStrFrom()
+  tuser["ph_tickets"] = tConn.GetIntFrom()
+  tuser["ph_figure"] = tConn.GetStrFrom()
+  tuser["photo_film"] = tConn.GetIntFrom()
+  tuser["directMail"] = tConn.GetIntFrom()
   tDelim = the itemDelimiter
   the itemDelimiter = "="
-  repeat with i = 1 to tMsg.content.line.count
-    tLine = tMsg.content.line[i]
-    tuser[tLine.item[1]] = tLine.item[2..tLine.item.count]
-  end repeat
   if not voidp(tuser["sex"]) then
     if tuser["sex"] contains "F" or tuser["sex"] contains "f" then
       tuser["sex"] = "F"
@@ -287,6 +294,25 @@ on handleModAlert me, tMsg
   else
     error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
+end
+
+on login me, tConn
+  if tConn = 0 then
+    return 0
+  end if
+  tUserName = getObject(#session).get(#userName)
+  tPassword = getObject(#session).get(#password)
+  if not stringp(tUserName) or not stringp(tPassword) then
+    return removeConnection(tConn.getID())
+  end if
+  if tUserName = EMPTY or tPassword = EMPTY then
+    return removeConnection(tConn.getID())
+  end if
+  return tConn.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+end
+
+on hideLogin me
+  me.getInterface().hideLogin()
 end
 
 on regMsgList me, tBool

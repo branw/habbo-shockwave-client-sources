@@ -115,7 +115,7 @@ on handle_status me, tMsg
       repeat with tAction in tuser[#actions]
         call(symbol("action_" & tAction[#name]), [tUserObj], tAction[#params])
       end repeat
-      tUserObj.Refresh(tuser[#x], tuser[#y], tuser[#h])
+      tUserObj.refresh(tuser[#x], tuser[#y], tuser[#h])
     end if
   end repeat
 end
@@ -557,11 +557,11 @@ on handle_stripinfo me, tMsg
       tInventory.updateStripItems(tProps[#objects])
       tInventory.setStripItemCount(tProps[#count])
       tInventory.open(1)
-      tInventory.Refresh()
+      tInventory.refresh()
     98:
       tInventory.appendStripItem(tProps[#objects][1])
       tInventory.open(1)
-      tInventory.Refresh()
+      tInventory.refresh()
     108:
       return tProps
   end case
@@ -613,7 +613,7 @@ on handle_trade_items me, tMsg
     end if
     tMessage[tUserName] = tdata
   end repeat
-  return me.getInterface().getSafeTrader().Refresh(tMessage)
+  return me.getInterface().getSafeTrader().refresh(tMessage)
 end
 
 on handle_trade_close me, tMsg

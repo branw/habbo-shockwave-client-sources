@@ -37,6 +37,8 @@ on construct me
   if not objectExists("Ticket_Window_Manager") then
     createObject("Ticket_Window_Manager", "Ticket Window Manager Class")
   end if
+  registerMessage(#openConnection, me.getID(), #openConnection)
+  registerMessage(#closeConnection, me.getID(), #disconnect)
   return 1
 end
 
@@ -60,6 +62,8 @@ on deconstruct me
   if objectExists("Help_Tooltip_Manager") then
     removeObject("Help_Tooltip_Manager")
   end if
+  unregisterMessage(#openConnection, me.getID())
+  unregisterMessage(#closeConnection, me.getID())
   if connectionExists(getVariable("connection.info.id", #info)) then
     return me.disconnect()
   else
@@ -76,6 +80,11 @@ end
 
 on initB me
   return me.getInterface().showLogin()
+end
+
+on openConnection me
+  me.setaProp(#pOkToLogin, 1)
+  me.connect()
 end
 
 on connect me

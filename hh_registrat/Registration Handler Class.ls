@@ -141,16 +141,6 @@ on handle_update_request me, tMsg
   return 0
 end
 
-on handle_password_approved me, tMsg
-  tConn = tMsg.connection
-  if voidp(tConn) then
-    return 0
-  end if
-  tResult = tConn.GetIntFrom()
-  me.getInterface().userPasswordResult(tResult)
-  return 1
-end
-
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(1, #handle_ok)
@@ -170,7 +160,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(271, #handle_email_approved)
   tMsgs.setaProp(272, #handle_email_rejected)
   tMsgs.setaProp(275, #handle_update_request)
-  tMsgs.setaProp(282, #handle_password_approved)
   tCmds = [:]
   tCmds.setaProp("INFORETRIEVE", 7)
   tCmds.setaProp("GETAVAILABLESETS", 9)
@@ -186,7 +175,6 @@ on regMsgList me, tBool
   tCmds.setaProp("SEND_PARENT_EMAIL", 148)
   tCmds.setaProp("UPDATE_ACCOUNT", 149)
   tCmds.setaProp("APPROVEEMAIL", 197)
-  tCmds.setaProp("APPROVE_PASSWORD", 203)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

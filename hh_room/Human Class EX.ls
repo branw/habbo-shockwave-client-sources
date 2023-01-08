@@ -139,7 +139,7 @@ on setup me, tdata
     return error(me, "Couldn't create part lists!", #setup)
   end if
   me.resetValues(pLocX, pLocY, pLocH, pHeadDir, pDirection)
-  me.Refresh(pLocX, pLocY, pLocH, pDirection)
+  me.refresh(pLocX, pLocY, pLocH, pDirection)
   pSync = 0
 end
 
@@ -197,11 +197,11 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pDirection = tDirBody
   pHeadDir = tDirHead
   if pExtraObjs.count > 0 then
-    call(#Refresh, pExtraObjs)
+    call(#refresh, pExtraObjs)
   end if
 end
 
-on Refresh me, tX, tY, tH
+on refresh me, tX, tY, tH
   if pQueuesWithObj and pPreviousLoc = [tX, tY, tH] then
     return 1
   end if

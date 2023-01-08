@@ -20,7 +20,7 @@ on create me, tid, tInitField
   return me.initThread(tInitField, tid)
 end
 
-on Remove me, tid
+on remove me, tid
   return me.closeThread(tid)
 end
 
@@ -156,13 +156,13 @@ on closeThread me, tCastNumOrID
     end if
     tObjMgr = getObjectManager()
     if objectp(tThread.interface) then
-      tObjMgr.Remove(tThread.interface.getID())
+      tObjMgr.remove(tThread.interface.getID())
     end if
     if objectp(tThread.component) then
-      tObjMgr.Remove(tThread.component.getID())
+      tObjMgr.remove(tThread.component.getID())
     end if
     if objectp(tThread.handler) then
-      tObjMgr.Remove(tThread.handler.getID())
+      tObjMgr.remove(tThread.handler.getID())
     end if
     pThreadList.deleteProp(tid)
   end repeat

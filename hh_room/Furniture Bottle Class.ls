@@ -16,8 +16,6 @@ end
 on diceThrown me, tValue
   if tValue >= 0 then
     pRollDir = tValue
-    pRolling = 1
-    pChanges = 1
   else
     me.startRolling()
   end if

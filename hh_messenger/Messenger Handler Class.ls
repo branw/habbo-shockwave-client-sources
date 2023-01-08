@@ -159,12 +159,19 @@ on handle_messenger_error me, tMsg
     0:
       return error(me, "Undefined messenger error!", #handle_messenger_error)
     37:
-      tItems = me.getComponent().pItemList
-      tItems[#newBuddyRequest].addAt(1, tItems[#pendingBuddyAccept])
-      tItems[#pendingBuddyAccept] = EMPTY
-      me.getComponent().tellRequestCount()
-      me.getInterface().updateFrontPage()
-      return me.getInterface().openBuddyMassremoveWindow()
+      tReason = tConn.GetIntFrom()
+      if tReason = 1 then
+        tItems = me.getComponent().pItemList
+        tItems[#newBuddyRequest].addAt(1, tItems[#pendingBuddyAccept])
+        tItems[#pendingBuddyAccept] = EMPTY
+        me.getComponent().tellRequestCount()
+        me.getInterface().updateFrontPage()
+        return me.getInterface().openBuddyMassremoveWindow()
+      else
+        if tReason = 2 then
+          executeMessage(#alert, [#msg: "console_buddylimit_requester", #modal: 1])
+        end if
+      end if
     39:
       return me.getInterface().openBuddyMassremoveWindow()
   end case
