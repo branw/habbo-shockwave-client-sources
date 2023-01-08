@@ -60,7 +60,7 @@ on changeDiscoStyle me, tNr
 end
 
 on update me
-  pAnimThisUpdate = UNKNOWN_NAME_16404
+  pAnimThisUpdate = not pAnimThisUpdate
   if not pAnimThisUpdate then
     return 1
   end if

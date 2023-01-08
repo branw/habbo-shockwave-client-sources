@@ -73,7 +73,11 @@ on send_cryPick me, tCryID, tGoHelp
     if not tOk then
       return error(me, "Invalid or missing data in saved help cry!", #send_cryPick)
     end if
-    tdata[#id] = string(tdata[#room_id])
+    if tdata[#room_id] = 0 then
+      tdata[#id] = tdata[#roomname]
+    else
+      tdata[#id] = string(tdata[#room_id])
+    end if
     tdata[#name] = tdata[#roomname]
     if tdata[#type] = #private then
       tdata[#nodeType] = 2
@@ -81,7 +85,8 @@ on send_cryPick me, tCryID, tGoHelp
       tdata[#id] = "f_" & tdata[#id]
       tdata[#casts] = getVariableValue("room.cast.private")
     else
-      tdata[#nodeType] = 0
+      tdata[#nodeType] = 1
+      tdata[#unitStrId] = tdata[#roomname]
       if ilk(tdata[#casts]) = #string then
         tCasts = tdata[#casts]
         tdata[#casts] = []

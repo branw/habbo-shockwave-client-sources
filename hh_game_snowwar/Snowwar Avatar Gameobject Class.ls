@@ -15,9 +15,7 @@ on deconstruct me
   if tWorld <> 0 then
     tWorld.clearObjectFromTileSpace(me.getObjectId())
   end if
-  if pWalkLoop <> VOID then
-    stopSoundChannel(pWalkLoop)
-  end if
+  me.stopWalkLoop()
   me.removeRoomObject()
   return 1
 end
@@ -148,13 +146,14 @@ on executeGameObjectEvent me, tEvent, tdata
         me.pGameObjectSyncValues[#activity_state] = 0
         me.pGameObjectSyncValues[#activity_timer] = 0
         me.resetFigureAnimation()
+        if pIsOwnPlayer then
+          me.getGameSystem().sendGameSystemEvent(#statusbar_createball_stopped, me.pGameObjectSyncValues[#snowball_count])
+        end if
       end if
       me.pGameObjectFinalTarget.setLoc(tdata.x, tdata.y, 0)
       me.setGameObjectSyncProperty([#move_target_x: tdata.x, #move_target_y: tdata.y])
       if pIsOwnPlayer then
-        if pWalkLoop <> VOID then
-          stopSoundChannel(pWalkLoop)
-        end if
+        me.stopWalkLoop()
         pWalkLoop = playSound("LS-walk-loop-1", VOID, [#infiniteloop: 1])
       end if
     #set_target_tile:
@@ -198,7 +197,8 @@ on executeGameObjectEvent me, tEvent, tdata
     #reset_player:
       me.pGameObjectSyncValues[#player_id] = -1
       return 1
-    #reset_figure:
+    #reset_figure, #gameend:
+      me.stopWalkLoop()
       return me.resetFigureAnimation()
     otherwise:
       put "* TileWorldMover: UNDEFINED EVENT:" && tEvent && tdata
@@ -231,19 +231,13 @@ on calculateFrameMovement me
         pRoomObject.gameObjectNewMoveTarget(me.pGameObjectNextTarget.getTileX(), me.pGameObjectNextTarget.getTileY(), 0.0, tDirBody, tDirBody, "wlk")
       end if
     else
-      if pWalkLoop <> VOID then
-        stopSoundChannel(pWalkLoop)
-      end if
-      pWalkLoop = VOID
+      me.stopWalkLoop()
       me.resetTargets()
       me.setGameObjectSyncProperty([#x: me.pGameObjectLocation.x, #y: me.pGameObjectLocation.y, #next_tile_x: me.pGameObjectLocation.getTileX(), #next_tile_y: me.pGameObjectLocation.getTileY()])
       pRoomObject.gameObjectMoveDone(me.pGameObjectLocation.getTileX(), me.pGameObjectLocation.getTileY(), 0.0, tDirBody, tDirBody, "std")
     end if
   else
-    if pWalkLoop <> VOID then
-      stopSoundChannel(pWalkLoop)
-    end if
-    pWalkLoop = VOID
+    me.stopWalkLoop()
   end if
   tActivityState = me.pGameObjectSyncValues[#activity_state]
   if tActivityState = getIntVariable("ACTIVITY_STATE_STUNNED") or tActivityState = getIntVariable("ACTIVITY_STATE_INVINCIBLE_AFTER_STUN") then
@@ -422,10 +416,7 @@ on checkForSnowballCollisions me
 end
 
 on stopMovement me
-  if pWalkLoop <> VOID then
-    stopSoundChannel(pWalkLoop)
-  end if
-  pWalkLoop = VOID
+  me.stopWalkLoop()
   me.setLocation(me.pGameObjectNextTarget.x, me.pGameObjectNextTarget.y, me.pGameObjectNextTarget.x)
   me.setGameObjectSyncProperty([#x: me.pGameObjectNextTarget.x, #y: me.pGameObjectNextTarget.y, #move_target_x: me.pGameObjectNextTarget.x, #move_target_y: me.pGameObjectNextTarget.y])
   me.resetTargets()
@@ -550,6 +541,14 @@ on getStateAllowsMoving me
   tstate = me.pGameObjectSyncValues[#activity_state]
   tPossibleStates = [getIntVariable("ACTIVITY_STATE_NORMAL"), getIntVariable("ACTIVITY_STATE_CREATING"), getIntVariable("ACTIVITY_STATE_INVINCIBLE_AFTER_STUN")]
   return tPossibleStates.findPos(tstate) > 0
+end
+
+on stopWalkLoop me
+  if pWalkLoop <> VOID then
+    stopSoundChannel(pWalkLoop)
+  end if
+  pWalkLoop = VOID
+  return 1
 end
 
 on incrementScoreBy me, tPoints

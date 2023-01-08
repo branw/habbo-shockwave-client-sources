@@ -39,6 +39,8 @@ on Refresh me, tTopic, tdata
       me.removeFinalScores()
     #playerrejoined:
       me.showJoinedPlayer(tdata)
+    #numtickets:
+      me.renderNumTickets()
   end case
   return 1
 end

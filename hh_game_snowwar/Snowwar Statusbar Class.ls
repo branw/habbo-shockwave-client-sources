@@ -22,6 +22,10 @@ end
 
 on Refresh me, tTopic, tdata
   case tTopic of
+    #gamestart:
+      return me.updateBallCount(pLastBallcount)
+    #gameend:
+      return me.setCreateButtonState("_off")
     #update_game_visuals:
       return me.updateGameVisuals()
     #statusbar_health_update:
@@ -30,6 +34,8 @@ on Refresh me, tTopic, tdata
       return me.updateBallCount(tdata)
     #statusbar_createball_started:
       return me.animateBallCreateStarted()
+    #statusbar_createball_stopped:
+      return me.updateBallCount(pLastBallcount)
   end case
   return 1
 end
@@ -234,6 +240,7 @@ on replaceRoomBar me
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseEnter)
   tWndObj.registerProcedure(#eventProcRoomBar, me.getID(), #mouseLeave)
   me.updateSoundIcon()
+  me.setCreateButtonState("_off")
   return 1
 end
 

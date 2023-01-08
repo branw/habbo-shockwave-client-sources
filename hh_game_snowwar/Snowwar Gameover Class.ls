@@ -177,13 +177,13 @@ on saveSortedScores me, tdata
     end repeat
   end repeat
   if pBestPlayer[#tie] then
-    playSound("LS-C64-drawSFX-1")
+    playSound("LS-C64-win-1")
   else
     pBestPlayer[#image] = me.getBestPlayerImage(pBestPlayer[#id])
     if tOwnPlayerWins then
-      playSound("LS-C64-winSFX-1")
+      playSound("LS-C64-win-1")
     else
-      playSound("LS-C64-looseSFX-1")
+      playSound("LS-C64-loose-1")
     end if
   end if
   return 1

@@ -771,8 +771,9 @@ on ShowSmallIcons me, tstate, tPram
       tClass = pCurrentPageData["productList"][f]["class"]
       tpartColors = pCurrentPageData["productList"][f]["partColors"]
       tDealNumber = pCurrentPageData["productList"][f]["dealNumber"]
+      tDealList = pCurrentPageData["productList"][f]["dealList"]
       tid = "ctlg_small_img_" & f - pProductOffset
-      if tmember <> 0 or tDealNumber > 0 then
+      if tmember <> 0 or not voidp(tDealNumber) and listp(tDealList) then
         if tWndObj.elementExists(tid) then
           tElem = tWndObj.getElement(tid)
           if not voidp(tstate) then
@@ -780,6 +781,8 @@ on ShowSmallIcons me, tstate, tPram
               tBgImage = getMember("ctlg_small_active_bg").image
             end if
           end if
+          tWid = tElem.getProperty(#width)
+          tHei = tElem.getProperty(#height)
           if tClass <> EMPTY then
             tRenderedImage = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tpartColors, tClass)
           else
@@ -794,11 +797,9 @@ on ShowSmallIcons me, tstate, tPram
               else
                 tObj = getObject("ctlg_dealpreviewObj")
               end if
-              tRenderedImage = tObj.renderDealPreviewImage(tDealNumber)
+              tRenderedImage = tObj.renderDealPreviewImage(tDealNumber, tDealList, tWid, tHei)
             end if
           end if
-          tWid = tElem.getProperty(#width)
-          tHei = tElem.getProperty(#height)
           tCenteredImage = image(tWid, tHei, 32)
           if tBgImage <> VOID then
             tCenteredImage.copyPixels(tBgImage, tBgImage.rect, tBgImage.rect)

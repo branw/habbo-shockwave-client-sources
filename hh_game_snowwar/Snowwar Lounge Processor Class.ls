@@ -69,10 +69,10 @@ on createSkillLevelWindow me, tdata
   tSkillLevel = tdata[#lounge_skill_name]
   tSkillMin = tdata[#lounge_skill_score_min]
   tSkillMax = tdata[#lounge_skill_score_max]
-  if tSkillMin = 0 then
+  if tSkillMin <= 0 then
     tSkillMin = getText("gs_lounge_skill_no_min")
   end if
-  if tSkillMax = 0 then
+  if tSkillMax <= 0 then
     tSkillMax = getText("gs_lounge_skill_no_max")
   end if
   createWindow(pSkillLevelWindowId, "sw_skillevel.window")
