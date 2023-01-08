@@ -67,9 +67,9 @@ on handle_purse me, tMsg
           tResultStr = tResultStr & tProductName & RETURN
           tProductName = tConn.GetStrFrom()
         end repeat
-        return executeMessage(#alert, [#msg: tResultStr])
+        return executeMessage(#alert, [#Msg: tResultStr])
       else
-        return executeMessage(#alert, [#msg: "purse_vouchers_success"])
+        return executeMessage(#alert, [#Msg: "purse_vouchers_success"])
       end if
     213:
       me.getInterface().setVoucherInput(1)
@@ -77,7 +77,7 @@ on handle_purse me, tMsg
       the itemDelimiter = TAB
       tErrorCode = tMsg.content.line[1].item[1]
       the itemDelimiter = tDelim
-      return executeMessage(#alert, [#msg: "purse_vouchers_error" & tErrorCode])
+      return executeMessage(#alert, [#Msg: "purse_vouchers_error" & tErrorCode])
   end case
 end
 
