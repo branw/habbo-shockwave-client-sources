@@ -1,4 +1,4 @@
-property ancestor, pPart, pmodel, pDirection, pDrawProps, pAction, pMemString, pCacheImage, pCacheRectA, pCacheRectB
+property ancestor, pPart, pmodel, pDirection, pDrawProps, pAction, pMemString, pCacheImage, pCacheRectA, pCacheRectB, pCacheDir
 
 on deconstruct me
   ancestor = VOID
@@ -18,6 +18,7 @@ on define me, tPart, tmodel, tPalette, tColor, tDirection, tAction, tAncestor
   pDirection = tDirection
   pAction = tAction
   pMemString = EMPTY
+  pCacheDir = -1
   return 1
 end
 
@@ -44,6 +45,9 @@ on update me
         "pla", "scr":
           tAnimCntr = 1 mod me.pAnimCounter
       end case
+      if pDirection <> pCacheDir then
+        tUpdate = 1
+      end if
       tXFix = 0
       tYFix = 0
     "hd":
@@ -91,6 +95,7 @@ on update me
       pCacheRectB = pCacheImage.rect
       pDrawProps[#maskImage] = pCacheImage.createMatte()
       me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
+      pCacheDir = pDirection
     else
       if pCacheRectA.width > 0 then
         me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
