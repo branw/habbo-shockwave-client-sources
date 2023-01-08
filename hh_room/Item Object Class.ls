@@ -220,7 +220,7 @@ on updateLocation me
         end if
       end if
       if not (pClass contains "post.it") then
-        if not (tWallObjFound and getObject(#session).get(#room_owner)) then
+        if not tWallObjFound and getObject(#session).get(#room_owner) then
           tComponent = getThread(#room).getComponent()
           if not (tComponent = 0) then
             tComponent.getRoomConnection().send("ADDSTRIPITEM", "new item" && me.getID())
