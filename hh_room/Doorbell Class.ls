@@ -103,9 +103,10 @@ end
 on eventProcDoorBell me, tEvent, tSprID, tParam
   case tSprID of
     "doorbell_yes":
-      getThread(#room).getComponent().getRoomConnection().send("LETUSERIN", pDoorbellQueue[pRingingUser])
+      getThread(#room).getComponent().getRoomConnection().send("LETUSERIN", [#string: pDoorbellQueue[pRingingUser], #boolean: 1])
       me.removeRingingUser()
     "doorbell_no":
+      getThread(#room).getComponent().getRoomConnection().send("LETUSERIN", [#string: pDoorbellQueue[pRingingUser], #boolean: 0])
       me.removeRingingUser()
     "close":
       me.hideDoorBell()

@@ -29,11 +29,16 @@ on update me
   if not pChanges then
     return 
   end if
+  tName = me.pSprList[6].member.name
+  tDelim = the itemDelimiter
+  the itemDelimiter = "_"
+  tClass = tName.item[1..tName.item.count - 6]
+  the itemDelimiter = tDelim
   if pActive then
     pTimer = pTimer + 1
     if pTimer > 4 then
-      tNewNameE = "hcamme_e_0_1_2_" & me.pDirection[1] & "_" & pActive
-      tNewNameG = "hcamme_g_0_1_2_" & me.pDirection[1] & "_" & pActive
+      tNewNameE = tClass & "_e_0_1_2_" & me.pDirection[1] & "_" & pActive
+      tNewNameG = tClass & "_g_0_1_2_" & me.pDirection[1] & "_" & pActive
       if memberExists(tNewNameE) then
         me.pSprList[5].castNum = abs(getmemnum(tNewNameE))
       end if
@@ -44,18 +49,18 @@ on update me
       if pAnimFrame > 3 then
         pAnimFrame = 1
       end if
-      tNewNameH = "hcamme_h_0_1_2_" & me.pDirection[1] & "_" & pAnimFrame
+      tNewNameH = tClass & "_h_0_1_2_" & me.pDirection[1] & "_" & pAnimFrame
       me.pSprList[8].castNum = abs(getmemnum(tNewNameH))
-      tNewNameF = "hcamme_f_0_1_2_" & me.pDirection[1] & "_" & pAnimFrame
+      tNewNameF = tClass & "_f_0_1_2_" & me.pDirection[1] & "_" & pAnimFrame
       me.pSprList[6].castNum = abs(getmemnum(tNewNameF))
       pTimer = 0
       pChanges = 1
     end if
   else
-    tNewNameE = "hcamme_e_0_1_2_" & me.pDirection[1] & "_" & 0
-    tNewNameF = "hcamme_f_0_1_2_" & me.pDirection[1] & "_" & 0
-    tNewNameG = "hcamme_g_0_1_2_" & me.pDirection[1] & "_" & 0
-    tNewNameH = "hcamme_h_0_1_2_" & me.pDirection[1] & "_" & 0
+    tNewNameE = tClass & "_e_0_1_2_" & me.pDirection[1] & "_" & 0
+    tNewNameF = tClass & "_f_0_1_2_" & me.pDirection[1] & "_" & 0
+    tNewNameG = tClass & "_g_0_1_2_" & me.pDirection[1] & "_" & 0
+    tNewNameH = tClass & "_h_0_1_2_" & me.pDirection[1] & "_" & 0
     me.pSprList[5].castNum = abs(getmemnum(tNewNameE))
     me.pSprList[6].castNum = abs(getmemnum(tNewNameF))
     me.pSprList[7].castNum = abs(getmemnum(tNewNameG))

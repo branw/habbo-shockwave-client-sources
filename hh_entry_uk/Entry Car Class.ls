@@ -1,10 +1,15 @@
 property pSprite, pOffset, pTurnPnt, pDirection
 
-on define me, tsprite, tDirection
+on define me, tsprite, tCount
+  if tCount mod 2 then
+    tdir = #right
+  else
+    tdir = #left
+  end if
   pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
-  pDirection = tDirection
+  pDirection = tdir
   me.reset()
   return 1
 end

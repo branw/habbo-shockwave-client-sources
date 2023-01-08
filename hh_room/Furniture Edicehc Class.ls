@@ -3,13 +3,15 @@ property pActive, pValue, pAnimStart, pChanges
 on prepare me, tdata
   pChanges = 1
   pAnimStart = 0
-  pValue = integer(tdata[#stuffdata])
-  if not integerp(pValue) then
-    pValue = 1
+  if not voidp(tdata[#stuffdata]) then
+    pValue = tdata[#stuffdata]
+  else
+    pValue = 0
   end if
   if pValue > 6 then
     pValue = 0
   end if
+  pActive = integer(pValue) > 0
   me.update()
   return 1
 end
@@ -36,13 +38,11 @@ on select me
           end repeat
         end repeat
       else
-        if pActive = 0 then
-          getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
-        end if
+        getThread(#room).getComponent().getRoomConnection().send("THROW_DICE", me.getID())
       end if
     end if
   else
-    if rollover(me.pSprList[1]) and the doubleClick and pActive = 0 then
+    if rollover(me.pSprList[1]) and the doubleClick then
       getThread(#room).getComponent().getRoomConnection().send("DICE_OFF", me.getID())
       return 1
     end if
@@ -53,9 +53,11 @@ end
 on diceThrown me, tValue
   pChanges = 1
   pValue = tValue
-  if pValue < 0 then
-    pValue = 0
+  if pValue > 0 then
     pActive = 1
+    pAnimStart = the milliSeconds
+  else
+    pActive = 0
   end if
 end
 
@@ -66,18 +68,23 @@ on update me
   if pChanges = 0 then
     return 
   end if
+  tName = me.pSprList[2].member.name
+  tDelim = the itemDelimiter
+  the itemDelimiter = "_"
+  tClass = tName.item[1..tName.item.count - 6]
+  the itemDelimiter = tDelim
   if pActive then
     tSprite1 = me.pSprList[2]
     tSprite2 = me.pSprList[3]
-    tMember2 = member(getmemnum("edicehc_c_0_1_1_0_1"))
-    if pValue <= 0 then
-      if tSprite1.castNum = getmemnum("edicehc_b_0_1_1_0_7") then
-        tMember1 = member(getmemnum("edicehc_b_0_1_1_0_0"))
+    tMember2 = member(getmemnum(tClass & "_c_0_1_1_0_1"))
+    if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
+      if tSprite1.castNum = getmemnum(tClass & "_b_0_1_1_0_7") then
+        tMember1 = member(getmemnum(tClass & "_b_0_1_1_0_0"))
       else
-        tMember1 = member(getmemnum("edicehc_b_0_1_1_0_7"))
+        tMember1 = member(getmemnum(tClass & "_b_0_1_1_0_7"))
       end if
     else
-      tMember1 = member(getmemnum("edicehc_b_0_1_1_0_" & pValue))
+      tMember1 = member(getmemnum(tClass & "_b_0_1_1_0_" & pValue))
       pActive = 0
       pChanges = 1
     end if
@@ -85,11 +92,11 @@ on update me
     tSprite1 = me.pSprList[2]
     tSprite2 = me.pSprList[3]
     tMember1 = tSprite1.member
-    if pValue = 0 then
-      tMember2 = member(getmemnum("edicehc_c_0_1_1_0_0"))
+    if integer(pValue) = 0 then
+      tMember2 = member(getmemnum(tClass & "_c_0_1_1_0_0"))
     else
-      tMember1 = member(getmemnum("edicehc_b_0_1_1_0_" & pValue))
-      tMember2 = member(getmemnum("edicehc_c_0_1_1_0_1"))
+      tMember1 = member(getmemnum(tClass & "_b_0_1_1_0_" & pValue))
+      tMember2 = member(getmemnum(tClass & "_c_0_1_1_0_1"))
     end if
     pChanges = 0
   end if

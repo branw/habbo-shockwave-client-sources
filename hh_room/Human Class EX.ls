@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc
+property pName, pClass, pCustom, pSex, pModState, pCtrlType, pBadge, pCanvasName, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLastDir, pHeadDir, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pColors, pPeopleSize, pMainAction, pMoving, pTalking, pCarrying, pSleeping, pDancing, pWaving, pTrading, pAnimating, pSwim, pCurrentAnim, pGeometry, pExtraObjs, pInfoStruct, pCorrectLocZ, pPartClass, pQueuesWithObj, pPreviousLoc, pBaseLocZ
 
 on construct me
   pName = EMPTY
@@ -45,6 +45,7 @@ on construct me
   pHFactor = pGeometry.pHFactor
   pCorrectLocZ = 0
   pPartClass = value(getThread(#room).getComponent().getClassContainer().get("bodypart"))
+  pBaseLocZ = 0
   return 1
 end
 
@@ -55,8 +56,8 @@ on deconstruct me
   releaseSprite(pSprite.spriteNum)
   releaseSprite(pMatteSpr.spriteNum)
   releaseSprite(pShadowSpr.spriteNum)
-  if memberExists(me.getCanvasName()) then
-    removeMember(me.getCanvasName())
+  if memberExists(pCanvasName) and pCanvasName <> VOID then
+    removeMember(pCanvasName)
   end if
   call(#deconstruct, pExtraObjs)
   pExtraObjs = VOID
@@ -68,11 +69,12 @@ end
 
 on define me, tdata
   me.setup(tdata)
-  if not memberExists(me.getCanvasName()) then
-    createMember(me.getCanvasName(), #bitmap)
+  pCanvasName = pClass && pName && me.getID() && "Canvas"
+  if not memberExists(pCanvasName) then
+    createMember(pCanvasName, #bitmap)
   end if
   tSize = pCanvasSize[#std]
-  pMember = member(getmemnum(me.getCanvasName()))
+  pMember = member(getmemnum(pCanvasName))
   pMember.image = image(tSize[1], tSize[2], tSize[3])
   pMember.regPoint = point(0, pMember.image.height + tSize[4])
   pBuffer = pMember.image.duplicate()
@@ -103,6 +105,11 @@ on define me, tdata
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
   pInfoStruct[#badge] = " "
+  tViz = getThread(#room).getInterface().getRoomVisualizer()
+  tPart = tViz.getPartAtLocation(tdata[#x], tdata[#y], [#wallleft, #wallright])
+  if not (tPart = 0) then
+    pBaseLocZ = tPart[#locZ] - 1000
+  end if
   return 1
 end
 
@@ -507,7 +514,11 @@ on render me
   pSprite.locV = pScreenLoc[2]
   pMatteSpr.loc = pSprite.loc
   pShadowSpr.loc = pSprite.loc + [pShadowFix, 0]
-  pSprite.locZ = pScreenLoc[3] + tOffZ
+  if pBaseLocZ <> 0 then
+    pSprite.locZ = pBaseLocZ
+  else
+    pSprite.locZ = pScreenLoc[3] + tOffZ + pBaseLocZ
+  end if
   pMatteSpr.locZ = pSprite.locZ + 1
   pShadowSpr.locZ = pSprite.locZ - 3
   pUpdateRect = rect(0, 0, 0, 0)
@@ -648,13 +659,10 @@ on flipImage me, tImg_a
   return tImg_b
 end
 
-on getCanvasName me
-  return pClass && pName & me.getID() && "Canvas"
-end
-
 on action_mv me, tProps
   pMainAction = "wlk"
   pMoving = 1
+  pBaseLocZ = 0
   tDelim = the itemDelimiter
   the itemDelimiter = ","
   tloc = tProps.word[2]
@@ -670,6 +678,7 @@ end
 
 on action_sld me, tProps
   pMoving = 1
+  pBaseLocZ = 0
   tDelim = the itemDelimiter
   the itemDelimiter = ","
   tloc = tProps.word[2]
@@ -703,13 +712,26 @@ on action_lay me, tProps
   pCarrying = 0
   pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
-  case pFlipList[pDirection + 1] of
-    2:
-      pScreenLoc = pScreenLoc + [10, 30, 2000]
-    0:
-      pScreenLoc = pScreenLoc + [-47, 32, 2000]
-  end case
-  pLocFix = point(30, -10)
+  if pXFactor < 33 then
+    case pFlipList[pDirection + 1] of
+      2:
+        pScreenLoc = pScreenLoc + [-10, 18, 2000]
+      0:
+        pScreenLoc = pScreenLoc + [-17, 18, 2000]
+    end case
+  else
+    case pFlipList[pDirection + 1] of
+      2:
+        pScreenLoc = pScreenLoc + [10, 30, 2000]
+      0:
+        pScreenLoc = pScreenLoc + [-47, 32, 2000]
+    end case
+  end if
+  if pXFactor > 32 then
+    pLocFix = point(30, -10)
+  else
+    pLocFix = point(35, -5)
+  end if
   call(#layDown, pPartList)
   if pDirection = 0 then
     pDirection = 4
@@ -863,6 +885,9 @@ on action_eat me, tProps
 end
 
 on action_talk me, tProps
+  if pMainAction = "lay" and pXFactor < 33 then
+    return 0
+  end if
   pTalking = 1
 end
 

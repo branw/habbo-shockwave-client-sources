@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pCastLoaded, pEnterRoomAlert
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -10,6 +10,7 @@ on construct me
   pCacheKey = EMPTY
   pCacheFlag = getVariableValue("room.map.cache", 0)
   pTrgDoorID = VOID
+  pPickedCryName = EMPTY
   pUserObjList = [:]
   pActiveObjList = [:]
   pPassiveObjList = [:]
@@ -21,6 +22,8 @@ on construct me
   pAdSystemID = "Room ad"
   pInterstitialSystemID = "Interstitial system"
   pSpectatorSystemID = "Room Mode Manager"
+  pFurniChooserID = "Furniture Chooser"
+  pShadowManagerID = "Room Shadow Manager"
   pChatProps = [:]
   pChatProps["returnCount"] = 0
   pChatProps["timerStart"] = 0
@@ -35,6 +38,8 @@ on construct me
   createObject(pInterstitialSystemID, "Interstitial Manager")
   createObject(pSpectatorSystemID, "Spectator System Class")
   pCurrentSlidingObjects = [:]
+  createObject(pShadowManagerID, "Shadow Manager")
+  registerMessage(#pickAndGoCFH, me.getID(), #pickAndGoCFH)
   registerMessage(#enterRoom, me.getID(), #enterRoom)
   registerMessage(#leaveRoom, me.getID(), #leaveRoom)
   registerMessage(#changeRoom, me.getID(), #leaveRoom)
@@ -80,6 +85,9 @@ on deconstruct me
   end if
   if objectExists(pSpectatorSystemID) then
     removeObject(pSpectatorSystemID)
+  end if
+  if objectExists(pShadowManagerID) then
+    removeObject(pShadowManagerID)
   end if
   pRoomId = EMPTY
   pUserObjList = [:]
@@ -173,6 +181,7 @@ on leaveRoom me, tJumpingToSubUnit
   if not tJumpingToSubUnit then
     pRoomId = EMPTY
   end if
+  me.getShadowManager().disableRender(1)
   if listp(pUserObjList) then
     call(#deconstruct, pUserObjList)
   end if
@@ -185,6 +194,7 @@ on leaveRoom me, tJumpingToSubUnit
   if listp(pItemObjList) then
     call(#deconstruct, pItemObjList)
   end if
+  me.getShadowManager().disableRender(0)
   pUserObjList = [:]
   pActiveObjList = [:]
   pPassiveObjList = [:]
@@ -208,18 +218,18 @@ on enterRoomDirect me, tdata
   pSaveData = tdata
   getObject(#session).set("lastroom", pSaveData)
   if pSaveData[#type] = #private then
-    tRoomId = integer(pSaveData[#id])
+    tRoomID = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomId = integer(pSaveData[#port])
+    tRoomID = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
 end
 
 on createUserObject me, tdata
@@ -350,11 +360,19 @@ on getOwnUser me
   return me.getUserObject(getObject(#session).get("user_index"))
 end
 
-on roomExists me, tRoomId
-  if voidp(tRoomId) then
+on getShadowManager me
+  if objectExists(pShadowManagerID) then
+    return getObject(pShadowManagerID)
+  else
+    return error(me, "Shadow manager not found", #getShadowManager)
+  end if
+end
+
+on roomExists me, tRoomID
+  if voidp(tRoomID) then
     return pActiveFlag
   else
-    return pRoomId = tRoomId
+    return pRoomId = tRoomID
   end if
 end
 
@@ -373,12 +391,17 @@ on sendChat me, tChat
           return createObject(#chooser, "User Chooser Class")
         end if
       ":furni":
+        if pSaveData[#type] <> #private then
+          return 1
+        end if
         if getObject(#session).get("user_rights").getOne("fuse_furni_chooser") then
-          createObject(#furniChooser, "Furni Chooser Class")
-          if getObject(#furniChooser) = 0 then
+          if not objectExists(pFurniChooserID) then
+            createObject(pFurniChooserID, "Furni Chooser Class")
+          end if
+          if getObject(pFurniChooserID) = 0 then
             return 0
           end if
-          return getObject(#furniChooser).showList()
+          return getObject(pFurniChooserID).showList()
         end if
       ":performance":
         if getObject(#session).get("user_rights").getOne("fuse_performance_panel") then
@@ -520,18 +543,18 @@ on roomPrePartFinished me
     return 0
   end if
   if pSaveData[#type] = #private then
-    tRoomId = integer(pSaveData[#id])
+    tRoomID = integer(pSaveData[#id])
     tDoorID = 0
     tTypeID = 0
   else
-    tRoomId = integer(pSaveData[#port])
+    tRoomID = integer(pSaveData[#port])
     tDoorID = integer(pSaveData[#door])
     tTypeID = 1
   end if
   if tDoorID.ilk = #void then
     tDoorID = 0
   end if
-  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomId, #integer: tDoorID])
+  return getConnection(pRoomConnID).send(#room_directory, [#boolean: tTypeID, #integer: tRoomID, #integer: tDoorID])
   return 1
 end
 
@@ -557,23 +580,35 @@ on setSpectatorMode me, tstate
   return tModeMgrObj.setSpectatorMode(tstate, tRoomType)
 end
 
+on pickAndGoCFH me, tSender
+  if not stringp(tSender) then
+    return 0
+  end if
+  pPickedCryName = tSender
+  return 1
+end
+
+on getPickedCryName me
+  return pPickedCryName
+end
+
+on showCfhSenderDelayed me, tid
+  pPickedCryName = EMPTY
+  return me.getInterface().showCfhSenderDelayed(tid)
+end
+
 on loadRoomCasts me
   if pRoomId = EMPTY then
     return 0
   end if
-  tCastList = []
-  i = 1
-  repeat while 1
-    if variableExists("room.cast." & i) then
-      tCast = getVariable("room.cast." & i)
-      if not castExists(tCast) then
-        tCastList.add(tCast)
-      end if
-    else
-      exit repeat
+  tCastVarPrefix = "room.cast."
+  tCastList = me.addToCastDownloadList(tCastVarPrefix, tCastList)
+  if pSaveData[#type] = #private then
+    if me.getRoomScale(pSaveData[#marker]) = #small then
+      tCastVarPrefix = "room.cast.small."
+      tCastList = me.addToCastDownloadList(tCastVarPrefix, tCastList)
     end if
-    i = i + 1
-  end repeat
+  end if
   if tCastList.count > 0 then
     tCastLoadId = startCastLoad(tCastList, 1)
     registerCastloadCallback(tCastLoadId, #loadRoomCasts, me.getID())
@@ -686,6 +721,8 @@ on roomConnected me, tMarker, tstate
   else
     me.validateHeightMap(tCache[#heightmap])
   end if
+  tShadowManager = me.getShadowManager()
+  tShadowManager.define("roomShadow")
   tCache[#users] = []
   if not pProcessList[#users] then
     me.getRoomConnection().send("G_USRS")
@@ -847,9 +884,12 @@ on updateProcess me, tKey, tValue
     repeat with tdata in tCache[#passive]
       me.createPassiveObject(tdata)
     end repeat
+    me.getShadowManager().disableRender(1)
     repeat with tdata in tCache[#Active]
       me.createActiveObject(tdata)
     end repeat
+    me.getShadowManager().disableRender(0)
+    me.getShadowManager().render()
     repeat with tdata in tCache[#items]
       me.createItemObject(tdata)
     end repeat
@@ -978,4 +1018,37 @@ end
 
 on removeEnterRoomAlert me
   pEnterRoomAlert = EMPTY
+end
+
+on getRoomScale me, tRoomMarker
+  tRoomProps = getVariableValue("private.room.properties")
+  if voidp(tRoomProps) then
+    return 0
+  end if
+  tRoomKey = chars(tRoomMarker, tRoomMarker.length, tRoomMarker.length)
+  repeat with tRoom in tRoomProps
+    if tRoom[#model] = tRoomKey then
+      return tRoom[#charScale]
+    end if
+  end repeat
+  return 0
+end
+
+on addToCastDownloadList me, tCastVarPrefix, tCastList
+  if voidp(tCastList) or not listp(tCastList) then
+    tCastList = []
+  end if
+  i = 1
+  repeat while 1
+    if variableExists(tCastVarPrefix & i) then
+      tCast = getVariable(tCastVarPrefix & i)
+      if not castExists(tCast) then
+        tCastList.add(tCast)
+      end if
+    else
+      exit repeat
+    end if
+    i = i + 1
+  end repeat
+  return tCastList
 end

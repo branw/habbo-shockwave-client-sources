@@ -1,4 +1,4 @@
-property pState, pCategoryIndex, pNodeCache, pCacheTimeStamp, pNaviHistory, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdatePeriod, pConnectionId
+property pState, pCategoryIndex, pNodeCache, pNodeCacheExpList, pNaviHistory, pHideFullRoomsFlag, pRootUnitCatId, pRootFlatCatId, pDefaultUnitCatId, pDefaultFlatCatId, pUpdateInterval, pConnectionId
 
 on construct me
   pRootUnitCatId = string(getIntVariable("navigator.visible.public.root"))
@@ -15,10 +15,11 @@ on construct me
   end if
   pCategoryIndex = [:]
   pNodeCache = [:]
-  pCacheTimeStamp = 0
+  pNodeCacheExpList = [:]
   pNaviHistory = []
-  pUpdatePeriod = getIntVariable("navigator.updatetime", 60000)
-  pConnectionId = getVariableValue("connection.info.id")
+  pHideFullRoomsFlag = 0
+  pUpdateInterval = getIntVariable("navigator.updatetime", 60000)
+  pConnectionId = getVariableValue("connection.info.id", #info)
   getObject(#session).set("lastroom", "Entry")
   registerMessage(#userlogin, me.getID(), #updateState)
   registerMessage(#show_navigator, me.getID(), #showNavigator)
@@ -57,23 +58,6 @@ on showhidenavigator me
   return me.getInterface().showhidenavigator(#hide)
 end
 
-on setUpdates me, tBoolean
-  if tBoolean then
-    if pCacheTimeStamp < the milliSeconds - pUpdatePeriod then
-      me.callNodeUpdate()
-    end if
-    if timeoutExists(#navigator_update) then
-      return 1
-    end if
-    return createTimeout(#navigator_update, pUpdatePeriod, #callNodeUpdate, me.getID(), VOID, 0)
-  else
-    if timeoutExists(#navigator_update) then
-      removeTimeout(#navigator_update)
-    end if
-    return 1
-  end if
-end
-
 on getState me
   return pState
 end
@@ -83,13 +67,27 @@ on leaveRoom me
   return me.getInterface().showNavigator()
 end
 
-on getNodeInfo me, tNodeId, tCache
+on getNodeInfo me, tNodeId, tCategoryId
   if tNodeId = VOID then
     return 0
   end if
-  if tCache <> VOID then
-    if pNodeCache[tCache] <> VOID then
-      return pNodeCache[tCache][#children][tNodeId]
+  if not (tNodeId contains "/") then
+    tTestInfo = me.getNodeInfo(tNodeId & "/" & me.getCurrentNodeMask(), tCategoryId)
+    if tTestInfo <> 0 then
+      return tTestInfo
+    end if
+    tTestInfo = me.getNodeInfo(tNodeId & "/0", tCategoryId)
+    if tTestInfo <> 0 then
+      return tTestInfo
+    end if
+    tTestInfo = me.getNodeInfo(tNodeId & "/1", tCategoryId)
+    if tTestInfo <> 0 then
+      return tTestInfo
+    end if
+  end if
+  if tCategoryId <> VOID then
+    if pNodeCache[tCategoryId] <> VOID then
+      return pNodeCache[tCategoryId][#children][tNodeId]
     end if
   end if
   if pNodeCache[tNodeId] <> VOID then
@@ -103,52 +101,22 @@ on getNodeInfo me, tNodeId, tCache
   return 0
 end
 
-on getNodeParentId me, tid
+on getNodeParentInfo me, tid
   if pCategoryIndex[tid] = VOID then
     return 0
   end if
   if tid = pRootUnitCatId or tid = pRootFlatCatId then
     return 0
   end if
-  return pCategoryIndex[tid][#parentid]
-end
-
-on getNodeChildren me, tid
-  if tid = VOID then
-    return [:]
-  end if
-  if pNodeCache[tid] = VOID then
-    return [:]
-  end if
-  return pNodeCache[tid][#children]
-end
-
-on getNodeName me, tid
-  if tid = VOID then
-    return EMPTY
-  end if
-  if pCategoryIndex[tid] <> VOID then
-    return pCategoryIndex[tid][#name]
-  end if
-  repeat with tList in pNodeCache
-    if not (tList[#children] = VOID) then
-      if tList[#children][tid] <> VOID then
-        return tList[#children][tid][#name]
-      end if
-    end if
-  end repeat
-  return EMPTY
+  return pCategoryIndex[tid]
 end
 
 on setNodeProperty me, tNodeId, tProp, tValue
-  if tNodeId = VOID then
+  tNodeInfo = me.getNodeInfo(tNodeId)
+  if not listp(tNodeInfo) then
     return 0
   end if
-  repeat with tList in pNodeCache
-    if not (tList[#children][tNodeId] = VOID) then
-      tList[#children][tNodeId].setaProp(tProp, tValue)
-    end if
-  end repeat
+  tNodeInfo.setaProp(tProp, tValue)
   return 1
 end
 
@@ -156,39 +124,32 @@ on getNodeProperty me, tNodeId, tProp
   if tNodeId = VOID then
     return 0
   end if
-  repeat with tList in pNodeCache
-    tNode = tList.getaProp(#children).getaProp(tNodeId)
-    if not voidp(tNode) then
-      tValue = tNode.getaProp(tProp)
-      if not voidp(tValue) then
-        return tValue
-      end if
-    end if
-  end repeat
-  return 0
-end
-
-on feedNewRoomList me, tid
-  if not listp(pNodeCache[tid]) then
-    return me.callNodeUpdate()
+  tNodeInfo = me.getNodeInfo(tNodeId)
+  if tNodeInfo = 0 then
+    return 0
   end if
-  tNodeCache = pNodeCache[tid]
-  me.getInterface().updateRoomList(tNodeCache[#id], tNodeCache[#children])
-  pCacheTimeStamp = the milliSeconds
-  return 1
+  return tNodeInfo.getaProp(tProp)
 end
 
-on prepareRoomEntry me, tRoomId
-  tRoomInfo = me.getComponent().getNodeInfo(tRoomId)
+on updateInterface me, tid
+  if tid = #own or tid = #src or tid = #fav then
+    return me.feedNewRoomList(tid)
+  else
+    return me.feedNewRoomList(tid & "/" & me.getCurrentNodeMask())
+  end if
+end
+
+on prepareRoomEntry me, tRoomID
+  tRoomInfo = me.getComponent().getNodeInfo(tRoomID)
   if tRoomInfo = 0 then
     return 0
   end if
   if tRoomInfo[#nodeType] = 1 then
-    return me.getComponent().executeRoomEntry(tRoomId)
+    return me.getComponent().executeRoomEntry(tRoomID)
   else
     me.getInterface().hideNavigator()
-    registerMessage(symbol("receivedFlatStruct" & tRoomId), me.getInterface().getID(), #checkFlatAccess)
-    return me.getComponent().sendGetFlatInfo(tRoomId)
+    registerMessage(symbol("receivedFlatStruct" & tRoomID), me.getInterface().getID(), #checkFlatAccess)
+    return me.getComponent().sendGetFlatInfo(tRoomID)
   end if
 end
 
@@ -224,13 +185,9 @@ end
 
 on expandNode me, tNodeId
   me.getInterface().clearRoomList()
-  tPrevNodeId = me.getInterface().getProperty(#categoryId)
-  if not voidp(tPrevNodeId) then
-    pNodeCache.deleteProp(tPrevNodeId)
-  end if
   me.getInterface().setProperty(#categoryId, tNodeId)
   me.createNaviHistory(tNodeId)
-  return me.sendNavigate(tNodeId)
+  return me.updateInterface(tNodeId)
 end
 
 on expandHistoryItem me, tClickedItem
@@ -257,12 +214,12 @@ on createNaviHistory me, tCategoryId
   if tCategoryId = VOID then
     return 0
   end if
-  tParent = me.getNodeParentId(tCategoryId)
-  repeat while tParent <> 0
-    if pNaviHistory.getPos(tParent) = 0 then
-      pNaviHistory.addAt(1, tParent)
-      tText = me.getNodeName(tParent) & RETURN & tText
-      tParent = me.getNodeParentId(tParent)
+  tParentInfo = me.getNodeParentInfo(tCategoryId)
+  repeat while tParentInfo <> 0
+    if pNaviHistory.getPos(tParentInfo[#parentid]) = 0 then
+      pNaviHistory.addAt(1, tParentInfo[#parentid])
+      tText = tParentInfo[#name] & RETURN & tText
+      tParentInfo = me.getNodeParentInfo(tParentInfo[#parentid])
       next repeat
     end if
     return error(me, "Category loop detected in navigation data!", #createNaviHistory)
@@ -279,14 +236,18 @@ end
 on callNodeUpdate me
   case me.getInterface().getNaviView() of
     #unit, #flat:
-      tCategoryId = me.getInterface().getProperty(#categoryId)
-      return me.sendNavigate(tCategoryId)
+      return me.sendNavigate(me.getInterface().getProperty(#categoryId))
     #own:
       return me.getComponent().sendGetOwnFlats()
     #fav:
       return me.getComponent().sendGetFavoriteFlats()
   end case
   return 0
+end
+
+on showHideFullRooms me, tNodeId
+  pHideFullRoomsFlag = not pHideFullRoomsFlag
+  return me.updateInterface(tNodeId)
 end
 
 on roomkioskGoingFlat me, tRoomProps
@@ -333,10 +294,52 @@ on delayedAlert me, tAlert, tDelay
   end if
 end
 
+on checkCacheForNode me, tNodeId
+  if tNodeId = VOID then
+    return 0
+  end if
+  if pNodeCacheExpList[tNodeId] = VOID then
+    return 0
+  end if
+  if tNodeId = #src then
+    return 1
+  end if
+  if the milliSeconds - pNodeCacheExpList[tNodeId] < pUpdateInterval then
+    return 1
+  end if
+  return 0
+end
+
+on feedNewRoomList me, tid
+  if tid = VOID then
+    return 0
+  end if
+  tNodeInfo = me.getNodeInfo(tid)
+  if not listp(tNodeInfo) or not me.checkCacheForNode(tid) then
+    return me.callNodeUpdate()
+  end if
+  if tNodeInfo[#nodeMask] <> me.getCurrentNodeMask() then
+    return me.callNodeUpdate
+  end if
+  me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
+  return 1
+end
+
+on purgeNodeCacheExpList me
+  repeat with i = 1 to pNodeCacheExpList.count
+    if the milliSeconds - pNodeCacheExpList[i] > pUpdateInterval then
+      tid = pNodeCacheExpList.getPropAt(i)
+      pNodeCacheExpList.deleteAt(i)
+      pNodeCache.deleteProp(tid)
+    end if
+  end repeat
+end
+
 on saveFlatResults me, tMsg
   if listp(tMsg) then
     tid = tMsg[#id]
     pNodeCache[tid] = tMsg
+    pNodeCacheExpList[tid] = the milliSeconds
   end if
   return me.feedNewRoomList(tMsg[#id])
 end
@@ -351,7 +354,9 @@ on sendNavigate me, tNodeId, tDepth
   if tDepth = VOID then
     tDepth = 1
   end if
-  getConnection(pConnectionId).send("NAVIGATE", [#integer: integer(tNodeId), #integer: tDepth])
+  tNodeMask = me.getCurrentNodeMask()
+  getConnection(pConnectionId).send("NAVIGATE", [#integer: tNodeMask, #integer: integer(tNodeId), #integer: tDepth])
+  me.purgeNodeCacheExpList()
   return 1
 end
 
@@ -363,9 +368,10 @@ on updateCategoryIndex me, tCategoryIndex
 end
 
 on saveNodeInfo me, tNodeInfo
-  tNodeId = tNodeInfo[#id]
+  tNodeId = tNodeInfo[#id] & "/" & tNodeInfo[#nodeMask]
   if listp(tNodeInfo) then
     pNodeCache[tNodeId] = tNodeInfo
+    pNodeCacheExpList[tNodeId] = the milliSeconds
   end if
   return me.feedNewRoomList(tNodeId)
 end
@@ -413,31 +419,43 @@ end
 
 on sendGetFavoriteFlats me
   if connectionExists(pConnectionId) then
-    return getConnection(pConnectionId).send("GETFVRF")
+    return getConnection(pConnectionId).send("GETFVRF", [#boolean: 0])
   else
     return 0
   end if
 end
 
 on sendAddFavoriteFlat me, tNodeId
-  tFlatID = me.getNodeProperty(tNodeId, #flatId)
+  tRoomType = me.getNodeProperty(tNodeId, #nodeType) = 1
+  if tRoomType = 0 then
+    tRoomID = me.getNodeProperty(tNodeId, #flatId)
+  else
+    tRoomID = tNodeId
+  end if
+  tRoomID = integer(tRoomID)
   if connectionExists(pConnectionId) then
-    if voidp(tFlatID) then
+    if voidp(tRoomID) then
       return error(me, "Room ID expected!", #sendAddFavoriteFlat)
     end if
-    return getConnection(pConnectionId).send("ADD_FAVORITE_ROOM", tFlatID)
+    return getConnection(pConnectionId).send("ADD_FAVORITE_ROOM", [#integer: tRoomType, #integer: tRoomID])
   else
     return 0
   end if
 end
 
 on sendRemoveFavoriteFlat me, tNodeId
-  tFlatID = me.getNodeProperty(tNodeId, #flatId)
+  tRoomType = me.getNodeProperty(tNodeId, #nodeType) = 1
+  if tRoomType = 0 then
+    tRoomID = me.getNodeProperty(tNodeId, #flatId)
+  else
+    tRoomID = tNodeId
+  end if
+  tRoomID = integer(tRoomID)
   if connectionExists(pConnectionId) then
-    if voidp(tFlatID) then
+    if voidp(tRoomID) then
       return error(me, "Flat ID expected!", #sendRemoveFavoriteFlat)
     end if
-    return getConnection(pConnectionId).send("DEL_FAVORITE_ROOM", tFlatID)
+    return getConnection(pConnectionId).send("DEL_FAVORITE_ROOM", [#integer: tRoomType, #integer: tRoomID])
   else
     return 0
   end if
@@ -482,9 +500,11 @@ end
 on sendDeleteFlat me, tNodeId
   tFlatID = me.getNodeProperty(tNodeId, #flatId)
   if connectionExists(pConnectionId) then
-    repeat with tList in pNodeCache
-      tList[#children].deleteProp(tNodeId)
-    end repeat
+    if listp(pNodeCache[#own]) then
+      if listp(pNodeCache[#own][#children]) then
+        pNodeCache[#own][#children].deleteProp(tNodeId)
+      end if
+    end if
     if tFlatID = VOID then
       return 0
     end if
@@ -531,38 +551,37 @@ on sendupdateFlatInfo me, tPropList
   tFlatMsg = string(tPropList[#flatId]) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & tPropList[#description] & RETURN
   tFlatMsg = tFlatMsg & "password=" & tPropList[#password] & RETURN
-  tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture]
+  tFlatMsg = tFlatMsg & "allsuperuser=" & tPropList[#ableothersmovefurniture] & RETURN
+  tFlatMsg = tFlatMsg & "maxvisitors=" & tPropList[#maxVisitors]
   getConnection(pConnectionId).send("SETFLATINFO", tFlatMsg)
   return 1
 end
 
-on sendRemoveAllRights me, tRoomId
-  tFlatID = me.getNodeProperty(tRoomId, #flatId)
+on sendRemoveAllRights me, tRoomID
+  tFlatID = integer(me.getNodeProperty(tRoomID, #flatId))
   if voidp(tFlatID) then
     return 0
   end if
-  tFlatIdInt = integer(tFlatID)
-  getConnection(pConnectionId).send("REMOVEALLRIGHTS", [#integer: tFlatIdInt])
+  getConnection(pConnectionId).send("REMOVEALLRIGHTS", [#integer: tFlatID])
   return 1
 end
 
-on sendGetParentChain me, tRoomId
-  tFlatID = me.getNodeProperty(tRoomId, #flatId)
-  if voidp(tRoomId) then
+on sendGetParentChain me, tRoomID
+  if voidp(tRoomID) then
     return 0
   end if
-  getConnection(pConnectionId).send("GETPARENTCHAIN", [#integer: integer(tRoomId)])
+  getConnection(pConnectionId).send("GETPARENTCHAIN", [#integer: integer(tRoomID)])
   return 1
 end
 
-on getRoomProperties me, tRoomId
-  tProps = me.getNodeInfo(tRoomId)
+on getRoomProperties me, tRoomID
+  tProps = me.getNodeInfo(tRoomID)
   if tProps = VOID then
-    return error(me, "Couldn't find room properties:" && tRoomId, #getRoomProperties)
+    return error(me, "Couldn't find room properties:" && tRoomID, #getRoomProperties)
   end if
   if tProps[#owner] <> VOID then
     tStruct = [:]
-    tStruct[#id] = tProps[#flatId]
+    tStruct[#id] = string(tProps[#flatId])
     tStruct[#name] = tProps[#name]
     tStruct[#type] = #private
     tStruct[#marker] = tProps[#marker]
@@ -588,11 +607,15 @@ on getRoomProperties me, tRoomId
   end if
 end
 
+on getCurrentNodeMask me
+  return pHideFullRoomsFlag
+end
+
 on updateState me, tstate, tProps
   case tstate of
     "reset":
       pState = tstate
-      me.setUpdates(0)
+      me.getInterface().setUpdates(0)
       return 0
     "userLogin":
       pState = tstate

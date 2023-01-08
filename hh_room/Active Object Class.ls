@@ -29,7 +29,13 @@ on deconstruct me
   repeat with tSpr in pSprList
     releaseSprite(tSpr.spriteNum)
   end repeat
-  getThread("room").getComponent().removeSlideObject(me.ancestor.id)
+  if threadExists(#room) then
+    tRoomThread = getThread(#room)
+    tComponent = tRoomThread.getComponent()
+    tShadowManager = tComponent.getShadowManager()
+    tShadowManager.removeShadow(me.getID())
+    tComponent.removeSlideObject(me.getID())
+  end if
   pSprList = []
   return 1
 end
@@ -281,6 +287,9 @@ on solveMembers me
     tSmallMem = tClass & "_small"
   end if
   pSmallMember = tSmallMem
+  if pXFactor = 32 then
+    tClass = "s_" & tClass
+  end if
   if pSprList.count > 0 then
     repeat with tSpr in pSprList
       releaseSprite(tSpr.spriteNum)
@@ -321,7 +330,11 @@ on solveMembers me
           end repeat
           if pDirection[1] = 8 then
             error(me, "Couldn't define members:" && tClass, #solveMembers)
-            tMemNum = getmemnum("room_object_placeholder")
+            if pXFactor = 32 then
+              tMemNum = getmemnum("s_room_object_placeholder")
+            else
+              tMemNum = getmemnum("room_object_placeholder")
+            end if
             pDirection = [0, 0, 0]
             tFound = 1
           end if
@@ -386,24 +399,59 @@ on solveMembers me
   if not tShadowNum and listp(pDirection) then
     tShadowNum = getmemnum(tClass & "_sd")
   end if
-  if tShadowNum <> 0 then
-    tSpr = sprite(reserveSprite(me.getID()))
-    pSprList.add(tSpr)
-    pLoczList.add([-4000, -4000, -4000, -4000, -4000, -4000, -4000])
-    pLocShiftList.add([0, 0, 0, 0, 0, 0, 0, 0])
-    if tShadowNum < 0 then
-      tShadowNum = abs(tShadowNum)
-      tSpr.rotation = 180
-      tSpr.skew = 180
-      tSpr.locH = tSpr.locH + pXFactor
+  if threadExists(#room) then
+    tRoomThread = getThread(#room)
+    tComponent = tRoomThread.getComponent()
+    tShadowManager = tComponent.getShadowManager()
+  else
+    return 0
+  end if
+  tid = me.getID()
+  tRoomType = getObject(#session).get("lastroom")[#type]
+  if tRoomType <> #private then
+    if tShadowNum <> 0 then
+      tSpr = sprite(reserveSprite(tid))
+      pSprList.add(tSpr)
+      pLoczList.add([-4000, -4000, -4000, -4000, -4000, -4000, -4000])
+      pLocShiftList.add([0, 0, 0, 0, 0, 0, 0, 0])
+      if tShadowNum < 0 then
+        tShadowNum = abs(tShadowNum)
+        tSpr.rotation = 180
+        tSpr.skew = 180
+        tSpr.locH = tSpr.locH + pXFactor
+      end if
+      tSpr.castNum = tShadowNum
+      tSpr.width = member(tShadowNum).width
+      tSpr.height = member(tShadowNum).height
+      tSpr.ink = me.solveInk("sd")
+      tSpr.blend = me.solveBlend("sd")
+      if tSpr.blend = 100 then
+        tSpr.blend = 20
+      end if
     end if
-    tSpr.castNum = tShadowNum
-    tSpr.width = member(tShadowNum).width
-    tSpr.height = member(tShadowNum).height
-    tSpr.ink = me.solveInk("sd")
-    tSpr.blend = me.solveBlend("sd")
-    if tSpr.blend = 100 then
-      tSpr.blend = 20
+  else
+    if voidp(tShadowManager) then
+      return 0
+    end if
+    tShadowManager.removeShadow(tid)
+    if tShadowNum <> 0 and pLocH = integer(pLocH) then
+      tProps = [:]
+      tScreenLocs = tRoomThread.getInterface().getGeometry().getScreenCoordinate(pLocX, pLocY, pLocH)
+      tmember = member(tShadowNum)
+      if tShadowNum < 0 then
+        tShadowNum = abs(tShadowNum)
+        tmember = member(tShadowNum)
+        tProps[#multiflip] = 1
+        tProps[#offsetx] = pXFactor
+      end if
+      tProps[#member] = member(tShadowNum).name
+      tProps[#locH] = tScreenLocs[1]
+      tProps[#locV] = tScreenLocs[2]
+      tProps[#width] = tmember.width
+      tProps[#height] = tmember.height
+      tProps[#id] = tid
+      tShadowManager.addShadow(tProps)
+      tShadowManager.render()
     end if
   end if
   if pSprList.count > 0 then

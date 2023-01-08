@@ -30,13 +30,18 @@ on update me
     return 
   end if
   if pActive then
+    if me.pXFactor = 32 then
+      tClass = "s_rare_globe"
+    else
+      tClass = "rare_globe"
+    end if
     pTimer = pTimer + 1
     if pTimer < pNextChange then
       return 
     end if
     pTimer = 0
     pNextChange = 6
-    tNewName = "rare_globe_b_0_1_1_0_" & random(4)
+    tNewName = tClass & "_b_0_1_1_0_" & random(4)
     if memberExists(tNewName) then
       me.pSprList[2].castNum = getmemnum(tNewName)
       me.pSprList[2].width = me.pSprList[2].member.width

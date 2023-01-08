@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -27,6 +27,7 @@ on construct me
   pRingingUser = EMPTY
   pVisitorQueue = []
   pBannerLink = 0
+  pSwapAnimations = []
   pModBadgeList = getVariableValue("moderator.badgelist")
   createObject(pGeometryId, "Room Geometry Class")
   createObject(pContainerID, "Container Hand Class")
@@ -52,18 +53,21 @@ on deconstruct me
   pIgnoreListObj = VOID
   removeObject(pBadgeObjID)
   removeObject(pDoorBellID)
+  repeat with tAnim in pSwapAnimations
+    tAnim.deconstruct()
+  end repeat
   return me.hideAll()
 end
 
-on showRoom me, tRoomId
-  if not memberExists(tRoomId & ".room") then
-    return error(me, "Room description not found:" && tRoomId, #showRoom)
+on showRoom me, tRoomID
+  if not memberExists(tRoomID & ".room") then
+    return error(me, "Room description not found:" && tRoomID, #showRoom)
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then
     activateWindow(pLoaderBarID)
   end if
-  tRoomField = tRoomId & ".room"
+  tRoomField = tRoomID & ".room"
   createVisualizer(pRoomSpaceId, tRoomField)
   tVisObj = getVisualizer(pRoomSpaceId)
   tLocX = tVisObj.getProperty(#locX)
@@ -87,6 +91,18 @@ on showRoom me, tRoomId
     createObject(pHiliterId, "Room Hiliter Class")
     me.getHiliter().define([#sprite: tHiliterSpr, #geometry: pGeometryId])
     receiveUpdate(pHiliterId)
+  end if
+  tAnimations = tVisObj.getProperty(#swapAnims)
+  if tAnimations <> 0 then
+    repeat with tAnimation in tAnimations
+      tObj = createObject(#random, getVariableValue("swap.animation.class"))
+      if tObj = 0 then
+        error(me, "Error creating swwap animation", #showRoom)
+        next repeat
+      end if
+      pSwapAnimations.add(tObj)
+      pSwapAnimations[pSwapAnimations.count].define(tAnimation)
+    end repeat
   end if
   me.getArrowHiliter().Init()
   pClickAction = "moveHuman"
@@ -390,6 +406,9 @@ on showObjectInfo me, tObjType
     tWndObj.getElement("info_text").show()
     tWndObj.getElement("info_name").setText(tProps[#name])
     tWndObj.getElement("info_text").setText(tProps[#Custom])
+    if tObjType = "user" then
+      executeMessage(#userClicked, tProps[#name])
+    end if
     tElem = tWndObj.getElement("info_image")
     if ilk(tProps[#image]) = #image then
       tElem.resizeTo(tProps[#image].width, tProps[#image].height)
@@ -426,14 +445,71 @@ on updateInfoStandBadge me, tBadgeID, tUserID
 end
 
 on showArrowHiliter me, tUserID
-  return me.getArrowHiliter().show(tUserID)
+  if objectExists(pArrowObjID) then
+    return me.getArrowHiliter().show(tUserID)
+  end if
 end
 
 on hideArrowHiliter me
   return me.getArrowHiliter().hide()
 end
 
-on showDoorBell me, tName
+on showDoorBellWaiting me
+  me.hideLoaderBar()
+  createWindow(pLoaderBarID, "habbo_simple.window")
+  tWndObj = getWindow(pLoaderBarID)
+  if tWndObj = 0 then
+    return 0
+  end if
+  tWndObj.merge("room_doorbell_waiting.window")
+  tWndObj.center()
+  tWndObj.registerClient(me.getID())
+  tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
+  tRoomData = me.getComponent().getRoomData()
+  if tRoomData = 0 then
+    return 1
+  end if
+  tRoomName = tRoomData[#name]
+  tElem = tWndObj.getElement("room_doorbell_roomname")
+  if tElem = 0 then
+    return 1
+  end if
+  tElem.setText(tRoomName)
+  return 1
+end
+
+on showDoorBellAccepted me, tName
+  if tName = EMPTY then
+    nothing()
+  else
+    if objectExists(pDoorBellID) then
+      getObject(pDoorBellID).removeFromList(tName)
+    end if
+  end if
+  return 1
+end
+
+on showDoorBellRejected me, tName
+  if tName = EMPTY then
+    me.hideLoaderBar()
+    createWindow(pLoaderBarID, "habbo_simple.window")
+    tWndObj = getWindow(pLoaderBarID)
+    if tWndObj = 0 then
+      return 0
+    end if
+    tWndObj.merge("room_doorbell_rejected.window")
+    tWndObj.center()
+    tWndObj.registerClient(me.getID())
+    tWndObj.registerProcedure(#eventProcBanner, me.getID(), #mouseUp)
+  else
+    if objectExists(pDoorBellID) then
+      getObject(pDoorBellID).removeFromList(tName)
+    end if
+  end if
+  return 1
+end
+
+on showDoorBellDialog me, tName
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 then
     return error(me, "Own user not found!", #showDoorBell)
@@ -446,15 +522,9 @@ on showDoorBell me, tName
   end if
 end
 
-on hideDoorBell me
+on hideDoorBellDialog me
   if objectExists(pDoorBellID) then
     getObject(pDoorBellID).hideDoorBell()
-  end if
-end
-
-on roomEnterDoorBell me, tName
-  if objectExists(pDoorBellID) then
-    getObject(pDoorBellID).removeFromList(tName)
   end if
 end
 
@@ -633,7 +703,7 @@ on hideAll me
   me.hideInterface(#remove)
   me.hideConfirmDelete()
   me.hideConfirmPlace()
-  me.hideDoorBell()
+  me.hideDoorBellDialog()
   me.hideLoaderBar()
   me.hideTrashCover()
   me.hideLoaderBar()
@@ -757,6 +827,8 @@ on notify me, ttype
       executeMessage(#alert, [#msg: "wallitem_post.it.limit"])
     404:
       executeMessage(#alert, [#msg: "queue_tile_limit"])
+    405:
+      executeMessage(#alert, [#msg: "room_alert_furni_limit", #id: "roomfullfurni", #modal: 1])
   end case
 end
 
@@ -767,7 +839,13 @@ on setRollOverInfo me, tInfo
   end if
 end
 
-on getIgnoreStatus me, tUserID
+on getIgnoreStatus me, tUserID, tName
+  if not objectp(pIgnoreListObj) then
+    return 0
+  end if
+  if not voidp(tName) then
+    return pIgnoreListObj.getIgnoreStatus(tName)
+  end if
   if me.getComponent().userObjectExists(tUserID) and objectp(pIgnoreListObj) then
     tName = me.getComponent().getUserObject(tUserID).getName()
     return pIgnoreListObj.getIgnoreStatus(tName)
@@ -925,6 +1003,17 @@ on placeFurniture me, tObjID, tObjType
       return 1
   end case
   return 0
+end
+
+on showCfhSenderDelayed me, tid
+  return createTimeout(#highLightCfhSender, 3000, #highLightCfhSender, me.getID(), tid, 1)
+end
+
+on highLightCfhSender me, tid
+  if not voidp(tid) then
+    me.showArrowHiliter(tid)
+  end if
+  return 1
 end
 
 on updateMessageCount me, tMsgCount
@@ -1467,7 +1556,6 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tObject <> me.getComponent().getOwnUser() or tParam = #userEnters then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
     end if
-    me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
   else
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
@@ -1528,7 +1616,7 @@ end
 
 on eventProcPassiveObj me, tEvent, tSprID, tParam
   if not me.validateEvent(tEvent, tSprID, the mouseLoc) then
-    pass()
+    return 0
   end if
   tObject = me.getComponent().getPassiveObject(tSprID)
   if the shiftDown then
@@ -1672,19 +1760,27 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   tdata[#locZ] = EMPTY
   tSprList = tObj.getSprites()
   repeat with tSpr in tSprList
-    tdata[#locZ] = tdata[#locZ] && tSpr.locZ
+    tdata[#locZ] = tdata[#locZ] & tSpr.locZ && EMPTY
+  end repeat
+  tdata[#sprNumList] = EMPTY
+  repeat with tSpr in tSprList
+    tdata[#sprNumList] = tdata[#sprNumList] & tSpr.spriteNum && EMPTY
   end repeat
   put "- - - - - - - - - - - - - - - - - - - - - -"
-  put "ID       " & tdata[#id]
-  put "Class    " & tdata[#class]
-  put "Member   " & sprite(tSprNum).member.name
-  put "World X  " & tdata[#x]
-  put "World Y  " & tdata[#y]
-  put "World H  " & tdata[#h]
-  put "Dir      " & tdata[#dir]
-  put "Scr X    " & tdata[#locH]
-  put "Scr Y    " & tdata[#locV]
-  put "Scr Z    " & tdata[#locZ]
+  put "ID            " & tdata[#id]
+  put "Class         " & tdata[#class]
+  put "Member        " & sprite(tSprNum).member.name
+  put "Cast          " & castLib(sprite(tSprNum).castLibNum).name
+  put "World X       " & tdata[#x]
+  put "World Y       " & tdata[#y]
+  put "World H       " & tdata[#h]
+  put "Dir           " & tdata[#dir]
+  put "Scr X         " & tdata[#locH]
+  put "Scr Y         " & tdata[#locV]
+  put "Scr Z         " & tdata[#locZ]
+  put "This sprite   " & tSprNum
+  put "All sprites   " & tdata[#sprNumList]
+  put "Object info   " & tObj
   put "- - - - - - - - - - - - - - - - - - - - - -"
 end
 

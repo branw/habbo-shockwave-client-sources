@@ -1,4 +1,4 @@
-property pState, pProp, pTextKeys, pTextlist, pShowOrder, pDropMenuImg, pDropActiveBtnImg, pDropDownImg, pLineHeight, pMarginTop, pMarginBottom, pMarginLeft, pAlignment, pOpenDir, pMaxWidth, pDotLineImg, pFont, pFonSize, pSelectedItemNum, pRollOverItem, pLoc, pFixedSize, pOrigWidth, pLastRollOver, pTextWidth, pClickPass, pDelayID, pOnFirstChoise, pDropDownType, pmodel
+property pState, pProp, pTextKeys, pTextlist, pShowOrder, pDropMenuImg, pDropActiveBtnImg, pDropDownImg, pLineHeight, pMarginTop, pMarginBottom, pMarginLeft, pAlignment, pOpenDir, pMaxWidth, pDotLineImg, pFont, pFonSize, pSelectedItemNum, pRollOverItem, pLoc, pFixedSize, pOrigWidth, pLastRollOver, pTextWidth, pClickPass, pDelayID, pOnFirstChoise, pDropDownType, pmodel, pOrdering
 
 on define me, tProps
   tField = tProps[#type] & tProps[#model] & ".element"
@@ -21,6 +21,7 @@ on define me, tProps
   pMaxWidth = tProps[#maxwidth]
   pLineHeight = tProps[#height]
   pFixedSize = tProps[#fixedsize]
+  pOrdering = 1
   if not voidp(pProp[#dropDownType]) then
     pDropDownType = pProp[#dropDownType].getProp(#content)
   else
@@ -164,6 +165,9 @@ on setSelection me, tSelNumOrStr, tUpdate
 end
 
 on setShowOrder me, tStyle, tFirstNum, tDeleteOne, tOpenDir
+  if not pOrdering then
+    return 1
+  end if
   tChoise = pShowOrder[pSelectedItemNum]
   case tStyle of
     #reverse:
@@ -193,6 +197,11 @@ on setShowOrder me, tStyle, tFirstNum, tDeleteOne, tOpenDir
   end if
   pSelectedItemNum = pShowOrder.getPos(tChoise)
   return 0
+end
+
+on setOrdering me, tMode
+  pOrdering = tMode
+  return 1
 end
 
 on arrangeTextList me, tStyle

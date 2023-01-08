@@ -19,6 +19,25 @@ on setScore me, tScore
   if me.pSprList.count < 4 then
     return 0
   end if
+  if me.pXFactor = 32 then
+    tClass = "s_hockey_score"
+    if me.pDirection[1] = 2 then
+      tLoc3 = me.pSprList[1].loc + [26, -100]
+      tLoc4 = me.pSprList[1].loc + [32, -103]
+    else
+      tLoc3 = me.pSprList[1].loc + [-44, -105]
+      tLoc4 = me.pSprList[1].loc + [-38, -102]
+    end if
+  else
+    tClass = "hockey_score"
+    if me.pDirection[1] = 2 then
+      tLoc3 = me.pSprList[1].loc + [26, -100]
+      tLoc4 = me.pSprList[1].loc + [36, -105]
+    else
+      tLoc3 = me.pSprList[1].loc + [-44, -105]
+      tLoc4 = me.pSprList[1].loc + [-34, -100]
+    end if
+  end if
   if tScore = "x" then
     pScore = "x"
     me.pSprList[3].blend = 0
@@ -39,15 +58,10 @@ on setScore me, tScore
   if length(tString) = 1 then
     tString = "0" & tString
   end if
-  me.pSprList[3].member = member(getmemnum("hockey_score_" & me.pDirection[1] & "_" & tString.char[1]))
-  me.pSprList[4].member = member(getmemnum("hockey_score_" & me.pDirection[1] & "_" & tString.char[2]))
-  if me.pDirection[1] = 2 then
-    me.pSprList[3].loc = me.pSprList[1].loc + [26, -100]
-    me.pSprList[4].loc = me.pSprList[1].loc + [36, -105]
-  else
-    me.pSprList[3].loc = me.pSprList[1].loc + [-44, -105]
-    me.pSprList[4].loc = me.pSprList[1].loc + [-34, -100]
-  end if
+  me.pSprList[3].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[1]))
+  me.pSprList[4].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[2]))
+  me.pSprList[3].loc = tLoc3
+  me.pSprList[4].loc = tLoc4
   me.pSprList[3].width = me.pSprList[3].member.width
   me.pSprList[3].height = me.pSprList[3].member.height
   me.pSprList[4].width = me.pSprList[4].member.width
@@ -61,15 +75,22 @@ on select me
   tUpdate = 0
   tScore = pScore
   tloc = point(the mouseH - me.pSprList[1].left, the mouseV - me.pSprList[1].top)
+  if me.pXFactor = 32 then
+    tRect1 = rect(0, 53, 12, 66)
+    tRect2 = rect(13, 53, 23, 66)
+  else
+    tRect1 = rect(14, 108, 22, 116)
+    tRect2 = rect(26, 108, 34, 116)
+  end if
   if pScore <> "x" then
-    if inside(tloc, rect(14, 108, 22, 116)) then
+    if inside(tloc, tRect1) then
       tUpdate = 1
       tScore = tScore - 1
       if tScore < 0 then
         tScore = 99
       end if
     else
-      if inside(tloc, rect(26, 108, 34, 116)) then
+      if inside(tloc, tRect2) then
         tUpdate = 1
         tScore = tScore + 1
         if tScore > 99 then

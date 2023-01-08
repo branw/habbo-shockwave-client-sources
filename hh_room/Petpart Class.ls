@@ -31,6 +31,11 @@ on update me
   if tBodyDir > 4 then
     tBodyDir = 5
   end if
+  if integer(me.pXFactor) > 33 then
+    tOffsetList = me.pOffsetList
+  else
+    tOffsetList = me.pOffsetListSmall
+  end if
   case pPart of
     "bd":
       case pAction of
@@ -43,11 +48,11 @@ on update me
       tYFix = 0
     "hd":
       if me.pMainAction = "jmp" or me.pMainAction = "scr" or me.pMainAction = "bnd" then
-        tXFix = me.pOffsetList["hd_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][1]
-        tYFix = me.pOffsetList["hd_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][2]
+        tXFix = tOffsetList["hd_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][1]
+        tYFix = tOffsetList["hd_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][2]
       else
-        tXFix = me.pOffsetList["hd_" & me.pMainAction][tBodyDir][1]
-        tYFix = me.pOffsetList["hd_" & me.pMainAction][tBodyDir][2]
+        tXFix = tOffsetList["hd_" & me.pMainAction][tBodyDir][1]
+        tYFix = tOffsetList["hd_" & me.pMainAction][tBodyDir][2]
       end if
       if tAction = "snf" or tAction = "eat" or tAction = "spk" then
         tAnimCntr = me.pAnimCounter mod 2
@@ -55,18 +60,23 @@ on update me
       tUpdate = 1
     "tl":
       if me.pMainAction = "jmp" or me.pMainAction = "scr" or me.pMainAction = "bnd" then
-        tXFix = me.pOffsetList["tl_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][1]
-        tYFix = me.pOffsetList["tl_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][2]
+        tXFix = tOffsetList["tl_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][1]
+        tYFix = tOffsetList["tl_" & me.pMainAction & "_" & me.pAnimCounter][tBodyDir][2]
       else
-        tXFix = me.pOffsetList["tl_" & me.pMainAction][tBodyDir][1]
-        tYFix = me.pOffsetList["tl_" & me.pMainAction][tBodyDir][2]
+        tXFix = tOffsetList["tl_" & me.pMainAction][tBodyDir][1]
+        tYFix = tOffsetList["tl_" & me.pMainAction][tBodyDir][2]
       end if
       if tAction = "wav" then
         tAnimCntr = me.pAnimCounter mod 2
       end if
       tUpdate = 1
   end case
-  tMemString = "p_" & tAction & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & tAnimCntr
+  tPartSize = getVariable("human.size." & integer(ancestor.pXFactor))
+  tAnDir = ancestor.pDirection
+  if tAnDir > 3 and tAnDir < 7 and tPartSize = "sh" then
+    tXFix = tXFix + integer(ancestor.pXFactor) - 7
+  end if
+  tMemString = me.pMemberNamePrefix & tAction & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & tAnimCntr
   tMemNum = getmemnum(tMemString)
   if pMemString <> tMemString or tUpdate then
     if tMemNum > 0 then
@@ -189,12 +199,18 @@ on copyPicture me, tImg, tdir, tHumanSize, tAction, tAnimFrame
   if voidp(tAnimFrame) then
     tAnimFrame = "0"
   end if
+  if tHumanSize = "p" then
+    tOffsetList = me.pOffsetList
+  else
+    tHumanSize = "s_p"
+    tOffsetList = me.pOffsetListSmall
+  end if
   if pPart = "bd" then
     tOffX = 0
     tOffY = 0
   else
-    tOffX = me.pOffsetList[pPart & "_" & tAction][integer(tdir) + 1][1]
-    tOffY = me.pOffsetList[pPart & "_" & tAction][integer(tdir) + 1][2]
+    tOffX = tOffsetList[pPart & "_" & tAction][integer(tdir) + 1][1]
+    tOffY = tOffsetList[pPart & "_" & tAction][integer(tdir) + 1][2]
   end if
   tMemName = tHumanSize & "_" & tAction & "_" & pPart & "_" & pmodel & "_" & tdir & "_" & tAnimFrame
   if memberExists(tMemName) then

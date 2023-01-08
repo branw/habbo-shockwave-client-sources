@@ -161,6 +161,9 @@ on updateRoomObjectGoal me, tuser
 end
 
 on handleUserCreated me, tName, tUserStrId
+  if me.getGameSystem().getSpectatorModeFlag() then
+    return 1
+  end if
   if tUserStrId <> getObject(#session).get("user_index") then
     return 0
   end if

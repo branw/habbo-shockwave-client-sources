@@ -1,12 +1,11 @@
-property pData, pID, pName, pSex, pMsg, pEmailOK, pOnline, pUnit, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pUnitNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
+property pData, pID, pName, pSex, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
   pID = EMPTY
-  pMsg = EMPTY
-  pEmailOK = 0
+  pCustomText = EMPTY
   pOnline = 0
-  pUnit = EMPTY
+  pLocation = EMPTY
   pLastTime = EMPTY
   pMsgCount = "0"
   pTopMarg = 3
@@ -18,7 +17,7 @@ on construct me
   pCacheOnlineImg = member(getmemnum("mes_smallbuddy_head")).image
   pNameNeedUpdate = 1
   pMsgsNeedUpdate = 1
-  pUnitNeedUpdate = 1
+  pLocationNeedUpdate = 1
   pLastNeedUpdate = 1
   pMissNeedUpdate = 1
   pFriendNameOffset = 0
@@ -38,9 +37,9 @@ end
 
 on define me, tdata, tProps
   pData = tdata
-  pEmailOK = tdata.emailOk
   pID = tdata.id
   pName = tdata.name
+  pOnline = tdata.online
   pSex = tdata.sex
   pwidth = tProps.width
   pheight = tProps.height
@@ -55,20 +54,23 @@ end
 
 on update me
   pOnline = pData.online
-  if pData.msg <> pMsg then
-    pMsg = pData.msg
+  if pData.customText <> pCustomText then
+    pCustomText = pData.customText
     pMissNeedUpdate = 1
     pNeedUpdate = 1
   end if
-  if pData.unit <> pUnit then
-    pUnit = pData.unit
-    pUnitNeedUpdate = 1
-    pNeedUpdate = 1
-  end if
-  if pData.last_access_time <> pLastTime then
-    pLastTime = pData.last_access_time
-    pLastNeedUpdate = 1
-    pNeedUpdate = 1
+  if pOnline then
+    if pData.location <> pLocation then
+      pLocation = pData.location
+      pLocationNeedUpdate = 1
+      pNeedUpdate = 1
+    end if
+  else
+    if pData.lastAccess <> pLastTime then
+      pLastTime = pData.lastAccess
+      pLastNeedUpdate = 1
+      pNeedUpdate = 1
+    end if
   end if
   if pData.msgs <> pMsgCount then
     pMsgCount = string(pData.msgs)
@@ -91,7 +93,7 @@ on select me, tClickPoint, tBuffer, tPosition
       pSelected = 1
       tBuffer.draw(tRect, [#shapeType: #rect, #lineSize: 1, #color: rgb("#EEEEEE")])
     end if
-    getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected, pEmailOK)
+    getThread(#messenger).getInterface().buddySelectOrNot(pName, pID, pSelected)
   end if
 end
 
@@ -133,17 +135,17 @@ on render me, tBuffer, tPosition
       pMsgNeedUpdate = 0
     end if
     if pLastNeedUpdate then
-      if length(pUnit) < 3 then
-        tText = getText("console_lastvisit", "Last visit") && pLastTime
+      if not pOnline then
+        tText = getText("console_lastvisit") && pLastTime
       else
-        tlocation = pUnit
+        tlocation = pLocation
         if tlocation contains "Floor1" then
-          tlocation = getText("console_inprivateroom", "In private room")
+          tlocation = getText("console_inprivateroom")
         end if
-        if tlocation = "Messenger" then
-          tlocation = getText("console_onfrontpage", "(On front page)")
+        if tlocation = "ENTERPRISESERVER" then
+          tlocation = getText("console_onfrontpage")
         end if
-        tText = getText("console_online", "Online:") && tlocation
+        tText = getText("console_online") && tlocation
       end if
       tLastTimeImg = pWriterLast.render(tText)
       tX1 = pLeftMarg
@@ -166,13 +168,13 @@ on render me, tBuffer, tPosition
       pCacheImage.fill(tDstRect, rgb(255, 255, 255))
     end if
     if pMissNeedUpdate then
-      tMissionImg = pWriterText.render(QUOTE & pMsg & QUOTE)
+      tMissionImg = pWriterText.render(QUOTE & pCustomText & QUOTE)
       tX1 = pLeftMarg
       tX2 = tX1 + tMissionImg.width
       tY1 = pLineHeight * 2 + pTopMarg + pFriendPerMsgOffset
       tY2 = tY1 + tMissionImg.height
       tDstRect = rect(tX1, tY1, tX2, tY2)
-      pCacheImage.fill(tDstRect, rgb(255, 255, 255))
+      pCacheImage.fill(rect(tX1, tY1, tX1 + pwidth, tY2), rgb(255, 255, 255))
       pCacheImage.copyPixels(tMissionImg, tDstRect, tMissionImg.rect)
       pMissNeedUpdate = 0
     end if

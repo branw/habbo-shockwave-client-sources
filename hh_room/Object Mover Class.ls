@@ -287,7 +287,24 @@ on moveItem me
   end repeat
   tClass = pClientObj.getClass()
   if tClass = "poster" or tClass contains "post.it" or tClass = "photo" then
-    tProps = me.getWallSpriteItemWithin(pSprList[1])
+    tProps = [#insideWall: 0]
+    tRoomInterface = getThread(#room).getInterface()
+    if not voidp(tRoomInterface) then
+      tVisual = tRoomInterface.getRoomVisualizer()
+      if not voidp(tVisual) then
+        tSp = pSprList[1]
+        tRp = sprite(tSp).member.regPoint
+        tRect = rect(sprite(tSp).locH, sprite(tSp).locV, sprite(tSp).locH, sprite(tSp).locV) + rect(-tRp[1], -tRp[2], sprite(tSp).member.width - tRp[1], sprite(tSp).member.height - tRp[2])
+        tProps = tVisual.getWallPartUnderRect(tRect, 0.5)
+        if tProps[#insideWall] then
+          tProps[#localCoordinate][1] = tProps[#localCoordinate][1] + pSprList[1].member.regPoint[1]
+          tProps[#localCoordinate][2] = tProps[#localCoordinate][2] + pSprList[1].member.regPoint[2]
+        end if
+      end if
+    end if
+    if tProps[#insideWall] = 0 then
+      tProps = me.getWallSpriteItemWithin(pSprList[1])
+    end if
     if tProps[#insideWall] = 0 then
       repeat with i = 1 to pSprList.count
         pSprList[i].blend = 30
@@ -297,11 +314,19 @@ on moveItem me
       repeat with i = 1 to pSprList.count
         pSprList[i].blend = 100
       end repeat
-      tWallObjLoc = tProps[#wallObject].getLocation()
+      if voidp(tProps[#wallObject]) then
+        tWallObjLoc = tProps[#wallLocation]
+      else
+        tWallObjLoc = tProps[#wallObject].getLocation()
+      end if
       pItemLocStr = obfuscate(":w=" & tWallObjLoc[1] & "," & tWallObjLoc[2] && "l=" & tProps[#localCoordinate][1] & "," & tProps[#localCoordinate][2] && tProps.direction.char[1])
     end if
     tName = pSprList[1].member.name
-    tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
+    if pGeometry.pXFactor = 32 then
+      tMemNum = getmemnum("s_" & tProps[#direction] && tName.word[2..tName.word.count])
+    else
+      tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])
+    end if
     if tMemNum = 0 then
       return 0
     end if
@@ -315,6 +340,9 @@ on moveItem me
     if tProps[#wallSprites] <> 0 then
       tSprites = tProps[#wallSprites]
       tlocz = tSprites[1].locZ
+      if tlocz < -1000000 then
+        tlocz = tlocz + 20100
+      end if
       if tSprites.count > 1 then
         if tSprites[2].locZ > tlocz then
           tlocz = tSprites[2].locZ

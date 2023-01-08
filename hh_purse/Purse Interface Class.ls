@@ -38,10 +38,12 @@ on construct me
   else
     pValueField = 0
   end if
+  registerMessage(#updateFilmCount, me.getID(), #updatePurseFilm)
   return 1
 end
 
 on deconstruct me
+  unregisterMessage(#updateFilmCount, me.getID())
   removeUpdate(me.getID())
   removeWindow(pWindowTitle)
   removeWindow(pVoucherWindowTitle)
@@ -415,14 +417,6 @@ on changePurseWindowView me, tWindowName
       if tWndObj.elementExists("coins") then
         tWndObj.getElement("coins").setText(tTxt1)
       end if
-      if tWndObj.elementExists("purse_info_tickets") then
-        tFieldTxt = getObject(#session).get("user_ph_tickets") && getText("purse_info_tickets")
-        tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
-      end if
-      if tWndObj.elementExists("purse_info_film") then
-        tFieldTxt = getObject(#session).get("user_photo_film") && getText("purse_info_film")
-        tWndObj.getElement("purse_info_film").setText(tFieldTxt)
-      end if
       tMyName = getObject(#session).get(#userName)
       if tWndObj.elementExists("purse_name") then
         tWndObj.getElement("purse_name").setText(tMyName)
@@ -432,6 +426,9 @@ on changePurseWindowView me, tWindowName
         tWndObj.getElement("purse_voucher").setProperty(#cursor, 0)
       end if
       me.drawPurseCoins(tSaldo)
+      me.updatePurseTickets()
+      me.updatePurseFilm()
+      return 1
     "PurseTransactions2.window":
       if not tWndObj.merge("PurseTransactions2.window") then
         return tWndObj.close()
@@ -709,14 +706,41 @@ on dataReceived me
   pDataReceived = 1
 end
 
-on updateSaldoView me
-  if windowExists(pWindowTitle) then
-    tWndObj = getWindow(pWindowTitle)
-    if pOpenWindow = "purse.window" then
-      tSaldo = me.checkSaldo("purse_amount")
-      me.drawPurseCoins(tSaldo)
-    end if
+on updatePurseSaldo me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
   end if
+  if pOpenWindow <> "purse.window" then
+    return 0
+  end if
+  tSaldo = me.checkSaldo("purse_amount")
+  me.drawPurseCoins(tSaldo)
+  return 1
+end
+
+on updatePurseTickets me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if tWndObj.elementExists("purse_info_tickets") then
+    tFieldTxt = getObject(#session).get("user_ph_tickets") && getText("purse_info_tickets")
+    tWndObj.getElement("purse_info_tickets").setText(tFieldTxt)
+  end if
+  return 1
+end
+
+on updatePurseFilm me
+  tWndObj = getWindow(pWindowTitle)
+  if tWndObj = 0 then
+    return 0
+  end if
+  if tWndObj.elementExists("purse_info_film") then
+    tFieldTxt = getObject(#session).get("user_photo_film") && getText("purse_info_film")
+    tWndObj.getElement("purse_info_film").setText(tFieldTxt)
+  end if
+  return 1
 end
 
 on eventProcPurse me, tEvent, tElemID, tParm

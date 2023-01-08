@@ -1,4 +1,4 @@
-property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag
+property pWindowList, pAlertList, pDefWndType, pWriterPlain, pWriterLink, pWriterBold, pReadyFlag, pChosenHelpRadio, pHelpChoiceCount, pCfhType
 
 on construct me
   pWindowList = []
@@ -7,6 +7,9 @@ on construct me
   pReadyFlag = 0
   registerMessage(#openGeneralDialog, me.getID(), #showDialog)
   registerMessage(#alert, me.getID(), #ShowAlert)
+  pHelpChoiceCount = me.countHelpChoices()
+  pChosenHelpRadio = 0
+  pCfhType = #none
   return 1
 end
 
@@ -38,6 +41,19 @@ on deconstruct me
   unregisterMessage(#openGeneralDialog, me.getID())
   unregisterMessage(#alert, me.getID())
   return 1
+end
+
+on countHelpChoices me
+  if not textExists("help_pointer_1") then
+    error(me, "No help choices defined. All go to emergency help.", #countHelpChoices)
+    return 0
+  end if
+  repeat with i = 2 to 7
+    if not textExists("help_pointer_" & i) then
+      return i - 1
+    end if
+  end repeat
+  return 7
 end
 
 on ShowAlert me, tProps
@@ -168,11 +184,9 @@ on showDialog me, tWndID, tProps
         end if
       end if
     #call_for_help, "call_for_help":
-      tWndTitle = getText("win_callforhelp", "Alert a Hobba")
-      if windowExists(tWndTitle) then
-        return me.removeDialog(tWndTitle, pWindowList)
-      end if
-      me.createDialog(tWndTitle, pDefWndType, "habbo_hobba_compose.window", #eventProcCallHelp)
+      me.openCfhWindow()
+    #help_choice, "help_choice":
+      me.openHelpChoiceWindow()
     #ban, "ban":
       tProps[#registerProcedure] = #eventProcBan
       return me.ShowAlert(tProps)
@@ -216,6 +230,113 @@ on removeDialog me, tWndTitle, tWndList
   else
     return error(me, "Attempted to remove unknown dialog:" && tWndTitle, #removeDialog)
   end if
+end
+
+on showAlertSentWindow me, tWndObj
+  tWndObj.unmerge()
+  tWndObj.merge("habbo_hobba_alertsent.window")
+  if pCfhType = #habbo_helpers then
+    tHeader = getText("callhelp_sent")
+    tText = getText("callhelp_allwillreceive")
+  else
+    tHeader = getText("help_emergency_sent")
+    tText = getText("help_emergency_whathappens")
+  end if
+  tWndObj.getElement("alertsent_header").setText(tHeader)
+  tWndObj.getElement("alertsent_text").setText(tText)
+  return 1
+end
+
+on openCfhWindow me
+  tWndTitle = getText("win_callforhelp")
+  if windowExists(tWndTitle) then
+    me.removeDialog(tWndTitle, pWindowList)
+  end if
+  me.createDialog(tWndTitle, pDefWndType, "habbo_hobba_compose.window", #eventProcCallHelp)
+  tWndObj = getWindow(tWndTitle)
+  if pCfhType = #habbo_helpers then
+    tTopText = getText("callhelp_explanation")
+    tMidText = getText("callhelp_writeyour")
+    tBotText = getText("callhelp_example")
+  else
+    tTopText = getText("help_emergency_explanation")
+    tMidText = getText("help_emergency_writeyour")
+    tBotText = getText("help_emergency_example")
+  end if
+  tWndObj.getElement("hobbaalert_top").setText(tTopText)
+  tWndObj.getElement("hobbaalert_mid").setText(tMidText)
+  tWndObj.getElement("hobbaalert_bottom").setText(tBotText)
+  return 1
+end
+
+on openHelpChoiceWindow me
+  if pHelpChoiceCount = 0 then
+    pCfhType = #emergency
+    return me.showDialog("call_for_help")
+  end if
+  tWndTitle = getText("win_callforhelp")
+  if windowExists(tWndTitle) then
+    return me.removeDialog(tWndTitle, pWindowList)
+  end if
+  me.createDialog(tWndTitle, "habbo_full.window", "habbo_help_choise.window", #eventProcHelp)
+  tWndObj = getWindow(tWndTitle)
+  if getMember("button.radio.off").type <> #bitmap then
+    return 0
+  end if
+  repeat with i = 1 to pHelpChoiceCount
+    tRadioImg = getMember("button.radio.off").image
+    tText = getText("help_option_" & i)
+    if tText <> "help_option_" & i then
+      tWndObj.getElement("help_option_" & i).setText(tText)
+      tWndObj.getElement("help_radio_" & i).feedImage(tRadioImg)
+    end if
+  end repeat
+  tWndObj.getElement("help_choise_ok").deactivate()
+  return 1
+end
+
+on helpChoiceMade me
+  if pChosenHelpRadio = 0 then
+    return 0
+  end if
+  tAction = getText("help_pointer_" & pChosenHelpRadio)
+  if tAction starts "http" then
+    openNetPage(tAction)
+    return me.removeDialog(getText("win_callforhelp"), pWindowList)
+  end if
+  if tAction = "hotel_help" then
+    pCfhType = #habbo_helpers
+    return me.showDialog("call_for_help")
+  else
+    if tAction = "emergency_help" then
+      pCfhType = #emergency
+      return me.showDialog("call_for_help")
+    end if
+  end if
+  return error(me, "Help pointer " & pChosenHelpRadio & " not working, check syntax.", #helpChoiceMade)
+end
+
+on helpRadioClicked me, tChoiceNum, tWndID
+  if not memberExists("button.radio.on") then
+    return 0
+  end if
+  tRadioOnImg = getMember("button.radio.on").image
+  tRadioOffImg = getMember("button.radio.off").image
+  tWnd = getWindow(tWndID)
+  if not tWnd.elementExists("help_radio_" & pHelpChoiceCount) then
+    return 0
+  end if
+  repeat with i = 1 to pHelpChoiceCount
+    tElem = tWnd.getElement("help_radio_" & i)
+    if i = tChoiceNum then
+      tElem.feedImage(tRadioOnImg)
+      next repeat
+    end if
+    tElem.feedImage(tRadioOffImg)
+  end repeat
+  tWnd.getElement("help_choise_ok").Activate()
+  pChosenHelpRadio = tChoiceNum
+  return 1
 end
 
 on eventProcAlert me, tEvent, tElemID, tParam, tWndID
@@ -269,14 +390,22 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
           openNetPage(tURL, "_new")
         end if
         return 1
-      "close", "help_ok":
+      "close", "help_ok", "help_choise_cancel":
         return me.removeDialog(tWndID, pWindowList)
       "help_tutorial_link":
         openNetPage(getText("reg_tutorial_url", "_new"))
       "help_callforhelp_textlink":
         me.removeDialog(tWndID, pWindowList)
-        me.showDialog(#call_for_help)
+        me.showDialog(#help_choice)
         return 1
+      "help_choise_ok":
+        me.helpChoiceMade()
+      otherwise:
+        if stringp(tElemID) then
+          if tElemID.char[1..11] = "help_radio_" then
+            me.helpRadioClicked(tElemID.char[12], tWndID)
+          end if
+        end if
     end case
   end if
 end
@@ -288,9 +417,8 @@ on eventProcCallHelp me, tEvent, tElemID, tParam, tWndID
         return me.removeDialog(tWndID, pWindowList)
       "callhelp_send":
         tWndObj = getWindow(tWndID)
-        executeMessage(#sendCallForHelp, tWndObj.getElement("callhelp_text").getText())
-        tWndObj.unmerge()
-        tWndObj.merge("habbo_hobba_alertsent.window")
+        executeMessage(#sendCallForHelp, tWndObj.getElement("callhelp_text").getText(), pCfhType)
+        me.showAlertSentWindow(tWndObj)
         return 1
     end case
   end if

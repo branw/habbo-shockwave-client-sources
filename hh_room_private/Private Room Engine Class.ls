@@ -54,11 +54,7 @@ on setWallPaper me, tIndex
   tColors = ["left": tColor - rgb(16, 16, 16), "right": tColor, "a": tColor - rgb(16, 16, 16), "b": tColor]
   the itemDelimiter = "_"
   tPieceList = getThread(#room).getComponent().getPassiveObject(#list)
-  if tPieceList.count = 0 then
-    pWallModel = tIndex
-    pWallDefined = 0
-    return 0
-  end if
+  tObjPieceCount = 0
   repeat with tPiece in tPieceList
     tSprList = tPiece.getSprites()
     repeat with tSpr in tSprList
@@ -77,6 +73,7 @@ on setWallPaper me, tIndex
         tSpr.member = member(getmemnum(tdir & "_" & tName & "_" & ttype & tdata))
         tSpr.bgColor = tColors[tColor]
         tSpr.member.paletteRef = member(getmemnum(tPalette))
+        tObjPieceCount = tObjPieceCount + 1
         if pWallDefined = 0 then
           tSpr.locZ = tSpr.locZ - 975
         end if
@@ -89,8 +86,30 @@ on setWallPaper me, tIndex
     end repeat
   end repeat
   the itemDelimiter = tDelim
-  pWallDefined = 1
-  return 1
+  tInterface = getThread(#room).getInterface()
+  if not voidp(tInterface) then
+    tViz = tInterface.getRoomVisualizer()
+    if not voidp(tViz) then
+      tWrappedWallParts = tViz.getWrappedParts([#wallleft, #wallright])
+      if tWrappedWallParts.count > 0 then
+        repeat with tWrapper in tWrappedWallParts
+          tWrapper.setPartPattern(ttype, tPalette, tColors["left"], #wallleft)
+          tWrapper.setPartPattern(ttype, tPalette, tColors["right"], #wallright)
+          tWrappedWallPartsDefined = 1
+        end repeat
+      else
+        tWrappedWallPartsDefined = 0
+      end if
+    end if
+  end if
+  if tPieceList.count = 0 and not tWrappedWallPartsDefined then
+    pWallModel = tIndex
+    pWallDefined = 0
+    return 0
+  else
+    pWallDefined = 1
+    return 1
+  end if
 end
 
 on setFloorPattern me, tIndex
@@ -123,10 +142,18 @@ on setFloorPattern me, tIndex
   tVisualizer = getThread(#room).getInterface().getRoomVisualizer()
   tPieceId = 1
   tSpr = tVisualizer.getSprById("floor" & tPieceId)
+  tDelim = the itemDelimiter
+  the itemDelimiter = "_"
   repeat while not (tSpr = 0)
-    tMemNum = getmemnum("floor" & ttype & tSpr.member.name.char[7..tSpr.member.name.length])
-    if tMemNum > 0 then
-      tSpr.member = member(tMemNum)
+    tMem = tSpr.member.name
+    tClass = tMem.item[1] & "_" & tMem.item[2] & "_"
+    tLayer = tMem.item[4] & "_"
+    tObs1 = tMem.item[5] & "_"
+    tdir = tMem.item[6] & "_"
+    tObs2 = tMem.item[7]
+    tNewMemName = tClass & ttype & "_" & tLayer & tObs1 & tdir & tObs2
+    if memberExists(tNewMemName) then
+      tSpr.member = member(tNewMemName)
     end if
     tSpr.bgColor = tColor
     tSpr.member.paletteRef = member(getmemnum(tPalette))
@@ -134,6 +161,11 @@ on setFloorPattern me, tIndex
     tSpr.locZ = tSpr.locZ - 1000000
     tPieceId = tPieceId + 1
     tSpr = tVisualizer.getSprById("floor" & tPieceId)
+  end repeat
+  the itemDelimiter = tDelim
+  tWrappedParts = tVisualizer.getWrappedParts([#floor])
+  repeat with tWrapper in tWrappedParts
+    tWrapper.setPartPattern(ttype, tPalette, tColor, #floor)
   end repeat
   the itemDelimiter = tDelim
   pFloorDefined = 1

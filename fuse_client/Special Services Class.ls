@@ -109,6 +109,13 @@ on openNetPage me, tURL_key
   else
     tURL = tURL_key
   end if
+  if tURL contains "http://%predefined%/" then
+    if getVariable("url.prefix").ilk = #string then
+      tURL = replaceChunks(tURL, "http://%predefined%/", getVariable("url.prefix"))
+    else
+      return error(me, "URL prefix not defined, invalid link.", #openNetPage)
+    end if
+  end if
   gotoNetPage(tURL, "_new")
   put "Open page:" && tURL
   return 1

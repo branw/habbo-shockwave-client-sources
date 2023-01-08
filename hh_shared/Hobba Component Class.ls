@@ -13,18 +13,41 @@ on deconstruct me
 end
 
 on receive_cryforhelp me, tMsg
-  pCryDataBase[tMsg[#url]] = tMsg
+  pCryDataBase[tMsg[#cry_id]] = tMsg
   me.getInterface().ShowAlert()
   me.getInterface().updateCryWnd()
   return 1
 end
 
 on receive_pickedCry me, tMsg
-  if voidp(pCryDataBase[tMsg[#url]]) then
+  if voidp(pCryDataBase[tMsg[#cry_id]]) then
     return 0
   end if
-  pCryDataBase[tMsg[#url]].picker = tMsg[#picker]
+  pCryDataBase[tMsg[#cry_id]].picker = tMsg[#picker]
   me.getInterface().updateCryWnd()
+  return 1
+end
+
+on deleteCry me, tid
+  pCryDataBase.deleteProp(tid)
+  me.getInterface().updateCryWnd()
+  return 1
+end
+
+on send_changeCfhType me, tCryID, tCategoryNum
+  if not connectionExists(getVariable("connection.info.id")) then
+    return 0
+  end if
+  if tCategoryNum = 2 then
+    tNewCategory = 1
+  else
+    if tCategoryNum = 1 then
+      tNewCategory = 2
+    else
+      return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType)
+    end if
+  end if
+  getConnection(getVariable("connection.info.id")).send("CHANGECALLCATEGORY", [#string: tCryID, #integer: tNewCategory])
   return 1
 end
 
@@ -32,17 +55,17 @@ on send_cryPick me, tCryID, tGoHelp
   if not connectionExists(getVariable("connection.info.id")) then
     return 0
   end if
-  getConnection(getVariable("connection.info.id")).send("PICK_CRYFORHELP", tCryID)
+  getConnection(getVariable("connection.info.id")).send("PICK_CRYFORHELP", [#string: tCryID])
   if tGoHelp then
-    tdata = pCryDataBase[tCryID]
+    tdata = pCryDataBase[tCryID].duplicate()
     if voidp(tdata) then
       return 0
     end if
     tOk = 1
     tOk = tdata[#picker].ilk = #string and tOk
-    tOk = tdata[#url].ilk = #string and tOk
-    tOk = tdata[#name].ilk = #string and tOk
-    tOk = tdata[#id].ilk = #string and tOk
+    tOk = tdata[#url_id].ilk = #string and tOk
+    tOk = tdata[#roomname].ilk = #string and tOk
+    tOk = tdata[#cry_id].ilk = #string and tOk
     tOk = tdata[#type].ilk = #symbol and tOk
     tOk = tdata[#msg].ilk = #string and tOk
     if not tOk then
@@ -62,34 +85,40 @@ on send_cryPick me, tCryID, tGoHelp
         the itemDelimiter = tDelim
       end if
     end if
-    executeMessage(#executeRoomEntry, tdata[#id], tdata)
+    tdata[#id] = tdata[#room_id]
+    executeMessage(#pickAndGoCFH, tdata[#sender])
+    executeMessage(#executeRoomEntry, tdata[#room_id], tdata)
   end if
   return 1
 end
 
-on send_cryForHelp me, tMsg
-  tRoomData = getObject(#session).get("lastroom")
-  if not (tRoomData.ilk = #propList) then
-    return 0
-  end if
+on send_cryForHelp me, tMsg, ttype
   tMsg = replaceChars(tMsg, "/", SPACE)
   tMsg = replaceChunks(tMsg, RETURN, "<br>")
   tMsg = convertSpecialChars(tMsg, 1)
-  if tRoomData[#type] = #private then
-    tPropList = [#string: tMsg, #string: tRoomData[#marker]]
+  if ttype = #habbo_helpers then
+    tSendType = 2
   else
-    tCasts = string(tRoomData[#casts])
-    tCasts = replaceChars(tCasts, QUOTE, EMPTY)
-    tCasts = replaceChars(tCasts, " ", EMPTY)
-    tCasts = replaceChars(tCasts, "[", EMPTY)
-    tCasts = replaceChars(tCasts, "]", EMPTY)
-    tPropList = [#string: tMsg, #string: tCasts]
+    if ttype = #emergency then
+      tSendType = 1
+    else
+      return error(me, "Illegal type for CFH!", #send_cryForHelp)
+    end if
   end if
+  tPropList = [#string: tMsg, #integer: tSendType]
   if connectionExists(getVariable("connection.room.id")) then
     return getConnection(getVariable("connection.room.id")).send("CRYFORHELP", tPropList)
   else
     return error(me, "Failed to access room connection!", #send_cryForHelp)
   end if
+end
+
+on send_CfhReply me, tCryID, tMsg
+  if not connectionExists(getVariable("connection.info.id")) then
+    return 0
+  end if
+  getConnection(getVariable("connection.info.id")).send("MESSAGETOCALLER", [#string: tCryID, #string: tMsg])
+  return 1
 end
 
 on getCryDataBase me

@@ -1,4 +1,4 @@
-property pTempPassword, pOpenWindow, pWindowTitle, pmode, pOldFigure, pOldSex, pPartChangeButtons, pBodyPartObjects, pPeopleSize, pBuffer, pFlipList, pNameChecked, pEmailChecked, pLastNameCheck, pPropsToServer, pErrorMsg, pRegProcess, pRegProcessLocation, pVerifyChangeWndID, pLastWindow
+property pTempPassword, pOpenWindow, pWindowTitle, pmode, pOldFigure, pOldSex, pPartChangeButtons, pBodyPartObjects, pPeopleSize, pBuffer, pFlipList, pNameChecked, pEmailChecked, pLastNameCheck, pPropsToServer, pErrorMsg, pRegProcess, pRegProcessLocation, pVerifyChangeWndID, pLastWindow, pPwdEmailUpdateForced
 
 on construct me
   pTempPassword = [:]
@@ -10,6 +10,7 @@ on construct me
   pRegProcessLocation = 1
   pVerifyChangeWndID = "VerifyingChangeWindow"
   pLastWindow = EMPTY
+  pPwdEmailUpdateForced = 0
   if not dumpVariableField("registration.props") then
     error(me, "registration props field not found!", #construct)
   end if
@@ -180,6 +181,47 @@ on parentEmailIncorrect me
   return 0
 end
 
+on openPasswordUpdate me, tForced, tMsg
+  me.openPwdEmailUpdate(#password, tForced, tMsg)
+end
+
+on openEmailUpdate me, tForced, tMsg
+  me.openPwdEmailUpdate(#email, tForced, tMsg)
+end
+
+on openPwdEmailUpdate me, ttype, tForced, tMsg
+  if tForced then
+    pPwdEmailUpdateForced = 1
+  end if
+  if ttype = #password then
+    tWindowTitleStr = getText("reg_changePassword")
+    tWndType = "reg_update_password.window"
+  else
+    tWindowTitleStr = getText("reg_changeEmail")
+    tWndType = "reg_update_email.window"
+  end if
+  if not createWindow(pVerifyChangeWndID, VOID, 0, 0, #modal) then
+    return 0
+  end if
+  pTempPassword = [:]
+  tWinObj = getWindow(pVerifyChangeWndID)
+  tWinObj.setProperty(#title, tWindowTitleStr)
+  tWinObj.merge("habbo_simple.window")
+  tWinObj.merge(tWndType)
+  tWinObj.center()
+  if tWinObj.elementExists("monthDrop") then
+    tWinObj.getElement("monthDrop").setOrdering(0)
+  end if
+  if pPwdEmailUpdateForced and tWinObj.elementExists("update_cancel_button") then
+    tWinObj.getElement("update_cancel_button").deactivate()
+  end if
+  if not voidp(tMsg) and tWinObj.elementExists("updateaccount_topic") then
+    tWinObj.getElement("updateaccount_topic").setText(tMsg)
+  end if
+  tWinObj.registerProcedure(#eventProcVerifyWindow, me.getID(), #mouseUp)
+  tWinObj.registerProcedure(#eventProcVerifyWindow, me.getID(), #keyDown)
+end
+
 on blinkLoading me
   tWndObj = getWindow(pWindowTitle)
   if tWndObj = 0 then
@@ -329,26 +371,13 @@ on setMyDataToFields me
     "reg_infopage.window":
       tTempProps = ["email": "char_email_field"]
       pTempPassword = [:]
-      if pmode = "registration" or pmode = "parent_email" then
-        tWndObj.getElement("char_birth_dd_field").setEdit(1)
-        tWndObj.getElement("char_birth_mm_field").setEdit(1)
-        tWndObj.getElement("char_birth_yyyy_field").setEdit(1)
-      else
-        tField = tWndObj.getElement("char_birth_dd_field")
-        tField.setEdit(0)
-        tField.setProperty(#blend, 30)
-        tField = tWndObj.getElement("char_birth_mm_field")
-        tField.setEdit(0)
-        tField.setProperty(#blend, 30)
-        tField = tWndObj.getElement("char_birth_yyyy_field")
-        tField.setEdit(0)
-        tField.setProperty(#blend, 30)
-      end if
       tDelim = the itemDelimiter
       the itemDelimiter = "."
-      tWndObj.getElement("char_birth_dd_field").setText(pPropsToServer["birthday"].item[1])
-      tWndObj.getElement("char_birth_mm_field").setText(pPropsToServer["birthday"].item[2])
-      tWndObj.getElement("char_birth_yyyy_field").setText(pPropsToServer["birthday"].item[3])
+      tWndObj.getElement("char_dd_field").setText(integer(pPropsToServer["birthday"].item[1]))
+      if not voidp(pPropsToServer["birthday"]) then
+        tWndObj.getElement("monthDrop").setSelection(integer(pPropsToServer["birthday"].item[2]), 1)
+      end if
+      tWndObj.getElement("char_yyyy_field").setText(pPropsToServer["birthday"].item[3])
       the itemDelimiter = tDelim
       me.updateCheckButton("char_spam_checkbox", "directMail")
     "reg_infopage_no_age.window":
@@ -359,16 +388,12 @@ on setMyDataToFields me
         tWndObj.getElement("reg_name").setText(tText)
       end if
       if tWndObj.elementExists("reg_age") then
-        if getVariable("fuse.project.id") = "habbo_us" then
-          tDelim = the itemDelimiter
-          the itemDelimiter = "."
-          tDate = pPropsToServer["birthday"]
-          tText = tDate.item[2] & "/" & tDate.item[1] & "/" & tDate.item[3]
-          the itemDelimiter = tDelim
+        if objectExists(#dateFormatter) then
+          tDate = getObject(#dateFormatter).getLocalDateFromStr(pPropsToServer["birthday"])
+          tText = getText("reg_check_age", "reg_check_age") && tDate
         else
-          tText = pPropsToServer["birthday"]
+          tText = getText("reg_check_age", "reg_check_age") && pPropsToServer["birthday"]
         end if
-        tText = getText("reg_check_age", "reg_check_age") && tText
         tWndObj.getElement("reg_age").setText(tText)
       end if
       if tWndObj.elementExists("reg_mail") then
@@ -437,9 +462,13 @@ on getMyDataFromFields me
     "reg_namepage_mission.window":
       tTempProps = ["customData": "char_mission_field"]
     "reg_infopage.window":
-      tDay = integer(tWndObj.getElement("char_birth_dd_field").getText())
-      tMonth = integer(tWndObj.getElement("char_birth_mm_field").getText())
-      tYear = integer(tWndObj.getElement("char_birth_yyyy_field").getText())
+      tDay = integer(tWndObj.getElement("char_dd_field").getText())
+      if not tWndObj.elementExists("monthDrop") then
+        return error(me, "No month drop!", #leavePage)
+      end if
+      tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
+      tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
+      tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
       if tDay < 10 and not voidp(tDay) then
         tDay = "0" & tDay
       end if
@@ -973,9 +1002,9 @@ on validateBirthday me, tYear, tMonth, tDay
     tServerDate = getObject(#session).get("server_date")
     tDelim = the itemDelimiter
     the itemDelimiter = "."
-    tServerDay = integer(tServerDate.item[1])
+    tServerDay = integer(tServerDate.item[3])
     tServerMonth = integer(tServerDate.item[2])
-    tServerYear = integer(tServerDate.item[3])
+    tServerYear = integer(tServerDate.item[1])
     if tYear > tServerYear then
       tBirthOK = 0
     else
@@ -1140,9 +1169,13 @@ on leavePage me, tCurrentWindow
         return 0
       end if
       tWndObj = getWindow(pWindowTitle)
-      tDay = integer(tWndObj.getElement("char_birth_dd_field").getText())
-      tMonth = integer(tWndObj.getElement("char_birth_mm_field").getText())
-      tYear = integer(tWndObj.getElement("char_birth_yyyy_field").getText())
+      tDay = integer(tWndObj.getElement("char_dd_field").getText())
+      if not tWndObj.elementExists("monthDrop") then
+        return error(me, "No month drop!", #leavePage)
+      end if
+      tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
+      tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
+      tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
       tEmail = tWndObj.getElement("char_email_field").getText()
       pErrorMsg = EMPTY
       tProceed = 1
@@ -1241,9 +1274,13 @@ on leavePage me, tCurrentWindow
       return 0
     "reg_age_check.window":
       tWndObj = getWindow(pWindowTitle)
-      tDay = integer(tWndObj.getElement("char_birth_dd_field").getText())
-      tMonth = integer(tWndObj.getElement("char_birth_mm_field").getText())
-      tYear = integer(tWndObj.getElement("char_birth_yyyy_field").getText())
+      tDay = integer(tWndObj.getElement("char_dd_field").getText())
+      if not tWndObj.elementExists("monthDrop") then
+        return error(me, "No month drop!", #leavePage)
+      end if
+      tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
+      tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
+      tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
       if voidp(tDay) or voidp(tMonth) or voidp(tYear) or tYear < 1900 or tMonth > 12 or tDay > 31 then
         executeMessage(#alert, [#title: "alert_reg_t", #msg: "Alert_CheckBirthday", #id: "problems", #modal: 1])
         return 0
@@ -1294,6 +1331,10 @@ on enterPage me, tWindow
       me.updateAllPrewIcons()
     "reg_infopage.window":
       me.setMyDataToFields()
+      tWinObj = getWindow(pWindowTitle)
+      if tWinObj.elementExists("monthDrop") then
+        tWinObj.getElement("monthDrop").setOrdering(0)
+      end if
       if pmode = "update" then
         executeMessage(#alert, [#title: "reg_note_title", #msg: "reg_note_text", #id: "pwnote", #modal: 1])
       end if
@@ -1336,6 +1377,11 @@ on enterPage me, tWindow
         end if
       end if
       me.setMyDataToFields()
+    "reg_age_check.window":
+      tWinObj = getWindow(pWindowTitle)
+      if tWinObj.elementExists("monthDrop") then
+        tWinObj.getElement("monthDrop").setOrdering(0)
+      end if
     otherwise:
       me.setMyDataToFields()
   end case
@@ -1368,6 +1414,9 @@ on responseToAccountUpdate me, tStatus
       me.highlightVerifyTopic()
   end case
   return error(me, "Invalid parameter in ACCOUNT_UPDATE_STATUS", #responseToAccountUpdate)
+  if pPwdEmailUpdateForced and tWndObj.elementExists("update_cancel_button") then
+    tWndObj.getElement("update_cancel_button").deactivate()
+  end if
 end
 
 on blinkChecking me
@@ -1473,24 +1522,10 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
         openNetPage("reg_parentemail_link_url1")
       "reg_parentemail_link2":
         openNetPage("reg_parentemail_link_url2")
-      "update_change_pwd", "update_change_email":
-        if createWindow(pVerifyChangeWndID, VOID, 0, 0, #modal) then
-          if tSprID = "update_change_pwd" then
-            tWindowTitleStr = getText("reg_changePassword")
-            tWndType = "reg_update_password.window"
-          else
-            tWindowTitleStr = getText("reg_changeEmail")
-            tWndType = "reg_update_email.window"
-          end if
-          pTempPassword = [:]
-          tWinObj = getWindow(pVerifyChangeWndID)
-          tWinObj.setProperty(#title, tWindowTitleStr)
-          tWinObj.merge("habbo_basic.window")
-          tWinObj.merge(tWndType)
-          tWinObj.center()
-          tWinObj.registerProcedure(#eventProcVerifyWindow, me.getID(), #mouseUp)
-          tWinObj.registerProcedure(#eventProcVerifyWindow, me.getID(), #keyDown)
-        end if
+      "update_change_pwd":
+        me.openPwdEmailUpdate(#password)
+      "update_change_email":
+        me.openPwdEmailUpdate(#email)
       "reg_tutorial_link":
         openNetPage("reg_tutorial_url", "_new")
       otherwise:
@@ -1523,6 +1558,8 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
           tDeniedKeys = getVariable("denied.name.chars", EMPTY)
           if not (tValidKeys contains the key) then
             case the keyCode of
+              36:
+                return 1
               48:
                 me.checkName()
                 return 0
@@ -1561,6 +1598,8 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
             pTempPassword[tSprID] = []
           end if
           case the keyCode of
+            36:
+              return 1
             48:
               return 0
             49:
@@ -1609,7 +1648,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
           return 1
         "char_email_field":
           return 0
-        "char_birth_dd_field", "char_birth_mm_field":
+        "char_dd_field":
           case the keyCode of
             48:
               return 0
@@ -1626,7 +1665,7 @@ on eventProcFigurecreator me, tEvent, tSprID, tParm, tWndID
                 return 1
               end if
           end case
-        "char_birth_yyyy_field":
+        "char_yyyy_field":
           case the keyCode of
             48:
               return 0
@@ -1656,6 +1695,8 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
   tRect = getWindow(tWndID).getElement(tSprID).getProperty(#rect)
   if tEvent = #keyDown then
     case the keyCode of
+      36:
+        return 1
       48:
         return 0
       49:
@@ -1668,7 +1709,7 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
         pTempPassword[tSprID] = []
       otherwise:
         tPasswordFields = list("char_currpwd_field", "char_newpwd1_field", "char_newpwd2_field")
-        tDOBFields = list("char_dd_field", "char_mm_field", "char_yyyy_field")
+        tDOBFields = list("char_dd_field", "char_yyyy_field")
         tTheKey = the key
         tASCII = charToNum(tTheKey)
         if tPasswordFields.getPos(tSprID) > 0 then
@@ -1710,12 +1751,8 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
               if tSprID = "char_dd_field" and tWndObj.getElement("char_dd_field").getText().length >= 2 then
                 return 1
               else
-                if tSprID = "char_mm_field" and tWndObj.getElement("char_mm_field").getText().length >= 2 then
+                if tSprID = "char_yyyy_field" and tWndObj.getElement("char_yyyy_field").getText().length >= 4 then
                   return 1
-                else
-                  if tSprID = "char_yyyy_field" and tWndObj.getElement("char_yyyy_field").getText().length >= 4 then
-                    return 1
-                  end if
                 end if
               end if
             end if
@@ -1724,9 +1761,10 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
     end case
   else
     case tSprID of
-      "updatepw_cancel_button", "updatemail_cancel_button", "updateok_ok_button":
+      "update_cancel_button", "updateok_ok_button":
         pTempPassword = [:]
         removeWindow(tWndID)
+        pPwdEmailUpdateForced = 0
       "updatepw_ok_button":
         pErrorMsg = EMPTY
         tCurrPwd = EMPTY
@@ -1741,7 +1779,11 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
           return 0
         end if
         tDay = integer(tWndObj.getElement("char_dd_field").getText())
-        tMonth = integer(tWndObj.getElement("char_mm_field").getText())
+        if not tWndObj.elementExists("monthDrop") then
+          return error(me, "No month drop!", #leavePage)
+        end if
+        tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
+        tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
         tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
         if tDay < 1 or tMonth < 1 or tYear < 1 then
           tWndObj.getElement("updateaccount_topic").setText(getText("Alert_CheckBirthday"))
@@ -1784,7 +1826,11 @@ on eventProcVerifyWindow me, tEvent, tSprID, tParm, tWndID
         tWndObj = getWindow(pVerifyChangeWndID)
         tEmail = tWndObj.getElement("char_newemail_field").getText()
         tYear = integer(tWndObj.getElement("char_yyyy_field").getText())
-        tMonth = integer(tWndObj.getElement("char_mm_field").getText())
+        if not tWndObj.elementExists("monthDrop") then
+          return error(me, "No month drop!", #leavePage)
+        end if
+        tMonthSelection = tWndObj.getElement("monthDrop").getSelection()
+        tMonth = integer(chars(tMonthSelection, tMonthSelection.length - 1, tMonthSelection.length))
         tDay = integer(tWndObj.getElement("char_dd_field").getText())
         tCurrPwd = EMPTY
         if not voidp(pTempPassword["char_currpwd_field"]) then

@@ -35,10 +35,13 @@ on update me
       me.setOff()
     end if
   end if
+  the itemDelimiter = "_"
+  tMemName = me.pSprList[3].member.name
+  tClass = tMemName.item[1..tMemName.item.count - 6]
   if pActive then
-    tmember = member(getmemnum("hockey_light_c_0_1_1_0_" & pFrame))
+    tmember = member(getmemnum(tClass & "_c_0_1_1_0_" & pFrame))
   else
-    tmember = member(getmemnum("hockey_light_c_0_1_1_0_0"))
+    tmember = member(getmemnum(tClass & "_c_0_1_1_0_0"))
   end if
   me.pSprList[3].castNum = tmember.number
   me.pSprList[3].width = tmember.width

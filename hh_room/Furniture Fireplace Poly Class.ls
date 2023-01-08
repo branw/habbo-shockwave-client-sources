@@ -31,10 +31,15 @@ on update me
   if me.pSprList.count < 3 then
     return 
   end if
-  if pActive then
-    tmember = member(getmemnum("fireplace_polyfon_c_0_2_1_4_" & random(10)))
+  if me.pXFactor = 32 then
+    tClass = "s_fireplace_polyfon"
   else
-    tmember = member(getmemnum("fireplace_polyfon_c_0_2_1_4_0"))
+    tClass = "fireplace_polyfon"
+  end if
+  if pActive then
+    tmember = member(getmemnum(tClass & "_c_0_2_1_4_" & random(10)))
+  else
+    tmember = member(getmemnum(tClass & "_c_0_2_1_4_0"))
     pChanges = 0
   end if
   me.pSprList[3].castNum = tmember.number

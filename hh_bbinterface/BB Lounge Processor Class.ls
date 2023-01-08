@@ -39,6 +39,7 @@ on refresh me, tTopic, tdata
       return tIntObj.showInstance()
     #gamedeleted:
       me.getGameSystem().unobserveInstance()
+      tComObj.resetUserTeamIndex()
       return tIntObj.ChangeWindowView(#gameList)
     #joinparameters:
       return tComObj.joinGame()
