@@ -92,13 +92,13 @@ end
 on hideNavigator me, tHideOrRemove
   me.getInterface().setUpdates(0)
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #remove
+    tHideOrRemove = #Remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #remove then
+    if tHideOrRemove = #Remove then
       removeWindow(pWindowTitle)
     else
-      getWindow(pWindowTitle).hide()
+      getWindow(pWindowTitle).Hide()
     end if
   end if
   return 1
@@ -106,7 +106,7 @@ end
 
 on showhidenavigator me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #remove
+    tHideOrRemove = #Remove
   end if
   if windowExists(pWindowTitle) then
     if getWindow(pWindowTitle).getProperty(#visible) then
@@ -163,9 +163,9 @@ on ChangeWindowView me, tWindowName
       tWndObj.registerProcedure(#eventProcNavigatorPublic, me.getID(), #keyDown)
       me.getComponent().createNaviHistory(tCategoryId)
       me.updateRoomList(tCategoryId, VOID)
-      if tRoomInfoState = #hide then
+      if tRoomInfoState = #Hide then
         me.setProperty(#roomInfoState, #show)
-        me.setRoomInfoArea(#hide)
+        me.setRoomInfoArea(#Hide)
       else
         me.showNodeInfo(me.getProperty(#viewedNodeId))
       end if
@@ -180,9 +180,9 @@ on ChangeWindowView me, tWindowName
       else
         me.getComponent().updateInterface(tCategoryId)
       end if
-      if tRoomInfoState = #hide then
+      if tRoomInfoState = #Hide then
         me.setProperty(#roomInfoState, #show)
-        me.setRoomInfoArea(#hide)
+        me.setRoomInfoArea(#Hide)
       else
         me.showNodeInfo(me.getProperty(#viewedNodeId))
       end if
@@ -369,15 +369,15 @@ on showNodeInfo me, tNodeId
         tHeaderTxt = getText("nav_private_helptext_hd")
     end case
     if tWndObj.elementExists("nav_modify_button") then
-      tWndObj.getElement("nav_modify_button").hide()
+      tWndObj.getElement("nav_modify_button").Hide()
     end if
     if tWndObj.elementExists("nav_addtofavourites_button") then
-      tWndObj.getElement("nav_addtofavourites_button").hide()
+      tWndObj.getElement("nav_addtofavourites_button").Hide()
     end if
     if tWndObj.elementExists("nav_removefavourites_button") then
-      tWndObj.getElement("nav_removefavourites_button").hide()
+      tWndObj.getElement("nav_removefavourites_button").Hide()
     end if
-    tWndObj.getElement("nav_go_button").hide()
+    tWndObj.getElement("nav_go_button").Hide()
   else
     case tView of
       #unit:
@@ -523,7 +523,7 @@ on createImgResources me
   tWriter.define([#wordWrap: 0, #color: rgb("#7B9498"), #alignment: #right])
   pHideFullLinkImages = [:]
   pHideFullLinkImages[#show] = tWriter.render(getText("nav_showfull")).duplicate()
-  pHideFullLinkImages[#hide] = tWriter.render(getText("nav_hidefull")).duplicate()
+  pHideFullLinkImages[#Hide] = tWriter.render(getText("nav_hidefull")).duplicate()
   removeWriter("nav_showfull")
   tWriter = VOID
   createWindow("naviTempWindow")
@@ -735,7 +735,7 @@ on setHideFullRoomsLink me
   if tstate then
     tImage = pHideFullLinkImages[#show]
   else
-    tImage = pHideFullLinkImages[#hide]
+    tImage = pHideFullLinkImages[#Hide]
   end if
   tOffX = tImage.width - tElem.getProperty(#width)
   tElem.feedImage(tImage)
@@ -754,7 +754,7 @@ on setRoomInfoArea me, tstate
     return 0
   end if
   me.setProperty(#roomInfoState, tstate)
-  if tstate = #hide then
+  if tstate = #Hide then
     me.setProperty(#viewedNodeId, VOID)
   end if
   tWndObj = getWindow(me.pWindowTitle)

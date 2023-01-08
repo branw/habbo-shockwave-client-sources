@@ -56,15 +56,15 @@ on deconstruct me
   return me.hideAll()
 end
 
-on showRoom me, tRoomId
-  if not memberExists(tRoomId & ".room") then
-    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomId & ".room", #showRoom)
+on showRoom me, tRoomID
+  if not memberExists(tRoomID & ".room") then
+    return error(me, "Room recording data member not found, check recording label name. Tried to find" && tRoomID & ".room", #showRoom)
   end if
   me.showTrashCover()
   if windowExists(pLoaderBarID) then
     activateWindow(pLoaderBarID)
   end if
-  tRoomField = tRoomId & ".room"
+  tRoomField = tRoomID & ".room"
   createVisualizer(pRoomSpaceId, tRoomField)
   tVisObj = getVisualizer(pRoomSpaceId)
   tLocX = tVisObj.getProperty(#locX)

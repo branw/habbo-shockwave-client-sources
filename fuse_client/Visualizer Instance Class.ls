@@ -73,7 +73,7 @@ on open me, tLayout
 end
 
 on close me
-  return me.remove(me.getID)
+  return me.Remove(me.getID)
 end
 
 on moveTo me, tX, tY
@@ -133,7 +133,7 @@ on moveSprBy me, tid, tX, tY
     return error(me, "Sprite not found:" && tid, #moveSprBy)
   end if
   tsprite.loc = tsprite.loc + [tX, tY]
-  return me.refresh()
+  return me.Refresh()
 end
 
 on moveSprTo me, tid, tX, tY
@@ -142,7 +142,7 @@ on moveSprTo me, tid, tX, tY
     return error(me, "Sprite not found:" && tid, #moveSprTo)
   end if
   tsprite.loc = point(tX, tY)
-  return me.refresh()
+  return me.Refresh()
 end
 
 on setActive me
@@ -153,7 +153,7 @@ on setDeactive me
   return 1
 end
 
-on hide me
+on Hide me
   if pVisible = 1 then
     pVisible = 0
     me.moveX(10000)
@@ -236,7 +236,7 @@ on setProperty me, tProp, tValue
       if tValue then
         return me.show()
       else
-        return me.hide()
+        return me.Hide()
       end if
     #title:
       pTitle = tValue
@@ -330,7 +330,7 @@ on update me
   me.moveTo(the mouseH - pDragOffset[1], the mouseV - pDragOffset[2])
 end
 
-on refresh me
+on Refresh me
   tRect = rect(100000, 100000, -100000, -100000)
   repeat with tWrapper in pWrappedParts
     tWrapper.updateWrap()
@@ -496,5 +496,5 @@ on buildVisual me, tLayout
       me.activateWrap(tWrapper)
     end if
   end repeat
-  return me.refresh()
+  return me.Refresh()
 end

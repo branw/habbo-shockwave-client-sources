@@ -40,7 +40,7 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
     if voidp(tLocY) then
       tLocY = me.get(tid).getProperty(#locY)
     end if
-    me.remove(tid)
+    me.Remove(tid)
   end if
   if integerp(tLocX) and integerp(tLocY) then
     tX = tLocX
@@ -66,11 +66,11 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
   tProps[#elements] = pClsList
   tProps[#manager] = me
   if not tItem.define(tProps) then
-    getObjectManager().remove(tid)
+    getObjectManager().Remove(tid)
     return 0
   end if
   if not tItem.merge(tLayout) then
-    getObjectManager().remove(tid)
+    getObjectManager().Remove(tid)
     return 0
   end if
   me.pItemList.add(tid)
@@ -79,13 +79,13 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
   return 1
 end
 
-on remove me, tid
+on Remove me, tid
   tWndObj = me.get(tid)
   if tWndObj = 0 then
     return 0
   end if
   me.pPosCache[tid] = [tWndObj.getProperty(#locX), tWndObj.getProperty(#locY)]
-  getObjectManager().remove(tid)
+  getObjectManager().Remove(tid)
   me.pItemList.deleteOne(tid)
   if me.pActiveItem = tid then
     tNextActive = me.pItemList.getLast()
@@ -103,7 +103,7 @@ on remove me, tid
       end if
     end repeat
     if not tModals then
-      me.remove(pModalID)
+      me.Remove(pModalID)
     end if
   end if
   me.Activate(tNextActive)

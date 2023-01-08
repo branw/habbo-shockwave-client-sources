@@ -20,7 +20,7 @@ on handle_error me, tMsg
   tErr = tMsg.content
   case tErr of
     "Error creating a private room":
-      executeMessage(#alert, [#msg: getText("roomatic_create_error")])
+      executeMessage(#alert, [#Msg: getText("roomatic_create_error")])
       return me.getInterface().showHideRoomKiosk()
   end case
   return 1

@@ -71,9 +71,9 @@ on showVoteResults me, tTotalVotes, tVoteResults
     tBarMultiplier = 1
   end if
   tWndObj = getWindow(pHubuWndID)
-  tWndObj.getElement("time_bar_bg").hide()
-  tWndObj.getElement("time_bar").hide()
-  tWndObj.getElement("hubu_time").hide()
+  tWndObj.getElement("time_bar_bg").Hide()
+  tWndObj.getElement("time_bar").Hide()
+  tWndObj.getElement("hubu_time").Hide()
   tWndObj.getElement("hubu_statusbar").setText(EMPTY)
   repeat with i = 1 to tVoteResults.count
     tWndObj.getElement("hubu_res_" & i).setProperty(#blend, 100)

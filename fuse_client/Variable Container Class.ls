@@ -66,7 +66,7 @@ on getValue me, tVariable, tDefault
   return tValue
 end
 
-on remove me, tVariable
+on Remove me, tVariable
   return me.pItemList.deleteProp(tVariable)
 end
 

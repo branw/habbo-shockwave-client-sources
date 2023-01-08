@@ -57,7 +57,7 @@ end
 
 on define me, tProps
   pName = tProps[#name]
-  pDirection = tProps[#dir]
+  pDirection = tProps[#Dir]
   tUserObj = getThread(#room).getComponent().getUserObject(pName)
   if not tUserObj then
     return error(me, "User object not found:" && pName & "!", #define)
@@ -70,7 +70,7 @@ on define me, tProps
   pSprite.locZ = tScrLoc[3] + 1000
   pSprite.visible = 1
   tFigureData = tUserObj.getPelleFigure()
-  tProps = [#dir: pDirection, #figure: tFigureData, #buffer: pBuffer]
+  tProps = [#Dir: pDirection, #figure: tFigureData, #buffer: pBuffer]
   pPartList["fx"].define("fx", tProps)
   pPartList["lh"].define("lh", tProps)
   pPartList["bd"].define("bd", tProps)
@@ -96,7 +96,7 @@ on define me, tProps
   pDropMaxCnt = 16
   pDropOffset = [0, 0]
   pDropPoint = point(0, 0)
-  tUserObj.hide()
+  tUserObj.Hide()
   receivePrepare(me.getID())
   return 1
 end

@@ -94,7 +94,7 @@ on simulateUpdate me
   end if
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on Refresh me, tX, tY, tH, tDirHead, tDirBody
   pMoving = 0
   pDancing = 0
   pTalking = 0
