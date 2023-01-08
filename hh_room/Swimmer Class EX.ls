@@ -6,14 +6,14 @@ on define me, tdata
   pSwimAnimCount = 0
   pSwimAndStay = 0
   me.setup(tdata)
-  if not memberExists(me.pCanvasName) then
-    createMember(me.pCanvasName, #bitmap)
+  if not memberExists(me.getCanvasName()) then
+    createMember(me.getCanvasName(), #bitmap)
   end if
   if voidp(me.pCanvasSize[#swm]) then
     me.pCanvasSize[#swm] = [60, 60, 32, -8]
   end if
   tSize = me.pCanvasSize[#std]
-  me.pMember = member(getmemnum(me.pCanvasName))
+  me.pMember = member(getmemnum(me.getCanvasName()))
   me.pMember.image = image(tSize[1], tSize[2], tSize[3])
   me.pMember.regPoint = point(0, me.pMember.image.height + tSize[4])
   me.pBuffer = me.pMember.image.duplicate()

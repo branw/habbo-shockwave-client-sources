@@ -314,7 +314,6 @@ on regMsgList me, tBool
   tMsgs.setaProp(226, #handle_failure)
   tMsgs.setaProp(227, #handle_parentchain)
   tCmds = [:]
-  tCmds.setaProp("GETAVAILABLESETS", 9)
   tCmds.setaProp("SBUSYF", 13)
   tCmds.setaProp("SUSERF", 16)
   tCmds.setaProp("SRCHF", 17)

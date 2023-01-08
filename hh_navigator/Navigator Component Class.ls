@@ -101,14 +101,14 @@ on getNodeInfo me, tNodeId, tCategoryId
   return 0
 end
 
-on getNodeParentInfo me, tid
+on getNodeParentId me, tid
   if pCategoryIndex[tid] = VOID then
     return 0
   end if
   if tid = pRootUnitCatId or tid = pRootFlatCatId then
     return 0
   end if
-  return pCategoryIndex[tid]
+  return pCategoryIndex[tid][#parentid]
 end
 
 on setNodeProperty me, tNodeId, tProp, tValue
@@ -214,12 +214,14 @@ on createNaviHistory me, tCategoryId
   if tCategoryId = VOID then
     return 0
   end if
-  tParentInfo = me.getNodeParentInfo(tCategoryId)
+  tParentId = me.getNodeParentId(tCategoryId)
+  tParentInfo = me.getNodeInfo(tParentId)
   repeat while tParentInfo <> 0
     if pNaviHistory.getPos(tParentInfo[#parentid]) = 0 then
-      pNaviHistory.addAt(1, tParentInfo[#parentid])
+      pNaviHistory.addAt(1, tParentId)
       tText = tParentInfo[#name] & RETURN & tText
-      tParentInfo = me.getNodeParentInfo(tParentInfo[#parentid])
+      tParentId = tParentInfo[#parentid]
+      tParentInfo = me.getNodeInfo(tParentId)
       next repeat
     end if
     return error(me, "Category loop detected in navigation data!", #createNaviHistory)
@@ -317,9 +319,6 @@ on feedNewRoomList me, tid
   tNodeInfo = me.getNodeInfo(tid)
   if not listp(tNodeInfo) or not me.checkCacheForNode(tid) then
     return me.callNodeUpdate()
-  end if
-  if tNodeInfo[#nodeMask] <> me.getCurrentNodeMask() then
-    return me.callNodeUpdate
   end if
   me.getInterface().updateRoomList(tNodeInfo[#id], tNodeInfo[#children])
   return 1

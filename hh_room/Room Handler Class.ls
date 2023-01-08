@@ -680,9 +680,13 @@ end
 
 on handle_dice_value me, tMsg
   tid = tMsg.content.word[1]
-  tValue = integer(tMsg.content.word[2] - tid * 38)
-  if tValue > 6 then
-    tValue = 0
+  if tMsg.content.word.count = 1 then
+    tValue = -1
+  else
+    tValue = integer(tMsg.content.word[2] - tid * 38)
+    if tValue > 6 then
+      tValue = 0
+    end if
   end if
   if me.getComponent().activeObjectExists(tid) then
     me.getComponent().getActiveObject(tid).diceThrown(tValue)
@@ -747,7 +751,7 @@ on handle_userbadge me, tMsg
     return 0
   end if
   tUserObj.pBadge = tBadge
-  me.getInterface().uningoreAdmin(tUserID, tBadge)
+  me.getInterface().unignoreAdmin(tUserID, tBadge)
   me.getInterface().updateInfoStandBadge(tBadge, tUserID)
 end
 

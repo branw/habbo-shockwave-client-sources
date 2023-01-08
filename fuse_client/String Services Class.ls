@@ -136,7 +136,7 @@ end
 on obfuscate me, tStr
   tResult = EMPTY
   repeat with i = 1 to tStr.length
-    tRandom = random(255)
+    tRandom = random(127)
     tNumber = charToNum(tStr.char[i])
     tRandom = [bitAnd(tRandom, 216), bitAnd(tRandom, 223), bitAnd(tRandom, 7)]
     tNumbers = [bitAnd(tNumber, 216), bitAnd(tNumber, 32), bitAnd(tNumber, 7)]

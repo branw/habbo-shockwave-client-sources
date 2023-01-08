@@ -7,7 +7,7 @@ on prepare me, tdata
   if not integerp(pValue) then
     pValue = 1
   end if
-  if pValue > 6 then
+  if pValue > 6 or pValue < 0 then
     pValue = 0
   end if
   me.update()

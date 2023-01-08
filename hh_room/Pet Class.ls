@@ -1,4 +1,4 @@
-property pName, pClass, pCustom, pIDPrefix, pCanvasName, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix
+property pName, pClass, pCustom, pIDPrefix, pBuffer, pSprite, pMatteSpr, pMember, pShadowSpr, pShadowFix, pDefShadowMem, pPartList, pPartIndex, pFlipList, pUpdateRect, pDirection, pLocX, pLocY, pLocH, pLocFix, pXFactor, pYFactor, pHFactor, pScreenLoc, pStartLScreen, pDestLScreen, pRestingHeight, pAnimCounter, pMoveStart, pMoveTime, pEyesClosed, pSync, pChanges, pAlphaColor, pCanvasSize, pMainAction, pWaving, pMoving, pTalking, pSniffing, pGeometry, pInfoStruct, pCorrectLocZ, pPartClass, pOffsetList, pOffsetListSmall, pMemberNamePrefix
 
 on construct me
   pName = EMPTY
@@ -57,8 +57,8 @@ on deconstruct me
   if pShadowSpr.ilk = #sprite then
     releaseSprite(pShadowSpr.spriteNum)
   end if
-  if memberExists(pCanvasName) and pCanvasName <> VOID then
-    removeMember(pCanvasName)
+  if memberExists(me.getCanvasName()) then
+    removeMember(me.getCanvasName())
   end if
   pShadowSpr = VOID
   pMatteSpr = VOID
@@ -68,11 +68,10 @@ end
 
 on define me, tdata
   me.setup(tdata)
-  pCanvasName = pClass && pIDPrefix && pName && me.getID() && "Canvas"
-  if not memberExists(pCanvasName) then
-    createMember(pCanvasName, #bitmap)
+  if not memberExists(me.getCanvasName()) then
+    createMember(me.getCanvasName(), #bitmap)
   end if
-  pMember = member(getmemnum(pCanvasName))
+  pMember = member(getmemnum(me.getCanvasName()))
   pMember.image = image(pCanvasSize[1], pCanvasSize[2], pCanvasSize[3])
   pMember.regPoint = point(0, pMember.image.height + pCanvasSize[4])
   pBuffer = pMember.image.duplicate()
@@ -578,6 +577,10 @@ on getOffsetList me, tSize
     tList["tl_bnd_3"] = tList["tl_bnd_1"]
   end if
   return tList
+end
+
+on getCanvasName me
+  return pClass && pIDPrefix && pName & me.getID() && "Canvas"
 end
 
 on action_mv me, tProps

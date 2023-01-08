@@ -3,7 +3,6 @@ on construct me
 end
 
 on deconstruct me
-  unregisterMessage(#GETCATALOGPAG, me.getID())
   return me.regMsgList(0)
 end
 
@@ -112,20 +111,6 @@ on handle_catalogpage me, tMsg
   me.getComponent().saveCataloguePage(tList)
 end
 
-on handle_nameapproved me, tMsg
-  tParm = tMsg.connection.GetIntFrom(tMsg)
-  if tParm = 1 then
-    executeMessage(#petapproved)
-  end if
-end
-
-on handle_nameunacceptable me, tMsg
-  tParm = tMsg.connection.GetIntFrom(tMsg)
-  if tParm = 1 then
-    executeMessage(#petunacceptable)
-  end if
-end
-
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(67, #handle_purchase_ok)
@@ -133,13 +118,10 @@ on regMsgList me, tBool
   tMsgs.setaProp(68, #handle_purchase_nobalance)
   tMsgs.setaProp(126, #handle_catalogindex)
   tMsgs.setaProp(127, #handle_catalogpage)
-  tMsgs.setaProp(36, #handle_nameapproved)
-  tMsgs.setaProp(37, #handle_nameunacceptable)
   tCmds = [:]
   tCmds.setaProp("GPRC", 100)
   tCmds.setaProp("GCIX", 101)
   tCmds.setaProp("GCAP", 102)
-  tCmds.setaProp("APPROVENAME", 42)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

@@ -8,10 +8,13 @@ on construct me
   pSelectablePartsList = [:]
   pSelectableSetIDList = [:]
   setVariable("figurepartlist.loaded", 0)
+  me.regMsgList(1)
   return 1
 end
 
 on deconstruct me
+  me.regMsgList(0)
+  return 1
 end
 
 on define me, tProps
@@ -668,4 +671,17 @@ on initializeSelectablePartList me, tSetIDList
       end if
     end repeat
   end repeat
+end
+
+on regMsgList me, tBool
+  tMsgs = [:]
+  tCmds = [:]
+  tCmds.setaProp("GETAVAILABLESETS", 9)
+  if tBool then
+    registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  else
+    unregisterListener(getVariable("connection.info.id"), me.getID(), tMsgs)
+    unregisterCommands(getVariable("connection.info.id"), me.getID(), tCmds)
+  end if
 end

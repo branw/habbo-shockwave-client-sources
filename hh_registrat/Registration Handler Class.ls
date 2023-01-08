@@ -29,6 +29,10 @@ on handle_updateok me, tMsg
 end
 
 on handle_approvenamereply me, tMsg
+  if me.getComponent().pCheckingName = VOID then
+    return 1
+  end if
+  me.getComponent().pCheckingName = VOID
   tParm = tMsg.connection.GetIntFrom(tMsg)
   case tParm of
     0:
@@ -42,6 +46,7 @@ on handle_approvenamereply me, tMsg
     4:
       me.getInterface().userNameAlreadyReserved()
   end case
+  return 1
 end
 
 on handle_nameunacceptable me, tMsg
@@ -157,6 +162,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(275, #handle_update_request)
   tCmds = [:]
   tCmds.setaProp("INFORETRIEVE", 7)
+  tCmds.setaProp("GETAVAILABLESETS", 9)
   tCmds.setaProp("FINDUSER", 41)
   tCmds.setaProp("APPROVENAME", 42)
   tCmds.setaProp("REGISTER", 43)
