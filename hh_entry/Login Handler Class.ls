@@ -291,7 +291,16 @@ on handleEndCrypto me, tMsg
 end
 
 on handleHotelLogout me, tMsg
-  openNetPage(getText("url_logged_out"), "self")
+  tLogoutMsgId = tMsg.connection.GetIntFrom()
+  case tLogoutMsgId of
+    -1:
+      me.getComponent().disconnect()
+      me.getInterface().showDisconnect()
+    1:
+      openNetPage(getText("url_logged_out"), "self")
+    2:
+      openNetPage(getText("url_logout_concurrent"), "self")
+  end case
 end
 
 on makeServerToClientKey me

@@ -71,7 +71,7 @@ on createRoomObject me, tdata
   tAvatarStruct.addProp(#id, tUserStrId)
   tAvatarStruct.addProp(#name, tdata[#name])
   tAvatarStruct.addProp(#direction, [tdata[#dirBody], 0])
-  tAvatarStruct.addProp(#Class, "bouncing.human.class")
+  tAvatarStruct.addProp(#class, "bouncing.human.class")
   tAvatarStruct.addProp(#x, tdata[#locX])
   tAvatarStruct.addProp(#y, tdata[#locY])
   tAvatarStruct.addProp(#h, 0.0)

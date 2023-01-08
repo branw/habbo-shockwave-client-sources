@@ -72,7 +72,11 @@ on showContent me, tdata
   end if
   ttype = tdata[#type]
   tCode = tdata[#code]
+  tColor = tdata[#color]
   tMemNum = VOID
+  if tColor = EMPTY then
+    tColor = VOID
+  end if
   if ttype contains "*" then
     tDelim = the itemDelimiter
     the itemDelimiter = "*"
@@ -87,7 +91,7 @@ on showContent me, tdata
     end if
   end if
   if tMemNum = 0 then
-    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, VOID, tdata[#type])
+    tImg = getObject("Preview_renderer").renderPreviewImage(VOID, VOID, tColor, tdata[#type])
   else
     tImg = member(tMemNum).image.duplicate()
   end if
