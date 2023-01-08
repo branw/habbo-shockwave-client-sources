@@ -59,8 +59,8 @@ on define me, tProps
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
   pInitialized = 0
-  me.pName = getText(tClass & "_name")
-  me.pCustom = getText(tClass & "_desc")
+  me.pName = getText("wallitem_" & tClass & "_name")
+  me.pCustom = getText("wallitem_" & tClass & "_desc")
   return callAncestor(#define, [me], tProps)
 end
 

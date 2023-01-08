@@ -133,7 +133,11 @@ on changeFigureAndData me, tdata
   end repeat
   pChanges = 1
   me.render()
-  me.reDraw()
+  if me.isInSwimsuit() then
+    me.setPartLists(tdata[#figure], #preserveAnimation)
+  else
+    me.reDraw()
+  end if
   pInfoStruct[#image] = me.getPicture()
 end
 

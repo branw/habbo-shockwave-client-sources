@@ -18,7 +18,9 @@ on construct me
   end if
   i = 0
   repeat while 1
-    if textExists("pet_race_" & i & "_000") then
+    tRaceDefExists = pPetDefinitions.getaProp(string(i)) <> VOID
+    tRaceTextExists = textExists("pet_race_" & i & "_000")
+    if tRaceDefExists and tRaceTextExists then
       tPetType = string(i)
       tTempRaces = []
       tTempRaces.add("000")

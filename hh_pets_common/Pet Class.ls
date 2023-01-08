@@ -109,7 +109,7 @@ on define me, tdata
   the itemDelimiter = tDelim
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
-  pInfoStruct[#Custom] = pCustom
+  pInfoStruct[#custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   return 1
 end
@@ -620,8 +620,8 @@ end
 
 on action_slp me, tProps
   me.action_lay(tProps)
-  me.closeEyes()
   pMainAction = "slp"
+  pPartList[pPartIndex["hd"]].defineAct("slp")
 end
 
 on action_jmp me, tProps
@@ -643,6 +643,7 @@ end
 on action_beg me, tProps
   pMainAction = "beg"
   pPartList[pPartIndex["bd"]].defineAct("beg")
+  pPartList[pPartIndex["hd"]].defineAct("beg")
 end
 
 on action_pla me, tProps

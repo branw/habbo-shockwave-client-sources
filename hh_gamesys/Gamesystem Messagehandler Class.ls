@@ -49,6 +49,7 @@ on regMsgList me, tBool
   pMsgIds.setaProp(249, #gamereset)
   pMsgIds.setaProp(250, #gameplayerinfo)
   pMsgIds.setaProp(251, #idlewarning)
+  pMsgIds.setaProp(252, #skilllevelchanged)
   tMsgs = [:]
   repeat with i = 1 to pMsgIds.count
     tMsgs.setaProp(pMsgIds.getPropAt(i), #handle_message)

@@ -29,6 +29,8 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
   case tSpecial of
     #modal:
       return me.modal(tid, tLayout)
+    #modalcorner:
+      return me.modal(tid, tLayout, #corner)
   end case
   if voidp(tLayout) then
     tLayout = "empty.window"
@@ -170,12 +172,20 @@ on unlock me
   return 1
 end
 
-on modal me, tid, tLayout
+on modal me, tid, tLayout, tPosition
+  if voidp(tPosition) then
+    tPosition = #center
+  end if
   if not me.create(tid, tLayout) then
     return 0
   end if
   tWndObj = me.GET(tid)
-  tWndObj.center()
+  case tPosition of
+    #center:
+      tWndObj.center()
+    #corner:
+      tWndObj.moveTo(0, 0)
+  end case
   tWndObj.lock()
   tWndObj.setProperty(#modal, 1)
   if not me.exists(pModalID) then

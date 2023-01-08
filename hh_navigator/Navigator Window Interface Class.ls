@@ -854,5 +854,9 @@ on updatePasswordAsterisks me, tParams
 end
 
 on sendTrackingCall me
-  executeMessage(#sendTrackingData, [#content: "navigator"])
+  tTrackingHeader = getObject(#session).get("tracking_header")
+  if tTrackingHeader = 0 then
+    return error(me, "Tracking header not in session.", #sendTrackingCall)
+  end if
+  executeMessage(#sendTrackingData, [#content: tTrackingHeader & "/navigator"])
 end

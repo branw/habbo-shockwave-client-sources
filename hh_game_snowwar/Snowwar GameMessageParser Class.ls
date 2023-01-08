@@ -161,25 +161,28 @@ on handle_msgstruct_fullgamestatus me, tMsg
   tdata.addProp(#state, tstate)
   tdata.addProp(#time, [#state: tstate, #time_to_next_state: tConn.GetIntFrom(), #state_duration: tConn.GetIntFrom()])
   tNumObjects = tConn.GetIntFrom()
+  tObjectIdList = []
   tGameObjects = []
   repeat with i = 1 to tNumObjects
-    tGameObjects.add(me.parse_snowwar_gameobject(tConn))
+    tGameObject = me.parse_snowwar_gameobject(tConn)
+    if listp(tGameObject) then
+      tGameObjects.add(tGameObject)
+      tObjectIdList.add(string(tGameObject[#id]))
+    end if
   end repeat
   tdata.addProp(#game_objects, tGameObjects)
   tGameSystem.getVarMgr().set(#tournament_flag, tConn.GetBoolFrom())
   tGameSystem.sendGameSystemEvent(#set_number_of_teams, tConn.GetIntFrom())
   tGameSystem.sendGameSystemEvent(#fullgamestatus_time, tdata[#time])
   tGameSystem.clearTurnBuffer()
-  tObjectIdList = []
+  tGameSystem.sendGameSystemEvent(#verify_game_object_id_list, tObjectIdList)
   repeat with tGameObject in tdata[#game_objects]
-    tObjectIdList.add(string(tGameObject[#id]))
     if tGameSystem.getGameObject(tGameObject[#id]) = 0 then
       tGameSystem.sendGameSystemEvent(#create_game_object, tGameObject)
       next repeat
     end if
     tGameSystem.sendGameSystemEvent(#update_game_object, tGameObject)
   end repeat
-  tGameSystem.sendGameSystemEvent(#verify_game_object_id_list, tObjectIdList)
   tGameSystem.sendGameSystemEvent(#update_game_visuals)
   tGameSystem.startTurnManager()
   return me.parse_gamestatus(tConn)
@@ -224,14 +227,26 @@ on handle_msgstruct_gamereset me, tMsg
   tdata.addProp(#time_until_game_start, tConn.GetIntFrom())
   tNumObjects = tConn.GetIntFrom()
   tGameObjects = []
+  tObjectIdList = []
   repeat with i = 1 to tNumObjects
-    tGameObjects.add(me.parse_snowwar_gameobject(tConn))
+    tGameObject = me.parse_snowwar_gameobject(tConn)
+    if listp(tGameObject) then
+      tGameObjects.add(tGameObject)
+      tObjectIdList.add(string(tGameObject[#id]))
+    end if
   end repeat
   tdata.addProp(#game_objects, tGameObjects)
   tGameSystem = me.getGameSystem()
+  tGameSystem.clearTurnBuffer()
+  tGameSystem.sendGameSystemEvent(#verify_game_object_id_list, tObjectIdList)
   repeat with tGameObject in tdata[#game_objects]
+    if tGameSystem.getGameObject(tGameObject[#id]) = 0 then
+      tGameSystem.sendGameSystemEvent(#create_game_object, tGameObject)
+      next repeat
+    end if
     tGameSystem.sendGameSystemEvent(#update_game_object, tGameObject)
   end repeat
+  tGameSystem.sendGameSystemEvent(#update_game_visuals)
   return tGameSystem.sendGameSystemEvent(#gamereset, tdata)
 end
 

@@ -137,7 +137,7 @@ on setPartLists me, tmodels
     if (tPartSymbol = "fc" or tPartSymbol = "hd") and tmodels[tPartSymbol]["model"] = "002" and me.pXFactor < 33 then
       tmodels[tPartSymbol]["model"] = "001"
     end if
-    tPartCls = value(getThread(#room).getComponent().getClassContainer().get("swimpart"))
+    tPartCls = value(getThread(#room).getComponent().getClassContainer().GET("swimpart"))
     tPartObj = createObject(#temp, tPartCls)
     if stringp(tmodels[tPartSymbol]["color"]) then
       tColor = value("rgb(" & tmodels[tPartSymbol]["color"] & ")")

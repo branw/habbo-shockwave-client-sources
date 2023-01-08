@@ -83,7 +83,7 @@ on showDisconnect me
   if tList["retval"] = 1 then
     return 1
   end if
-  createWindow(#error, "error.window", 0, 0, #modal)
+  createWindow(#error, "error.window", 0, 0, #modalcorner)
   tWndObj = getWindow(#error)
   tWndObj.getElement("error_title").setText(getText("Alert_ConnectionFailure"))
   tWndObj.getElement("error_text").setText(getText("Alert_ConnectionDisconnected"))
@@ -149,7 +149,7 @@ on showUserFound me
   tWndObj = getWindow(#login_b)
   tWndObj.merge("login_c.window")
   tTxt = tWndObj.getElement("login_c_welcome").getText()
-  tTxt = tTxt && getObject(#session).get("user_name")
+  tTxt = tTxt && getObject(#session).GET("user_name")
   tWndObj.getElement("login_c_welcome").setText(tTxt)
   if objectExists("Figure_Preview") then
     tBuffer = getObject("Figure_Preview").createTemplateHuman("h", 3, "wave")

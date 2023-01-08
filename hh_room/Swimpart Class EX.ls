@@ -1,6 +1,6 @@
 property ancestor, pPart, pmodel, pDirection, pDrawProps, pSwimProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pLastLocFix, pCacheImage, pCacheRectA, pCacheRectB, pAnimation, pAnimFrame, pTotalFrame
 
-on deconsturct me
+on deconstruct me
   ancestor = VOID
   return 1
 end
@@ -16,6 +16,12 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
   pCacheRectB = rect(0, 0, 0, 0)
   me.defineInk()
   me.setColor(tColor)
+  if tAction = "sws" or tAction = "swm" or tAction = "sit" then
+    tNoSwimFramesList = ["hr", "fc", "ey", "hd"]
+    if tNoSwimFramesList.getPos(pPart) > 0 then
+      tAction = "std"
+    end if
+  end if
   pDirection = tDirection
   pAction = tAction
   pActionLh = tAction
@@ -321,6 +327,10 @@ on getLocation me
   return tRegPoint * -1 + tCenterPoint
 end
 
+on getPartID me
+  return pPart
+end
+
 on copyPicture me, tImg, tdir, tHumanSize, tAction, tAnimFrame
   if voidp(tdir) then
     tdir = "2"
@@ -359,6 +369,22 @@ on reset me, tSwimFlag
   pAction = "std"
   pActionLh = VOID
   pActionRh = VOID
+end
+
+on changePartData me, tmodel, tColor
+  if voidp(tmodel) or voidp(tColor) then
+    return 0
+  end if
+  if pPart = "ch" then
+    return 1
+  end if
+  pmodel = tmodel
+  pDrawProps[#bgColor] = tColor
+  tMemNameList = explode(pMemString, "_")
+  tMemNameList[4] = tmodel
+  pMemString = implode(tMemNameList, "_")
+  tForced = 1
+  me.update(tForced)
 end
 
 on setAnimation me, tPart, tAnim
