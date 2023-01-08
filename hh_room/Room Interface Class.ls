@@ -407,9 +407,6 @@ on showObjectInfo me, tObjType
     tWndObj.getElement("info_text").show()
     tWndObj.getElement("info_name").setText(tProps[#name])
     tWndObj.getElement("info_text").setText(tProps[#Custom])
-    if tObjType = "user" then
-      executeMessage(#userClicked, tProps[#name])
-    end if
     tElem = tWndObj.getElement("info_image")
     if ilk(tProps[#image]) = #image then
       tElem.resizeTo(tProps[#image].width, tProps[#image].height)
@@ -1448,7 +1445,8 @@ on eventProcRoom me, tEvent, tSprID, tParam
     end case
     return me.getComponent().getRoomConnection().send(tCmd, tPrm)
   end if
-  if tEvent = #mouseDown then
+  tDragging = 0
+  if tEvent = #mouseDown or tDragging then
     case pClickAction of
       "moveHuman":
         if tParam <> "object_selection" then
@@ -1543,6 +1541,9 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     return me.eventProcRoom(tEvent, tSprID, tParam)
   end if
   if tObject.select() then
+    if tObject.getClass() = "user" then
+      executeMessage(#userClicked, tObject.getName())
+    end if
     if pSelectedObj <> tSprID then
       pSelectedObj = tSprID
       pSelectedType = tObject.getClass()

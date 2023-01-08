@@ -1,4 +1,4 @@
-property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag, pHandButtonsWnd, pNextActive, pPrevActive
+property pItemList, pTotalCount, pHandVisID, pAnimMode, pAnimLocs, pAnimFrm, pAppendFlag, pHandButtonsWnd, pNextActive, pPrevActive, pDragging, pDragPos
 
 on construct me
   pItemList = [:]

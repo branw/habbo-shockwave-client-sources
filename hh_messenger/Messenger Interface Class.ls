@@ -446,6 +446,7 @@ on renderMessage me, tMsgStruct
   tMsg = tMsgStruct[#message]
   tTime = tMsgStruct[#time]
   tSenderId = tMsgStruct[#senderID]
+  tSenderSex = tMsgStruct[#sex]
   tWndObj = getWindow(pWindowTitle)
   if tMsgStruct[#campaign] = 1 then
     me.ChangeWindowView("console_officialmessage.window")
@@ -458,11 +459,9 @@ on renderMessage me, tMsgStruct
   tdata = pBuddyListPntr.getaProp(#value).buddies.getaProp(tSenderId)
   if not voidp(tdata) then
     tSenderName = tdata.name
-    tSenderSex = tdata.sex
   else
     error(me, "Unknown message sender:" && tSenderId, #renderMessage)
     tSenderName = "Unknown sender!"
-    tSenderSex = "M"
   end if
   if objectExists("Figure_System") then
     tFigure = getObject("Figure_System").parseFigure(tMsgStruct[#FigureData], tSenderSex)
@@ -544,7 +543,9 @@ on ChangeWindowView me, tWindowName
       end if
     "console_getrequest.window":
       tBuddyRequest = me.getComponent().getNextBuddyRequest()
-      tWndObj.getElement("console_getrequest_habbo_name_text").setText(tBuddyRequest[#name])
+      if listp(tBuddyRequest) then
+        tWndObj.getElement("console_getrequest_habbo_name_text").setText(tBuddyRequest[#name])
+      end if
     "console_compose.window":
       if pSelectedBuddies.count = 0 then
         return me.ChangeWindowView("console_friends.window")
