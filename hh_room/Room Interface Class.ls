@@ -1554,7 +1554,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     if tParam = #userEnters then
       tloc = [5, 5]
     end if
-    if tObject = me.getComponent().getOwnUser() and tObject.getProperty(#moving) or tParam = #userEnters then
+    if tObject <> me.getComponent().getOwnUser() or (tObject.getProperty(#moving) or tParam = #userEnters) then
       me.getComponent().getRoomConnection().send("LOOKTO", tloc[1] && tloc[2])
     end if
   else

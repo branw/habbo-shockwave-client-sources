@@ -26,7 +26,7 @@ on retrieveData me, tid, tAuth, tCallBackObj
 end
 
 on storeData me, tdata, tCallBackObj
-  pQueue.add([#type: #store, #Data: tdata, #callback: tCallBackObj])
+  pQueue.add([#type: #store, #data: tdata, #callback: tCallBackObj])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
@@ -71,7 +71,7 @@ on next me
         tTask = pQueue[1]
         case tTask.type of
           #store:
-            return getMultiuser(pConnectionId).sendBinary(tTask.Data)
+            return getMultiuser(pConnectionId).sendBinary(tTask.data)
           #retrieve:
             return getMultiuser(pConnectionId).send("GETBINDATA" && tTask.id && tTask.auth)
           #fusemsg:

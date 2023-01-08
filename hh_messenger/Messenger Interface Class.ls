@@ -115,6 +115,9 @@ on setMessengerInactive me
 end
 
 on setMessengerActive me
+  if pMessengerInactive = 1 then
+    me.getComponent().send_AskForMessages()
+  end if
   pMessengerInactive = 0
   me.getComponent().resume()
   return 1
