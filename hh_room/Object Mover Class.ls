@@ -115,10 +115,11 @@ on define me, tClientID, tStripID, tObjType
     pSprList.add(tSpr)
   end repeat
   tInfo = tClientObj.getInfo()
-  if tInfo[#image] = VOID then
-    return error(me, "No image defined for object mover.", #define)
-  end if
   tMemNum = getObject("Preview_renderer").getPreviewMember(tInfo[#image])
+  if tMemNum = 0 then
+    me.close()
+    return error(me, "Preview member missing.", #define)
+  end if
   tSmallMem = member(tMemNum)
   pSmallSpr = sprite(reserveSprite(me.getID()))
   pSmallSpr.member = tSmallMem
