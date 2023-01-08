@@ -212,6 +212,13 @@ on sendRejoinGame me
   return getConnection(pConnectionId).send("REJOINGAME")
 end
 
+on sendRequestFullStatusUpdate me
+  if not connectionExists(pConnectionId) then
+    return error(me, "Connection not found:" && pConnectionId, #sendRequestFullStatusUpdate)
+  end if
+  return getConnection(pConnectionId).send("REQUESTFULLSTATUSUPDATE")
+end
+
 on sendGameEventMessage me, tdata
   if not connectionExists(pConnectionId) then
     return error(me, "Connection not found:" && pConnectionId, #sendNavigate)

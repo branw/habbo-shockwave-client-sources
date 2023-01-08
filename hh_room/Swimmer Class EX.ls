@@ -178,6 +178,9 @@ on setPartLists me, tmodels
   repeat with i = 1 to me.pPartList.count
     me.pPartIndex[me.pPartList[i].pPart] = i
   end repeat
+  if not me.isSwimming() then
+    me.resumeAnimation()
+  end if
   return 1
 end
 

@@ -75,7 +75,7 @@ on createRoomObject me, tdata
   tAvatarStruct.addProp(#x, tdata[#locX])
   tAvatarStruct.addProp(#y, tdata[#locY])
   tAvatarStruct.addProp(#h, 0.0)
-  tAvatarStruct.addProp(#custom, tdata[#mission])
+  tAvatarStruct.addProp(#Custom, tdata[#mission])
   tAvatarStruct.addProp(#sex, tdata[#sex])
   tAvatarStruct.addProp(#teamId, tdata[#teamId])
   if tdata[#name] = getObject(#session).get(#userName) then

@@ -890,7 +890,7 @@ on showPreviewImage me, tProps, tElemID
       tdata[#id] = "ctlg_previewObj"
       tdata[#class] = tClass
       tdata[#name] = tClass
-      tdata[#custom] = tClass
+      tdata[#Custom] = tClass
       tdata[#direction] = tDirection
       tdata[#dimensions] = tDimensions
       tdata[#colors] = tpartColors
