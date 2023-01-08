@@ -8,6 +8,7 @@ on prepare me, tdata
     pChannelNum = integer(tdata[#stuffdata])
     if ([1, 2, 3]).getOne(pChannelNum) = 0 then
       pChannelNum = 0
+      pActive = 0
     end if
   else
     pChanges = 0
@@ -25,6 +26,7 @@ on updateStuffdata me, tValue
     pChannelNum = integer(tValue)
     if ([1, 2, 3]).getOne(pChannelNum) = 0 then
       pChannelNum = 0
+      pActive = 0
     end if
   end if
   pChanges = 1
@@ -49,7 +51,7 @@ on update me
         tNewName = tTmpName & random(10)
       2:
         tNewName = tTmpName & 10 + random(5)
-      3:
+      otherwise:
         tNewName = tTmpName & 15 + random(5)
     end case
     if memberExists(tNewName) then

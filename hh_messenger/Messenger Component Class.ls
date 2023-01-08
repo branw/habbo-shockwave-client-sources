@@ -222,6 +222,7 @@ end
 
 on receive_purgeAllBuddyRequests me
   pItemList[#newBuddyRequest] = []
+  me.tellRequestCount()
   return me.getInterface().updateFrontPage()
 end
 

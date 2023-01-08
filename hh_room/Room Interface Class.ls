@@ -1637,6 +1637,9 @@ on eventProcBanner me, tEvent, tSprID, tParam
 end
 
 on outputObjectInfo me, tSprID, tObjType, tSprNum
+  if sprite(tSprNum).spriteNum = 0 then
+    return 0
+  end if
   case tObjType of
     "user":
       tObj = me.getComponent().getUserObject(tSprID)

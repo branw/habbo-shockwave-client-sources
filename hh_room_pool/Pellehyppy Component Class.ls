@@ -96,7 +96,10 @@ on jumpPlayPack me, tMsg
     createObject(#playpackpelle_obj, "Jumping Pelle Class", "Pelle Player Class")
   end if
   tUserObj = getThread(#room).getComponent().getUserObject(tMsg[#index])
-  tFigure = tUserObj.getPelleFigure()
+  tFigure = call(#getPelleFigure, [tUserObj])
+  if not listp(tFigure) then
+    return 0
+  end if
   if tMsg[#index] = getObject(#session).get("user_index") then
     me.poolUpView("playback")
   end if
