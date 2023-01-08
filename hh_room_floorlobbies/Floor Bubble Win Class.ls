@@ -1,7 +1,7 @@
 property pSprite, pAreaWidth, pAreaHeight, pLocV, pOffV, pMuutos, pMuutos2, pMiddle, pMaksimi, pFromLeft, pDivPi
 
-on define me, tsprite
-  pSprite = tsprite
+on define me, tSprite
+  pSprite = tSprite
   pAreaWidth = 185
   pAreaHeight = 234
   pFromLeft = 326

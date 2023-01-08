@@ -1,7 +1,7 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pVertDir, pFrameCount, pTimer
 
-on define me, tsprite
-  pSprite = tsprite
+on define me, tSprite
+  pSprite = tSprite
   pOffset = [0, 0]
   pTurnPnt = 545
   pDirection = #left

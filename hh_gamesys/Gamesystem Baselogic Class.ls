@@ -201,6 +201,7 @@ on store_watchfailed me, tParamList
 end
 
 on store_gamelocation me, tParamList
+  executeMessage(#changeRoom)
   tVarMgr = me.getVariableManager()
   tVarMgr.set(#observed_instance_data, [:])
   tVarMgr.set(#game_status, #game_waiting_for_start)
@@ -210,7 +211,6 @@ on store_gamelocation me, tParamList
   tParamList.addProp(#tournament_flag, me.getVariableManager().get(#tournament_flag))
   getObject(#session).set(#gamespace_world_info, tParamList)
   me.getMessageSender().setInstanceListUpdates(0)
-  executeMessage(#changeRoom)
   tUnitId = tParamList[#unitId]
   tWorldId = tParamList[#worldId]
   me.spaceTravel(tUnitId, tWorldId, #game)
