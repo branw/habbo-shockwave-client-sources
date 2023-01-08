@@ -289,6 +289,20 @@ on activeObjectExists me, tid
   return me.roomObjectExists(tid, pActiveObjList)
 end
 
+on releaseSpritesFromActiveObjects me
+  tRemoveCountMax = 100
+  tActiveObjCount = pActiveObjList.count - 1
+  tRemoveCount = min([tRemoveCountMax, tActiveObjCount])
+  repeat with tNo = 1 to tRemoveCount
+    tObject = pActiveObjList[tNo].deconstruct()
+  end repeat
+  createTimeout(#releaseactivetimeout, 3000, #releaseActiveTimeoutCallback, me.getID(), VOID, 1)
+end
+
+on releaseActiveTimeoutCallback me
+  executeMessage(#alert, [#Msg: "alert_too_much_furnitures", #modal: 1])
+end
+
 on createPassiveObject me, tdata
   if me.passiveObjectExists(tdata[#id]) then
     me.removePassiveObject(tdata[#id])

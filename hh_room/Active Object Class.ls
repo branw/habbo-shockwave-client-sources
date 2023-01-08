@@ -393,6 +393,13 @@ on solveMembers me
       else
         tTargetID = getThread(#room).getInterface().getID()
         tSpr = sprite(reserveSprite(me.getID()))
+        if tSpr = sprite(0) then
+          tRoomThread = getThread(#room)
+          if not voidp(tRoomThread) then
+            tRoomThread.getComponent().releaseSpritesFromActiveObjects()
+          end if
+          return error(me, "Could not reserve sprite for: " && tClass, #solveMembers)
+        end if
         pSprList.add(tSpr)
         setEventBroker(tSpr.spriteNum, me.getID())
         tSpr.registerProcedure(#eventProcActiveObj, tTargetID, #mouseDown)

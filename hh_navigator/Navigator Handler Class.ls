@@ -54,8 +54,13 @@ on handle_flat_results me, tMsg
   tList = [:]
   tDelim = the itemDelimiter
   the itemDelimiter = TAB
-  repeat with i = 1 to tMsg.content.line.count
-    tLine = tMsg.content.line[i]
+  tContent = tMsg.content
+  repeat with i = 1 to tContent.line.count
+    tLine = tContent.line[i]
+    if tLine.item.count > 0 and tLine.item.count < 9 then
+      nothing()
+      next repeat
+    end if
     if tLine = EMPTY then
       exit repeat
     end if

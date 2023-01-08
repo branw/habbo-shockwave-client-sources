@@ -1,4 +1,4 @@
-property pDynDownloadURL, pFurniCastNameTemplate, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading
+property pDynDownloadURL, pFurniCastNameTemplate, pDownloadQueue, pPriorityDownloadQueue, pCurrentDownLoads, pDownloadedAssets, pBypassList, pFurniRevisionList, pRevisionsReceived, pRevisionsLoading, pAliasList, pAliasListReceived, pAliasListLoading, pBinCastName
 
 on construct me
   if variableExists("dynamic.download.url") then
@@ -21,6 +21,7 @@ on construct me
   pAliasList = [:]
   pAliasListReceived = 0
   pAliasListLoading = 0
+  pBinCastName = "bin"
   pBypassList = value(getVariable("dyn.download.bypass.list", []))
 end
 
@@ -224,58 +225,71 @@ on acquireAssetsFromCast me, tCastNum, tAssetId
     return 0
   end if
   tSavedPaletteRefs = [:]
-  repeat with tMemNo = 1 to the number of castMembers of castLib the number of tCast
-    tmember = member(tMemNo, tCast.number)
-    tMemType = tmember.type
-    tMemName = tmember.name
-    case tMemType of
-      #bitmap:
-        if member(tMemName).castLibNum > 4 then
-          if ilk(tmember.paletteRef) <> #symbol then
-            tSourceMemName = tmember.name
-            tAliasedMemName = me.doAliasReplacing(tSourceMemName, tAssetId)
-            tSavedPaletteRefs[tAliasedMemName] = tmember.paletteRef.name
-            tmember.paletteRef = #systemMac
+  tFirst = 1
+  tLast = the number of castMembers of castLib the number of tCast
+  tDone = 0
+  repeat while not tDone
+    tDone = 1
+    tCurrentLast = tLast
+    repeat with tMemNo = tFirst to tCurrentLast
+      tmember = member(tMemNo, tCast.number)
+      tMemType = tmember.type
+      tMemName = tmember.name
+      case tMemType of
+        #bitmap:
+          if member(tMemName, pBinCastName).name <> tMemName then
+            if ilk(tmember.paletteRef) <> #symbol then
+              tSourceMemName = tmember.name
+              tAliasedMemName = me.doAliasReplacing(tSourceMemName, tAssetId)
+              tSavedPaletteRefs[tAliasedMemName] = tmember.paletteRef.name
+              tmember.paletteRef = #systemMac
+            end if
+            me.copyMemberToBin(tmember, tAssetId)
           end if
-          me.copyMemberToBin(tmember, tAssetId)
-        end if
-      #palette:
-        if member(tMemName).castLibNum > 4 then
-          me.copyMemberToBin(tmember, VOID)
-        end if
-      #field:
-        tSourceText = tmember.text
-        tAliasedText = me.doAliasReplacing(tSourceText, tAssetId)
-        tmember.text = tAliasedText
-        if tMemName = "asset.index" then
-          tClassesContainer = getObject(getVariable("room.classes.container"))
-          repeat with i = 1 to tmember.lineCount
-            tLine = tmember.line[i]
-            if stringp(tLine) then
-              if tLine.length > 3 then
-                tLineData = value(tLine)
-                tAssetId = tLineData[#id]
-                if offset("s_", tAssetId) = 1 then
-                  tAssetId = tAssetId.char[3..tAssetId.length]
+        #palette:
+          if member(tMemName, pBinCastName).name <> tMemName then
+            me.copyMemberToBin(tmember, VOID)
+          end if
+        #field:
+          tSourceText = tmember.text
+          tAliasedText = me.doAliasReplacing(tSourceText, tAssetId)
+          tmember.text = tAliasedText
+          if tMemName = "asset.index" then
+            tClassesContainer = getObject(getVariable("room.classes.container"))
+            repeat with i = 1 to tmember.lineCount
+              tLine = tmember.line[i]
+              if stringp(tLine) then
+                if tLine.length > 3 then
+                  tLineData = value(tLine)
+                  tAssetId = tLineData[#id]
+                  pDownloadedAssets[tAssetId] = #downloaded
+                  if offset("s_", tAssetId) = 1 then
+                    tAssetId = tAssetId.char[3..tAssetId.length]
+                  end if
+                  tAssetClasses = tLineData[#classes]
+                  tClassesContainer.set(tAssetId, tAssetClasses)
                 end if
-                tAssetClasses = tLineData[#classes]
-                tClassesContainer.set(tAssetId, tAssetClasses)
-                pDownloadedAssets[tAssetId] = #downloaded
+              end if
+            end repeat
+          else
+            if tMemName = "memberalias.index" then
+              if tMemNo = tLast then
+                getResourceManager().readAliasIndexesFromField(tMemName, tCastNum)
+              else
+                tDone = 0
+                tFirst = tMemNo
+                tLast = tMemNo
+              end if
+            else
+              if tMemName contains ".props" or tMemName contains ".data" then
+                me.copyMemberToBin(tmember, tAssetId)
               end if
             end if
-          end repeat
-        else
-          if tMemName = "memberalias.index" then
-            getResourceManager().readAliasIndexesFromField(tMemName, tCastNum)
-          else
-            if tMemName contains ".props" or tMemName contains ".data" then
-              me.copyMemberToBin(tmember, tAssetId)
-            end if
           end if
-        end if
-      #script:
-        me.copyMemberToBin(tmember)
-    end case
+        #script:
+          me.copyMemberToBin(tmember)
+      end case
+    end repeat
   end repeat
   repeat with i = 1 to tSavedPaletteRefs.count
     tMemberName = tSavedPaletteRefs.getPropAt(i)

@@ -247,6 +247,13 @@ on handle_showprogram me, tMsg
   end if
 end
 
+on handle_no_user_for_gift me, tMsg
+  tUserName = tMsg.content
+  tAlertString = getText("no_user_for_gift")
+  tAlertString = replaceChunks(tAlertString, "%user%", tUserName)
+  executeMessage(#alert, [#Msg: tAlertString])
+end
+
 on handle_heightmap me, tMsg
   me.getComponent().validateHeightMap(tMsg.content)
 end
@@ -914,6 +921,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(69, #handle_room_ready)
   tMsgs.setaProp(70, #handle_youaremod)
   tMsgs.setaProp(71, #handle_showprogram)
+  tMsgs.setaProp(76, #handle_no_user_for_gift)
   tMsgs.setaProp(83, #handle_items)
   tMsgs.setaProp(84, #handle_removeitem)
   tMsgs.setaProp(85, #handle_updateitem)
