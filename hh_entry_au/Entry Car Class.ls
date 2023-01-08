@@ -1,13 +1,13 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pPauseTime
 
-on define me, tSprite, tid
+on define me, tsprite, tid
   pID = tid
   if tid mod 2 then
     tdir = #right
   else
     tdir = #left
   end if
-  pSprite = tSprite
+  pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
   pDirection = tdir

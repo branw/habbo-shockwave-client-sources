@@ -174,7 +174,7 @@ on handle_users me, tMsg
         tList[tuser][#y] = integer(tdata.word[2])
         tList[tuser][#h] = getLocalFloat(tdata.word[3])
       "c":
-        tList[tuser][#Custom] = tdata
+        tList[tuser][#custom] = tdata
       "s":
         if tdata.char[1] = "F" or tdata.char[1] = "f" then
           tList[tuser][#sex] = "F"
@@ -527,7 +527,7 @@ on handle_stripinfo me, tMsg
       "S":
         tObj[#name] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_name")
         tObj[#striptype] = "active"
-        tObj[#Custom] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_desc")
+        tObj[#custom] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_desc")
         tObj[#dimensions] = [integer(tItem.item[7]), integer(tItem.item[8])]
         tObj[#colors] = tItem.item[9]
         the itemDelimiter = ","
