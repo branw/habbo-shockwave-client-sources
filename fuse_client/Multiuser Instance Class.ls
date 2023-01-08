@@ -99,7 +99,7 @@ on getProperty me, tProp
       return pListenersPntr
     #commands:
       return pCommandsPntr
-    #Message:
+    #message:
       return pMsgStruct
   end case
   return 0
@@ -198,7 +198,7 @@ on forwardMsg me, tMessage
       tCallback = tCallbackList[i]
       tObject = tObjMngr.get(tCallback[1])
       if tObject <> 0 then
-        pMsgStruct.setaProp(#Message, tMessage)
+        pMsgStruct.setaProp(#message, tMessage)
         pMsgStruct.setaProp(#subject, tSubject)
         pMsgStruct.setaProp(#content, tMessage.word[2..tMessage.word.count])
         call(tCallback[2], tObject, pMsgStruct)
@@ -214,9 +214,10 @@ on forwardMsg me, tMessage
 end
 
 on log me, tMsg
+  if not (the runMode contains "Author") then
+    return 0
+  end if
   case pLogMode of
-    1:
-      put "[Connection" && me.getID() & "] :" && tMsg
     2:
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield

@@ -64,9 +64,9 @@ on ShowAlert me, tProps
     return error(me, "Properties for window expected!", #showHideWindow)
   end if
   if stringp(tProps) then
-    tProps = [#Msg: tProps]
+    tProps = [#msg: tProps]
   end if
-  tText = getText(tProps[#Msg])
+  tText = getText(tProps[#msg])
   tWndTitle = getText("win_error", "Notice!")
   tTextImg = getWriter(pWriterPlain).render(tText).duplicate()
   if voidp(tProps[#id]) then
@@ -106,6 +106,13 @@ on ShowAlert me, tProps
   tTextElem = tWndObj.getElement("alert_text")
   tWidth = tTextElem.getProperty(#width)
   tHeight = tTextElem.getProperty(#height)
+  tTextImgWidth = tTextImg.width
+  if tTextImgWidth < tWidth then
+    tTextElem.setProperty(#width, tTextImgWidth)
+    tTextV = tTextElem.getProperty(#locV)
+    tTextH = tTextElem.getProperty(#locH)
+    tTextElem.moveTo(tWndObj.getProperty(#width) / 2 - tTextImgWidth / 2 - tTextH, tTextV)
+  end if
   tTextElem.moveBy(0, tTitleHeight)
   tOffW = 0
   tOffH = 0
@@ -172,7 +179,7 @@ on showDialog me, tWndID, tProps
       tWndObj.getElement("link_list").feedImage(tLinkImg)
       if threadExists(#room) then
         if getThread(#room).getComponent().getRoomID() = EMPTY then
-          tWndObj.getElement("help_callforhelp_textlink").Hide()
+          tWndObj.getElement("help_callforhelp_textlink").hide()
         end if
       end if
       if tWndObj.elementExists("help_tutorial_link") then
@@ -360,9 +367,9 @@ on eventProcPurse me, tEvent, tElemID, tParam, tWndID
         else
           tURL = getText("url_purse_subscribe")
         end if
-        tURL = tURL & urlEncode(tSession.get("user_name"))
+        tURL = tURL & urlencode(tSession.get("user_name"))
         if tSession.exists("user_checksum") then
-          tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+          tURL = tURL & "&sum=" & urlencode(tSession.get("user_checksum"))
         end if
         openNetPage(tURL, "_new")
     end case
@@ -377,14 +384,14 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
         if textExists("url_help_" & tLineNum) then
           tSession = getObject(#session)
           tURL = getText("url_help_" & tLineNum)
-          tName = urlEncode(tSession.get("user_name"))
+          tName = urlencode(tSession.get("user_name"))
           if tURL = EMPTY then
             return 1
           end if
           if tURL contains "\user_name" then
             tURL = replaceChunks(tURL, "\user_name", tName)
             if tSession.exists("user_checksum") then
-              tURL = tURL & "&sum=" & urlEncode(tSession.get("user_checksum"))
+              tURL = tURL & "&sum=" & urlencode(tSession.get("user_checksum"))
             end if
           end if
           openNetPage(tURL, "_new")

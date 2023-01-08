@@ -46,7 +46,7 @@ on show me, tUserID, tAnimFlag
   return 1
 end
 
-on Hide me
+on hide me
   removeUpdate(me.getID())
   pArrowSpr.loc = point(-1000, -1000)
   pArrowSpr.visible = 0
@@ -60,7 +60,7 @@ on update me
   end if
   tHumanObj = getThread(#room).getComponent().getUserObject(pUserId)
   if tHumanObj = 0 then
-    return me.Hide()
+    return me.hide()
   end if
   tHumanLoc = tHumanObj.getPartLocation("hd")
   tHumanDir = tHumanObj.getDirection()
