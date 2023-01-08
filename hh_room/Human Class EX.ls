@@ -124,6 +124,9 @@ on changeFigureAndData me, tdata
     if ilk(tNewModelItem) = #propList then
       tmodel = tNewModelItem["model"]
       tColor = tNewModelItem["color"]
+      if tColor.red + tColor.green + tColor.blue > 238 * 3 then
+        tColor = rgb("EEEEEE")
+      end if
       tPart.changePartData(tmodel, tColor)
       pColors[tPartId] = tColor
     end if
