@@ -212,6 +212,36 @@ on updateLocation me
             tWallObjFound = 1
             repeat with tSpr in pSprList
               tMem = member(getmemnum(tPartProps.member))
+              tFixNegativeLoc = 0
+              if tLounge = "model_b.room" then
+                if pWallX = 4 and pWallY = 4 and pLocalX < 0 then
+                  tFixNegativeLoc = 1
+                end if
+              else
+                if tLounge = "model_f.room" then
+                  if pWallX = 2 and pWallY = 6 and pLocalX < 0 then
+                    tFixNegativeLoc = 1
+                  end if
+                  if pWallX = 6 and pWallY = 2 and pLocalX < 0 then
+                    tFixNegativeLoc = 1
+                  end if
+                else
+                  if tLounge = "model_g.room" then
+                    if pWallX = 6 and pWallY = 4 and pLocalX < 0 then
+                      tFixNegativeLoc = 1
+                    end if
+                  else
+                    if tLounge = "model_h.room" then
+                      if pWallX = 4 and pWallY = 8 and pLocalX < 0 then
+                        tFixNegativeLoc = 1
+                      end if
+                    end if
+                  end if
+                end if
+              end if
+              if tFixNegativeLoc then
+                pLocalX = 32 + pLocalX
+              end if
               tSpr.locH = tPartProps.locH - tMem.regPoint[1] + pLocalX
               tSpr.locV = tPartProps.locV - tMem.regPoint[2] + pLocalY
             end repeat

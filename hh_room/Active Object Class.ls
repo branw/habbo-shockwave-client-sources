@@ -177,7 +177,7 @@ on prepare me, tdata
   return 1
 end
 
-on relocate me
+on relocate me, tSpriteList
   return 1
 end
 
@@ -486,5 +486,5 @@ on updateLocation me
     end if
     tSpr.locZ = tScreenLocs[3] + tZ - 1
   end repeat
-  me.relocate()
+  me.relocate(pSprList)
 end

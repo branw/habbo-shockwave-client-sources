@@ -3,45 +3,45 @@ property pScore, pBoardImg
 on prepare me, tdata
   pScore = 0
   tTemp = tdata.getaProp(#stuffdata)
-  me.setScore(tTemp)
+  me.setScore(tTemp, me.pSprList)
   return 1
 end
 
-on relocate me
-  me.setScore(pScore)
+on relocate me, tSpriteList
+  me.setScore(pScore, tSpriteList)
 end
 
 on updateStuffdata me, tValue
-  me.setScore(tValue)
+  me.setScore(tValue, me.pSprList)
 end
 
-on setScore me, tScore
-  if me.pSprList.count < 4 then
+on setScore me, tScore, tSpriteList
+  if tSpriteList.count < 4 then
     return 0
   end if
   if me.pXFactor = 32 then
     tClass = "s_hockey_score"
     if me.pDirection[1] = 2 then
-      tLoc3 = me.pSprList[1].loc + [26, -100]
-      tLoc4 = me.pSprList[1].loc + [32, -103]
+      tLoc3 = tSpriteList[1].loc + [26, -100]
+      tLoc4 = tSpriteList[1].loc + [32, -103]
     else
-      tLoc3 = me.pSprList[1].loc + [-44, -105]
-      tLoc4 = me.pSprList[1].loc + [-38, -102]
+      tLoc3 = tSpriteList[1].loc + [-44, -105]
+      tLoc4 = tSpriteList[1].loc + [-38, -102]
     end if
   else
     tClass = "hockey_score"
     if me.pDirection[1] = 2 then
-      tLoc3 = me.pSprList[1].loc + [26, -100]
-      tLoc4 = me.pSprList[1].loc + [36, -105]
+      tLoc3 = tSpriteList[1].loc + [26, -100]
+      tLoc4 = tSpriteList[1].loc + [36, -105]
     else
-      tLoc3 = me.pSprList[1].loc + [-44, -105]
-      tLoc4 = me.pSprList[1].loc + [-34, -100]
+      tLoc3 = tSpriteList[1].loc + [-44, -105]
+      tLoc4 = tSpriteList[1].loc + [-34, -100]
     end if
   end if
   if tScore = "x" then
     pScore = "x"
-    me.pSprList[3].blend = 0
-    me.pSprList[4].blend = 0
+    tSpriteList[3].blend = 0
+    tSpriteList[4].blend = 0
     return 1
   end if
   pScore = integer(tScore)
@@ -58,16 +58,16 @@ on setScore me, tScore
   if length(tString) = 1 then
     tString = "0" & tString
   end if
-  me.pSprList[3].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[1]))
-  me.pSprList[4].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[2]))
-  me.pSprList[3].loc = tLoc3
-  me.pSprList[4].loc = tLoc4
-  me.pSprList[3].width = me.pSprList[3].member.width
-  me.pSprList[3].height = me.pSprList[3].member.height
-  me.pSprList[4].width = me.pSprList[4].member.width
-  me.pSprList[4].height = me.pSprList[4].member.height
-  me.pSprList[3].blend = 100
-  me.pSprList[4].blend = 100
+  tSpriteList[3].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[1]))
+  tSpriteList[4].member = member(getmemnum(tClass & "_" & me.pDirection[1] & "_" & tString.char[2]))
+  tSpriteList[3].loc = tLoc3
+  tSpriteList[4].loc = tLoc4
+  tSpriteList[3].width = tSpriteList[3].member.width
+  tSpriteList[3].height = tSpriteList[3].member.height
+  tSpriteList[4].width = tSpriteList[4].member.width
+  tSpriteList[4].height = tSpriteList[4].member.height
+  tSpriteList[3].blend = 100
+  tSpriteList[4].blend = 100
   return 1
 end
 

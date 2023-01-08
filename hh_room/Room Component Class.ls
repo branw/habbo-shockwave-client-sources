@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID
+property pInfoConnID, pRoomConnID, pRoomId, pActiveFlag, pProcessList, pChatProps, pDefaultChatMode, pSaveData, pCacheKey, pCacheFlag, pUserObjList, pActiveObjList, pPassiveObjList, pItemObjList, pBalloonId, pClassContId, pRoomPrgID, pRoomPollerID, pTrgDoorID, pAdSystemID, pFurniChooserID, pInterstitialSystemID, pSpectatorSystemID, pHeightMapData, pCurrentSlidingObjects, pPickedCryName, pCastLoaded, pEnterRoomAlert, pShadowManagerID, pPrvRoomsReady
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -35,6 +35,7 @@ on construct me
   createObject(pBalloonId, "Balloon Manager")
   createObject(pAdSystemID, "Ad Manager")
   pCastLoaded = 0
+  pPrvRoomsReady = 0
   createObject(pInterstitialSystemID, "Interstitial Manager")
   createObject(pSpectatorSystemID, "Spectator System Class")
   pCurrentSlidingObjects = [:]
@@ -148,11 +149,19 @@ on enterDoor me, tdata
     getObject(#session).set("target_door_ID", 0)
     tReConnect = 0
   end if
+  tCurrentScale = me.getRoomScale(pSaveData[#marker])
+  tCurrentRoomCasts = pSaveData[#casts]
   pRoomId = "private"
   pTrgDoorID = tdata[#id]
   pSaveData = tdata.duplicate()
   pSaveData[#type] = #private
   getObject(#session).set("lastroom", pSaveData.duplicate())
+  if me.getRoomScale(pSaveData[#marker]) = #small and tCurrentScale = #large and not pPrvRoomsReady then
+    pSaveData[#casts] = tCurrentRoomCasts
+    me.loadRoomCasts()
+    pPrvRoomsReady = 1
+    return 0
+  end if
   if tReConnect then
     return me.roomCastLoaded()
   else
@@ -603,10 +612,14 @@ on loadRoomCasts me
   end if
   tCastVarPrefix = "room.cast."
   tCastList = me.addToCastDownloadList(tCastVarPrefix, tCastList)
+  if pSaveData[#type] = #public then
+    pPrvRoomsReady = 0
+  end if
   if pSaveData[#type] = #private then
     if me.getRoomScale(pSaveData[#marker]) = #small then
       tCastVarPrefix = "room.cast.small."
       tCastList = me.addToCastDownloadList(tCastVarPrefix, tCastList)
+      pPrvRoomsReady = 1
     end if
   end if
   if tCastList.count > 0 then
@@ -620,6 +633,7 @@ on loadRoomCasts me
   end if
   if pSaveData[#casts].count < 1 then
     error(me, "Cast for room not defined:" && pRoomId, #loadRoomCasts)
+    me.getInterface().hideLoaderBar()
     executeMessage(#leaveRoom)
   end if
   tCastLoadId = startCastLoad(pSaveData[#casts], 0)
@@ -759,6 +773,7 @@ on roomConnected me, tMarker, tstate
 end
 
 on roomDisconnected me
+  pPrvRoomsReady = 0
   me.leaveRoom()
   return executeMessage(#leaveRoom)
 end

@@ -409,6 +409,7 @@ on showActualPic me, tloc
     tZ = pLoczList[i][pSavedDir + 1]
     pSprList[i].locZ = tScreenCoord[3] + pClientObj.pLocH * 1000 + tZ - 1
   end repeat
+  pClientObj.relocate(pSprList)
 end
 
 on getWallSpriteItemWithin me, tSpr
