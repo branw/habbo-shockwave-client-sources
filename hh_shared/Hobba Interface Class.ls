@@ -388,13 +388,13 @@ on initializeBanDropDown me
   tHours = getText("modtool_hours")
   tDays = getText("modtool_days")
   tVisOptions = ["2" && tHours, "4" && tHours, "12" && tHours, "24" && tHours, "2" && tDays, "3" && tDays, "7" && tDays, "14" && tDays]
-  tBanLengths = [2, 4, 12, 24, 2 * 24, 3 * 24, 7 * 24, 14 * 24]
-  if getObject(#session).get("user_rights").getOne("fuse_superban") = 0 then
-    repeat while tVisOptions.count > 4
-      tVisOptions.deleteAt(tVisOptions.count)
-      tBanLengths.deleteAt(tBanLengths.count)
-    end repeat
-  end if
+  tVisOptions.add("21" && tDays)
+  tVisOptions.add("30" && tDays)
+  tVisOptions.add("60" && tDays)
+  tVisOptions.add("365" && tDays)
+  tVisOptions.add("730" && tDays)
+  tVisOptions.add("4167" && tDays)
+  tBanLengths = [2, 4, 12, 24, 2 * 24, 3 * 24, 7 * 24, 14 * 24, 21 * 24, 30 * 24, 60 * 24, 365 * 24, 730 * 24, 100000]
   tDropDown.updateData(tVisOptions, tBanLengths, 1)
   tDropDown.setOrdering(0)
   return 1
