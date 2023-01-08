@@ -124,7 +124,7 @@ on setup me, tdata
     return error(me, "Couldn't create part lists!", #setup)
   end if
   me.resetValues(pLocX, pLocY, pLocH, pDirection, pDirection)
-  me.refresh(pLocX, pLocY, pLocH)
+  me.Refresh(pLocX, pLocY, pLocH)
   pSync = 0
 end
 
@@ -172,15 +172,15 @@ on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pDirection = tDirBody
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on Refresh me, tX, tY, tH, tDirHead, tDirBody
   me.arrangeParts()
   pChanges = 1
 end
 
 on select me
   if the doubleClick then
-    if connectionExists(getVariable("connection.info.id", #info)) then
-      getConnection(getVariable("connection.info.id", #info)).send("GETPETSTAT", [#string: pIDPrefix & pName])
+    if connectionExists(getVariable("connection.info.id", #Info)) then
+      getConnection(getVariable("connection.info.id", #Info)).send("GETPETSTAT", [#string: pIDPrefix & pName])
     end if
   end if
   return 1
@@ -303,7 +303,7 @@ on show me
   pShadowSpr.visible = 1
 end
 
-on hide me
+on Hide me
   pSprite.visible = 0
   pMatteSpr.visible = 0
   pShadowSpr.visible = 0

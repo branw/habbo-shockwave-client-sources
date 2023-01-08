@@ -60,7 +60,10 @@ on solveColorList me, tpartColors
 end
 
 on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
-  if tClass <> VOID then
+  if tMemStr = VOID then
+    tMemStr = me.solveClass(tClass, tMemStr)
+  end if
+  if getmemnum(tMemStr) = 0 then
     tMemStr = me.solveClass(tClass, tMemStr)
   end if
   if tColorListToSolve <> VOID then
