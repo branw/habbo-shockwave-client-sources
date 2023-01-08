@@ -1,7 +1,7 @@
 property pSprite, pCurrentLoc, pXStart, pXEnd, pDelayAmount, pXSpeed, pYSpeed
 
-on define me, tsprite
-  pSprite = tsprite
+on define me, tSprite
+  pSprite = tSprite
   pXStart = 730
   pXEnd = 280
   pXSpeed = 0.59999999999999998

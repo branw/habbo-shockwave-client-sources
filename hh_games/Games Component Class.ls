@@ -54,7 +54,7 @@ on openGameBoard me, tMsg
         me.openChess(pOpenGameProps)
       end if
     "BattleShip":
-      pOpenGameProps[#gameend] = 0
+      pOpenGameProps[#gameEnd] = 0
       if me.sendGameOpen() then
         me.openBattleShip(pOpenGameProps)
       end if
@@ -89,9 +89,9 @@ on processItemMessage me, tMsg
   case pOpenGameProps[#name] of
     "TicTacToe":
       if tMsg[#command] contains "BOARDDATA" then
-        pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
-        pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
-        pOpenGameProps[#gameboard] = tMsg[#Data].line[3..tMsg[#Data].line.count]
+        pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
+        pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
+        pOpenGameProps[#gameboard] = tMsg[#data].line[3..tMsg[#data].line.count]
         if pOpenGameProps[#bothTypeChosen] then
           me.getInterface().updateTicTacToe(pOpenGameProps)
         else
@@ -106,11 +106,11 @@ on processItemMessage me, tMsg
         else
           if tMsg[#command] contains "OPPONENTS" then
             me.restartTicTacToe()
-            pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
-            pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
+            pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
+            pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
             me.getInterface().selectedTypeTicTacToe(pOpenGameProps[#player1], pOpenGameProps)
             me.getInterface().selectedTypeTicTacToe(pOpenGameProps[#player2], pOpenGameProps)
-            if tMsg[#Data].line[1].length > 3 and tMsg[#Data].line[2].length > 3 then
+            if tMsg[#data].line[1].length > 3 and tMsg[#data].line[2].length > 3 then
               pOpenGameProps[#bothTypeChosen] = 1
             else
               pOpenGameProps[#bothTypeChosen] = 0
@@ -131,9 +131,9 @@ on processItemMessage me, tMsg
           if voidp(pOpenGameProps[#mySelectedType]) then
             return 0
           end if
-          pOpenGameProps[#player1] = [#type: tMsg[#Data].line[1].word[1], #name: tMsg[#Data].line[1].word[2]]
-          pOpenGameProps[#player2] = [#type: tMsg[#Data].line[2].word[1], #name: tMsg[#Data].line[2].word[2]]
-          pOpenGameProps[#gameboard] = tMsg[#Data].line[3..tMsg[#Data].line.count]
+          pOpenGameProps[#player1] = [#type: tMsg[#data].line[1].word[1], #name: tMsg[#data].line[1].word[2]]
+          pOpenGameProps[#player2] = [#type: tMsg[#data].line[2].word[1], #name: tMsg[#data].line[2].word[2]]
+          pOpenGameProps[#gameboard] = tMsg[#data].line[3..tMsg[#data].line.count]
           me.getInterface().updateChess(pOpenGameProps)
         else
           if tMsg[#command] contains "TYPERESERVED" then
@@ -142,8 +142,8 @@ on processItemMessage me, tMsg
         end if
       end if
     "BattleShip":
-      if not voidp(pOpenGameProps[#gameend]) then
-        if pOpenGameProps[#gameend] = 1 then
+      if not voidp(pOpenGameProps[#gameEnd]) then
+        if pOpenGameProps[#gameEnd] = 1 then
           tText = getText("game_bs_won", "WON!") && pOpenGameProps[#winner]
           me.getInterface().battleShipGameEnd(tText)
           return 1
@@ -153,8 +153,8 @@ on processItemMessage me, tMsg
         if voidp(pOpenGameProps[#myTurnNum]) then
           return 0
         end if
-        if not voidp(pOpenGameProps[#gameend]) then
-          if pOpenGameProps[#gameend] = 1 then
+        if not voidp(pOpenGameProps[#gameEnd]) then
+          if pOpenGameProps[#gameEnd] = 1 then
             return 0
           end if
         end if
@@ -163,7 +163,7 @@ on processItemMessage me, tMsg
             return 0
           end if
         end if
-        if tMsg[#Data].char[1] = pOpenGameProps[#myTurnNum] then
+        if tMsg[#data].char[1] = pOpenGameProps[#myTurnNum] then
           pOpenGameProps[#myturn] = 1
           me.getInterface().battleShipMyTurn()
           if not voidp(pOpenGameProps[#player1Data]) then
@@ -178,8 +178,8 @@ on processItemMessage me, tMsg
         end if
       else
         if tMsg[#command] contains "OPPONENTS" then
-          repeat with i = 1 to tMsg[#Data].line.count
-            tLine = tMsg[#Data].line[i]
+          repeat with i = 1 to tMsg[#data].line.count
+            tLine = tMsg[#data].line[i]
             if tLine.word[2] = getObject(#session).get("user_name") then
               pOpenGameProps[#myTurnNum] = tLine.word[1]
             end if
@@ -215,12 +215,12 @@ on processItemMessage me, tMsg
                   me.getInterface().battleShipShowStatusText(tText)
                 else
                   if tMsg[#command] contains "GAMEEND" then
-                    pOpenGameProps[#winner] = tMsg[#Data].word[1]
-                    pOpenGameProps[#gameend] = 1
+                    pOpenGameProps[#winner] = tMsg[#data].word[1]
+                    pOpenGameProps[#gameEnd] = 1
                   else
                     if tMsg[#command] contains "SITUATION" then
-                      tOpponent1Data = tMsg[#Data].line[2]
-                      tOpponent2Data = tMsg[#Data].line[4]
+                      tOpponent1Data = tMsg[#data].line[2]
+                      tOpponent2Data = tMsg[#data].line[4]
                       pOpenGameProps[#player1Data] = []
                       pOpenGameProps[#player2Data] = []
                       repeat with j in [1, 2]
@@ -271,13 +271,13 @@ on processItemMessage me, tMsg
         tMsg[#command] contains "YOURCARDS":
           return me.getInterface().PokerListMyCards(tMsg[#command])
         tMsg[#command] contains "OPPONENTS":
-          return me.getInterface().PokerHandleOpponents(tMsg[#Data])
+          return me.getInterface().PokerHandleOpponents(tMsg[#data])
         tMsg[#command] contains "CHANGED":
-          return me.getInterface().pokerChangeCards(tMsg[#Data])
+          return me.getInterface().pokerChangeCards(tMsg[#data])
         tMsg[#command] contains "REVEALCARDS":
-          return me.getInterface().PokerRevealCards(tMsg[#Data])
+          return me.getInterface().PokerRevealCards(tMsg[#data])
         tMsg[#command] contains "OPPONENT_LOGOUT":
-          return me.getInterface().PokerOpponentLeaves(tMsg[#Data].item[1])
+          return me.getInterface().PokerOpponentLeaves(tMsg[#data].item[1])
       end case
     otherwise:
       put ">>>>>>>>>>", tMsg
@@ -419,8 +419,8 @@ on sendBattleShipShoot me, tX, tY
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  if not voidp(pOpenGameProps[#gameend]) then
-    if pOpenGameProps[#gameend] = 1 then
+  if not voidp(pOpenGameProps[#gameEnd]) then
+    if pOpenGameProps[#gameEnd] = 1 then
       return 0
     end if
   end if

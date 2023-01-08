@@ -48,6 +48,6 @@ on showDialog me
   me.getInterface().showDialog()
 end
 
-on userID me
+on userid me
   return pUserId
 end
