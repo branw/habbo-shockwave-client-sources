@@ -62,18 +62,10 @@ on getGamestatus me
 end
 
 on startTurnManager me
-  if pTurnManagerState then
-    return 1
-  end if
-  pTurnManagerState = 1
   return me.getTurnManager().StartMinigameEngine()
 end
 
 on stopTurnManager me
-  if pTurnManagerState = 0 then
-    return 1
-  end if
-  pTurnManagerState = 0
   return me.getTurnManager().stopMinigameEngine()
 end
 
@@ -250,7 +242,7 @@ on store_gamestatus_turn me, tdata
   if not objectp(tdata) then
     return 0
   end if
-  return me.getTurnManager()._AddTurnToBuffer(tdata)
+  return me.getTurnManager().addTurnToBuffer(tdata)
 end
 
 on store_gamestart me, tdata

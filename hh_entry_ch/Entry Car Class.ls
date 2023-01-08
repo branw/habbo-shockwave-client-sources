@@ -1,12 +1,12 @@
 property pSprite, pOffset, pTurnPnt, pDirection, pWaitTime
 
-on define me, tSprite, tCounter
+on define me, tsprite, tCounter
   if tCounter mod 2 = 1 then
     tDirection = #left
   else
     tDirection = #right
   end if
-  pSprite = tSprite
+  pSprite = tsprite
   pOffset = [0, 0]
   pTurnPnt = 0
   pDirection = tDirection

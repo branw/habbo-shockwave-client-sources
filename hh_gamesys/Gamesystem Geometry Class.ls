@@ -1,4 +1,4 @@
-property pComponentToAngle
+property pVelocityTable, pComponentToAngle
 
 on direction360to8 me, tValue
   return me.validateDirection8Value(me.validateDirection360Value(tValue - 22) / 45 + 1)
@@ -42,4 +42,14 @@ on getAngleFromComponents me, tX, tY
     end if
   end if
   return me.validateDirection360Value(pComponentToAngle.getAngleFromComponents(tX, tY))
+end
+
+on GetVelocityTable me
+  if pVelocityTable = VOID then
+    pVelocityTable = createObject(#temp, getClassVariable("gamesystem.velocitytable.class"))
+    if not objectp(pVelocityTable) then
+      return error(me, "Cannot create pVelocityTable")
+    end if
+  end if
+  return pVelocityTable
 end

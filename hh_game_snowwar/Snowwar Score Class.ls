@@ -141,7 +141,6 @@ on cacheTeamScores me
       pTeamScoreCache[tTeamId] = pTeamScoreCache[tTeamId] + tScore
     end if
   end repeat
-  put "* Rebuilt team scores:" && pTeamScoreCache
   return me.renderTeamScores()
 end
 

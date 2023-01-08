@@ -59,3 +59,7 @@ end
 on SetTested me, a_bVal
   m_bTested = a_bVal
 end
+
+on GetSubTurns me
+  return m_ar_subturns
+end

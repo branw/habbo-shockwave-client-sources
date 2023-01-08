@@ -1,4 +1,4 @@
-property pObjects, pCollision, pSquareRoot, pObjectTypeIndex
+property pObjects, pObjectTypeIndex, pCollision, pSquareRoot
 
 on construct me
   pGeometry = createObject(#temp, getClassVariable("gamesystem.geometry.class"))
@@ -190,11 +190,4 @@ on dump me
     tText = tText & tObject.dump() & RETURN
   end repeat
   return tText
-end
-
-on _SendAction me, tMsg
-  if tMsg[2] = 4 then
-    me.getMessageSender().sendGameEventMessage([#integer: 4])
-  end if
-  return 1
 end
