@@ -3,14 +3,14 @@ property pState
 on construct me
   registerMessage(#enterRoom, me.getID(), #leaveEntry)
   registerMessage(#leaveRoom, me.getID(), #enterEntry)
-  registerMessage(#Initialize, me.getID(), #updateState)
+  registerMessage(#initialize, me.getID(), #updateState)
   return 1
 end
 
 on deconstruct me
   unregisterMessage(#enterRoom, me.getID())
   unregisterMessage(#leaveRoom, me.getID())
-  unregisterMessage(#Initialize, me.getID())
+  unregisterMessage(#initialize, me.getID())
   updateState(me, "reset")
   return 1
 end

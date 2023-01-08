@@ -20,7 +20,7 @@ end
 
 on define me, tProps
   pPackageID = tProps[#id]
-  pMessage = tProps[#Msg]
+  pMessage = tProps[#msg]
   me.showCard(tProps[#loc] + [0, -220])
   return 1
 end
@@ -45,7 +45,7 @@ on showCard me, tloc
   tUserRights = getObject(#session).get("user_rights")
   tUserCanOpen = getObject(#session).get("room_owner") or tUserRights.findPos("fuse_pick_up_any_furni")
   if not tUserCanOpen and tWndObj.getElement("open_package") <> 0 then
-    tWndObj.getElement("open_package").Hide()
+    tWndObj.getElement("open_package").hide()
   end if
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcCard, me.getID(), #mouseUp)
@@ -92,10 +92,10 @@ on showContent me, tdata
     tImg = member(tMemNum).image.duplicate()
   end if
   tWndObj = getWindow(pCardWndID)
-  tWndObj.getElement("card_icon").Hide()
+  tWndObj.getElement("card_icon").hide()
   tWndObj.getElement("small_img").feedImage(tImg)
   tWndObj.getElement("small_img").setProperty(#blend, 100)
-  tWndObj.getElement("open_package").Hide()
+  tWndObj.getElement("open_package").hide()
 end
 
 on eventProcCard me, tEvent, tElemID, tParam

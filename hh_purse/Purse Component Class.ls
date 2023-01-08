@@ -32,5 +32,5 @@ on hidePurse me
 end
 
 on showHidePurse me
-  return me.getInterface().showHidePurse(#Hide)
+  return me.getInterface().showHidePurse(#hide)
 end

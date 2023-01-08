@@ -21,12 +21,12 @@ on deconstruct me
   me.clearAll()
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #fullgamestatus_tiles:
       me.initBuffer()
       receiveUpdate(me.getID())
-      me.Refresh(#gamestatus_flood, tdata)
+      me.refresh(#gamestatus_flood, tdata)
     #gamereset:
       me.initBuffer()
       receiveUpdate(me.getID())

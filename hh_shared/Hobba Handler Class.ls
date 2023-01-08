@@ -14,7 +14,7 @@ on handle_cryforhelp me, tMsg
   tProps[#category] = tConn.GetIntFrom()
   tProps[#time] = tConn.GetStrFrom()
   tProps[#sender] = tConn.GetStrFrom()
-  tProps[#Msg] = replaceChunks(tConn.GetStrFrom(), "<br>", RETURN)
+  tProps[#msg] = replaceChunks(tConn.GetStrFrom(), "<br>", RETURN)
   tProps[#url_id] = tConn.GetStrFrom()
   tProps[#roomname] = tConn.GetStrFrom()
   ttype = tConn.GetIntFrom()
@@ -64,7 +64,7 @@ on handle_cry_reply me, tMsg
   tConn = tMsg.getaProp(#connection)
   tText = convertSpecialChars(tConn.GetStrFrom(), 0)
   tText = replaceChunks(tText, "<br>", RETURN)
-  executeMessage(#alert, [#title: "hobba_message_from", #Msg: tText])
+  executeMessage(#alert, [#title: "hobba_message_from", #msg: tText])
   return 1
 end
 

@@ -11,7 +11,7 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #users:
       return 1

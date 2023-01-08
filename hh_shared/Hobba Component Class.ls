@@ -40,11 +40,11 @@ on send_changeCfhType me, tCryID, tCategoryNum
   end if
   if tCategoryNum = 2 then
     tNewCategory = 1
-    executeMessage(#alert, [#Msg: "hobba_sent_to_helpers"])
+    executeMessage(#alert, [#msg: "hobba_sent_to_helpers"])
   else
     if tCategoryNum = 1 then
       tNewCategory = 2
-      executeMessage(#alert, [#Msg: "hobba_sent_to_moderators"])
+      executeMessage(#alert, [#msg: "hobba_sent_to_moderators"])
     else
       return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType)
     end if
@@ -69,7 +69,7 @@ on send_cryPick me, tCryID, tGoHelp
     tOk = tdata[#roomname].ilk = #string and tOk
     tOk = tdata[#cry_id].ilk = #string and tOk
     tOk = tdata[#type].ilk = #symbol and tOk
-    tOk = tdata[#Msg].ilk = #string and tOk
+    tOk = tdata[#msg].ilk = #string and tOk
     if not tOk then
       return error(me, "Invalid or missing data in saved help cry!", #send_cryPick)
     end if

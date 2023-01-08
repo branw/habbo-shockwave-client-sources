@@ -1,7 +1,7 @@
 property pSprite, pTurnPoint, pVertDir, pImg, pLoc, pTurnPointList, pCurrentTurnPoint, pCloudDir, pMemName, pCloudMember
 
-on define me, tSprite, tCount
-  pSprite = tSprite
+on define me, tsprite, tCount
+  pSprite = tsprite
   if memberExists("entrycloud_" & tCount) then
     pCloudMember = member(getmemnum("entrycloud_" & tCount))
   else
@@ -43,7 +43,7 @@ on initCloud me
   if pSprite.left > the stageRight - the stageLeft then
     pVertDir = -1
     pSprite.locH = -40
-    pSprite.locV = 260 - random(40)
+    pSprite.locV = 260 - random(60)
     pMemName = pMemName.char[1..pMemName.length - 1] & random(4) - 1
     pCurrentTurnPoint = 1
     pTurnPoint = pTurnPointList[1]

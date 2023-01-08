@@ -28,7 +28,7 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #gameend:
       pJoinedPlayers = []
@@ -155,7 +155,7 @@ on renderFinalScoresText me
   end if
   if me.getGameSystem().getSpectatorModeFlag() then
     repeat with tButtonID in ["bb_button_playAgn", "bb_button_leaveGam2"]
-      tWndObj.getElement(tButtonID).Hide()
+      tWndObj.getElement(tButtonID).hide()
     end repeat
   end if
   tRoomComponent = getObject(#room_component)

@@ -209,7 +209,7 @@ on getPicture me, tImg
   return tCanvas
 end
 
-on Refresh me, tX, tY, tH
+on refresh me, tX, tY, tH
   call(#defineDir, me.pPartList, me.pDirection)
   call(#defineDirMultiple, me.pPartList, me.pDirection, ["hd", "hr", "ey", "fc"])
   me.arrangeParts()

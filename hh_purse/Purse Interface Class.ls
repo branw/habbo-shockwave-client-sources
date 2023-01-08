@@ -73,13 +73,13 @@ end
 
 on hidePurse me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #Remove
+    tHideOrRemove = #remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #Remove then
+    if tHideOrRemove = #remove then
       removeWindow(pWindowTitle)
     else
-      getWindow(pWindowTitle).Hide()
+      getWindow(pWindowTitle).hide()
     end if
   end if
   if timeoutExists("flyTimer") then
@@ -136,7 +136,7 @@ on setVoucherInput me, tstate
   tWndObj = getWindow(pVoucherWindowTitle)
   if pVoucherInputState then
     tWndObj.getElement("voucher_statustext").setText(getText("purse_vouchers_entercode"))
-    tWndObj.getElement("loading_bg").Hide()
+    tWndObj.getElement("loading_bg").hide()
     tCursor = "cursor.finger"
   else
     tWndObj.getElement("voucher_statustext").setText(getText("purse_vouchers_checking"))
@@ -162,7 +162,7 @@ on showVoucherWindow me
     tWndObj.center()
     tWndObj.moveBy(80, 50)
     if not (getText("purse_vouchers_helpurl") starts "http") then
-      tWndObj.getElement("voucher_help").Hide()
+      tWndObj.getElement("voucher_help").hide()
     end if
     me.setVoucherInput(pVoucherInputState)
     if tWndObj.elementExists("voucher_code") then

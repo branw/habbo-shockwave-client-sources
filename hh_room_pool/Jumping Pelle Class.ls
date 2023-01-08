@@ -179,21 +179,21 @@ on UpdatePelle me
     tColor = pColors.getProp(f)
     if f = "bd" or f = "lh" or f = "ch" or f = "rh" then
       if jumpAction contains "jd" then
-        Dir = 0
+        dir = 0
       else
-        Dir = 2
+        dir = 2
       end if
-      tMemNum = getmemnum("sh_" & jumpAction & "_" & f & "_" & pModels.getProp(f) & "_" & Dir & "_" & jumpAnimFrame)
+      tMemNum = getmemnum("sh_" & jumpAction & "_" & f & "_" & pModels.getProp(f) & "_" & dir & "_" & jumpAnimFrame)
       if tMemNum < 0 then
         tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & 2 & "_" & 0)
       end if
     else
       if pJumpDirection = "d" or jumpAction contains "jus" and jumpAnimFrame = 2 then
-        Dir = 0
+        dir = 0
       else
-        Dir = 2
+        dir = 2
       end if
-      tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & Dir & "_0")
+      tMemNum = getmemnum("sh_" & "std" & "_" & f & "_" & pModels.getProp(f) & "_" & dir & "_0")
     end if
     if tMemNum <> 0 then
       tImage = member(tMemNum).image
