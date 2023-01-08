@@ -1,11 +1,11 @@
 on prepare me, tdata
   if tdata.count = 0 then
-    tdata = ["foo": "0"]
+    tdata = [#extra: "0"]
   end if
-  return me.updateStuffdata(tdata.getPropAt(1), tdata[1])
+  return me.updateStuffdata(tdata[#extra])
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   tCount = integer(tValue)
   if not ilk(tCount, #integer) then
     tCount = 0

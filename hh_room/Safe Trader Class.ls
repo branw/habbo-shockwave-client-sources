@@ -198,28 +198,28 @@ on createItemImg me, tProps
   if tProps[#class] contains "*" then
     tClass = tProps[#class].char[1..offset("*", tProps[#class]) - 1]
   end if
-  if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then
-    tMemStr = tProps[#class] & "_small"
-  else
-    if memberExists(tClass && tProps[#props] & "_small") then
-      tMemStr = tClass && tProps[#props] & "_small"
+  if tClass contains "post.it" then
+    tCount = integer(value(tProps[#props]) / (20.0 / 6.0))
+    if tCount > 6 then
+      tCount = 6
+    end if
+    if tCount < 1 then
+      tCount = 1
+    end if
+    if memberExists(tClass & "_" & tCount & "_" & "small") then
+      tMemStr = tClass & "_" & tCount & "_" & "small"
     else
-      if memberExists("rightwall" && tClass && tProps[#props]) then
-        tMemStr = "rightwall" && tClass && tProps[#props]
+      error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+    end if
+  else
+    if memberExists(tProps[#class] & "_" & tProps[#props] & "_small") then
+      tMemStr = tProps[#class] & "_" & tProps[#props] & "_small"
+    else
+      if memberExists(tClass && tProps[#props] & "_small") then
+        tMemStr = tClass && tProps[#props] & "_small"
       else
-        if tClass contains "post.it" then
-          tCount = integer(value(tProps[#props]) / (20.0 / 6.0))
-          if tCount > 6 then
-            tCount = 6
-          end if
-          if tCount < 1 then
-            tCount = 1
-          end if
-          if memberExists(tClass & "_" & tCount & "_" & "small") then
-            tMemStr = tClass & "_" & tCount & "_" & "small"
-          else
-            error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
-          end if
+        if memberExists("rightwall" && tClass && tProps[#props]) then
+          tMemStr = "rightwall" && tClass && tProps[#props]
         else
           error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
         end if

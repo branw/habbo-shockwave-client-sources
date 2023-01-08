@@ -97,6 +97,8 @@ on prepare me
   if pPercent = tPercent then
     return 
   end if
+  pBuffer.fill(pBarRect, pBgColor)
+  pBuffer.draw(pBarRect, [#color: pcolor, #shapeType: #rect])
   tRect = rect(pOffRect[1], pOffRect[2], pPercent * pOffRect.width + pOffRect[1], pOffRect[4])
   pBuffer.fill(tRect, pcolor)
   pDrawPoint = pPercent * pOffRect.width

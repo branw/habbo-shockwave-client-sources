@@ -119,20 +119,20 @@ on spriteExists me, tid
 end
 
 on moveSprBy me, tid, tX, tY
-  tSprite = pActSprList[tid]
-  if voidp(tSprite) then
+  tsprite = pActSprList[tid]
+  if voidp(tsprite) then
     return error(me, "Sprite not found:" && tid, #moveSprBy)
   end if
-  tSprite.loc = tSprite.loc + [tX, tY]
+  tsprite.loc = tsprite.loc + [tX, tY]
   return me.refresh()
 end
 
 on moveSprTo me, tid, tX, tY
-  tSprite = pActSprList[tid]
-  if voidp(tSprite) then
+  tsprite = pActSprList[tid]
+  if voidp(tsprite) then
     return error(me, "Sprite not found:" && tid, #moveSprTo)
   end if
-  tSprite.loc = point(tX, tY)
+  tsprite.loc = point(tX, tY)
   return me.refresh()
 end
 

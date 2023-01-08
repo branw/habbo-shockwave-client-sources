@@ -1,8 +1,8 @@
 property pStartPointX, pSprite, pAnimFrame, pSpeed
 
-on prepare me, tSprite, tStartPointX
+on prepare me, tsprite, tStartPointX
   pAnimFrame = 0
-  pSprite = tSprite
+  pSprite = tsprite
   pStartPointX = tStartPointX
   tRand = random(50) - 25
   pSprite.locH = tStartPointX + tRand

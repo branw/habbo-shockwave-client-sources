@@ -1,6 +1,6 @@
 property pElement, pWinTop, pWinBottom, pWinLeft, pWinRight, pFlyMember, pWayCounter, pMyDir, pMyNum
 
-on define me, tSprite, tCount
+on define me, tsprite, tCount
   tWndObj = getWindow(getText("win_purse", "Habbo Purse"))
   pElement = tWndObj.getElement("fly_" & tCount)
   pElement.setProperty(#visible, 1)

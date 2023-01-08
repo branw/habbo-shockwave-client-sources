@@ -7,7 +7,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   pAnimFrame = 1
   pActive = 1
 end
@@ -77,7 +77,6 @@ on select me
   tloc = tUserObj.getProperty(#loc)
   tLocX = tloc[1]
   tLocY = tloc[2]
-  pUserClicked = 1
   case me.pDirection[1] of
     4:
       if me.pLocX = tLocX and me.pLocY - tLocY = -1 then
@@ -119,11 +118,12 @@ on setAnimation me
   if pActive = 1 then
     return 1
   end if
+  pUserClicked = 1
   tConnection = getThread(#room).getComponent().getRoomConnection()
   if tConnection = 0 then
     return 0
   end if
-  tConnection.send("SETSTUFFDATA", me.getID() & "/" & "ACTIVATE" & "/" & "TRUE")
+  getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "TRUE"])
   tConnection.send("LOOKTO", me.pLocX && me.pLocY)
 end
 

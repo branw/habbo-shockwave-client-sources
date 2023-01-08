@@ -2,12 +2,12 @@ property pActive, pSwitch, pSync, pKill, pAnimFrame
 
 on prepare me, tdata
   if me.pSprList.count < 7 then
-    return 
+    return 0
   end if
   repeat with tNum = 6 to 7
     removeEventBroker(me.pSprList[tNum].spriteNum)
   end repeat
-  if tdata["SWITCHON"] = "ON" then
+  if tdata[#stuffdata] = "ON" then
     me.setOn()
   else
     me.setOff()
@@ -16,7 +16,7 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "ON" then
     me.setOn()
   else
@@ -27,7 +27,7 @@ end
 on update me
   if pActive then
     if me.pSprList.count < 7 then
-      return 
+      return 0
     end if
     if not pKill then
       pSync = not pSync
@@ -93,7 +93,7 @@ on select me
     else
       tStr = "ON"
     end if
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "SWITCHON" & "/" & tStr)
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: tStr])
   end if
   return 1
 end

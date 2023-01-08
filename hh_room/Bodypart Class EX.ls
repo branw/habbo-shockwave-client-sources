@@ -1,4 +1,4 @@
-property ancestor, pPart, pmodel, pDirection, pDrawProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pCacheImage, pCacheRectA, pCacheRectB, pAnimation, pAnimFrame, pTotalFrame
+property ancestor, pPart, pmodel, pDirection, pDrawProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pLastLocFix, pCacheImage, pCacheRectA, pCacheRectB, pFlipH, pAnimation, pAnimFrame, pTotalFrame
 
 on deconsturct me
   ancestor = VOID
@@ -22,6 +22,8 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
   pMemString = EMPTY
   pXFix = 0
   pYFix = 0
+  pFlipH = 0
+  pLastLocFix = point(1000, 1000)
   pAnimation = 0
   pAnimFrame = 1
   pTotalFrame = 1
@@ -37,6 +39,35 @@ on update me
   pYFix = 0
   if me.pAnimating and me.checkPartNotCarrying() then
     tMemString = me.animate()
+    case me.pDirection of
+      0:
+        pYFix = pYFix + pXFix / 2
+        pXFix = pXFix / 2
+      1:
+        pYFix = pYFix + pXFix
+        pXFix = 0
+      2:
+        pYFix = pYFix - pXFix / 2
+        pXFix = pXFix / 2
+      4:
+        pYFix = pYFix + pXFix / 2
+        pXFix = -pXFix / 2
+      5:
+        pYFix = pYFix - pXFix
+        pXFix = 0
+      6:
+        pYFix = pYFix - pXFix / 2
+        pXFix = -pXFix / 2
+      7:
+        pXFix = -pXFix
+    end case
+    if me.pPeopleSize = "sh" then
+      tSizeMultiplier = 0.69999999999999996
+    else
+      tSizeMultiplier = 1
+    end if
+    pXFix = pXFix * tSizeMultiplier
+    pYFix = pYFix * tSizeMultiplier
   else
     case pPart of
       "bd", "lg", "sh":
@@ -60,8 +91,10 @@ on update me
             tAnimCntr = me.pAnimCounter mod 2
           else
             if (["crr", "drk", "ohd"]).getPos(tAction) <> 0 then
-              pXFix = -40
-              tPart = "r" & pPart.char[2]
+              if pDirection >= 4 then
+                pXFix = -40
+                tPart = "r" & pPart.char[2]
+              end if
               tdir = pDirection
             end if
           end if
@@ -128,22 +161,36 @@ on update me
         tdir = pDirection
     end case
     tMemString = me.pPeopleSize & "_" & tAction & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & tAnimCntr
+    pFlipH = 0
   end if
-  if pMemString <> tMemString then
+  tLocFixChanged = pLastLocFix <> point(pXFix, pYFix)
+  pLastLocFix = point(pXFix, pYFix)
+  if pMemString <> tMemString or tLocFixChanged then
+    pMemString = tMemString
     tMemNum = getmemnum(tMemString)
     if tMemNum > 0 then
-      pMemString = tMemString
       tmember = member(tMemNum)
       tRegPnt = tmember.regPoint
       tX = -tRegPnt[1]
       tY = me.pBuffer.rect.height - tRegPnt[2] - 10
       me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
       pCacheImage = tmember.image
-      pCacheRectA = rect(tX, tY, tX + pCacheImage.width, tY + pCacheImage.height) + [pXFix, pYFix, pXFix, pYFix] + rect(me.pLocFix, me.pLocFix)
+      tLocFix = me.pLocFix
+      if pFlipH then
+        pCacheImage = me.flipHorizontal(pCacheImage)
+        tX = -tX - tmember.width + me.pBuffer.width
+        tLocFix = point(-me.pLocFix[1], me.pLocFix[2])
+        if me.pPeopleSize = "sh" then
+          tX = tX - 2
+        end if
+      end if
+      pCacheRectA = rect(tX, tY, tX + pCacheImage.width, tY + pCacheImage.height) + [pXFix, pYFix, pXFix, pYFix] + rect(tLocFix, tLocFix)
       pCacheRectB = pCacheImage.rect
       pDrawProps[#maskImage] = pCacheImage.createMatte()
       me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
     else
+      me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
+      pCacheRectA = rect(0, 0, 0, 0)
       return 
     end if
   end if
@@ -323,6 +370,14 @@ on reset me
   pActionRh = VOID
 end
 
+on skipAnimationFrame me
+  pAnimFrame = pAnimFrame + 1
+  if pAnimFrame > pTotalFrame then
+    pAnimFrame = 1
+  end if
+  return 1
+end
+
 on setAnimation me, tPart, tAnim
   if tPart <> pPart then
     return 
@@ -339,16 +394,32 @@ on remAnimation me
 end
 
 on animate me
+  if pPart = "ri" then
+    if pCacheRectA.width > 0 then
+      me.pUpdateRect = union(me.pUpdateRect, pCacheRectA)
+      pCacheRectA = rect(0, 0, 0, 0)
+    end if
+    return EMPTY
+  end if
   if not pAnimation then
     return EMPTY
   end if
   tdir = pDirection + pAnimation[#OffD][pAnimFrame]
   if tdir > 7 then
-    tdir = tdir - tdir mod 7
+    tdir = min(tdir - 8, 7)
   else
     if tdir < 0 then
-      tdir = 7 + tdir + 1
+      tdir = max(7 + tdir + 1, 0)
     end if
+  end if
+  if (["hd", "fc", "ey", "hr"]).getOne(pPart) <> 0 then
+    if tdir = 4 and pDirection = 3 or tdir = 0 and pDirection = 7 then
+      pFlipH = 1
+    else
+      pFlipH = 0
+    end if
+  else
+    pFlipH = 0
   end if
   tdir = me.pFlipList[tdir + 1]
   pXFix = pAnimation[#OffX][pAnimFrame]
@@ -359,4 +430,11 @@ on animate me
     pAnimFrame = 1
   end if
   return tMemName
+end
+
+on flipHorizontal me, tImg
+  tImage = image(tImg.width, tImg.height, tImg.depth)
+  tQuad = [point(tImg.width, 0), point(0, 0), point(0, tImg.height), point(tImg.width, tImg.height)]
+  tImage.copyPixels(tImg, tQuad, tImg.rect)
+  return tImage
 end

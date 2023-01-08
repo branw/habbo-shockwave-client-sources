@@ -7,6 +7,7 @@ on construct me
   pCommandsPntr = getStructVariable("struct.pointer")
   pListenersPntr = getStructVariable("struct.pointer")
   me.setLogMode(getIntVariable("connection.log.level", 0))
+  pMsgStruct = getStructVariable("struct.message")
   return 1
 end
 
@@ -149,6 +150,7 @@ on xtraMsgHandler me
   tNewMsg = pXtra.getNetMessage()
   tErrCode = tNewMsg.getaProp(#errorCode)
   tContent = tNewMsg.getaProp(#content)
+  tSubject = tNewMsg.getaProp(#subject)
   if tErrCode <> 0 then
     me.disconnect()
     return 0
@@ -160,7 +162,9 @@ on xtraMsgHandler me
     #string:
       me.forwardMsg(tNewMsg.subject & RETURN & tContent)
     #void:
-      error(me, "Message content is VOID!!!", #xtraMsgHandler)
+      if tSubject <> "ConnectToNetServer" then
+        error(me, "Message content is VOID!!!", #xtraMsgHandler)
+      end if
     otherwise:
       if voidp(pBinDataCallback.method) then
         return error(me, "No callback registered!", #xtraMsgHandler)

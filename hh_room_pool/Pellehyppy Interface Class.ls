@@ -16,39 +16,8 @@ on deconstruct me
   if objectExists("Figure_System_Pool") then
     removeObject("Figure_System_Pool")
   end if
-  me.hideTicketWnd()
   me.closeUimaKoppi()
   me.hideRoomBar()
-  return 1
-end
-
-on showTicketWnd me
-  tWindowTitle = getText("ph_tickets_title")
-  if windowExists(tWindowTitle) then
-    return removeWindow(tWindowTitle)
-  end if
-  createWindow(tWindowTitle, "habbo_basic.window")
-  tWndObj = getWindow(tWindowTitle)
-  tWndObj.merge("habbo_ph_tickets.window")
-  tWndObj.center()
-  tWndObj.registerClient(me.getID())
-  tWndObj.registerProcedure(#eventProcTicketsWindow, me.getID(), #mouseUp)
-  tWndObj.registerProcedure(#eventProcTicketsWindow, me.getID(), #keyDown)
-  tTickets = me.getComponent().getNumOfPhTickets()
-  tText = replaceChunks(getText("ph_tickets_txt"), "\x1", tTickets)
-  tWndObj.getElement("ph_tickets_number").setText(string(tTickets))
-  tWndObj.getElement("ph_tickets_txt").setText(string(tText))
-  tElem = tWndObj.getElement("ph_tickets_namefield")
-  if tElem <> 0 then
-    tElem.setText(getObject(#session).get("user_name"))
-  end if
-end
-
-on hideTicketWnd me
-  tWindowTitle = getText("ph_tickets_title")
-  if windowExists(tWindowTitle) then
-    return removeWindow(tWindowTitle)
-  end if
   return 1
 end
 
@@ -435,19 +404,6 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
         end if
       end if
     end if
-  end if
-end
-
-on eventProcTicketsWindow me, tEvent, tSprID, tParam, tWndID
-  if tEvent = #mouseUp then
-    case tSprID of
-      "close":
-        return removeWindow(tWndID)
-      "ph_tickets_buy_button":
-        tName = getWindow(tWndID).getElement("ph_tickets_namefield").getText()
-        me.getComponent().buyPoolTickets(tName)
-        return removeWindow(tWndID)
-    end case
   end if
 end
 

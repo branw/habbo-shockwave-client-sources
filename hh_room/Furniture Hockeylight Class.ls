@@ -8,10 +8,11 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
+on updateStuffdata me, tValue
   if tValue = "I" then
     me.setOn()
   end if
+  return 1
 end
 
 on update me
@@ -54,7 +55,7 @@ end
 
 on select me
   if the doubleClick then
-    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", me.getID() & "/" & "ON" & "/" & "I")
+    getThread(#room).getComponent().getRoomConnection().send("SETSTUFFDATA", [#string: string(me.getID()), #string: "I"])
   end if
   return 1
 end

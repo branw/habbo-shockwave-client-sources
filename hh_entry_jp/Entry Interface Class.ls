@@ -302,6 +302,9 @@ on updateCreditCount me, tCount
 end
 
 on updateClubStatus me, tStatus
+  if tStatus.ilk <> #propList then
+    return 0
+  end if
   tWndObj = getWindow(pBottomBar)
   if tWndObj <> 0 then
     if not tWndObj.elementExists("club_bottombar_text1") then
@@ -310,23 +313,20 @@ on updateClubStatus me, tStatus
     if not tWndObj.elementExists("club_bottombar_text2") then
       return 0
     end if
-    if listp(tStatus) then
-      case tStatus[#status] of
-        "active":
-          tStr = getText("club_habbo.bottombar.link.member")
-          if value(tStatus[#daysLeft]) = VOID then
-            tStr = getText("club_habbo.bottombar.link.member.continuous")
-          end if
-          tStr = replaceChunks(tStr, "%days%", tStatus[#daysLeft])
-          tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.member"))
-          tWndObj.getElement("club_bottombar_text2").setText(tStr)
-        "inactive":
-          tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.notmember"))
-          tWndObj.getElement("club_bottombar_text2").setText(getText("club_habbo.bottombar.link.notmember"))
-      end case
+    tDays = tStatus[#daysLeft] + tStatus[#PrepaidPeriods] * 31
+    if tStatus[#PrepaidPeriods] < 0 then
+      tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.member"))
+      tWndObj.getElement("club_bottombar_text2").setText(getText("club_member"))
     else
-      tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.notmember"))
-      tWndObj.getElement("club_bottombar_text2").setText(getText("club_habbo.bottombar.link.notmember"))
+      if tDays = 0 then
+        tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.notmember"))
+        tWndObj.getElement("club_bottombar_text2").setText(getText("club_habbo.bottombar.link.notmember"))
+      else
+        tStr = getText("club_habbo.bottombar.link.member")
+        tStr = replaceChunks(tStr, "%days%", tDays)
+        tWndObj.getElement("club_bottombar_text1").setText(getText("club_habbo.bottombar.text.member"))
+        tWndObj.getElement("club_bottombar_text2").setText(tStr)
+      end if
     end if
   end if
   return 1

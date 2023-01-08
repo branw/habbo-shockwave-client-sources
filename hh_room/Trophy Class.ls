@@ -9,9 +9,10 @@ on prepare me, tdata
   if tdata.ilk <> #propList then
     return error(me, "Incorrect data", #prepare)
   end if
-  if voidp(tdata["CUSTOM_VARIABLE"]) then
+  if voidp(tdata[#stuffdata]) then
+    return 1
   else
-    tTemp = tdata["CUSTOM_VARIABLE"]
+    tTemp = tdata[#stuffdata]
     tDelim = the itemDelimiter
     the itemDelimiter = TAB
     if tTemp.item.count > 2 then
@@ -24,7 +25,10 @@ on prepare me, tdata
         pName = tTemp.item[1]
         pDate = tTemp.item[2]
       else
-        return error(me, "Name and date missing", #prepare)
+        pName = EMPTY
+        pDate = EMPTY
+        pMsg = EMPTY
+        error(me, "Name and date missing", #prepare)
       end if
     end if
     the itemDelimiter = tDelim

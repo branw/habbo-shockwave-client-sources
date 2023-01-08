@@ -1,4 +1,4 @@
-property ancestor, pPart, pmodel, pDirection, pDrawProps, pSwimProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pCacheImage, pCacheRectA, pCacheRectB, pAnimation, pAnimFrame, pTotalFrame
+property ancestor, pPart, pmodel, pDirection, pDrawProps, pSwimProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pLastLocFix, pCacheImage, pCacheRectA, pCacheRectB, pAnimation, pAnimFrame, pTotalFrame
 
 on deconsturct me
   ancestor = VOID
@@ -23,6 +23,7 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
   pMemString = EMPTY
   pXFix = 0
   pYFix = 0
+  pLastLocFix = point(1000, 1000)
   pAnimation = 0
   pAnimFrame = 1
   pTotalFrame = 1
@@ -38,6 +39,36 @@ on update me
   pYFix = 0
   if me.pAnimating then
     tMemString = me.animate()
+    tAncestorDir = me.pDirection
+    if me.pPeopleSize = "sh" then
+      tSizeMultiplier = 0.69999999999999996
+    else
+      tSizeMultiplier = 1
+    end if
+    case tAncestorDir of
+      0:
+        pYFix = pYFix + pXFix / 2
+        pXFix = pXFix / 2
+      1:
+        pYFix = pYFix + pXFix
+        pXFix = 0
+      2:
+        pYFix = pYFix - pXFix / 2
+        pXFix = pXFix / 2
+      4:
+        pYFix = pYFix + pXFix / 2
+        pXFix = -pXFix / 2
+      5:
+        pYFix = pYFix - pXFix
+        pXFix = 0
+      6:
+        pYFix = pYFix - pXFix / 2
+        pXFix = -pXFix / 2
+      7:
+        pXFix = -pXFix
+    end case
+    pXFix = pXFix * tSizeMultiplier
+    pYFix = pYFix * tSizeMultiplier
   else
     case pPart of
       "bd", "lg", "sh":
@@ -127,7 +158,9 @@ on update me
     end case
     tMemString = me.pPeopleSize & "_" & tAction & "_" & tPart & "_" & pmodel & "_" & tdir & "_" & tAnimCounter
   end if
-  if pMemString <> tMemString then
+  tLocFixChanged = pLastLocFix <> point(pXFix, pYFix)
+  pLastLocFix = point(pXFix, pYFix)
+  if pMemString <> tMemString or tLocFixChanged then
     tMemNum = getmemnum(tMemString)
     if tMemNum > 0 then
       pMemString = tMemString

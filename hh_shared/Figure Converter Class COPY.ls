@@ -189,7 +189,7 @@ on generateFigureDataToOldServerMode me, tFigure, tsex, tCheckValidParts
         end if
         tColor = string(tColor)
         if tColor.item.count < 3 then
-          put "VIKAA SILMISS€"
+          put "VIKAA SILMISSÄ"
         else
           tR = value(tColor.item[1].char[5..length(tColor.item[1])])
           tG = value(tColor.item[2])

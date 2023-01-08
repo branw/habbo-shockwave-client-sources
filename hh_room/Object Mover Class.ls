@@ -345,7 +345,7 @@ on cancelMove me
       end if
       tObj.moveTo(tLocX, tLocY, tLocH)
     "placeActive", "placeItem":
-      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "new")
+      getThread(#room).getComponent().getRoomConnection().send("GETSTRIP", "update")
   end case
 end
 

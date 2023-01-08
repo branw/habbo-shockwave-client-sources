@@ -147,7 +147,7 @@ on eventProcCameraMouseDown me, tEvent, tSprID, tParam
       if pmode <> #live then
         return 
       end if
-      getConnection(getVariable("connection.room.id")).send("USEITEM", "cam" & TAB & "1500")
+      getConnection(getVariable("connection.room.id")).send("USEITEM", "20" & TAB & "1500")
       pZoomLevel = 1
       tWndObj.getElement("cam_display").setProperty(#visible, 0)
       tWndObj.getElement("cam_display_noise_horizontal").setProperty(#visible, 0)

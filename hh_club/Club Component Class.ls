@@ -10,10 +10,11 @@ on deconstruct me
   return 1
 end
 
-on setStatus me, tStatus
+on setStatus me, tStatus, tResponseFlag
+  tOldClubStatus = pClubStatus
   pClubStatus = tStatus
   getObject(#session).set("club_status", tStatus)
-  me.getInterface().updateClubStatus(tStatus)
+  me.getInterface().updateClubStatus(tStatus, tResponseFlag, tOldClubStatus)
   executeMessage(#updateClubStatus, tStatus)
   return 1
 end
@@ -26,19 +27,12 @@ on getStatus me
   end if
 end
 
-on subscribe me, tDays
+on subscribe me, tChosenLength
   if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send("SCR_SUBSCRIBE", "club_habbo 0" && tDays)
+    tList = [#string: "club_habbo", #integer: tChosenLength]
+    return getConnection(getVariable("connection.info.id")).send("SCR_BUY", tList)
   else
     return error(me, "Couldn't find connection:" && getVariable("connection.info.id"), #subscribe)
-  end if
-end
-
-on extendSubscription me, tDays
-  if connectionExists(getVariable("connection.info.id")) then
-    return getConnection(getVariable("connection.info.id")).send("SCR_EXTSCR", "club_habbo" && tDays)
-  else
-    return error(me, "Couldn't find connection:" && getVariable("connection.info.id"), #extendSubscription)
   end if
 end
 

@@ -3,9 +3,12 @@ property pActive, pValue, pAnimStart, pChanges
 on prepare me, tdata
   pChanges = 1
   pAnimStart = 0
-  if not voidp(tdata["VALUE"]) then
-    pValue = tdata["VALUE"]
+  if not voidp(tdata[#stuffdata]) then
+    pValue = tdata[#stuffdata]
   else
+    pValue = 0
+  end if
+  if pValue > 6 then
     pValue = 0
   end if
   pActive = integer(pValue) > 0
@@ -68,8 +71,7 @@ on update me
   if pActive then
     tSprite1 = me.pSprList[2]
     tSprite2 = me.pSprList[3]
-    tMember1 = member(getmemnum("edicehc_c_0_1_1_0_1"))
-    tMember2 = tSprite2.member
+    tMember2 = member(getmemnum("edicehc_c_0_1_1_0_1"))
     if the milliSeconds - pAnimStart < 2000 or random(100) = 2 and pValue <> 0 then
       if tSprite1.castNum = getmemnum("edicehc_b_0_1_1_0_7") then
         tMember1 = member(getmemnum("edicehc_b_0_1_1_0_0"))

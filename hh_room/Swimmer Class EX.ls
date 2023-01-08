@@ -59,7 +59,7 @@ on isSwimming me
   return pSwim
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on resetValues me, tX, tY, tH, tDirHead, tDirBody
   me.pMoving = 0
   me.pDancing = 0
   me.pTalking = 0
@@ -102,10 +102,14 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.pLocY = tY
   me.pLocH = tH
   me.pRestingHeight = 0.0
-  me.arrangeParts()
   if me.pExtraObjs.count > 0 then
     call(#refresh, me.pExtraObjs)
   end if
+  return 1
+end
+
+on refresh me, tX, tY, tH
+  me.arrangeParts()
   me.pSync = 0
   me.pChanges = 1
 end
@@ -279,7 +283,7 @@ on prepare me
     me.pChanges = 1
   end if
   if me.pDancing then
-    me.pLocFix = point(0, 1)
+    me.pLocFix = point(0, 2)
     me.pAnimating = 1
     me.pChanges = 1
   end if

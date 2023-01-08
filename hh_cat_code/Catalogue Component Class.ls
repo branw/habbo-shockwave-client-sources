@@ -99,7 +99,7 @@ on purchaseProduct me, tGiftProps
     end if
     if not voidp(tGiftProps["gift_msg"]) then
       tGiftMsg = tGiftProps["gift_msg"]
-      tGiftMsg = getStringServices().convertSpecialChars(tGiftMsg, 1)
+      tGiftMsg = convertSpecialChars(tGiftMsg, 1)
       tGift = tGift & tGiftMsg & RETURN
     else
       tGift = EMPTY
@@ -113,7 +113,7 @@ on purchaseProduct me, tGiftProps
   tOrderStr = tOrderStr & me.getLanguage() & RETURN
   tOrderStr = tOrderStr & pProductOrderData["purchaseCode"] & RETURN
   tExtra = pProductOrderData["extra_parm"]
-  tExtra = getStringServices().convertSpecialChars(tExtra, 1)
+  tExtra = convertSpecialChars(tExtra, 1)
   tOrderStr = tOrderStr & tExtra & RETURN
   tOrderStr = tOrderStr & tGift
   if not connectionExists(getVariable("connection.info.id")) then
@@ -166,7 +166,7 @@ on purchaseReady me, tStatus, tMsg
     "OK":
       me.getInterface().showPurchaseOk()
     "NOBALANCE":
-      error(me, "User out of cash!", #purchaseReady)
+      me.getInterface().showNoBalance(VOID, 1)
     "ERROR":
       error(me, "Purchase error:" && tMsg, #purchaseReady)
     otherwise:

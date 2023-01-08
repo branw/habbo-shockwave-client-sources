@@ -10,6 +10,14 @@ on handle_ok me, tMsg
   tMsg.connection.send("MESSENGER_INIT")
 end
 
+on handle_buddyreqs_purged me
+  return me.getComponent().receive_purgeAllBuddyRequests()
+end
+
+on handle_buddylimit_reached me
+  return me.getInterface().openBuddyMassremoveWindow()
+end
+
 on handle_messengerready me, tMsg
   me.getComponent().receive_MessengerReady("MESSENGERREADY")
 end
@@ -45,7 +53,9 @@ on handle_buddylist me, tMsg
       else
         tProps[#unit] = tUnit
       end if
-      tProps[#last_access_time] = tMsg.content.line[i + 1].item[2]
+      tLastAccess = tMsg.content.line[i + 1].item[2]
+      tLastAccess = chars(tLastAccess, 1, tLastAccess.length - 3)
+      tProps[#last_access_time] = tLastAccess
       the itemDelimiter = ","
       if length(tUnit) > 2 then
         tMessage.online.add(tLine.word[2])
@@ -84,8 +94,16 @@ on handle_buddylist me, tMsg
   end case
 end
 
+on handle_buddylist_limits me, tMsg
+  tUserLimit = tMsg.connection.GetIntFrom()
+  tNormalLimit = tMsg.connection.GetIntFrom()
+  tClubLimit = tMsg.connection.GetIntFrom()
+  me.getInterface().setBuddyListLimits(tUserLimit, tNormalLimit, tClubLimit)
+  return 1
+end
+
 on handle_remove_buddy me, tMsg
-  me.getComponent().receive_RemoveBuddy(tMsg.content)
+  me.getComponent().receive_RemoveBuddy(tMsg)
 end
 
 on handle_messenger_msg me, tMsg
@@ -176,6 +194,9 @@ on regMsgList me, tBool
   tMsgs.setaProp(137, #handle_buddylist)
   tMsgs.setaProp(138, #handle_remove_buddy)
   tMsgs.setaProp(147, #handle_nosuchuser)
+  tMsgs.setaProp(260, #handle_buddylist_limits)
+  tMsgs.setaProp(261, #handle_buddylimit_reached)
+  tMsgs.setaProp(262, #handle_buddyreqs_purged)
   tCmds = [:]
   tCmds.setaProp("MESSENGER_INIT", 12)
   tCmds.setaProp("MESSENGER_SENDUPDATE", 15)
@@ -190,6 +211,8 @@ on regMsgList me, tBool
   tCmds.setaProp("MESSENGER_REQUESTBUDDY", 39)
   tCmds.setaProp("MESSENGER_REMOVEBUDDY", 40)
   tCmds.setaProp("FINDUSER", 41)
+  tCmds.setaProp("MESSENGER_PURGEBUDDYREQS", 180)
+  tCmds.setaProp("MESSENGER_GETMESSAGES", 191)
   if tBool then
     registerListener(getVariable("connection.info.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.info.id"), me.getID(), tCmds)

@@ -1,15 +1,19 @@
-property pUpdateFrame, pActive, pLastFrm, pTimer
+property pTimer, pUpdateFrame, pActive, pLastFrm
 
 on prepare me, tdata
   if tdata.count = 0 then
-    tdata = ["p": "0"]
+    tdata = [#runtimedata: "0"]
   end if
-  me.updateStuffdata("p", tdata[1])
+  me.updateRuntimeData(tdata[#runtimedata])
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
-  if integer(tValue) = 1 then
+on updateStuffdata me, tValue
+  return 1
+end
+
+on updateRuntimeData me, tValue
+  if tValue = "p/1/" then
     pUpdateFrame = 0
     pActive = 1
     pTimer = the milliSeconds
@@ -45,7 +49,7 @@ on update me
         me.pSprList[i].height = tmember.height
       end repeat
       if the milliSeconds - pTimer > 20000 then
-        me.updateStuffdata(0)
+        getConnection(#info).send("SETSTUFFDATA", [#string: me.getID(), #string: "0"])
       end if
     end if
   end if

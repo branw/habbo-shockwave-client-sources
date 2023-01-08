@@ -38,7 +38,7 @@ on close me
       return 0
     end if
     tStickieText = tWindow.getElement("stickies_text_field").getText()
-    tStickieText = getStringServices().convertSpecialChars(tStickieText, 1)
+    tStickieText = convertSpecialChars(tStickieText, 1)
     tdata = tColorHex.char[2..length(tColorHex)] && tStickieText
     if pChanged = 1 then
       getThread(#room).getComponent().getRoomConnection().send("SETITEMDATA", pActivePostItId & "/" & tdata)

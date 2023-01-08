@@ -4,9 +4,9 @@ on construct me
   pClouds = [:]
   repeat with f = 1 to 4
     pClouds.addProp("pilvi" & f, createObject(#temp, "Pelle Cloud Class"))
-    tSprite = getVisualizer(#pooltower).getSprById("pilvi" & f)
+    tsprite = getVisualizer(#pooltower).getSprById("pilvi" & f)
     tStartPointX = [711, 888, 515, 318][f]
-    pClouds["pilvi" & f].prepare(tSprite, tStartPointX)
+    pClouds["pilvi" & f].prepare(tsprite, tStartPointX)
   end repeat
   return receivePrepare(me.getID())
 end

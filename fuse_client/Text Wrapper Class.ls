@@ -198,6 +198,9 @@ on createImgFromTxt me
   if me.pimage = VOID then
     return 0
   end if
+  if pTextMem = VOID then
+    return 0
+  end if
   if pNeedFill then
     me.pimage.fill(me.pimage.rect, me.pFontData[#bgColor])
   end if

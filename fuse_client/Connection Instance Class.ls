@@ -416,5 +416,7 @@ on log me, tMsg
       if ilk(pLogfield, #member) then
         put RETURN & "[Connection" && me.getID() & "] :" && tMsg after pLogfield
       end if
+    3:
+      executeMessage(#logdata, tMsg)
   end case
 end

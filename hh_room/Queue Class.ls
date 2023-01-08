@@ -5,7 +5,7 @@ on prepare me, tdata
   pMaxSkipFrames = 1
   pAnimFrame = 0
   pFrameCounter = 0
-  tstate = tdata["Q_ANIM_ST"]
+  tstate = tdata[#extra]
   if not voidp(tstate) then
     pState = tstate
   else
@@ -20,16 +20,14 @@ on prepare me, tdata
   return 1
 end
 
-on updateStuffdata me, tProp, tValue
-  if not (voidp(tProp) or voidp(tValue)) then
-    case tProp of
-      "state":
-        pState = tValue
-      "animate":
-        pAnimate = 1
-        pAnimStartTime = the milliSeconds
-    end case
-  end if
+on updateStuffdata me, tValue
+  pState = tValue
+end
+
+on setAnimation me, tValue
+  pAnimate = 1
+  pAnimStartTime = the milliSeconds
+  return 1
 end
 
 on update me

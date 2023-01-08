@@ -2,7 +2,7 @@ property pMessage, pCardObj
 
 on prepare me, tdata
   pCardObj = "PackageCardObj"
-  tdata = tdata["CUSTOM_VARIABLE"]
+  tdata = tdata[#stuffdata]
   if not voidp(tdata) then
     if tdata.char[1] = "!" then
       pMessage = tdata.char[2..length(tdata)]

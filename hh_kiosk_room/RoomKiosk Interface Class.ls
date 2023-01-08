@@ -82,8 +82,8 @@ on sendFlatInfo me
 end
 
 on updateRadioButton me, tElement, tListOfOtherElements
-  tOnImg = member(getmemnum("button.checkbox_green.on")).image
-  tOffImg = member(getmemnum("button.checkbox_green.off")).image
+  tOnImg = member(getmemnum("button.radio_green.on")).image
+  tOffImg = member(getmemnum("button.radio_green.off")).image
   tWindowObj = getWindow(pWindowTitle)
   if tWindowObj.elementExists(tElement) then
     tWindowObj.getElement(tElement).feedImage(tOnImg)
@@ -161,6 +161,9 @@ on setPageValues me, tWindowName
   case tWindowName of
     "roomatic2.window":
       tWndObj = getWindow(pWindowTitle)
+      if tWndObj = 0 then
+        return 0
+      end if
       if not voidp(pRoomProps[#name]) then
         tWndObj.getElement("roomatic_roomname_field").setText(pRoomProps[#name])
       end if
@@ -181,11 +184,11 @@ on setPageValues me, tWindowName
       end if
       tDropDown = tWndObj.getElement("roomatic_choosecategory")
       if not ilk(tDropDown, #instance) then
-        return error(me, "Unable to retrieve Dropdown:" && tDropDown, #setPageValues)
+        return error(me, "Unable to retrieve dropdown:" && tDropDown, #setPageValues)
       end if
       tCatProps = getObject(#session).get("user_flat_cats")
       if not ilk(tCatProps, #propList) then
-        return error(me, "Category list was not property list:" && tCatProps, #setPageValues)
+        return error(me, "Category list was not a property list:" && tCatProps, #setPageValues)
       end if
       tCatTxtItems = []
       tCatKeyItems = []
@@ -193,21 +196,11 @@ on setPageValues me, tWindowName
         tCatTxtItems[i] = getAt(tCatProps, i)
         tCatKeyItems[i] = getPropAt(tCatProps, i)
       end repeat
-      tDropDown.pMenuItems = tCatTxtItems
-      tDropDown.pTextlist = tDropDown.pMenuItems
-      tDropDown.pTextKeys = tCatKeyItems
-      tDropDown.pNumberOfMenuItems = tDropDown.pMenuItems.count
       if not voidp(pRoomProps[#category]) then
-        tDropDown.setSelection(pRoomProps[#category])
+        tDropDown.updateData(tCatTxtItems, tCatKeyItems, VOID, pRoomProps[#category])
       else
-        tDropDown.setSelection(tCatKeyItems[1])
+        tDropDown.updateData(tCatTxtItems, tCatKeyItems)
       end if
-      tDropDown.pDropMenuImg = tDropDown.createDropImg(tDropDown.pMenuItems, 1, #up)
-      tDropDown.pDropActiveBtnImg = tDropDown.createDropImg([tDropDown.pMenuItems[tDropDown.pSelectedItemNum]], 0, #up)
-      tDropDown.pBuffer.image = tDropDown.pDropActiveBtnImg
-      tDropDown.pBuffer.regPoint = point(0, 0)
-      tDropDown.pimage = tDropDown.pDropActiveBtnImg
-      tDropDown.render()
     "roomatic3.window", "roomatic_club.window":
       tOthers = []
       if voidp(pRoomProps["model"]) then
@@ -238,7 +231,29 @@ on setPageValues me, tWindowName
         me.updateRadioButton("roomatic_security_open", tOthers)
       end if
       me.updateCheckButton("roomatic_security_letmove", #ableothersmovefurniture, 0)
+      if pRoomProps[#door] <> "password" then
+        me.showPasswordFields(0)
+      else
+        me.showPasswordFields(1)
+      end if
   end case
+end
+
+on showPasswordFields me, tVisible
+  tWndObj = getWindow(pWindowTitle)
+  if voidp(tWndObj) then
+    return error(me, "No window!", #showPasswordFields)
+  end if
+  tElems = ["roomatic_password2_field", "roomatic_password_field", "roomatic_pwdfieldsbg", "roomatic_pwd_desc"]
+  repeat with tElemID in tElems
+    tElem = tWndObj.getElement(tElemID)
+    if not voidp(tElem) then
+      tElem.setProperty(#visible, tVisible)
+      if tElemID = "roomatic_password2_field" or tElemID = "roomatic_password_field" then
+        tElem.setText(EMPTY)
+      end if
+    end if
+  end repeat
 end
 
 on eventProc me, tEvent, tSprID, tParm
@@ -263,8 +278,6 @@ on eventProc me, tEvent, tSprID, tParm
         pRoomProps[#name] = tRoomName
         pRoomProps[#description] = getWindow(pWindowTitle).getElement("romatic_roomdescription_field").getText()
         me.ChangeWindowView("roomatic3.window")
-      "roomatic_1_button_cancel":
-        me.ChangeWindowView("roomatic1.window")
       "roomatic_namedisplayed_yes_check":
         pRoomProps[#showownername] = 1
         me.updateRadioButton("roomatic_namedisplayed_yes_check", ["roomatic_namedisplayed_no_check"])
@@ -292,18 +305,26 @@ on eventProc me, tEvent, tSprID, tParm
         me.ChangeWindowView("roomatic3.window")
       "goto_club_layouts":
         me.ChangeWindowView("roomatic_club.window")
+      "goto_normal_layouts":
+        me.ChangeWindowView("roomatic3.window")
       "roomatic_security_open":
         pRoomProps[#door] = "open"
         tOthers = ["roomatic_security_locked", "roomatic_security_pwc"]
         me.updateRadioButton("roomatic_security_open", tOthers)
+        pTempPassword = [:]
+        me.showPasswordFields(0)
       "roomatic_security_locked":
         pRoomProps[#door] = "closed"
         tOthers = ["roomatic_security_open", "roomatic_security_pwc"]
         me.updateRadioButton("roomatic_security_locked", tOthers)
+        pTempPassword = [:]
+        me.showPasswordFields(0)
       "roomatic_security_pwc":
         pRoomProps[#door] = "password"
         tOthers = ["roomatic_security_open", "roomatic_security_locked"]
         me.updateRadioButton("roomatic_security_pwc", tOthers)
+        pTempPassword = [:]
+        me.showPasswordFields(1)
       "roomatic_security_letmove":
         me.updateCheckButton("roomatic_security_letmove", #ableothersmovefurniture, 1)
       "roomatic_5_button_back":

@@ -108,6 +108,7 @@ on handleRoomListClicked me, tParm
       me.showNodeInfo(tNodeInfo[#id])
     end if
   end if
+  return 1
 end
 
 on startFlatSearch me
@@ -250,11 +251,11 @@ on prepareCategoryDropMenu me, tNodeId
   tDefaultCatId = me.getComponent().getNodeProperty(tNodeId, #parentid)
   tDropDown = tWndObj.getElement("nav_choosecategory")
   if not ilk(tDropDown, #instance) then
-    return error(me, "Unable to retrieve Dropdown:" && tDropDown, #ChangeWindowView)
+    return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu)
   end if
   tCatProps = getObject(#session).get("user_flat_cats")
   if not ilk(tCatProps, #propList) then
-    return error(me, "Category list was not property list:" && tCatProps, #ChangeWindowView)
+    return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu)
   end if
   tCatTxtItems = []
   tCatKeyItems = []
@@ -262,21 +263,12 @@ on prepareCategoryDropMenu me, tNodeId
     tCatTxtItems[i] = getAt(tCatProps, i)
     tCatKeyItems[i] = getPropAt(tCatProps, i)
   end repeat
-  tDropDown.pMenuItems = tCatTxtItems
-  tDropDown.pTextlist = tDropDown.pMenuItems
-  tDropDown.pTextKeys = tCatKeyItems
   tDefaultCatItem = tCatKeyItems.getPos(tDefaultCatId)
   if tDefaultCatItem = 0 then
     tDefaultCatItem = 1
   end if
-  tDropDown.pSelectedItemNum = tDefaultCatItem
-  tDropDown.pNumberOfMenuItems = tDropDown.pMenuItems.count
-  tDropDown.pDropMenuImg = tDropDown.createDropImg(tDropDown.pMenuItems, 1, #up)
-  tDropDown.pDropActiveBtnImg = tDropDown.createDropImg([tDropDown.pMenuItems[tDropDown.pSelectedItemNum]], 0, #up)
-  tDropDown.pBuffer.image = tDropDown.pDropActiveBtnImg
-  tDropDown.pBuffer.regPoint = point(0, 0)
-  tDropDown.pimage = tDropDown.pDropActiveBtnImg
-  tDropDown.render()
+  tDropDown.updateData(tCatTxtItems, tCatKeyItems, tDefaultCatItem)
+  return 1
 end
 
 on eventProcNavigatorPublic me, tEvent, tSprID, tParm
@@ -330,13 +322,13 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
       "nav_roomlistBackLinks":
         me.setLoadingCursor(1)
         return me.getComponent().expandHistoryItem(integer(tParm.locV / me.pHistoryItemHeight) + 1)
-      "nav_roomlist":
-        me.setLoadingCursor(1)
-        me.handleRoomListClicked(tParm)
     end case
   else
     if tEvent = #mouseUp then
       case tSprID of
+        "nav_roomlist":
+          me.setLoadingCursor(1)
+          return me.handleRoomListClicked(tParm)
         "close":
           me.hideNavigator(#hide)
         "nav_go_button":
@@ -462,6 +454,7 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
     if tEvent = #mouseUp then
       case tSprID of
         "close":
+          executeMessage(#removeEnterRoomAlert)
           me.hideNavigator(#hide)
         "nav_go_button":
           me.getComponent().prepareRoomEntry(tNodeId)
@@ -484,8 +477,8 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
           end if
           tFlatData[#description] = tWndObj.getElement("nav_modify_roomdescription_field").getText()
           tFlatData[#password] = me.getPasswordFromField("nav_modify_door_pw")
-          tFlatData[#name] = getStringServices().convertSpecialChars(tFlatData[#name], 1)
-          tFlatData[#description] = getStringServices().convertSpecialChars(tFlatData[#description], 1)
+          tFlatData[#name] = convertSpecialChars(tFlatData[#name], 1)
+          tFlatData[#description] = convertSpecialChars(tFlatData[#description], 1)
           me.getComponent().sendupdateFlatInfo(tFlatData)
           if tFlatData.findPos(#parentid) <> VOID then
             me.getComponent().sendSetFlatCategory(tNodeId, tFlatData[#parentid])
@@ -493,10 +486,13 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
           me.getComponent().callNodeUpdate()
           me.ChangeWindowView("nav_gr_mod2")
         "nav_modify_ok":
+          executeMessage(#removeEnterRoomAlert)
           me.ChangeWindowView("nav_gr_own")
         "nav_modify_cancel":
+          executeMessage(#removeEnterRoomAlert)
           me.ChangeWindowView("nav_gr_own")
         "nav_modify_deleteroom":
+          executeMessage(#removeEnterRoomAlert)
           me.ChangeWindowView("nav_gr_modify_delete1")
         otherwise:
           if voidp(tNodeId) then
@@ -562,6 +558,12 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
             set the selStart to pFlatPasswords[tSprID].count
             set the selEnd to pFlatPasswords[tSprID].count
             return 1
+          "nav_modify_roomdescription_field":
+            tKeyCode = the keyCode
+            case tKeyCode of
+              36, 76:
+                return 1
+            end case
         end case
       end if
     end if

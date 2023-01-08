@@ -28,6 +28,12 @@ on construct me
     end if
   end if
   registerMessage(#Initialize, me.getID(), #initA)
+  if not objectExists("Help_Tooltip_Manager") then
+    createObject("Help_Tooltip_Manager", "Help Tooltip Manager Class")
+  end if
+  if not objectExists("Ticket_Window_Manager") then
+    createObject("Ticket_Window_Manager", "Ticket Window Manager Class")
+  end if
   return 1
 end
 
@@ -47,6 +53,9 @@ on deconstruct me
   end if
   if objectExists(#getServerDate) then
     removeObject(#getServerDate)
+  end if
+  if objectExists("Help_Tooltip_Manager") then
+    removeObject("Help_Tooltip_Manager")
   end if
   if connectionExists(getVariable("connection.info.id", #info)) then
     return me.disconnect()

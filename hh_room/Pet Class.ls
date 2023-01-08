@@ -114,12 +114,11 @@ on setup me, tdata
   end if
   pCorrectLocZ = 1
   pCanvasSize = [60, 62, 32, -18]
-  tPartSymbols = tdata[#parts]
   if not me.setPartLists(tdata[#figure]) then
     return error(me, "Couldn't create part lists!", #setup)
   end if
-  me.arrangeParts()
-  me.refresh(pLocX, pLocY, pLocH, pDirection, pDirection)
+  me.resetValues(pLocX, pLocY, pLocH, pDirection, pDirection)
+  me.refresh(pLocX, pLocY, pLocH)
   pSync = 0
 end
 
@@ -132,7 +131,7 @@ on update me
   end if
 end
 
-on refresh me, tX, tY, tH, tDirHead, tDirBody
+on resetValues me, tX, tY, tH, tDirHead, tDirBody
   pWaving = 0
   pMoving = 0
   pTalking = 0
@@ -165,6 +164,9 @@ on refresh me, tX, tY, tH, tDirHead, tDirBody
   end if
   pPartList[pPartIndex["hd"]].defineDir(tDirHead)
   pDirection = tDirBody
+end
+
+on refresh me, tX, tY, tH, tDirHead, tDirBody
   me.arrangeParts()
   pChanges = 1
 end

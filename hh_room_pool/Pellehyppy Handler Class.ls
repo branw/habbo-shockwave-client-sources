@@ -14,20 +14,6 @@ on handle_closeuimakoppi me, tMsg
   me.getComponent().closeUimaKoppi()
 end
 
-on handle_phtickets me, tMsg
-  me.getComponent().setNumOfPhTickets(tMsg.content)
-end
-
-on handle_phtickets_buy me, tMsg
-  me.getComponent().setNumOfPhTickets(tMsg.content.line[1].word[1])
-  me.getInterface().showTicketWnd()
-end
-
-on handle_notickets me, tMsg
-  me.getComponent().setNumOfPhTickets(0)
-  me.getInterface().showTicketWnd()
-end
-
 on handle_jumpdata me, tMsg
   me.getComponent().jumpPlayPack([#index: tMsg.content.line[1], #jumpdata: tMsg.content.line[2]])
 end
@@ -46,19 +32,15 @@ end
 
 on regMsgList me, tBool
   tMsgs = [:]
-  tMsgs.setaProp(72, #handle_phtickets)
-  tMsgs.setaProp(73, #handle_notickets)
   tMsgs.setaProp(74, #handle_jumpdata)
   tMsgs.setaProp(96, #handle_openuimakoppi)
   tMsgs.setaProp(97, #handle_closeuimakoppi)
   tMsgs.setaProp(122, #handle_jumpliftdoor_open)
   tMsgs.setaProp(123, #handle_jumpliftdoor_close)
-  tMsgs.setaProp(124, #handle_phtickets_buy)
   tMsgs.setaProp(125, #handle_jumpingplace_ok)
   tCmds = [:]
   tCmds.setaProp("JUMPSTART", 103)
   tCmds.setaProp("SIGN", 104)
-  tCmds.setaProp("BTCKS", 105)
   tCmds.setaProp("JUMPPERF", 106)
   tCmds.setaProp("SPLASH_POSITION", 107)
   tCmds.setaProp("CLOSE_UIMAKOPPI", 108)

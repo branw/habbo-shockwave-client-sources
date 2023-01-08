@@ -39,8 +39,8 @@ on convertToHigherCase tString
   return getStringServices().convertToHigherCase(tString)
 end
 
-on convertSpecialChars tString
-  return getStringServices().convertSpecialChars(tString)
+on convertSpecialChars tString, tDirection
+  return getStringServices().convertSpecialChars(tString, tDirection)
 end
 
 on convertIntToHex tInt
