@@ -1,7 +1,7 @@
 property pWindowID, pTimeOutID, pCountdownMember, pDuration, pEndTime
 
 on construct me
-  pWindowID = getText("bb_title_countdown")
+  pWindowID = getText("gs_title_countdown")
   pTimeOutID = "bb_countdown_timeout"
   return 1
 end
@@ -10,7 +10,7 @@ on deconstruct me
   return me.removeGameCountdown()
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   case tTopic of
     #gamereset:
       return me.startGameCountdown(tdata[#time_until_game_start], 0)
@@ -37,10 +37,9 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
     tWndObj = getWindow(pWindowID)
     if me.getGameSystem().getSpectatorModeFlag() then
       tWndObj.getElement("bb_button_cdown_exit").hide()
-      tWndObj.moveTo(41, 50)
     else
-      tWndObj.moveTo(25, 26)
     end if
+    tWndObj.center()
     if me.getGameSystem().getTournamentFlag() then
       tWndObj.getElement("bb_gameprice").hide()
     end if

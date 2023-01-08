@@ -62,6 +62,9 @@ end
 
 on update me
   if pActive then
+    if me.pSprList.count < 2 then
+      return 0
+    end if
     the itemDelimiter = "_"
     tMemName = me.pSprList[2].member.name
     tClass = tMemName.item[1..tMemName.item.count - 6]

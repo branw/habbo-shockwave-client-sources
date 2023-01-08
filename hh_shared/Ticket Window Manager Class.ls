@@ -28,24 +28,48 @@ on showTicketWindow me
   if windowExists(pWndID) then
     return 1
   end if
+  tList = [:]
+  tList["showDialog"] = 1
+  executeMessage(#getHotelClosingStatus, tList)
+  if tList["retval"] = 1 then
+    return 1
+  end if
   createWindow(pWndID, "habbo_basic.window")
   tWndObj = getWindow(pWndID)
   if tWndObj = 0 then
     return error(me, "Cannot open tickets window", #showTicketWindow)
   end if
-  if not tWndObj.merge("habbo_ph_tickets.window") then
-    return error(me, "Cannot open tickets window", #showTicketWindow)
+  if not me.ChangeWindowView("habbo_ph_tickets.window") then
+    return 0
   end if
   tWndObj.center()
   tWndObj.registerClient(me.getID())
   tWndObj.registerProcedure(#eventProcTicketsWindow, me.getID(), #mouseUp)
   tWndObj.registerProcedure(#eventProcTicketsWindow, me.getID(), #keyDown)
+  return 1
+end
+
+on ChangeWindowView me, tView
+  if not windowExists(pWndID) then
+    return 1
+  end if
+  tWndObj = getWindow(pWndID)
+  tWndObj.unmerge()
+  if not tWndObj.merge(tView) then
+    return error(me, "Cannot open tickets window", #ChangeWindowView)
+  end if
   tTickets = getObject(#session).get("user_ph_tickets")
   tText = replaceChunks(getText("ph_tickets_txt"), "\x1", tTickets)
-  tWndObj.getElement("ph_tickets_number").setText(string(tTickets))
-  tWndObj.getElement("ph_tickets_txt").setText(string(tText))
+  tElem = tWndObj.getElement("ph_tickets_number")
+  if tElem <> 0 then
+    tElem.setText(string(tTickets))
+  end if
+  tElem = tWndObj.getElement("ph_tickets_txt")
+  if tElem <> 0 then
+    tElem.setText(string(tText))
+  end if
   me.activateGiftBox(pGiftActive)
-  return me.setCheckBox(1)
+  return me.setCheckBox(pChosenAmount)
 end
 
 on hideTicketWindow me
@@ -78,6 +102,12 @@ on eventProcTicketsWindow me, tEvent, tSprID, tParam, tWndID
       "tickets_checkbox_2":
         me.setCheckBox(2)
         pChosenAmount = 2
+      "tickets_button_info_1":
+        return me.ChangeWindowView("habbo_ph_ticketinfo1.window")
+      "tickets_button_info_2":
+        return me.ChangeWindowView("habbo_ph_ticketinfo2.window")
+      "tickets_button_info_hide":
+        return me.ChangeWindowView("habbo_ph_tickets.window")
       "tickets_gift_check":
         pGiftActive = not pGiftActive
         me.activateGiftBox(pGiftActive)
@@ -96,11 +126,13 @@ on setCheckBox me, tNr
   tOffImg = getMember("button.radio.off").image
   repeat with i = 1 to 2
     tElem = tWndObj.getElement("tickets_checkbox_" & i)
-    if tNr = i then
-      tElem.feedImage(tOnImg)
-      next repeat
+    if tElem <> 0 then
+      if tNr = i then
+        tElem.feedImage(tOnImg)
+        next repeat
+      end if
+      tElem.feedImage(tOffImg)
     end if
-    tElem.feedImage(tOffImg)
   end repeat
   return 1
 end
@@ -121,6 +153,9 @@ on activateGiftBox me, tActive
   tOnMember = "button.checkbox.on"
   tOffMember = "button.checkbox.off"
   tCheckElem = tWndObj.getElement("tickets_gift_check")
+  if tCheckElem = 0 then
+    return 0
+  end if
   if tActive then
     tCheckElem.setProperty(#member, tOnMember)
     tWndObj.getElement("ph_tickets_gift_bg").setProperty(#visible, 1)

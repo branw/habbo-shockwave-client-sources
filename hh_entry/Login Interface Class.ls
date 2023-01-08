@@ -20,7 +20,11 @@ on showLogin me
   getObject(#session).set(#userName, EMPTY)
   getObject(#session).set(#password, EMPTY)
   pTempPassword = EMPTY
-  if not getVariable("registration.disabled", 0) then
+  tRegistrationDisabled = 0
+  if variableExists("registration.disabled") then
+    tRegistrationDisabled = getVariable("registration.disabled")
+  end if
+  if not tRegistrationDisabled then
     if createWindow(#login_a, "habbo_simple.window", 444, 100) then
       tWndObj = getWindow(#login_a)
       tWndObj.merge("login_a.window")
@@ -74,6 +78,11 @@ on hideLogin me
 end
 
 on showDisconnect me
+  tList = [:]
+  executeMessage(#getHotelClosedDisconnectStatus, tList)
+  if tList["retval"] = 1 then
+    return 1
+  end if
   createWindow(#error, "error.window", 0, 0, #modal)
   tWndObj = getWindow(#error)
   tWndObj.getElement("error_title").setText(getText("Alert_ConnectionFailure"))
@@ -214,7 +223,7 @@ on eventProcLogin me, tEvent, tSprID, tParam
               return 1
             end if
           else
-            executeMessage(#alert, [#msg: "registration_disabled_text", #modal: 1])
+            executeMessage(#alert, [#Msg: "registration_disabled_text", #modal: 1])
           end if
         "login_forgotten":
           if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then

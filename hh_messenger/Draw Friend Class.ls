@@ -1,4 +1,4 @@
-property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
+property pData, pID, pName, pCustomText, pOnline, pLocation, pLastTime, pMsgCount, pTopMarg, pLeftMarg, pwidth, pheight, pLineHeight, pMsgLinkRect, pSelected, pNeedUpdate, pCacheImage, pDotLineImg, pCacheOnlineImg, pCacheNameImg, pCacheMsgsImg, pCacheUnitImg, pCacheLastTimeImg, pCacheMissionImg, pCacheWebLinkImg, pNameNeedUpdate, pMsgsNeedUpdate, pLocationNeedUpdate, pLastNeedUpdate, pMissNeedUpdate, pWriterName, pWriterMsgs, pWriterLast, pWriterText, pFriendNameOffset, pFriendLastOffset, pFriendPerMsgOffset
 
 on construct me
   pData = [:]
@@ -15,6 +15,7 @@ on construct me
   pSelected = 0
   pDotLineImg = member(getmemnum("meswhitedottedline")).image
   pCacheOnlineImg = member(getmemnum("mes_smallbuddy_head")).image
+  pCacheWebLinkImg = member(getmemnum("messenger_web_page_button")).image
   pNameNeedUpdate = 1
   pMsgsNeedUpdate = 1
   pLocationNeedUpdate = 1
@@ -100,6 +101,20 @@ on unselect me
   pSelected = 0
 end
 
+on clickAt me, locX, locY
+  tX1 = pwidth - 16
+  tX2 = tX1 + pCacheWebLinkImg.width
+  tY1 = 4
+  tY2 = tY1 + pCacheWebLinkImg.height
+  tDstRect = rect(tX1, tY1, tX2, tY2)
+  if point(locX, locY).inside(tDstRect) then
+    if not voidp(pID) then
+      tDestURL = replaceChunks(getVariable("link.format.userpage"), "%ID%", string(pID))
+      openNetPage(tDestURL)
+    end if
+  end if
+end
+
 on render me, tBuffer, tPosition
   tPosition = tPosition - 1
   if pData.update then
@@ -165,6 +180,14 @@ on render me, tBuffer, tPosition
       pCacheImage.copyPixels(pCacheOnlineImg, tDstRect, pCacheOnlineImg.rect)
     else
       pCacheImage.fill(tDstRect, rgb(255, 255, 255))
+    end if
+    if variableExists("link.format.userpage") then
+      tX1 = pwidth - 17
+      tX2 = tX1 + pCacheWebLinkImg.width
+      tY1 = 3
+      tY2 = tY1 + pCacheWebLinkImg.height
+      tDstRect = rect(tX1, tY1, tX2, tY2)
+      pCacheImage.copyPixels(pCacheWebLinkImg, tDstRect, pCacheWebLinkImg.rect)
     end if
     if pMissNeedUpdate then
       tMissionImg = pWriterText.render(QUOTE & pCustomText & QUOTE)

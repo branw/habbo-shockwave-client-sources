@@ -21,7 +21,8 @@ on handle_login_ok me, tMsg
 end
 
 on handle_regok me, tMsg
-  me.getComponent().newFigureReady()
+  tUserID = tMsg.connection.GetStrFrom()
+  me.getComponent().pUserIDFromRegistration = tUserID
 end
 
 on handle_updateok me, tMsg

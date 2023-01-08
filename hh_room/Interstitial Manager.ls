@@ -59,7 +59,7 @@ on Init me, tSourceURL, tClickURL
     tSeparator = "?"
   end if
   tSourceURL = tSourceURL & tSeparator & "r=" & random(9999999999.0)
-  tAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1)
+  tAdMemNum = queueDownload(tSourceURL, pMemberID, #bitmap, 1, #httpcookie)
   if tAdMemNum < 1 then
     me.adFinished()
     return error(me, "Member not found", #Init)
@@ -219,7 +219,7 @@ end
 on eventProc me, tEvent, tSprID, tParm
   if tEvent = #mouseUp then
     if not voidp(pClickURL) then
-      openNetPage(pClickURL)
+      queueDownload(pClickURL, "temp" & the milliSeconds, #text, 1, #httpcookie, #openredirect)
     end if
   else
     if tEvent = #mouseEnter or tEvent = #mouseWithin then

@@ -45,6 +45,9 @@ end
 
 on switchMember me, tPart, tNewMem
   tSprNum = (["a", "b", "c", "d", "e", "f"]).getPos(tPart)
+  if me.pSprList.count < tSprNum or tSprNum = 0 then
+    return 0
+  end if
   tName = me.pSprList[tSprNum].member.name
   tName = tName.char[1..tName.length - 1] & tNewMem
   if memberExists(tName) then

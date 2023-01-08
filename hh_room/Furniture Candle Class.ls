@@ -1,6 +1,9 @@
 property pActive, pTimer, pLastFrm, pItem, pPart, pData
 
 on prepare me, tdata
+  if me.pSprList.count < 2 then
+    return 0
+  end if
   repeat with i = 2 to me.pSprList.count
     removeEventBroker(me.pSprList[i].spriteNum)
   end repeat
@@ -68,6 +71,9 @@ on select me
 end
 
 on setAnimMembersToFrame me, tFrame
+  if me.pSprList.count < 2 then
+    return 0
+  end if
   tCharNum = charToNum("a")
   repeat with i = 2 to me.pSprList.count
     tLayerChar = numToChar(tCharNum + i - 1)

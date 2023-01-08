@@ -24,6 +24,8 @@ end
 on regMsgList me, tBool
   pMsgIds = [:]
   pMsgIds.setaProp(28, #users)
+  pMsgIds.setaProp(30, #objects)
+  pMsgIds.setaProp(31, #heightmap)
   pMsgIds.setaProp(72, #numtickets)
   pMsgIds.setaProp(73, #notickets)
   pMsgIds.setaProp(124, #numtickets)
@@ -52,6 +54,7 @@ on regMsgList me, tBool
     tMsgs.setaProp(pMsgIds.getPropAt(i), #handle_message)
   end repeat
   tCmds = [:]
+  tCmds.setaProp("MOVE", 75)
   tCmds.setaProp("GETINSTANCELIST", 159)
   tCmds.setaProp("OBSERVEINSTANCE", 160)
   tCmds.setaProp("UNOBSERVEINSTANCE", 161)

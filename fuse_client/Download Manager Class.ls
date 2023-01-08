@@ -6,6 +6,7 @@ on construct me
   pReceivedTasks = []
   pCompleteTasks = []
   pTypeDefList = [:]
+  me.emptyCookies()
   return 1
 end
 
@@ -29,7 +30,7 @@ on exists me, tMemName
   return not voidp(pTaskQueue[tMemName]) or not voidp(pActiveTasks[tMemName])
 end
 
-on queue me, tURL, tMemName, ttype, tForceFlag
+on queue me, tURL, tMemName, ttype, tForceFlag, tDownloadMethod, tRedirectType
   if not ilk(tURL, #string) then
     return error(me, "Missing or invalid URL:" && tURL, #queue)
   end if
@@ -59,7 +60,10 @@ on queue me, tURL, tMemName, ttype, tForceFlag
     end if
   end if
   pReceivedTasks.add(tMemName)
-  pTaskQueue[tMemName] = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]
+  tTempTask = [#url: tURL, #memNum: tMemNum, #type: ttype, #callback: VOID]
+  tTempTask[#downloadMethod] = tDownloadMethod
+  tTempTask[#redirectType] = tRedirectType
+  pTaskQueue[tMemName] = tTempTask
   me.updateQueue()
   return tMemNum
 end
@@ -249,7 +253,11 @@ on updateQueue me
       tTaskName = pTaskQueue.getPropAt(1)
       tTaskData = pTaskQueue[tTaskName]
       pTaskQueue.deleteProp(tTaskName)
-      pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("download.instance.class"))
+      if tTaskData[#downloadMethod] = #httpcookie then
+        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("httpcookie.instance.class"))
+      else
+        pActiveTasks[tTaskName] = createObject(#temp, getClassVariable("download.instance.class"))
+      end if
       pActiveTasks[tTaskName].define(tTaskName, tTaskData)
       receiveUpdate(me.getID())
     end if
@@ -298,6 +306,11 @@ on recognizeMemberType me, tURL
   else
     return tFileType
   end if
+end
+
+on emptyCookies me
+  tCookiePrefLoc = getVariable("httpcookie.pref.name")
+  setPref(tCookiePrefLoc, EMPTY)
 end
 
 on fillTypeDefinitions me

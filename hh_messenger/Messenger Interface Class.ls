@@ -1,4 +1,4 @@
-property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeigth, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pBodyPartObjects, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text
+property pWindowTitle, pOpenWindow, pLastOpenWindow, pRoomProps, pBuddyListPntr, pSelectedBuddies, pBuddyListBuffer, pBuddyListBufferWidth, pBuddylistItemHeigth, pBuddyDrawObjList, pLastSearch, pLastGetMsg, pComposeMsg, pBodyPartObjects, pRemoveBuddy, pBuddyDrawNum, pCurrProf, pMsgsStr, pFriendListSwitch, pFriendListObjs, pBuddyListLimits, pMessengerInactive, pListRendering, pActiveMessage, pWriterID_nobuddies, pWriterID_consolemsg, pBuddyDrw_writerID_name, pBuddyDrw_writerID_msgs, pBuddyDrw_writerID_last, pBuddyDrw_writerID_text, pTimeOutID
 
 on construct me
   pWindowTitle = getText("win_messenger", "Habbo Console")
@@ -44,6 +44,7 @@ on construct me
   createWriter(pBuddyDrw_writerID_last, tMetrics)
   tMetrics = [#font: tPlain.getaProp(#font), #fontStyle: tPlain.getaProp(#fontStyle), #color: rgb("#EEEEEE")]
   createWriter(pBuddyDrw_writerID_text, tMetrics)
+  pTimeOutID = "console_change_window_timeout"
   return 1
 end
 
@@ -60,6 +61,9 @@ on deconstruct me
   pBodyPartObjects = [:]
   pBuddyDrawObjList = [:]
   removePrepare(me.getID())
+  if timeoutExists(pTimeOutID) then
+    removeTimeout(pTimeOutID)
+  end if
   return 1
 end
 
@@ -540,6 +544,15 @@ on ChangeWindowView me, tWindowName
         tImg = getWriter(pWriterID_nobuddies).render(getText("console_youdonthavebuddies"))
         getWindow(pWindowTitle).getElement("console_friends_friendlist").feedImage(tImg)
       end if
+      tElem = tWndObj.getElement("console_select_friend_field")
+      if tElem <> 0 then
+        tElem.moveTo(2000, 2000)
+        the keyboardFocusSprite = tElem.getProperty(#sprite).spriteNum
+      end if
+      if timeoutExists(pTimeOutID) then
+        removeTimeout(pTimeOutID)
+      end if
+      createTimeout(pTimeOutID, 100, #changeWindowDelayedUpdate, me.getID(), VOID, 1)
     "console_getrequest.window":
       tBuddyRequest = me.getComponent().getNextBuddyRequest()
       if listp(tBuddyRequest) then
@@ -574,6 +587,15 @@ on ChangeWindowView me, tWindowName
     "console_messagemodes_help.window":
     "console_friends_help.window":
   end case
+end
+
+on changeWindowDelayedUpdate me
+  if pOpenWindow = "console_friends.window" then
+    tElem = getWindow(pWindowTitle).getElement("console_select_friend_field")
+    if tElem <> 0 then
+      the keyboardFocusSprite = tElem.getProperty(#sprite).spriteNum
+    end if
+  end if
 end
 
 on eventProcMessenger me, tEvent, tElemID, tParm
@@ -616,7 +638,12 @@ on eventProcMessenger me, tEvent, tElemID, tParm
           tpoint = tParm - [0, tClickLine * pBuddylistItemHeigth]
           tName = tRenderList[tPosition]
           pBuddyDrawObjList[tName].select(tpoint, pBuddyListBuffer, tClickLine)
+          pBuddyDrawObjList[tName].clickAt(tParm.locH, tParm.locV - tClickLine * pBuddylistItemHeigth)
           me.updateBuddyListImg()
+          tElem = getWindow(pWindowTitle).getElement("console_select_friend_field")
+          if tElem <> 0 then
+            the keyboardFocusSprite = tElem.getProperty(#sprite).spriteNum
+          end if
         else
           me.ChangeWindowView("console_compose.window")
         end if
@@ -772,6 +799,40 @@ on eventProcMessenger me, tEvent, tElemID, tParm
             me.getComponent().send_FindUser(tQuery)
             tElem.setText(EMPTY)
             return 1
+          end if
+        end if
+        if tElemID = "console_select_friend_field" then
+          tElem = getWindow(pWindowTitle).getElement(tElemID)
+          tElem.setText(EMPTY)
+          tElem = getWindow(pWindowTitle).getElement("friendlist_scrollbar")
+          case the keyCode of
+            126:
+              tElem.setScrollOffset(tElem.getProperty(#offset) - tElem.getProperty(#scrollStep))
+            125:
+              tElem.setScrollOffset(tElem.getProperty(#offset) + tElem.getProperty(#scrollStep))
+          end case
+          if charToNum(the key) >= 32 and charToNum(the key) <> 127 then
+            tBuddyList = me.getComponent().getBuddyData()[#render]
+            repeat with i = 1 to tBuddyList.count()
+              tBuddy = tBuddyList[i]
+              if tBuddy.char[1] = the key then
+                tScrollRange = tElem.getProperty(#scrollrange)
+                tElem.setScrollOffset(tScrollRange * (i - 1) / tBuddyList.count())
+                exit repeat
+                next repeat
+              end if
+              if tBuddy.char[1] > the key then
+                tScrollRange = tElem.getProperty(#scrollrange)
+                tElem.setScrollOffset(tScrollRange * (i - 2) / tBuddyList.count())
+                exit repeat
+                next repeat
+              end if
+              if i = tBuddyList.count() then
+                tScrollRange = tElem.getProperty(#scrollrange)
+                tElem.setScrollOffset(tScrollRange * (i - 1) / tBuddyList.count())
+                exit repeat
+              end if
+            end repeat
           end if
         end if
       end if

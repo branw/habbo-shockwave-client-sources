@@ -42,7 +42,7 @@ on delay me, tTime, tMethod, tArgument
   return tUniqueId
 end
 
-on cancel me, tDelayID
+on Cancel me, tDelayID
   if voidp(me.delays[tDelayID]) then
     return 0
   end if
@@ -61,6 +61,6 @@ end
 on executeDelay me, tTimeout
   tid = tTimeout.name
   tTask = delays[tid]
-  me.cancel(tid)
+  me.Cancel(tid)
   call(tTask[#method], me, tTask[#argument])
 end

@@ -1,5 +1,7 @@
+property pCryptoParams
+
 on construct me
-  registerMessage(#performLogin, me.getID(), #login)
+  pCryptoParams = [:]
   registerMessage(#hideLogin, me.getID(), #hideLogin)
   return me.regMsgList(1)
 end
@@ -16,7 +18,7 @@ on handleDisconnect me, tMsg
 end
 
 on handleHello me, tMsg
-  return tMsg.connection.send("GENERATEKEY")
+  return tMsg.connection.send("INIT_CRYPTO")
 end
 
 on handleSessionParameters me, tMsg
@@ -55,67 +57,18 @@ on handleSessionParameters me, tMsg
           6:
             tValue = tMsg.connection.GetIntFrom()
             tSession.set("conf_partner_integration", tValue > 0)
+          7:
+            tValue = tMsg.connection.GetIntFrom()
+            tSession.set("allow_profile_editing", tValue > 0)
         end case
       end repeat
     end if
   end if
-  return me.sendLogin(tMsg.connection)
-end
-
-on handleSecretKey me, tMsg
-  tKey = secretDecode(tMsg.content)
-  tMsg.connection.setDecoder(createObject(#temp, getClassVariable("connection.decoder.class")))
-  tMsg.connection.getDecoder().setKey(tKey)
-  tMsg.connection.setEncryption(1)
-  tClientURL = getMoviePath() & "habbo.dcr"
-  tExtVarsURL = getExtVarPath()
-  tHost = tMsg.connection.getProperty(#host)
-  if tHost contains deobfuscate("þÓKfGNuSE¿ô@kLK‹ËKiOIgCW{\S") then
-    tClientURL = EMPTY
-  end if
-  if tHost contains deobfuscate("8<Ö×;ÐöëÛÞ") then
-    tClientURL = EMPTY
-  end if
-  if not (the runMode contains "Plugin") then
-    tClientURL = EMPTY
-    tExtVarsURL = EMPTY
-  end if
-  tMsg.connection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
-  tMsg.connection.send("UNIQUEID", [#string: getMachineID()])
-  tMsg.connection.send("GET_SESSION_PARAMETERS")
-  return 1
-end
-
-on sendLogin me, tConnection
-  if objectExists("nav_problem_obj") then
-    removeObject("nav_problem_obj")
-  end if
-  if me.getComponent().isOkToLogin() then
-    tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#password)
-    if not stringp(tUserName) or not stringp(tPassword) then
-      return removeConnection(tConnection.getID())
-    end if
-    if tUserName = EMPTY or tPassword = EMPTY then
-      return removeConnection(tConnection.getID())
-    end if
-    return tConnection.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
-  end if
-  return 1
+  return me.getComponent().sendLogin(tMsg.connection)
 end
 
 on handlePing me, tMsg
   tMsg.connection.send("PONG")
-end
-
-on handleRegistrationOK me, tMsg
-  tTmp = [:]
-  executeMessage(#partnerRegistrationRequired, tTmp)
-  if tTmp["retval"] then
-    executeMessage(#partnerRegistration, tMsg)
-  else
-    me.login(tMsg.connection)
-  end if
 end
 
 on handleLoginOK me, tMsg
@@ -185,7 +138,7 @@ end
 
 on handleUserBanned me, tMsg
   tBanMsg = getText("Alert_YouAreBanned") & RETURN & tMsg.content
-  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #msg: tBanMsg, #modal: 1])
+  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #Msg: tBanMsg, #modal: 1])
   removeConnection(tMsg.connection.getID())
 end
 
@@ -220,7 +173,7 @@ on handleSystemBroadcast me, tMsg
   tMsg = tMsg[#content]
   tMsg = replaceChunks(tMsg, "\r", RETURN)
   tMsg = replaceChunks(tMsg, "<br>", RETURN)
-  executeMessage(#alert, [#msg: tMsg])
+  executeMessage(#alert, [#Msg: tMsg])
   the keyboardFocusSprite = 0
 end
 
@@ -275,46 +228,116 @@ on handleErr me, tMsg
       else
         getObject(#session).set("failed_password", 1)
         me.getInterface().showLogin()
-        executeMessage(#alert, [#msg: "Alert_WrongNameOrPassword"])
+        executeMessage(#alert, [#Msg: "Alert_WrongNameOrPassword"])
       end if
     tMsg.content contains "mod_warn":
       tDelim = the itemDelimiter
       the itemDelimiter = "/"
       tTextStr = tMsg.content.item[2..tMsg.content.item.count]
       the itemDelimiter = tDelim
-      executeMessage(#alert, [#title: "alert_warning", #msg: tTextStr, #modal: 1])
+      executeMessage(#alert, [#title: "alert_warning", #Msg: tTextStr, #modal: 1])
     tMsg.content contains "Version not correct":
-      executeMessage(#alert, [#msg: "Old client version!!!"])
+      executeMessage(#alert, [#Msg: "Old client version!!!"])
     tMsg.content contains "Duplicate session":
       removeConnection(tMsg.connection.getID())
       me.getComponent().setaProp(#pOkToLogin, 0)
       me.getInterface().showLogin()
-      executeMessage(#alert, [#msg: "alert_duplicatesession"])
+      executeMessage(#alert, [#Msg: "alert_duplicatesession"])
   end case
   return 1
 end
 
 on handleModAlert me, tMsg
   if not voidp(tMsg.content) then
-    executeMessage(#alert, [#title: "alert_warning", #msg: tMsg.content])
+    executeMessage(#alert, [#title: "alert_warning", #Msg: tMsg.content])
   else
     error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
 end
 
-on login me, tConn
-  if tConn = 0 then
-    return 0
+on handleCryptoParameters me, tMsg
+  tClientToServer = tMsg.connection.GetIntFrom() <> 0
+  tServerToClient = tMsg.connection.GetIntFrom() <> 0
+  pCryptoParams = [#ClientToServer: tClientToServer, #ServerToClient: tServerToClient]
+  if tClientToServer then
+    tMsg.connection.send("GENERATEKEY")
+  else
+    if tServerToClient then
+      error(me, "Server to client encryption only is not supported.", #handleCryptoParameters)
+      return tMsg.connection.disconnect(1)
+    end if
+    me.startSession()
   end if
-  tUserName = getObject(#session).get(#userName)
-  tPassword = getObject(#session).get(#password)
-  if not stringp(tUserName) or not stringp(tPassword) then
-    return removeConnection(tConn.getID())
+  return 1
+end
+
+on handleSecretKey me, tMsg
+  tKey = secretDecode(tMsg.content)
+  tMsg.connection.setEncoder(createObject(#temp, getClassVariable("connection.decoder.class")))
+  tMsg.connection.getEncoder().setKey(tKey)
+  tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
+  tMsg.connection.getEncoder().preMixEncodeSbox(tPremixChars, 13)
+  tMsg.connection.setEncryption(1)
+  if pCryptoParams.getaProp(#ServerToClient) = 1 then
+    me.makeServerToClientKey()
+  else
+    me.startSession()
   end if
-  if tUserName = EMPTY or tPassword = EMPTY then
-    return removeConnection(tConn.getID())
+  return 1
+end
+
+on handleEndCrypto me, tMsg
+  me.startSession()
+end
+
+on handleHotelLogout me, tMsg
+  openNetPage(getText("url_logged_out"), "self")
+end
+
+on makeServerToClientKey me
+  tConnection = getConnection(getVariable("connection.info.id"))
+  tDecoder = createObject(#temp, getClassVariable("connection.decoder.class"))
+  tPublicKey = tDecoder.createKey()
+  tConnection.send("SECRETKEY", [#string: tPublicKey])
+  tKey = secretDecode(tPublicKey)
+  tConnection.setDecoder(tDecoder)
+  tConnection.getDecoder().setKey(tKey)
+  tPremixChars = "eb11nmhdwbn733c2xjv1qln3ukpe0hvce0ylr02s12sv96rus2ohexr9cp8rufbmb1mdb732j1l3kehc0l0s2v6u2hx9prfmu"
+  tConnection.getDecoder().preMixEncodeSbox(tPremixChars, 13)
+  tConnection.setProperty(#deciphering, 1)
+end
+
+on startSession me
+  tClientURL = getMoviePath() & "habbo.dcr"
+  tExtVarsURL = getExtVarPath()
+  tConnection = getConnection(getVariable("connection.info.id"))
+  tHost = tConnection.getProperty(#host)
+  if tHost contains deobfuscate(",y,?mf,BmylPl^nGoH") then
+    tClientURL = EMPTY
   end if
-  return tConn.send("TRY_LOGIN", [#string: tUserName, #string: tPassword])
+  if tHost contains deobfuscate("FbgeGnd=&Ae]F@E}") then
+    tClientURL = EMPTY
+  end if
+  if tHost contains deobfuscate("&bF2fee|&CFmGqd}") then
+    tClientURL = EMPTY
+  end if
+  if tHost contains deobfuscate("G#f@d\fae<fa$]") then
+    tClientURL = EMPTY
+  end if
+  if not (the runMode contains "Plugin") then
+    tClientURL = EMPTY
+    tExtVarsURL = EMPTY
+  else
+    if tClientURL <> externalParamValue("src") then
+      tClientURL = "2"
+    end if
+    if getMoviePath() <> the moviePath then
+      tClientURL = "3"
+    end if
+  end if
+  tConnection.send("VERSIONCHECK", [#integer: getIntVariable("client.version.id"), #string: tClientURL, #string: tExtVarsURL])
+  tConnection.send("UNIQUEID", [#string: getMachineID()])
+  tConnection.send("GET_SESSION_PARAMETERS")
 end
 
 on hideLogin me
@@ -332,13 +355,15 @@ on regMsgList me, tBool
   tMsgs.setaProp(33, #handleErr)
   tMsgs.setaProp(35, #handleUserBanned)
   tMsgs.setaProp(50, #handlePing)
-  tMsgs.setaProp(51, #handleRegistrationOK)
   tMsgs.setaProp(52, #handleEPSnotify)
   tMsgs.setaProp(139, #handleSystemBroadcast)
   tMsgs.setaProp(141, #handleCheckSum)
   tMsgs.setaProp(161, #handleModAlert)
   tMsgs.setaProp(229, #handleAvailableBadges)
   tMsgs.setaProp(257, #handleSessionParameters)
+  tMsgs.setaProp(277, #handleCryptoParameters)
+  tMsgs.setaProp(278, #handleEndCrypto)
+  tMsgs.setaProp(287, #handleHotelLogout)
   tCmds = [:]
   tCmds.setaProp("TRY_LOGIN", 4)
   tCmds.setaProp("VERSIONCHECK", 5)
@@ -352,6 +377,9 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_SESSION_PARAMETERS", 181)
   tCmds.setaProp("PONG", 196)
   tCmds.setaProp("GENERATEKEY", 202)
+  tCmds.setaProp("SSO", 204)
+  tCmds.setaProp("INIT_CRYPTO", 206)
+  tCmds.setaProp("SECRETKEY", 207)
   tConn = getVariable("connection.info.id", #info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)

@@ -113,7 +113,7 @@ on Remove me, tid
     end if
     repeat with i = 1 to tObj.delays.count
       tDelayID = tObj.delays.getPropAt(i)
-      tObj.cancel(tDelayID)
+      tObj.Cancel(tDelayID)
     end repeat
     tObj.deconstruct()
     tObj.valid = 0

@@ -70,9 +70,6 @@ on update me
       tError = getDownloadManager().solveNetErrorMsg(netError(pNetId))
       error(me, "Download error:" & RETURN & pMemName & RETURN & tError, #update)
       case netError(pNetId) of
-        4836:
-          pURL = me.addRandomParamToUrl(pURL)
-          me.Activate()
         6, 4159, 4165:
           if not (pURL contains getDownloadManager().getProperty(#defaultURL)) then
             pURL = getDownloadManager().getProperty(#defaultURL) & pURL
@@ -106,16 +103,4 @@ on importFileToCast me
   end case
   tmember.name = pMemName
   return 1
-end
-
-on addRandomParamToUrl me, tURL
-  tKeySeparator = "?"
-  if offset(tKeySeparator, tURL) > 0 then
-    tKeySeparator = "&"
-  end if
-  tRandomParamKey = EMPTY
-  repeat with i = 1 to 6
-    tRandomParamKey = tRandomParamKey & numToChar(random(26) + 96)
-  end repeat
-  return tURL & tKeySeparator & tRandomParamKey & "=" & the milliSeconds
 end

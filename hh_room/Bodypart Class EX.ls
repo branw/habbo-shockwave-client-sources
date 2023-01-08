@@ -30,7 +30,7 @@ on define me, tPart, tmodel, tColor, tDirection, tAction, tAncestor
   return 1
 end
 
-on update me
+on update me, tForcedUpdate
   tAnimCntr = 0
   tAction = pAction
   tPart = pPart
@@ -165,7 +165,7 @@ on update me
   end if
   tLocFixChanged = pLastLocFix <> point(pXFix, pYFix)
   pLastLocFix = point(pXFix, pYFix)
-  if pMemString <> tMemString or tLocFixChanged then
+  if pMemString <> tMemString or tLocFixChanged or tForcedUpdate then
     pMemString = tMemString
     tMemNum = getmemnum(tMemString)
     if tMemNum > 0 then
@@ -199,7 +199,7 @@ end
 
 on render me
   if memberExists(pMemString) then
-    me.pBuffer.copyPixels(pCacheRectB, pCacheRectA, pCacheRectB, pDrawProps)
+    me.pBuffer.copyPixels(pCacheImage, pCacheRectA, pCacheRectB, pDrawProps)
   end if
 end
 
@@ -322,6 +322,10 @@ on getDirection me
   return pDirection
 end
 
+on getModel me
+  return pmodel
+end
+
 on getLocation me
   if voidp(pMemString) then
     return 0
@@ -334,6 +338,10 @@ on getLocation me
   tCntrPoint = point(tImgRect.width / 2, tImgRect.height / 2)
   tRegPoint = tmember.regPoint
   return -tRegPoint + tCntrPoint
+end
+
+on getPartID me
+  return pPart
 end
 
 on copyPicture me, tImg, tdir, tHumanSize, tAction, tAnimFrame
@@ -376,6 +384,19 @@ on skipAnimationFrame me
     pAnimFrame = 1
   end if
   return 1
+end
+
+on changePartData me, tmodel, tColor
+  if voidp(tmodel) or voidp(tColor) then
+    return 0
+  end if
+  pmodel = tmodel
+  pDrawProps[#bgColor] = tColor
+  tMemNameList = explode(pMemString, "_")
+  tMemNameList[4] = tmodel
+  pMemString = implode(tMemNameList, "_")
+  tForced = 1
+  me.update(tForced)
 end
 
 on setAnimation me, tPart, tAnim

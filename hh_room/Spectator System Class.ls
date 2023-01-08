@@ -61,7 +61,7 @@ on showSpectatorView me
   if tRoomVis = 0 then
     return 0
   end if
-  tVisObj.moveZ(tRoomVis.getProperty(#locZ) + 1)
+  tVisObj.moveZ(getIntVariable("window.default.locz") - 1)
   return 1
 end
 

@@ -6,7 +6,7 @@ on deconstruct me
   return me.regMsgList(0)
 end
 
-on getdate me
+on getDate me
   if connectionExists(getVariable("connection.info.id")) then
     return getConnection(getVariable("connection.info.id")).send("GDATE")
   else

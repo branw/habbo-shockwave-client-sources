@@ -1,6 +1,7 @@
-property pDownloadMgrs
+property pTurnManagerState, pDownloadMgrs
 
 on construct me
+  pTurnManagerState = 0
   pDownloadMgrs = [:]
   registerMessage(#roomReady, me.getID(), #checkIfInGameArea)
   registerMessage(#leaveRoom, me.getID(), #leaveRoom)
@@ -11,6 +12,7 @@ on construct me
 end
 
 on deconstruct me
+  me.stopTurnManager()
   pDownloadMgrs = [:]
   if memberExists("gsys_tournamentlogo") then
     removeMember("gsys_tournamentlogo")
@@ -28,6 +30,7 @@ on defineClient me, tid
 end
 
 on leaveRoom me
+  me.stopTurnManager()
   me.getMessageSender().setInstanceListUpdates(0)
   me.initVariables()
   return 1
@@ -42,13 +45,12 @@ on initVariables me
   tVarMgr.set(#game_location, [:])
   tVarMgr.set(#instancelist, [:])
   tVarMgr.set(#observed_instance_data, [:])
-  tVarMgr.set(#last_clicked_loc, point(0, 0))
   tVarMgr.set(#spectatormode_flag, 0)
   tVarMgr.set(#tournament_flag, 0)
   return 1
 end
 
-on getGameStatus me
+on getGamestatus me
   tVarMgr = me.getVariableManager()
   if tVarMgr = 0 then
     return 0
@@ -57,6 +59,22 @@ on getGameStatus me
     return 0
   end if
   return tVarMgr.get(#game_status)
+end
+
+on startTurnManager me
+  if pTurnManagerState then
+    return 1
+  end if
+  pTurnManagerState = 1
+  return me.getTurnManager().StartMinigameEngine()
+end
+
+on stopTurnManager me
+  if pTurnManagerState = 0 then
+    return 1
+  end if
+  pTurnManagerState = 0
+  return me.getTurnManager().stopMinigameEngine()
 end
 
 on cancelCreateGame me
@@ -114,7 +132,7 @@ on store_loungeinfo me, tdata
     return 0
   end if
   getObject(#session).set(#gamelounge_world_info, [#unitId: tWorldData[#port], #worldId: tWorldData[#door], #type: tWorldData[#type]])
-  getObject(#session).remove(#gamespace_world_info)
+  getObject(#session).Remove(#gamespace_world_info)
   return 1
 end
 
@@ -141,15 +159,15 @@ on store_gameinstance me, tItem
   tInstanceList = me.getVariableManager().get(#instancelist)
   tInstanceList[string(tItem[#id])] = tItem
   me.getVariableManager().set(#instancelist, tInstanceList)
-  if me.getGameStatus() = #watch_requested then
+  if me.getGamestatus() = #watch_requested then
     me.getVariableManager().set(#game_status, #watch_confirmed)
     return me.getProcManager().distributeEvent(#watchok)
   end if
-  if me.getGameStatus() = #join_requested then
+  if me.getGamestatus() = #join_requested then
     me.getVariableManager().set(#game_status, #join_confirmed)
     return me.getProcManager().distributeEvent(#joinok)
   end if
-  if me.getGameStatus() = #create_requested then
+  if me.getGamestatus() = #create_requested then
     me.getVariableManager().set(#game_status, #create_confirmed)
     return me.getProcManager().distributeEvent(#createok)
   end if
@@ -203,15 +221,15 @@ on store_fullgamestatus me, tdata
   end if
   case tdata[#state] of
     1:
-      me.getVariableManager().set(#game_status, #game_waiting_for_start)
+      me.store_gamereset()
     2:
-      me.getVariableManager().set(#game_status, #game_started)
+      me.store_gamestart()
     3:
-      me.getVariableManager().set(#game_status, #game_waiting_for_restart)
+      me.store_gameend()
   end case
   repeat with i = 1 to tdata.count
     tElementId = tdata.getPropAt(i)
-    me.getProcManager().distributeEvent(tdata.getPropAt(i), tdata[i])
+    me.getProcManager().distributeEvent(tdata.getPropAt(i), tdata[i].duplicate())
   end repeat
   return 1
 end
@@ -227,16 +245,25 @@ on store_gamestatus me, tdata
   return 1
 end
 
+on store_gamestatus_turn me, tdata
+  if not objectp(tdata) then
+    return 0
+  end if
+  return me.getTurnManager()._AddTurnToBuffer(tdata)
+end
+
 on store_gamestart me, tdata
-  me.getVariableManager().set(#last_clicked_loc, point(0, 0))
+  executeMessage(#game_started)
   return me.getVariableManager().set(#game_status, #game_started)
 end
 
 on store_gameend me, tdata
+  executeMessage(#game_end)
   return me.getVariableManager().set(#game_status, #game_waiting_for_restart)
 end
 
 on store_gamereset me, tdata
+  executeMessage(#game_reset)
   return me.getVariableManager().set(#game_status, #game_waiting_for_start)
 end
 

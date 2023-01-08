@@ -52,6 +52,9 @@ on update me
 end
 
 on updateScifiDoor me
+  if me.pSprList.count < 4 then
+    return 0
+  end if
   tTopSp = me.pSprList[4]
   tMidSp1 = me.pSprList[2]
   tMidSp2 = me.pSprList[3]
@@ -95,6 +98,9 @@ on updateScifiDoor me
 end
 
 on SetScifiDoor me, tdir
+  if me.pSprList.count < 4 then
+    return 0
+  end if
   tTopSp = me.pSprList[4]
   tMidSp1 = me.pSprList[2]
   tMidSp2 = me.pSprList[3]

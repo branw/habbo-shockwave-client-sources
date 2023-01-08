@@ -40,11 +40,11 @@ on send_changeCfhType me, tCryID, tCategoryNum
   end if
   if tCategoryNum = 2 then
     tNewCategory = 1
-    executeMessage(#alert, [#Msg: "hobba_sent_to_helpers"])
+    executeMessage(#alert, [#Msg: "hobba_sent_to_moderators"])
   else
     if tCategoryNum = 1 then
       tNewCategory = 2
-      executeMessage(#alert, [#Msg: "hobba_sent_to_moderators"])
+      executeMessage(#alert, [#Msg: "hobba_sent_to_helpers"])
     else
       return error(me, "Original category number illegal:" && tCategoryNum, #send_changeCfhType)
     end if
@@ -73,9 +73,15 @@ on send_cryPick me, tCryID, tGoHelp
     if not tOk then
       return error(me, "Invalid or missing data in saved help cry!", #send_cryPick)
     end if
+    tdata[#id] = string(tdata[#room_id])
+    tdata[#name] = tdata[#roomname]
     if tdata[#type] = #private then
+      tdata[#nodeType] = 2
+      tdata[#flatId] = tdata[#id]
+      tdata[#id] = "f_" & tdata[#id]
       tdata[#casts] = getVariableValue("room.cast.private")
     else
+      tdata[#nodeType] = 0
       if ilk(tdata[#casts]) = #string then
         tCasts = tdata[#casts]
         tdata[#casts] = []
@@ -87,10 +93,8 @@ on send_cryPick me, tCryID, tGoHelp
         the itemDelimiter = tDelim
       end if
     end if
-    tdata[#id] = tdata[#room_id]
     executeMessage(#pickAndGoCFH, tdata[#sender])
-    tdata[#name] = tdata[#roomname]
-    executeMessage(#executeRoomEntry, tdata[#id], tdata)
+    executeMessage(#roomForward, tdata, tdata[#type])
   end if
   return 1
 end

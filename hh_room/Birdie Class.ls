@@ -32,8 +32,8 @@ on update me
   if the milliSeconds < pLastUpdate then
     return 
   end if
-  if me.pSprList.count < 1 then
-    return 
+  if me.pSprList.count < 2 then
+    return 0
   end if
   if pState = 1 then
     tAnim = [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 2, 3, 2, 3, 3, 1, 0]

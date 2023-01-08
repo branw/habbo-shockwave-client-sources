@@ -1,7 +1,7 @@
 property pSprite, pRandom, pCount, pAdd, pMyNo
 
-on define me, tSprite, tNo
-  pSprite = tSprite
+on define me, tsprite, tNo
+  pSprite = tsprite
   pMyNo = tNo
   me.reset()
   return 1

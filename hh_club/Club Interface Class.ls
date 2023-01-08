@@ -36,12 +36,14 @@ end
 on notify me, ttype
   case ttype of
     1001:
-      executeMessage(#alert, [#msg: "epsnotify_1001"])
+      executeMessage(#alert, [#Msg: "epsnotify_1001"])
       if connectionExists(pConnectionId) then
         removeConnection(pConnectionId)
       end if
+    551:
+      executeMessage(#alert, [#Msg: getText("club_extend_failed")])
     552:
-      executeMessage(#alert, [#msg: getText("Alert_no_credits")])
+      executeMessage(#alert, [#Msg: getText("Alert_no_credits")])
   end case
 end
 
@@ -162,6 +164,12 @@ on show_clubinfo me
   tClubInfo = me.getComponent().getStatus()
   if tClubInfo <> 0 then
     if not windowExists(pDialogId) then
+      tList = [:]
+      tList["showDialog"] = 1
+      executeMessage(#getHotelClosingStatus, tList)
+      if tList["retval"] = 1 then
+        return 1
+      end if
       me.setupWindow(pDialogId)
       tWndObj = getWindow(pDialogId)
       if tClubInfo[#daysLeft] = 0 and tClubInfo[#ElapsedPeriods] = 0 then

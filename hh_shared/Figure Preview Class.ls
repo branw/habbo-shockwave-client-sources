@@ -2,8 +2,9 @@ property pBodyPartObjects
 
 on createTemplateHuman me, tSize, tdir, tAction, tActionProps
   tProps = [:]
-  if not objectExists("temp_humanobj") then
-    if not createObject("temp_humanobj", "Human Template Class") then
+  tObjectName = "temp_humanobj"
+  if not objectExists(tObjectName) then
+    if not createObject(tObjectName, "Human Template Class") then
       return error(me, "Failed to init temporary human object!", #createTemplateHuman)
     end if
     tProps[#userName] = "temp_human_figurecreator"
@@ -17,15 +18,17 @@ on createTemplateHuman me, tSize, tdir, tAction, tActionProps
     else
       tProps[#type] = 64
     end if
-    tmember = getObject("temp_humanobj").define(tProps)
+    tmember = getObject(tObjectName).define(tProps)
+  else
+    tmember = getObject(tObjectName).getMember()
   end if
   case tAction of
     "remove":
-      removeObject("temp_humanobj")
+      removeObject(tObjectName)
     "reset":
-      call(#resetTemplateHuman, [getObject("temp_humanobj")])
+      call(#resetTemplateHuman, [getObject(tObjectName)])
     otherwise:
-      call(symbol("action_" & tAction), [getObject("temp_humanobj")], tActionProps)
+      call(symbol("action_" & tAction), [getObject(tObjectName)], tActionProps)
   end case
   return tmember
 end

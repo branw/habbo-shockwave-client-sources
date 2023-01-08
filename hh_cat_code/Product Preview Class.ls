@@ -1,4 +1,4 @@
-property pClass, pName, pCustom, pLayerProps, pDirection, pDimensions, pPartColors, pAnimFrame, pObjectType, pLoczList
+property pClass, pName, pCustom, pLayerProps, pDirection, pDimensions, pPartColors, pAnimFrame, pObjectType, pLoczList, pLocShiftList
 
 on construct me
   pClass = EMPTY
@@ -63,9 +63,12 @@ on getPicture me, tImg
     "s":
       tTempLayerProps = [:]
       tTempLayerProps.sort()
+      tTempLocShifts = [:]
+      tTempLocShifts.sort()
       repeat with f = 1 to pLayerProps.count
         tlocz = pLoczList[f][pDirection[1] + 1]
         tTempLayerProps.addProp(tlocz, pLayerProps[f])
+        tTempLocShifts.addProp(tlocz, pLocShiftList[f][pDirection[1] + 1])
       end repeat
       repeat with j = 1 to tTempLayerProps.count
         tProps = tTempLayerProps[j]
@@ -77,6 +80,15 @@ on getPicture me, tImg
         tRegp = member(tMemNum).regPoint
         tX = 100 - tRegp[1]
         tY = 150 - tRegp[2]
+        if ilk(tTempLocShifts[j]) = #point then
+          tX = tX + tTempLocShifts[j].locH
+          tY = tY + tTempLocShifts[j].locV
+        else
+          if ilk(tTempLocShifts[j]) = #integer then
+            tX = tX + tTempLocShifts[j]
+            tX = tX + tTempLocShifts[j]
+          end if
+        end if
         tRect = rect(tX, tY, tX + tImage.width, tY + tImage.height)
         if tProps[#flipH] then
           tFlipFlag = 1
@@ -170,6 +182,7 @@ on solveStuffMembers me
   j = 1
   pLayerProps = []
   pLoczList = []
+  pLocShiftList = []
   repeat while tMemNum > 0
     tFound = 0
     repeat while tFound = 0
@@ -211,8 +224,10 @@ on solveStuffMembers me
     end repeat
     if tMemNum <> 0 then
       pLoczList.add([])
+      pLocShiftList.add([])
       repeat with tdir = 0 to 7
         pLoczList.getLast().add(me.solveLocZ(numToChar(i), tdir) + i)
+        pLocShiftList.getLast().add(me.solveLocShift(numToChar(i), tdir))
       end repeat
       if tMemNum < 1 then
         tMemNum = abs(tMemNum)
@@ -285,4 +300,30 @@ on solveLocZ me, tPart, tdir
     end if
   end if
   return tPropList[tPart][#zshift][tdir + 1]
+end
+
+on solveLocShift me, tPart, tdir
+  if not memberExists(pClass & ".props") then
+    return 0
+  end if
+  tPropList = value(field(getmemnum(pClass & ".props")))
+  if ilk(tPropList) <> #propList then
+    error(me, pClass & ".props is not valid!", #solveLocShift)
+    return 0
+  else
+    if voidp(tPropList[tPart]) then
+      return 0
+    end if
+    if voidp(tPropList[tPart][#locshift]) then
+      return 0
+    end if
+    if tPropList[tPart][#locshift].count <= tdir then
+      return 0
+    end if
+    tShift = value(tPropList[tPart][#locshift][tdir + 1])
+    if ilk(tShift) = #point then
+      return tShift
+    end if
+  end if
+  return 0
 end

@@ -6,43 +6,12 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
-  case tTopic of
-    #msgstruct_numtickets:
-      return me.handle_numtickets(tdata)
-    #msgstruct_notickets:
-      return me.handle_notickets(tdata)
-    #msgstruct_users:
-      return me.handle_users(tdata)
-    #msgstruct_loungeinfo:
-      return me.handle_loungeinfo(tdata)
-    #msgstruct_instancenotavailable:
-      return me.handle_instancenotavailable(tdata)
-    #msgstruct_gameparameters:
-      return me.handle_gameparameters(tdata)
-    #msgstruct_createfailed:
-      return me.handle_createfailed(tdata)
-    #msgstruct_gamedeleted:
-      return me.handle_gamedeleted(tdata)
-    #msgstruct_joinparameters:
-      return me.handle_joinparameters(tdata)
-    #msgstruct_joinfailed:
-      return me.handle_joinfailed(tdata)
-    #msgstruct_watchfailed:
-      return me.handle_watchfailed(tdata)
-    #msgstruct_gamelocation:
-      return me.handle_gamelocation(tdata)
-    #msgstruct_startfailed:
-      return me.handle_startfailed(tdata)
-    #msgstruct_playerrejoined:
-      return me.handle_playerrejoined(tdata)
-    #msgstruct_idlewarning:
-      return me.handle_idlewarning(tdata)
-  end case
-  return 0
+on Refresh me, tTopic, tdata
+  call(symbol("handle_" & tTopic), me, tdata)
+  return 1
 end
 
-on handle_numtickets me, tMsg
+on handle_msgstruct_numtickets me, tMsg
   tNum = integer(tMsg.content.line[1].word[1])
   if not integerp(tNum) then
     return 0
@@ -50,34 +19,35 @@ on handle_numtickets me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#numtickets, tNum)
 end
 
-on handle_notickets me, tMsg
+on handle_msgstruct_notickets me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#notickets, VOID)
 end
 
-on handle_users me, tMsg
+on handle_msgstruct_users me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#users, tMsg)
 end
 
-on handle_loungeinfo me, tMsg
+on handle_msgstruct_loungeinfo me, tMsg
   tConn = tMsg.connection
-  tHasTournament = tConn.GetIntFrom()
-  if tHasTournament then
-    tdata = [:]
+  tdata = [:]
+  tdata.addProp(#tournament_flag, tConn.GetIntFrom())
+  if tdata[#tournament_flag] > 0 then
     tdata.addProp(#tournament_logo_url, tConn.GetStrFrom())
     tdata.addProp(#tournament_logo_click_url, tConn.GetStrFrom())
-    return me.getGameSystem().sendGameSystemEvent(#loungeinfo, tdata)
-  else
-    return me.getGameSystem().sendGameSystemEvent(#loungeinfo, [:])
   end if
+  tdata.addProp(#lounge_skill_name, tConn.GetStrFrom())
+  tdata.addProp(#lounge_skill_score_min, tConn.GetIntFrom())
+  tdata.addProp(#lounge_skill_score_max, tConn.GetIntFrom())
+  return me.getGameSystem().sendGameSystemEvent(#loungeinfo, tdata)
 end
 
-on handle_instancenotavailable me, tMsg
+on handle_msgstruct_instancenotavailable me, tMsg
   tConn = tMsg.connection
   tid = tConn.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#instancenotavailable, tid)
 end
 
-on handle_gameparameters me, tMsg
+on handle_msgstruct_gameparameters me, tMsg
   tConn = tMsg.connection
   tParamCount = tConn.GetIntFrom()
   tParamList = []
@@ -110,25 +80,24 @@ on handle_gameparameters me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#gameparameters, tParamList)
 end
 
-on handle_createfailed me, tMsg
+on handle_msgstruct_createfailed me, tMsg
   tConn = tMsg.connection
   tReason = tConn.GetIntFrom()
-  tReasonStr = me.get_instance_error_str(tReason)
   if tReason = 1 then
-    tdata = [#reason: tReason, #request: "create", #reasonstr: tReasonStr, #key: tConn.GetStrFrom()]
+    tdata = [#reason: tReason, #request: "create", #key: tConn.GetStrFrom()]
   else
-    tdata = [#reason: tReason, #request: "create", #reasonstr: tReasonStr]
+    tdata = [#reason: tReason, #request: "create"]
   end if
   return me.getGameSystem().sendGameSystemEvent(#createfailed, tdata)
 end
 
-on handle_gamedeleted me, tMsg
+on handle_msgstruct_gamedeleted me, tMsg
   tConn = tMsg.connection
   tid = tConn.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#gamedeleted, tid)
 end
 
-on handle_joinparameters me, tMsg
+on handle_msgstruct_joinparameters me, tMsg
   tConn = tMsg.connection
   tInstanceId = tConn.GetIntFrom()
   tParamCount = tConn.GetIntFrom()
@@ -162,70 +131,85 @@ on handle_joinparameters me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#joinparameters, tParamList)
 end
 
-on handle_joinfailed me, tMsg
+on handle_msgstruct_joinfailed me, tMsg
   tConn = tMsg.connection
   tReason = tConn.GetIntFrom()
-  tReasonStr = me.get_instance_error_str(tReason)
   if tReason = 1 then
-    tdata = [#request: "join", #reason: tReason, #reasonstr: tReasonStr, #key: tConn.GetStrFrom()]
+    tdata = [#request: "join", #reason: tReason, #key: tConn.GetStrFrom()]
   else
-    tdata = [#request: "join", #reason: tReason, #reasonstr: tReasonStr]
+    tdata = [#request: "join", #reason: tReason]
   end if
   return me.getGameSystem().sendGameSystemEvent(#joinfailed, tdata)
 end
 
-on handle_watchfailed me, tMsg
+on handle_msgstruct_watchfailed me, tMsg
   tConn = tMsg.connection
   tInstanceId = tConn.GetIntFrom()
   tReason = tConn.GetIntFrom()
-  tReasonStr = me.get_instance_error_str(tReason)
-  return me.getGameSystem().sendGameSystemEvent(#watchfailed, [#id: tInstanceId, #request: "watch", #reason: tReason, #reasonstr: tReasonStr])
+  return me.getGameSystem().sendGameSystemEvent(#watchfailed, [#id: tInstanceId, #request: "watch", #reason: tReason])
 end
 
-on handle_gamelocation me, tMsg
+on handle_msgstruct_gamelocation me, tMsg
   tConn = tMsg.connection
   tUnitId = tConn.GetIntFrom()
   tWorldId = tConn.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#gamelocation, [#unitId: tUnitId, #worldId: tWorldId])
 end
 
-on handle_startfailed me, tMsg
+on handle_msgstruct_startfailed me, tMsg
   tConn = tMsg.connection
   tReason = tConn.GetIntFrom()
-  tReasonStr = me.get_instance_error_str(tReason)
-  return me.getGameSystem().sendGameSystemEvent(#startfailed, [#reason: tReason, #request: "start", #reasonstr: tReasonStr])
+  return me.getGameSystem().sendGameSystemEvent(#startfailed, [#reason: tReason, #request: "start"])
 end
 
-on handle_playerrejoined me, tMsg
+on handle_msgstruct_playerrejoined me, tMsg
   tConn = tMsg.connection
   tid = tConn.GetIntFrom()
   return me.getGameSystem().sendGameSystemEvent(#playerrejoined, [#id: tid])
 end
 
-on handle_idlewarning me, tMsg
+on handle_msgstruct_idlewarning me, tMsg
   return me.getGameSystem().sendGameSystemEvent(#idlewarning, VOID)
 end
 
-on get_instance_error_str me, tReason
-  case tReason of
-    0:
-      return "nospace"
-    1:
-      return "invalidparam"
-    2:
-      return "notickets"
-    3:
-      return "noskill"
-    4:
-      return "dailylimit"
-    5:
-      return "blockedip"
-    6:
-      return "kicked"
-    7:
-      return "alreadythere"
-    8:
-      return "noplayers"
-  end case
-  return EMPTY
+on handle_msgstruct_heightmap me, tdata
+  tContent = tdata[#content]
+  if ilk(tContent) <> #string then
+    return 0
+  end if
+  if tContent.line[tContent.line.count] = EMPTY then
+    delete char -30003 of tContent
+  end if
+  return me.getGameSystem().getWorld().storeHeightmap(tContent)
+end
+
+on handle_msgstruct_objects me, tdata
+  tList = []
+  tCount = tdata.content.line.count
+  repeat with i = 1 to tCount
+    tLine = tdata.content.line[i]
+    if length(tLine) > 5 then
+      tObj = [:]
+      tObj[#id] = tLine.word[1]
+      tObj[#class] = tLine.word[2]
+      tObj[#x] = integer(tLine.word[3])
+      tObj[#y] = integer(tLine.word[4])
+      tObj[#h] = integer(tLine.word[5])
+      if tLine.word.count = 6 then
+        tdir = integer(tLine.word[6]) mod 8
+        tObj[#direction] = [tdir, tdir, tdir]
+        tObj[#dimensions] = 0
+      else
+        tWidth = integer(tLine.word[6])
+        tHeight = integer(tLine.word[7])
+        tObj[#dimensions] = [tWidth, tHeight]
+        tObj[#x] = tObj[#x] + tObj[#width] - 1
+        tObj[#y] = tObj[#y] + tObj[#height] - 1
+      end if
+      if tObj[#id] <> EMPTY then
+        tList.add(tObj)
+      end if
+    end if
+  end repeat
+  return me.getGameSystem().getWorld().storeObjects(tList)
 end

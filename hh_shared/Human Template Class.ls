@@ -68,6 +68,10 @@ on define me, tdata
   return pMember
 end
 
+on getMember me
+  return pMember
+end
+
 on resetTemplateHuman me
   pMoving = 0
   pDancing = 0

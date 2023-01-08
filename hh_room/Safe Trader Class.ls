@@ -22,6 +22,12 @@ on deconstruct me
 end
 
 on open me, tdata
+  tList = [:]
+  tList["showDialog"] = 1
+  executeMessage(#getHotelClosingStatus, tList)
+  if tList["retval"] = 1 then
+    return 1
+  end if
   getThread(#room).getInterface().cancelObjectMover()
   getThread(#room).getInterface().setProperty(#clickAction, "tradeItem")
   if windowExists(pTraderWndID) then

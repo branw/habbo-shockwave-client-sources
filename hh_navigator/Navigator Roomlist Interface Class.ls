@@ -54,7 +54,6 @@ on flatPasswordIncorrect me
 end
 
 on checkFlatAccess me, tFlatData
-  unregisterMessage(symbol("receivedFlatStruct" & tFlatData[#id]), me.getID())
   if tFlatData[#owner] = getObject(#session).get("user_name") then
     tDoor = "open"
   else
@@ -62,16 +61,17 @@ on checkFlatAccess me, tFlatData
     pFlatPasswords = [:]
   end if
   case tDoor of
-    "open", "closed":
+    "password":
+      me.ChangeWindowView("nav_gr_password")
+      getWindow(me.pWindowTitle).getElement("nav_roomname_text").setText(tFlatData[#name])
+      me.setProperty(#passwordNodeId, tFlatData[#id])
+    otherwise:
       if voidp(tFlatData) then
         return error(me, "Can't enter flat, no room is selected!!!", #processFlatInfo)
       end if
       return me.getComponent().executeRoomEntry(tFlatData[#id])
-    "password":
-      me.ChangeWindowView("nav_gr_password")
-      getWindow(me.pWindowTitle).getElement("nav_roomname_text").setText(tFlatData[#name])
-      me.setProperty(#viewedNodeId, tFlatData[#id])
   end case
+  return 1
 end
 
 on handleRoomListClicked me, tParm
@@ -135,20 +135,20 @@ end
 on showRoomlistError me, tText
   me.setLoadingCursor(0)
   tElem = getWindow(me.pWindowTitle).getElement("nav_roomlist")
-  tWidth = tElem.getProperty(#width)
-  tHeight = tElem.getProperty(#height)
-  tTempImg = image(tWidth, tHeight, 8)
-  tTextImg = me.pWriterPlainNormLeft.render(tText)
-  tTempImg.copyPixels(tTextImg, tTextImg.rect + rect(8, 5, 8, 5), tTextImg.rect)
-  tElem.feedImage(tTempImg)
+  if tElem <> 0 then
+    tWidth = tElem.getProperty(#width)
+    tHeight = tElem.getProperty(#height)
+    tTempImg = image(tWidth, tHeight, 8)
+    tTextImg = me.pWriterPlainNormLeft.render(tText)
+    tTempImg.copyPixels(tTextImg, tTextImg.rect + rect(8, 5, 8, 5), tTextImg.rect)
+    tElem.feedImage(tTempImg)
+  end if
 end
 
 on modifyPrivateRoom me, tFlatInfo
   if not (tFlatInfo.ilk = #propList) then
-    registerMessage(symbol("receivedFlatStruct" & tFlatInfo), me.getID(), #modifyPrivateRoom)
-    return me.getComponent().sendGetFlatInfo(tFlatInfo)
+    return me.getComponent().getInfoBroker().requestRoomData(tFlatInfo, #private, [me.getID(), #modifyPrivateRoom])
   end if
-  unregisterMessage(symbol("receivedFlatStruct" & tFlatInfo[#id]), me.getID())
   tFlatInfo = me.getComponent().getNodeInfo(tFlatInfo[#id], #own)
   if tFlatInfo = 0 then
     return error(me, "Flat info is VOID", #modifyPrivateRoom)
@@ -224,7 +224,7 @@ on leaveModifyPage me
       pModifyFlatInfo[#description] = getWindow(me.pWindowTitle).getElement("nav_modify_roomdescription_field").getText()
       pModifyFlatInfo[#maxVisitors] = getWindow(me.pWindowTitle).getElement("nav_maxusers_amount").getText()
     "nav_gr_mod_b":
-      pModifyFlatInfo[#Password] = me.getPasswordFromField("nav_modify_door_pw")
+      pModifyFlatInfo[#password] = me.getPasswordFromField("nav_modify_door_pw")
   end case
 end
 
@@ -326,7 +326,7 @@ on eventProcNavigatorPublic me, tEvent, tSprID, tParm
   if tEvent = #mouseDown then
     case tSprID of
       "nav_closeInfo":
-        me.setRoomInfoArea(#Hide)
+        me.setRoomInfoArea(#hide)
       "nav_tb_guestRooms":
         me.setLoadingCursor(1)
         me.setRoomInfoArea(#show)
@@ -342,7 +342,7 @@ on eventProcNavigatorPublic me, tEvent, tSprID, tParm
     if tEvent = #mouseUp then
       case tSprID of
         "close":
-          return me.hideNavigator(#Hide)
+          return me.hideNavigator(#hide)
         "nav_go_button":
           return me.getComponent().prepareRoomEntry(me.getProperty(#viewedNodeId))
         "nav_addtofavourites_button":
@@ -359,7 +359,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
   if tEvent = #mouseDown then
     case tSprID of
       "nav_closeInfo":
-        me.setRoomInfoArea(#Hide)
+        me.setRoomInfoArea(#hide)
       "nav_tb_publicRooms":
         me.setLoadingCursor(1)
         me.setRoomInfoArea(#show)
@@ -386,7 +386,7 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
           me.setLoadingCursor(1)
           return me.handleRoomListClicked(tParm)
         "close":
-          me.hideNavigator(#Hide)
+          me.hideNavigator(#hide)
         "nav_go_button":
           return me.getComponent().prepareRoomEntry(me.getProperty(#viewedNodeId))
         "nav_private_button_search":
@@ -399,23 +399,24 @@ on eventProcNavigatorPrivate me, tEvent, tSprID, tParm
         "nav_removefavourites_button":
           me.getComponent().sendRemoveFavoriteFlat(me.getProperty(#viewedNodeId))
           me.setProperty(#viewedNodeId, VOID)
-          me.setRoomInfoArea(#Hide)
+          me.setRoomInfoArea(#hide)
           me.getComponent().sendGetFavoriteFlats()
         "nav_ringbell_cancel_button", "nav_flatpassword_cancel_button", "nav_trypw_cancel_button", "nav_noanswer_ok_button":
           me.ChangeWindowView("nav_gr0")
           me.getComponent().updateState("enterEntry")
         "nav_flatpassword_ok_button":
-          tLastClickedId = me.getProperty(#viewedNodeId)
+          tLastClickedId = me.getProperty(#passwordNodeId)
           tCategory = me.getProperty(#categoryId)
           tTemp = me.getPasswordFromField("nav_flatpassword_field")
-          if length(tTemp) = 0 then
+          if length(tTemp) = 0 or tTemp = "null" then
             return 
           end if
           tFlatData = me.getComponent().getNodeInfo(tLastClickedId, tCategory)
           if tFlatData = 0 then
             return 0
           end if
-          tFlatData[#Password] = tTemp
+          tFlatData[#password] = tTemp
+          me.getComponent().updateSingleSubNodeInfo(tFlatData)
           me.ChangeWindowView("nav_gr_trypassword")
           me.getComponent().executeRoomEntry(tLastClickedId)
         "nav_tryagain_ok_button":
@@ -536,7 +537,7 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
       case tSprID of
         "close":
           executeMessage(#removeEnterRoomAlert)
-          me.hideNavigator(#Hide)
+          me.hideNavigator(#hide)
         "nav_go_button":
           me.getComponent().prepareRoomEntry(tNodeId)
         "nav_choosecategory":
@@ -564,7 +565,7 @@ on eventProcNavigatorModify me, tEvent, tSprID, tParm
             return 0
           end if
           tFlatData[#description] = pModifyFlatInfo[#description]
-          tFlatData[#Password] = pModifyFlatInfo[#Password]
+          tFlatData[#password] = pModifyFlatInfo[#password]
           tFlatData[#name] = convertSpecialChars(tFlatData[#name], 1)
           tFlatData[#description] = convertSpecialChars(tFlatData[#description], 1)
           me.getComponent().sendupdateFlatInfo(tFlatData)

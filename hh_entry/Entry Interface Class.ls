@@ -451,8 +451,16 @@ on eventProcEntryBar me, tEvent, tSprID, tParam
         return executeMessage(#show_hide_messenger)
       end if
     "update_habboid_text", "ownhabbo_icon_image":
-      if threadExists(#registration) then
-        getThread(#registration).getComponent().openFigureUpdate()
+      tAllowModify = 1
+      if getObject(#session).exists("allow_profile_editing") then
+        tAllowModify = getObject(#session).get("allow_profile_editing")
+      end if
+      if tAllowModify then
+        if threadExists(#registration) then
+          getThread(#registration).getComponent().openFigureUpdate()
+        end if
+      else
+        openNetPage(getText("url_figure_editor"))
       end if
     "club_icon_image", "club_bottombar_text2":
       return executeMessage(#show_clubinfo)

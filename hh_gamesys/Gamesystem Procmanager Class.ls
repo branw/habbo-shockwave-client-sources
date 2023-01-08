@@ -56,7 +56,7 @@ on defineProcessors me, tid
     tScriptList.addAt(1, tBaseProcClassList)
     tProcObject = createObject(tProcObjId, tScriptList)
     if not objectp(tProcObject) then
-      return error(me, "Unable to create processor object:" && tProcObjId, #defineProcessors)
+      return error(me, "Unable to create processor object:" && tProcObjId && tScriptList && tScriptList.ilk, #defineProcessors)
     end if
     tProcObject[#pFacadeId] = tid
     tProcObject[#pID] = tProcId
@@ -65,6 +65,9 @@ on defineProcessors me, tid
     tProcessorRegList = getVariableValue(tid & "." & tProcId & ".processor.updates")
     if listp(tProcessorRegList) then
       repeat with tMsg in tProcessorRegList
+        if tMsg = VOID then
+          return error(me, "Invalid format in processor message:" && tProcObjId && tMsg, #defineProcessors)
+        end if
         if pUpdateBrokerList[tMsg] = VOID then
           pUpdateBrokerList.addProp(tMsg, [])
         end if
