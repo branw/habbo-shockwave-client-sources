@@ -88,20 +88,11 @@ on update me
         getDownloadManager().removeActiveTask(pMemName, pCallBack)
         return error(me, "Download failed too many times:" & RETURN & pURL, #update)
       else
-        pURL = me.addRandomRefreshParamToURL(pURL)
+        pURL = getSpecialServices().addRandomParamToURL(pURL)
         me.Activate()
       end if
     end if
   end if
-end
-
-on addRandomRefreshParamToURL me, tURL
-  tSeparator = "?"
-  if tURL contains "?" then
-    tSeparator = "&"
-  end if
-  tURL = tURL & tSeparator & "r" & random(999) & "=1"
-  return tURL
 end
 
 on importFileToCast me

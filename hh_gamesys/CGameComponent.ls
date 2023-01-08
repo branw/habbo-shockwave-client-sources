@@ -1,7 +1,9 @@
-property pWaitingForSync, pTurnContainerClass, pTurnContainerPool, m_iAllocationModel, m_rObjectPool, m_sHandler, m_rHandler, m_rQuickRandom, m_rCurrentTurn, m_rNextTurn, m_fTurnT, m_fTurnPulse, m_ar_turnBuffer, m_syncLostTime, m_iSpeedUp, m_iLastMS, m_iLastSubTurn, m_iSubTurnSpacing, m_aLastTurnData, m_bDump
+property pWaitingForSync, pWaitingForSyncCounter, pWaitingForSyncThreshold, pTurnContainerClass, pTurnContainerPool, m_iAllocationModel, m_rObjectPool, m_sHandler, m_rHandler, m_rQuickRandom, m_rCurrentTurn, m_rNextTurn, m_fTurnT, m_fTurnPulse, m_ar_turnBuffer, m_syncLostTime, m_iSpeedUp, m_iLastMS, m_iLastSubTurn, m_iSubTurnSpacing, m_aLastTurnData, m_bDump
 
 on construct me
   pWaitingForSync = 0
+  pWaitingForSyncCounter = 0
+  pWaitingForSyncThreshold = 90
   pTurnContainerClass = getClassVariable("gamesystem.turn.class")
   pTurnContainerPool = []
   m_iAllocationModel = #pool
@@ -40,6 +42,7 @@ end
 
 on StartMinigameEngine me
   pWaitingForSync = 0
+  pWaitingForSyncCounter = 0
   m_fTurnT = 0.0
   m_iLastMS = the milliSeconds
   m_iLastSubTurn = -1
@@ -113,7 +116,12 @@ end
 on _AdvanceTurn me
   me._ClearCurrentTurn()
   if pWaitingForSync then
-    return 0
+    pWaitingForSyncCounter = pWaitingForSyncCounter + 1
+    if pWaitingForSyncCounter < pWaitingForSyncThreshold then
+      return 0
+    end if
+    pWaitingForSyncCounter = 0
+    return me.getMessageSender().sendRequestFullStatusUpdate()
   end if
   case me._TurnBufferState() of
     #ready, #overfill:
