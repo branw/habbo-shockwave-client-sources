@@ -453,6 +453,9 @@ end
 
 on showErrorMessage me, tErrorType, tRequestStr, tExtra
   case tErrorType of
+    2:
+      executeMessage(#openOneClickGameBuyWindow)
+      return 1
     "game_deleted":
       tAlertStr = "gs_error_game_deleted"
     "idlewarning":
