@@ -182,10 +182,18 @@ on tryNextDownload me
   tDownloadURL = pDynDownloadURL & pFurniCastNameTemplate
   tFixedAssetId = replaceChunks(tAliasedAssetId, " ", "_")
   tDownloadURL = replaceChunks(tDownloadURL, "%typeid%", tFixedAssetId)
-  if not voidp(pFurniRevisionList.findPos(tAssetId)) then
-    tRevision = string(pFurniRevisionList[tAssetId])
+  tRawAssetId = tAssetId
+  if chars(tAssetId, 1, 2) = "s_" then
+    tRawAssetId = chars(tAssetId, 3, tAssetId.length)
+  end if
+  if not voidp(pFurniRevisionList.findPos(tRawAssetId)) then
+    tRevision = string(pFurniRevisionList[tRawAssetId])
   else
-    tRevision = EMPTY
+    if tAssetId contains "poster" then
+      tRevision = string(pFurniRevisionList["poster"])
+    else
+      tRevision = EMPTY
+    end if
   end if
   tDownloadURL = replaceChunks(tDownloadURL, "%revision%", tRevision)
   tDownloadObj.setDownloadName(tDownloadURL)
