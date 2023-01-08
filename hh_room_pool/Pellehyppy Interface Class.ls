@@ -321,6 +321,11 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
     end if
     return 0
   end if
+  if tEvent = #mouseDown then
+    getWindow(pBottomBarId).lock(0)
+    getWindowManager().Activate(pBottomBarId)
+    getWindow(pBottomBarId).lock(1)
+  end if
   if tEvent = #mouseUp then
     if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then
       case tSprID of

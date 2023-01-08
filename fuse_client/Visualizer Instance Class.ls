@@ -278,7 +278,9 @@ on refresh me
   pheight = tRect.height
   if pSpriteData.count > 0 then
     repeat with i = 1 to pSpriteList.count
-      pSpriteData[i][#loc] = pSpriteList[i].loc - [tRect[1], tRect[2]]
+      if listp(pSpriteData[i]) then
+        pSpriteData[i][#loc] = pSpriteList[i].loc - [tRect[1], tRect[2]]
+      end if
     end repeat
   end if
   return 1
