@@ -367,6 +367,16 @@ on getClassContainer me
   return getObject(pClassContId)
 end
 
+on isCreditFurniClass me, tClass
+  if getObject(pClassContId).exists(tClass) then
+    tClasses = value(getObject(pClassContId).GET(tClass))
+    if tClasses.getOne("Credit Furni Class") > 0 then
+      return 1
+    end if
+  end if
+  return 0
+end
+
 on getOwnUser me
   return me.getUserObject(getObject(#session).GET("user_index"))
 end

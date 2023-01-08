@@ -21,6 +21,8 @@ on construct me
   pAliasList = [:]
   pAliasListReceived = 0
   pAliasListLoading = 0
+  me.setAssetAlias(VOID, VOID)
+  me.setFurniRevision(VOID, VOID, VOID)
   pBypassList = value(getVariable("dyn.download.bypass.list", []))
 end
 
@@ -277,7 +279,17 @@ on copyMemberToBin me, tSourceMember, tTargetAssetClass
   if voidp(tTargetAssetClass) then
     tTargetAssetClass = EMPTY
   end if
-  if tSourceMember.type <> #empty then
+  tAllowCopy = 1
+  if tSourceMember.type = #empty then
+    tAllowCopy = 0
+  else
+    if tSourceMember.type = #script then
+      if tSourceMember.scriptType = #movie then
+        tAllowCopy = 0
+      end if
+    end if
+  end if
+  if tAllowCopy then
     if getmemnum(tSourceMember.name) = 0 then
       tSourceMemName = tSourceMember.name
       tTargetMemName = me.doAliasReplacing(tSourceMemName, tTargetAssetClass)
