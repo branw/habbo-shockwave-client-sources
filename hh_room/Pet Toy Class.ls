@@ -13,7 +13,7 @@ on updateStuffdata me, tValue
 end
 
 on updateRuntimeData me, tValue
-  if tValue = "p/1/" then
+  if tValue = "1" then
     pUpdateFrame = 0
     pActive = 1
     pTimer = the milliSeconds

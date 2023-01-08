@@ -24,11 +24,14 @@ on define me, tdata
     error(me, "Canvas size not found, using default!", #define)
     me.pCanvasSize = [#std: [64, 102, 32, -8], #lay: [89, 102, 32, -4]]
   end if
-  if not memberExists(me.pClass && me.pName && "Canvas") then
-    createMember(me.pClass && me.pName && "Canvas", #bitmap)
+  if me.pCanvasName = VOID then
+    me.pCanvasName = me.pClass && me.pName && me.getID() && "Canvas"
+  end if
+  if not memberExists(me.pCanvasName) then
+    createMember(me.pCanvasName, #bitmap)
   end if
   tSize = me.pCanvasSize[#std]
-  me.pMember = member(getmemnum(me.pClass && me.pName && "Canvas"))
+  me.pMember = member(getmemnum(me.pCanvasName))
   me.pMember.image = image(tSize[1], tSize[2], tSize[3])
   me.pMember.regPoint = point(0, me.pMember.image.height + tSize[4])
   me.pBuffer = me.pMember.image

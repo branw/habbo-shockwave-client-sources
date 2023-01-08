@@ -1342,6 +1342,9 @@ on eventProcRoom me, tEvent, tSprID, tParam
   if me.getComponent().getSpectatorMode() then
     return 1
   end if
+  if me.getComponent().getOwnUser() = 0 then
+    return 1
+  end if
   if tEvent = #mouseUp and tSprID contains "command:" then
     tCmd = convertToHigherCase(tSprID.word[2])
     tPrm = [:]
@@ -1478,6 +1481,9 @@ end
 on eventProcActiveObj me, tEvent, tSprID, tParam
   if not me.validateEvent(tEvent, tSprID, the mouseLoc) then
     return 0
+  end if
+  if me.getComponent().getOwnUser() = 0 then
+    return 1
   end if
   tObject = me.getComponent().getActiveObject(tSprID)
   if the shiftDown then

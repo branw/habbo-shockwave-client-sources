@@ -50,8 +50,8 @@ on deconstruct me
   if pShadowSpr.ilk = #sprite then
     releaseSprite(pShadowSpr.spriteNum)
   end if
-  if memberExists(pClass && pIDPrefix && pName && "Canvas") then
-    removeMember(pClass && pIDPrefix && pName && "Canvas")
+  if memberExists(me.getCanvasName()) then
+    removeMember(me.getCanvasName())
   end if
   pShadowSpr = VOID
   pMatteSpr = VOID
@@ -61,10 +61,10 @@ end
 
 on define me, tdata
   me.setup(tdata)
-  if not memberExists(pClass && pIDPrefix && pName && "Canvas") then
-    createMember(pClass && pIDPrefix && pName && "Canvas", #bitmap)
+  if not memberExists(me.getCanvasName()) then
+    createMember(me.getCanvasName(), #bitmap)
   end if
-  pMember = member(getmemnum(pClass && pIDPrefix && pName && "Canvas"))
+  pMember = member(getmemnum(me.getCanvasName()))
   pMember.image = image(pCanvasSize[1], pCanvasSize[2], pCanvasSize[3])
   pMember.regPoint = point(0, pMember.image.height + pCanvasSize[4])
   pBuffer = pMember.image.duplicate()
@@ -473,6 +473,10 @@ on flipImage me, tImg_a
   return tImg_b
 end
 
+on getCanvasName me
+  return pClass && pIDPrefix && pName & me.getID() && "Canvas"
+end
+
 on getOffsetList me
   tList = [:]
   tList["hd_std"] = [[36, -21], [38, -18], [37, -18], [32, -15], [32, -20]]
@@ -530,7 +534,7 @@ on action_mv me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = float(tloc.item[3])
+  tLocH = getLocalFloat(tloc.item[3])
   the itemDelimiter = tDelim
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
@@ -545,7 +549,7 @@ on action_sld me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = float(tloc.item[3])
+  tLocH = getLocalFloat(tloc.item[3])
   the itemDelimiter = tDelim
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   pDestLScreen = pGeometry.getScreenCoordinate(tLocX, tLocY, tLocH)
@@ -556,10 +560,10 @@ on action_sit me, tProps
   pMainAction = "sit"
   pPartList[pPartIndex["bd"]].defineAct("sit")
   if pCorrectLocZ then
-    pRestingHeight = float(tProps.word[2]) - pLocH
+    pRestingHeight = getLocalFloat(tProps.word[2]) - pLocH
     pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   else
-    pRestingHeight = float(tProps.word[2])
+    pRestingHeight = getLocalFloat(tProps.word[2])
     pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pRestingHeight)
   end if
 end
@@ -583,10 +587,10 @@ on action_lay me, tProps
   pMainAction = "lay"
   pPartList[pPartIndex["bd"]].defineAct("lay")
   if pCorrectLocZ then
-    pRestingHeight = float(tProps.word[2]) - pLocH
+    pRestingHeight = getLocalFloat(tProps.word[2]) - pLocH
     pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   else
-    pRestingHeight = float(tProps.word[2])
+    pRestingHeight = getLocalFloat(tProps.word[2])
     pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pRestingHeight)
   end if
 end

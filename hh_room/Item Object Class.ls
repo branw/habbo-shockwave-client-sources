@@ -140,6 +140,12 @@ on solveMembers me
 end
 
 on updateColor me, tHexstr
+  if not listp(pSprList) then
+    return 0
+  end if
+  if pSprList.count < 1 then
+    return 0
+  end if
   tSpr = pSprList[1]
   tSpr.ink = 8
   if pClass = "post.it" then

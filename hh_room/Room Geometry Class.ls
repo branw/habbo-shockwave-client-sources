@@ -13,12 +13,12 @@ on construct me
 end
 
 on define me, tdata
-  pXOffset = float(tdata[#offsetx])
-  pYOffset = float(tdata[#offsety])
-  pZOffset = float(tdata[#offsetz])
-  pXFactor = float(tdata[#factorx])
-  pYFactor = float(tdata[#factory])
-  pHFactor = float(tdata[#factorh])
+  pXOffset = getLocalFloat(tdata[#offsetx])
+  pYOffset = getLocalFloat(tdata[#offsety])
+  pZOffset = getLocalFloat(tdata[#offsetz])
+  pXFactor = getLocalFloat(tdata[#factorx])
+  pYFactor = getLocalFloat(tdata[#factory])
+  pHFactor = getLocalFloat(tdata[#factorh])
   return 1
 end
 

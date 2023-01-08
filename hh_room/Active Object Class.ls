@@ -122,9 +122,9 @@ on setSlideTo me, tFromLoc, tToLoc, tTimeNow, tHasCharacter
   end if
   pSlideStartTime = tTimeNow
   pLastSlideUpdateTime = pSlideStartTime
-  pLocX = tFromLoc[1].float
-  pLocY = tFromLoc[2].float
-  pLocH = tFromLoc[3].float
+  pLocX = getLocalFloat(tFromLoc[1])
+  pLocY = getLocalFloat(tFromLoc[2])
+  pLocH = getLocalFloat(tFromLoc[3])
   tDistances = []
   tDistances[1] = abs(tFromLoc[1] - tToLoc[1])
   tDistances[2] = abs(tFromLoc[2] - tToLoc[2])

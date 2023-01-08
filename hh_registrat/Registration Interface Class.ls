@@ -359,7 +359,16 @@ on setMyDataToFields me
         tWndObj.getElement("reg_name").setText(tText)
       end if
       if tWndObj.elementExists("reg_age") then
-        tText = getText("reg_check_age", "reg_check_age") && pPropsToServer["birthday"]
+        if getVariable("fuse.project.id") = "habbo_us" then
+          tDelim = the itemDelimiter
+          the itemDelimiter = "."
+          tDate = pPropsToServer["birthday"]
+          tText = tDate.item[2] & "/" & tDate.item[1] & "/" & tDate.item[3]
+          the itemDelimiter = tDelim
+        else
+          tText = pPropsToServer["birthday"]
+        end if
+        tText = getText("reg_check_age", "reg_check_age") && tText
         tWndObj.getElement("reg_age").setText(tText)
       end if
       if tWndObj.elementExists("reg_mail") then

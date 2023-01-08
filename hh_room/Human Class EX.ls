@@ -55,8 +55,8 @@ on deconstruct me
   releaseSprite(pSprite.spriteNum)
   releaseSprite(pMatteSpr.spriteNum)
   releaseSprite(pShadowSpr.spriteNum)
-  if memberExists(pClass && pName && "Canvas") then
-    removeMember(pClass && pName && "Canvas")
+  if memberExists(me.getCanvasName()) then
+    removeMember(me.getCanvasName())
   end if
   call(#deconstruct, pExtraObjs)
   pExtraObjs = VOID
@@ -68,11 +68,11 @@ end
 
 on define me, tdata
   me.setup(tdata)
-  if not memberExists(pClass && pName && "Canvas") then
-    createMember(pClass && pName && "Canvas", #bitmap)
+  if not memberExists(me.getCanvasName()) then
+    createMember(me.getCanvasName(), #bitmap)
   end if
   tSize = pCanvasSize[#std]
-  pMember = member(getmemnum(pClass && pName && "Canvas"))
+  pMember = member(getmemnum(me.getCanvasName()))
   pMember.image = image(tSize[1], tSize[2], tSize[3])
   pMember.regPoint = point(0, pMember.image.height + tSize[4])
   pBuffer = pMember.image.duplicate()
@@ -648,6 +648,10 @@ on flipImage me, tImg_a
   return tImg_b
 end
 
+on getCanvasName me
+  return pClass && pName & me.getID() && "Canvas"
+end
+
 on action_mv me, tProps
   pMainAction = "wlk"
   pMoving = 1
@@ -656,7 +660,7 @@ on action_mv me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = float(tloc.item[3])
+  tLocH = getLocalFloat(tloc.item[3])
   the itemDelimiter = tDelim
   pMoveStart = the milliSeconds
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH)
@@ -671,7 +675,7 @@ on action_sld me, tProps
   tloc = tProps.word[2]
   tLocX = integer(tloc.item[1])
   tLocY = integer(tloc.item[2])
-  tLocH = float(tloc.item[3])
+  tLocH = getLocalFloat(tloc.item[3])
   the itemDelimiter = tDelim
   pQueuesWithObj = integer(tProps.word[3])
   pStartLScreen = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
@@ -688,7 +692,7 @@ end
 on action_sit me, tProps
   call(#defineActMultiple, pPartList, "sit", ["bd", "lg", "sh"])
   pMainAction = "sit"
-  pRestingHeight = float(tProps.word[2]) - 1.0
+  pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   tIsInQueue = integer(tProps.word[3])
   pQueuesWithObj = tIsInQueue
@@ -697,7 +701,7 @@ end
 on action_lay me, tProps
   pMainAction = "lay"
   pCarrying = 0
-  pRestingHeight = float(tProps.word[2]) - 1.0
+  pRestingHeight = getLocalFloat(tProps.word[2]) - 1.0
   pScreenLoc = pGeometry.getScreenCoordinate(pLocX, pLocY, pLocH + pRestingHeight)
   case pFlipList[pDirection + 1] of
     2:

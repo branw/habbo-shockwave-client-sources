@@ -203,7 +203,7 @@ on getProperty me, tProp
     #stripId:
       return pStripID
     #itemLocStr:
-      return pItemLocStr
+      return deobfuscate(pItemLocStr)
     #loc:
       if pPause then
         return pGeometry.getWorldCoordinate(pLastLoc[1], pLastLoc[2])
@@ -295,7 +295,7 @@ on moveItem me
         pSprList[i].blend = 100
       end repeat
       tWallObjLoc = tProps[#wallObject].getLocation()
-      pItemLocStr = ":w=" & tWallObjLoc[1] & "," & tWallObjLoc[2] && "l=" & tProps[#localCoordinate][1] & "," & tProps[#localCoordinate][2] && tProps.direction.char[1]
+      pItemLocStr = obfuscate(":w=" & tWallObjLoc[1] & "," & tWallObjLoc[2] && "l=" & tProps[#localCoordinate][1] & "," & tProps[#localCoordinate][2] && tProps.direction.char[1])
     end if
     tName = pSprList[1].member.name
     tMemNum = getmemnum(tProps[#direction] && tName.word[2..tName.word.count])

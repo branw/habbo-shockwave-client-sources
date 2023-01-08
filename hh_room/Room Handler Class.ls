@@ -78,7 +78,7 @@ on handle_status me, tMsg
       the itemDelimiter = ","
       tuser[#x] = integer(tloc.item[1])
       tuser[#y] = integer(tloc.item[2])
-      tuser[#h] = float(tloc.item[3])
+      tuser[#h] = getLocalFloat(tloc.item[3])
       tuser[#dirHead] = integer(tloc.item[4]) mod 8
       tuser[#dirBody] = integer(tloc.item[5]) mod 8
       tActions = []
@@ -155,7 +155,7 @@ on handle_users me, tMsg
       "l":
         tList[tuser][#x] = integer(tdata.word[1])
         tList[tuser][#y] = integer(tdata.word[2])
-        tList[tuser][#h] = float(tdata.word[3])
+        tList[tuser][#h] = getLocalFloat(tdata.word[3])
       "c":
         tList[tuser][#Custom] = tdata
       "s":
@@ -277,7 +277,7 @@ on parseActiveObject me, tConn
   tDirection = tConn.GetIntFrom() mod 8
   tObj[#direction] = [tDirection, tDirection, tDirection]
   tObj[#dimensions] = [tWidth, tHeight]
-  tObj[#altitude] = float(tConn.GetStrFrom())
+  tObj[#altitude] = getLocalFloat(tConn.GetStrFrom())
   tObj[#colors] = tConn.GetStrFrom()
   if tObj[#colors] = EMPTY then
     tObj[#colors] = "0"
@@ -381,8 +381,8 @@ on handle_items me, tMsg
         tlocation = tLine.item[4].word[2..tLine.item[4].word.count]
         the itemDelimiter = ","
         tObj[#x] = 0
-        tObj[#y] = float(tlocation.item[1])
-        tObj[#h] = float(tlocation.item[2])
+        tObj[#y] = tlocation.item[1]
+        tObj[#h] = getLocalFloat(tlocation.item[2])
         tObj[#z] = integer(tlocation.item[3])
         tObj[#formatVersion] = #old
       else
@@ -594,9 +594,16 @@ on handle_trade_items me, tMsg
     tdata[#accept] = tLine.word[2]
     tItemStr = "foo" & RETURN & tLine.word[3..tLine.word.count] & RETURN & 1
     tdata[#items] = me.handle_stripinfo([#subject: 108, #content: tItemStr]).getaProp(#objects)
-    tMessage[tLine.word[1]] = tdata
+    if not listp(tdata[#items]) then
+      return error(me, "Invalid itemdata from server!", #handle_trade_items)
+    end if
+    tUserName = tLine.word[1]
+    if tUserName = EMPTY then
+      return error(me, "No username from server", #handle_trade_items)
+    end if
+    tMessage[tUserName] = tdata
   end repeat
-  me.getInterface().getSafeTrader().refresh(tMessage)
+  return me.getInterface().getSafeTrader().refresh(tMessage)
 end
 
 on handle_trade_close me, tMsg
@@ -748,8 +755,8 @@ on handle_slideobjectbundle me, tMsg
   repeat with tCount = 1 to tStuffCount
     tObj = []
     tItemID = tConn.GetIntFrom()
-    tItemFromH = tConn.GetStrFrom().float
-    tItemToH = tConn.GetStrFrom().float
+    tItemFromH = getLocalFloat(tConn.GetStrFrom())
+    tItemToH = getLocalFloat(tConn.GetStrFrom())
     tFrom = [tFromX, tFromY, tItemFromH]
     tTo = [tToX, tToY, tItemToH]
     tObj = [tItemID, tFrom, tTo]
@@ -775,8 +782,8 @@ on handle_slideobjectbundle me, tMsg
   return error(me, "Incompatible character movetype", #handle_slideobjectbundle)
   if tHasCharacter then
     tCharID = tConn.GetIntFrom()
-    tFromH = float(tConn.GetStrFrom())
-    tToH = float(tConn.GetStrFrom())
+    tFromH = getLocalFloat(tConn.GetStrFrom())
+    tToH = getLocalFloat(tConn.GetStrFrom())
     tUserObj = me.getComponent().getUserObject(tCharID)
     if tUserObj <> 0 then
       tCommandStr = tMoveType && tToX & "," & tToY & "," & tToH && tContainsObjects.integer && tTimeNow

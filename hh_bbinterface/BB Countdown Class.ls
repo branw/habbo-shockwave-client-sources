@@ -41,6 +41,9 @@ on startGameCountdown me, tSecondsLeft, tSecondsNowElapsed
     else
       tWndObj.moveTo(25, 26)
     end if
+    if me.getGameSystem().getTournamentFlag() then
+      tWndObj.getElement("bb_gameprice").hide()
+    end if
     tElem = tWndObj.getElement("bb_bar_cntDwn")
     tElem.setProperty(#member, member(getmemnum("bb_scrbar_4")))
     tElem.resizeTo(159, 13)
