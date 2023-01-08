@@ -830,7 +830,7 @@ end
 
 on setRollOverInfo me, tInfo
   tWndObj = getWindow(pBottomBarId)
-  if tWndObj <> 0 then
+  if tWndObj.elementExists("room_tooltip_text") then
     tWndObj.getElement("room_tooltip_text").setText(tInfo)
   end if
 end
