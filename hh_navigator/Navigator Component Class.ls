@@ -214,24 +214,28 @@ on createNaviHistory me, tCategoryId
   if tCategoryId = VOID then
     return 0
   end if
-  tTreeInfo = me.getTreeInfoFor(tCategoryId)
-  if listp(tTreeInfo) then
-    tParentId = tTreeInfo[#parentid]
+  tParentInfo = me.getTreeInfoFor(tCategoryId)
+  if tCategoryId = pRootUnitCatId or tCategoryId = pRootFlatCatId then
+    tParentInfo = 0
   end if
-  tParentInfo = me.getTreeInfoFor(tParentId)
+  if listp(tParentInfo) then
+    tParentId = tParentInfo[#parentid]
+    tParentInfo = me.getTreeInfoFor(tParentId)
+  end if
   repeat while tParentInfo <> 0
-    if pNaviHistory.getPos(tParentInfo[#parentid]) = 0 then
-      pNaviHistory.addAt(1, tParentId)
-      tText = tParentInfo[#name] & RETURN & tText
-      if tParentId = pRootUnitCatId or tParentId = pRootFlatCatId then
-        tParentInfo = 0
-      else
-        tParentId = tParentInfo[#parentid]
-        tParentInfo = me.getTreeInfoFor(tParentId)
-      end if
+    if pNaviHistory.getPos(tParentInfo[#parentid]) > 0 then
+      tParentInfo = 0
+      error(me, "Category loop detected in navigation data!", #createNaviHistory)
       next repeat
     end if
-    return error(me, "Category loop detected in navigation data!", #createNaviHistory)
+    pNaviHistory.addAt(1, tParentId)
+    tText = tParentInfo[#name] & RETURN & tText
+    if tParentId = pRootUnitCatId or tParentId = pRootFlatCatId then
+      tParentInfo = 0
+      next repeat
+    end if
+    tParentId = tParentInfo[#parentid]
+    tParentInfo = me.getTreeInfoFor(tParentId)
   end repeat
   if getObject(#session).get("lastroom") <> "Entry" then
     pNaviHistory.addAt(1, #entry)

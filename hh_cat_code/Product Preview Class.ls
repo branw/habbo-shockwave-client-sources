@@ -131,11 +131,16 @@ on solveInk me, tPart
     return 8
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
-  if tPropList[tPart] = VOID then
+  if ilk(tPropList) <> #propList then
+    error(me, pClass & ".props is not valid!", #solveInk)
     return 8
-  end if
-  if tPropList[tPart][#ink] <> VOID then
-    return tPropList[tPart][#ink]
+  else
+    if tPropList[tPart] = VOID then
+      return 8
+    end if
+    if tPropList[tPart][#ink] <> VOID then
+      return tPropList[tPart][#ink]
+    end if
   end if
   return 8
 end
@@ -145,11 +150,16 @@ on solveBlend me, tPart
     return 100
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
-  if tPropList[tPart] = VOID then
+  if ilk(tPropList) <> #propList then
+    error(me, pClass & ".props is not valid!", #solveBlend)
     return 100
-  end if
-  if tPropList[tPart][#blend] <> VOID then
-    return tPropList[tPart][#blend]
+  else
+    if tPropList[tPart] = VOID then
+      return 100
+    end if
+    if tPropList[tPart][#blend] <> VOID then
+      return tPropList[tPart][#blend]
+    end if
   end if
   return 100
 end
@@ -260,14 +270,19 @@ on solveLocZ me, tPart, tdir
     return charToNum(tPart)
   end if
   tPropList = value(field(getmemnum(pClass & ".props")))
-  if tPropList[tPart] = VOID then
+  if ilk(tPropList) <> #propList then
+    error(me, pClass & ".props is not valid!", #solveLocZ)
     return 0
-  end if
-  if tPropList[tPart][#zshift] = VOID then
-    return 0
-  end if
-  if tPropList[tPart][#zshift].count <= tdir then
-    tdir = 0
+  else
+    if tPropList[tPart] = VOID then
+      return 0
+    end if
+    if tPropList[tPart][#zshift] = VOID then
+      return 0
+    end if
+    if tPropList[tPart][#zshift].count <= tdir then
+      tdir = 0
+    end if
   end if
   return tPropList[tPart][#zshift][tdir + 1]
 end

@@ -133,12 +133,10 @@ on showRoomBar me
   end if
   tWndObj.lock(1)
   tWndObj.unmerge()
-  tSpectatorMode = me.getComponent().getSpectatorMode()
-  tModSpectator = getObject(#session).get("user_rights").getOne("fuse_enter_full_rooms")
-  if tSpectatorMode and tModSpectator or not tSpectatorMode then
-    tLayout = "room_bar.window"
-  else
+  if me.getComponent().getSpectatorMode() then
     tLayout = "room_bar_spectator.window"
+  else
+    tLayout = "room_bar.window"
   end if
   if not tWndObj.merge(tLayout) then
     return 0
@@ -1531,7 +1529,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     error(me, "User object not found:" && tSprID, #eventProcUserObj)
     return me.eventProcRoom(tEvent, "floor")
   end if
-  if the shiftDown then
+  if the shiftDown and the optionDown then
     return me.outputObjectInfo(tSprID, "user", the rollover)
   end if
   if pClickAction = "moveActive" or pClickAction = "placeActive" then
