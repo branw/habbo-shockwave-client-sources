@@ -91,7 +91,7 @@ on ShowAlert me, tProps
   if stringp(tProps[#title]) then
     tWndObj.merge("habbo_alert_a.window")
     tTitle = getText(tProps[#title])
-    getWriter(pWriterBold).define([#alignment: #center])
+    getWriter(pWriterBold).define([#alignment: #center, #color: rgb(0, 0, 0)])
     tTitleImg = getWriter(pWriterBold).render(tTitle).duplicate()
     tTitleElem = tWndObj.getElement("alert_title")
     tTitleElem.feedImage(tTitleImg)
@@ -371,7 +371,7 @@ on eventProcPurse me, tEvent, tElemID, tParam, tWndID
         if tSession.exists("user_checksum") then
           tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
         end if
-        openNetPage(tURL, "_new")
+        openNetPage(tURL)
     end case
   end if
 end
@@ -394,13 +394,13 @@ on eventProcHelp me, tEvent, tElemID, tParam, tWndID
               tURL = tURL & "&sum=" & urlEncode(tSession.GET("user_checksum"))
             end if
           end if
-          openNetPage(tURL, "_new")
+          openNetPage(tURL)
         end if
         return 1
       "close", "help_ok", "help_choise_cancel":
         return me.removeDialog(tWndID, pWindowList)
       "help_tutorial_link":
-        openNetPage(getText("reg_tutorial_url", "_new"))
+        openNetPage(getText("reg_tutorial_url"))
       "help_callforhelp_textlink":
         me.removeDialog(tWndID, pWindowList)
         me.showDialog(#help_choice)

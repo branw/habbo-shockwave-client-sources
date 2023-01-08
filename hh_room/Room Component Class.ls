@@ -1083,6 +1083,7 @@ on processTeleportStruct me, tFlatStruct
   if not listp(tFlatStruct) then
     return 0
   end if
+  tFlatStruct = tFlatStruct.duplicate()
   tFlatStruct[#id] = tFlatStruct[#flatId]
   tFlatStruct.addProp(#teleport, getObject(#session).GET("target_door_ID"))
   getObject(#session).Remove("target_flat_id")

@@ -443,7 +443,7 @@ on showNodeInfo me, tNodeId
         if voidp(tNodeInfo[#description]) then
           tNodeInfo[#description] = "-"
         end if
-        if getObject(#session).get("user_rights").getOne("fuse_see_flat_ids") <> 0 then
+        if getObject(#session).GET("user_rights").getOne("fuse_see_flat_ids") <> 0 then
           tNameTxt = tNodeInfo[#name] && "(id: " & tNodeInfo[#flatId] & ")"
         else
           tNameTxt = tNodeInfo[#name]
@@ -854,7 +854,7 @@ on updatePasswordAsterisks me, tParams
 end
 
 on sendTrackingCall me
-  tTrackingHeader = getObject(#session).get("tracking_header")
+  tTrackingHeader = getObject(#session).GET("tracking_header")
   if tTrackingHeader = 0 then
     return error(me, "Tracking header not in session.", #sendTrackingCall)
   end if

@@ -368,6 +368,7 @@ on InitializeBanCheckBoxes me
   tOffImg = getMember("button.checkbox.off").image
   tWndObj.getElement("modtool_checkbox_ip").feedImage(tOffImg)
   tWndObj.getElement("modtool_checkbox_computer").feedImage(tOffImg)
+  pModToolCheckBoxes = [0, 0]
   return 1
 end
 

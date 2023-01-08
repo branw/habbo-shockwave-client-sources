@@ -1,8 +1,12 @@
+property pLastRoomForwardTimeStamp
+
 on construct me
+  pLastRoomForwardTimeStamp = 0
   return me.regMsgList(1)
 end
 
 on deconstruct me
+  pLastRoomForwardTimeStamp = 0
   return me.regMsgList(0)
 end
 
@@ -37,7 +41,7 @@ on handle_flatinfo me, tMsg
   if tFlat[#absoluteMaxVisitors] < 1 then
     tFlat[#absoluteMaxVisitors] = 50
   end if
-  if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).get(#user_name) then
+  if tFlat[#alert] = 1 and tFlat[#owner] = getObject(#session).GET(#user_name) then
     executeMessage(#setEnterRoomAlert, "alert_no_category")
   end if
   me.getComponent().updateSingleSubNodeInfo(tFlat)
@@ -298,6 +302,13 @@ on handle_parentchain me, tMsg
 end
 
 on handle_roomforward me, tMsg
+  tTimeSinceLast = the milliSeconds - pLastRoomForwardTimeStamp
+  tTimeout = getVariable("navigator.room.forward.timeout")
+  if tTimeSinceLast < tTimeout then
+    return 0
+  else
+    pLastRoomForwardTimeStamp = the milliSeconds
+  end if
   tConn = tMsg.connection
   tIsPublic = tConn.GetIntFrom()
   if tIsPublic > 0 then

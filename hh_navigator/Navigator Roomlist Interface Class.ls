@@ -48,7 +48,7 @@ on flatPasswordIncorrect me
 end
 
 on checkFlatAccess me, tFlatData
-  if tFlatData[#owner] = getObject(#session).get("user_name") then
+  if tFlatData[#owner] = getObject(#session).GET("user_name") then
     tDoor = "open"
   else
     tDoor = tFlatData[#door]
@@ -156,7 +156,7 @@ on modifyPrivateRoom me, tFlatInfo
   unregisterMessage(#flatcat_received, me.getID())
   pFlatPasswords = [:]
   pDoorStatusModified = 0
-  if tFlatInfo[#owner] <> getObject(#session).get("user_name") then
+  if tFlatInfo[#owner] <> getObject(#session).GET("user_name") then
     return 0
   end if
   me.setModifyFirstPage()
@@ -290,7 +290,7 @@ on prepareCategoryDropMenu me, tNodeId
   if not ilk(tDropDown, #instance) then
     return error(me, "Unable to retrieve dropdown:" && tDropDown, #prepareCategoryDropMenu)
   end if
-  tCatProps = getObject(#session).get("user_flat_cats")
+  tCatProps = getObject(#session).GET("user_flat_cats")
   if not ilk(tCatProps, #propList) then
     return error(me, "Category list was not a property list:" && tCatProps, #prepareCategoryDropMenu)
   end if

@@ -301,7 +301,7 @@ on handleContentResponse me, tMsg, tContent
           end if
         end if
       else
-        openNetPage(tCompleteUrl)
+        openNetPage(tCompleteUrl, "_new")
         pNetDone = 1
       end if
     end if
