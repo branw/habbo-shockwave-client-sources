@@ -101,9 +101,10 @@ on eventProcSnowwarUserRollOver me, tEvent, tid, tProp
         tOwnPlayer = 1
       else
         if tGameSystem.getGamestatus() = #game_started then
-          tmember = member(getmemnum("sw_crosshair"))
-          if tmember <> 0 then
-            cursor(tmember)
+          tMemberNum = getmemnum("sw_crosshair")
+          tMemberNum2 = getmemnum("sw_crosshair.mask")
+          if tMemberNum <> 0 and tMemberNum2 <> 0 then
+            cursor([tMemberNum, tMemberNum2])
           end if
         end if
       end if
