@@ -33,7 +33,7 @@ on storeData me, tdata, tCallBackObj
 end
 
 on addMessageToQueue me, tMsg
-  pQueue.add([#type: #fusemsg, #message: tMsg])
+  pQueue.add([#type: #fusemsg, #Message: tMsg])
   if count(pQueue) = 1 or not multiuserExists(pConnectionId) then
     me.next()
   end if
@@ -45,7 +45,7 @@ on checkConnection me
   end if
   if getMultiuser(pConnectionId).connectionReady() and pHandshakeFinished then
     tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#password)
+    tPassword = getObject(#session).get(#Password)
     if pUseCrypto then
       tUserName = pCrypto.encipher(tUserName)
       tPassword = pCrypto.encipher(tPassword)
@@ -76,7 +76,7 @@ on next me
             return getMultiuser(pConnectionId).send("GETBINDATA" && tTask.id && tTask.auth)
           #fusemsg:
             pQueue.deleteAt(1)
-            getMultiuser(pConnectionId).send(tTask.message)
+            getMultiuser(pConnectionId).send(tTask.Message)
             me.next()
             return 1
         end case

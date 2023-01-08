@@ -22,10 +22,10 @@ on deconstruct me
     pTimeOut = VOID
   end if
   repeat with i = pInstanceList.count down to 1
-    me.remove(pInstanceList[i])
+    me.Remove(pInstanceList[i])
   end repeat
   repeat with i = pManagerList.count down to 1
-    me.remove(pManagerList[i])
+    me.Remove(pManagerList[i])
   end repeat
   pObjectList = [:]
   pUpdateList = []
@@ -102,7 +102,7 @@ on get me, tid
   end if
 end
 
-on remove me, tid
+on Remove me, tid
   tObj = pObjectList[tid]
   if voidp(tObj) then
     return 0

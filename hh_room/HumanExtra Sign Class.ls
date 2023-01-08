@@ -11,7 +11,7 @@ on deconstruct me
   return 1
 end
 
-on refresh me
+on Refresh me
   pSignSpr.visible = 0
 end
 

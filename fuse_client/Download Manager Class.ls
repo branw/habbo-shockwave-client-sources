@@ -21,7 +21,7 @@ on create me, tURL, tMemName, ttype, tForceFlag
   return queue(me, tURL, tMemName, ttype, tForceFlag)
 end
 
-on remove me, tMemNameOrNum
+on Remove me, tMemNameOrNum
   return me.abort(tMemNameOrNum)
 end
 

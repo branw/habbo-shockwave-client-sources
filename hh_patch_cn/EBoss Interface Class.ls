@@ -34,7 +34,7 @@ on hideDialog me
 end
 
 on openEBossPopup me
-  tUserID = me.getComponent().userid()
+  tUserID = me.getComponent().userID()
   tPartnerURL = getVariable("partner.registration.url")
   tPartnerURL = tPartnerURL & string(tUserID)
   openNetPage(tPartnerURL)

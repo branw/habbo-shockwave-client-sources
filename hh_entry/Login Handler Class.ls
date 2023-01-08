@@ -88,7 +88,7 @@ on sendLogin me, tConnection
   end if
   if me.getComponent().isOkToLogin() then
     tUserName = getObject(#session).get(#userName)
-    tPassword = getObject(#session).get(#password)
+    tPassword = getObject(#session).get(#Password)
     if not stringp(tUserName) or not stringp(tPassword) then
       return removeConnection(tConnection.getID())
     end if
@@ -163,7 +163,7 @@ on handleUserObj me, tMsg
     tSession.set("user_" & tuser.getPropAt(i), tuser[i])
   end repeat
   tSession.set(#userName, tSession.get("user_name"))
-  tSession.set("user_password", tSession.get(#password))
+  tSession.set("user_password", tSession.get(#Password))
   executeMessage(#updateFigureData)
   if getObject(#session).exists("user_logged") then
     return 
@@ -171,7 +171,7 @@ on handleUserObj me, tMsg
     getObject(#session).set("user_logged", 1)
   end if
   if getIntVariable("quickLogin", 0) and the runMode contains "Author" then
-    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).get(#userName), getObject(#session).get(#password)]))
+    setPref(getVariable("fuse.project.id", "fusepref"), string([getObject(#session).get(#userName), getObject(#session).get(#Password)]))
     me.getInterface().hideLogin()
   else
     me.getInterface().showUserFound()
@@ -181,7 +181,7 @@ end
 
 on handleUserBanned me, tMsg
   tBanMsg = getText("Alert_YouAreBanned") & RETURN & tMsg.content
-  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #msg: tBanMsg, #modal: 1])
+  executeMessage(#openGeneralDialog, #ban, [#id: "BannWarning", #title: "Alert_YouAreBanned_T", #Msg: tBanMsg, #modal: 1])
   removeConnection(tMsg.connection.getID())
 end
 
@@ -216,7 +216,7 @@ on handleSystemBroadcast me, tMsg
   tMsg = tMsg[#content]
   tMsg = replaceChunks(tMsg, "\r", RETURN)
   tMsg = replaceChunks(tMsg, "<br>", RETURN)
-  executeMessage(#alert, [#msg: tMsg])
+  executeMessage(#alert, [#Msg: tMsg])
   the keyboardFocusSprite = 0
 end
 
@@ -260,37 +260,39 @@ end
 
 on handleErr me, tMsg
   error(me, "Error from server:" && tMsg.content, #handle_error)
-  if tMsg.content contains "login incorrect" then
-    removeConnection(tMsg.connection.getID())
-    me.getComponent().setaProp(#pOkToLogin, 0)
-    if getObject(#session).exists("failed_password") then
-      openNetPage(getText("login_forgottenPassword_url"))
-      me.getInterface().showLogin()
-      return 0
-    else
-      getObject(#session).set("failed_password", 1)
-      me.getInterface().showLogin()
-      executeMessage(#alert, [#msg: "Alert_WrongNameOrPassword"])
-    end if
-  else
-    if tMsg.content contains "mod_warn" then
+  case 1 of
+    tMsg.content contains "login incorrect":
+      removeConnection(tMsg.connection.getID())
+      me.getComponent().setaProp(#pOkToLogin, 0)
+      if getObject(#session).exists("failed_password") then
+        openNetPage(getText("login_forgottenPassword_url"))
+        me.getInterface().showLogin()
+        return 0
+      else
+        getObject(#session).set("failed_password", 1)
+        me.getInterface().showLogin()
+        executeMessage(#alert, [#Msg: "Alert_WrongNameOrPassword"])
+      end if
+    tMsg.content contains "mod_warn":
       tDelim = the itemDelimiter
       the itemDelimiter = "/"
       tTextStr = tMsg.content.item[2..tMsg.content.item.count]
       the itemDelimiter = tDelim
-      executeMessage(#alert, [#title: "alert_warning", #msg: tTextStr, #modal: 1])
-    else
-      if tMsg.content contains "Version not correct" then
-        executeMessage(#alert, [#msg: "Old client version!!!"])
-      end if
-    end if
-  end if
+      executeMessage(#alert, [#title: "alert_warning", #Msg: tTextStr, #modal: 1])
+    tMsg.content contains "Version not correct":
+      executeMessage(#alert, [#Msg: "Old client version!!!"])
+    tMsg.content contains "Duplicate session":
+      removeConnection(tMsg.connection.getID())
+      me.getComponent().setaProp(#pOkToLogin, 0)
+      me.getInterface().showLogin()
+      executeMessage(#alert, [#Msg: "alert_duplicatesession"])
+  end case
   return 1
 end
 
 on handleModAlert me, tMsg
   if not voidp(tMsg.content) then
-    executeMessage(#alert, [#title: "alert_warning", #msg: tMsg.content])
+    executeMessage(#alert, [#title: "alert_warning", #Msg: tMsg.content])
   else
     error(me, "Error in moderator alert:" && tMsg.content, #handleModAlert)
   end if
@@ -301,7 +303,7 @@ on login me, tConn
     return 0
   end if
   tUserName = getObject(#session).get(#userName)
-  tPassword = getObject(#session).get(#password)
+  tPassword = getObject(#session).get(#Password)
   if not stringp(tUserName) or not stringp(tPassword) then
     return removeConnection(tConn.getID())
   end if
@@ -346,7 +348,7 @@ on regMsgList me, tBool
   tCmds.setaProp("GET_SESSION_PARAMETERS", 181)
   tCmds.setaProp("PONG", 196)
   tCmds.setaProp("GENERATEKEY", 202)
-  tConn = getVariable("connection.info.id", #info)
+  tConn = getVariable("connection.info.id", #Info)
   if tBool then
     registerListener(tConn, me.getID(), tMsgs)
     registerCommands(tConn, me.getID(), tCmds)

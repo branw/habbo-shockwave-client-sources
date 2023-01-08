@@ -274,7 +274,7 @@ on showNewBalloon me
   pAvailableBalloons.deleteProp(pLastBalloonId)
   tmember = member(pVisibleBalloons[pLastBalloonId].get(#member))
   pVisibleBalloons[pLastBalloonId].set(#balloonColor, pBalloonColor)
-  tmember.image = me.createballoonImg(tMsg[#name], tMsg[#message], pBalloonColor, tMsg[#command])
+  tmember.image = me.createballoonImg(tMsg[#name], tMsg[#Message], pBalloonColor, tMsg[#command])
   tmember.regPoint = tmember.regPoint + point(0, tmember.image.height / 2)
   pBalloonLeftMarg = getIntVariable("balloons.leftmargin", 0)
   pBalloonRightMarg = getIntVariable("balloons.rightmargin", 720)

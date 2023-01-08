@@ -121,7 +121,7 @@ on showCryWnd me
   end if
   pCryWndMode = "browse"
   if getObject(#session).get("user_rights").getOne("fuse_see_chat_log_link") = 0 then
-    tWndObj.getElement("hobba_seelog").hide()
+    tWndObj.getElement("hobba_seelog").Hide()
   end if
   return me.fillCryData(pCurrCryNum)
 end
@@ -259,7 +259,7 @@ on openCryReplyWindow me
     return removeWindow(pCryWindowID)
   end if
   tName = pCurrCryData[#sender]
-  tMsg = pCurrCryData[#msg]
+  tMsg = pCurrCryData[#Msg]
   tWndObj.getElement("hobba_reply_header").setText(getText("hobba_reply_cfh") && tName)
   tWndObj.getElement("hobba_reply_text").setText(tMsg)
   return 1
@@ -318,7 +318,7 @@ on fillCryData me, tCryNumOrID
   end if
   tName = pCurrCryData[#sender]
   tPlace = pCurrCryData[#roomname]
-  tMsg = pCurrCryData[#msg]
+  tMsg = pCurrCryData[#Msg]
   tTime = pCurrCryData[#time]
   tCategory = pCurrCryData[#category]
   tRoomID = pCurrCryData[#room_id]

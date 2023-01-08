@@ -19,7 +19,7 @@ on createHelpTooltip me, tParams
   if tParams.count < 2 then
     return error(me, "Wrong param count", #createHelpTooltip)
   end if
-  tMsg = getProp(tParams, #msg)
+  tMsg = getProp(tParams, #Msg)
   if textExists(tMsg) then
     tMsg = getText(tMsg)
   end if

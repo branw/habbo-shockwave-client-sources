@@ -59,9 +59,9 @@ on flatcreated me, tFlatName, tFlatID
   pRoomProps[#id] = tFlatID
   pRoomProps[#name] = tFlatName
   if pRoomProps[#door] = "password" then
-    pRoomProps[#password] = me.getPassword()
+    pRoomProps[#Password] = me.getPassword()
   else
-    pRoomProps[#password] = EMPTY
+    pRoomProps[#Password] = EMPTY
   end if
   tText = getText("roomatic_roomnumber", "Room number:") && pRoomProps[#id]
   if tWndObj.elementExists("roomatic_newnumber") then
@@ -77,7 +77,7 @@ end
 on sendFlatInfo me
   tFlatMsg = "/" & replaceChars(string(pRoomProps[#id]), "/", SPACE) & "/" & RETURN
   tFlatMsg = tFlatMsg & "description=" & replaceChars(pRoomProps[#description], "/", SPACE) & RETURN
-  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#password] & RETURN
+  tFlatMsg = tFlatMsg & "password=" & pRoomProps[#Password] & RETURN
   tFlatMsg = tFlatMsg & "allsuperuser=" & pRoomProps[#ableothersmovefurniture]
   me.getComponent().sendSetFlatInfo(tFlatMsg)
 end
@@ -231,11 +231,11 @@ on setPageValues me, tWindowName
         tWndObj.getElement("rm_hc_icon").show()
         tWndObj.getElement("rm_hc_only").show()
       else
-        tWndObj.getElement("rm_hc_icon").hide()
-        tWndObj.getElement("rm_hc_only").hide()
+        tWndObj.getElement("rm_hc_icon").Hide()
+        tWndObj.getElement("rm_hc_only").Hide()
       end if
       if tRoomSpecs[#club] and not me.getSpecialLayoutRights() then
-        tWndObj.getElement("roomatic_3_button_next").hide()
+        tWndObj.getElement("roomatic_3_button_next").Hide()
       else
         tWndObj.getElement("roomatic_3_button_next").show()
       end if
@@ -297,7 +297,7 @@ on eventProc me, tEvent, tSprID, tParm
       "roomatic_2_button_next":
         tRoomName = replaceChars(getWindow(pWindowTitle).getElement("roomatic_roomname_field").getText(), "/", EMPTY)
         if tRoomName = EMPTY then
-          return executeMessage(#alert, [#msg: "roomatic_givename"])
+          return executeMessage(#alert, [#Msg: "roomatic_givename"])
         end if
         pRoomProps[#name] = tRoomName
         pRoomProps[#description] = getWindow(pWindowTitle).getElement("romatic_roomdescription_field").getText()
