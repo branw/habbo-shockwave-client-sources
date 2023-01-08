@@ -138,7 +138,13 @@ on receive_BuddyList me, ttype, tList
 end
 
 on receive_AppendBuddy me, tdata
-  tdata = tdata.buddies[1]
+  if not listp(tdata) then
+    return 0
+  end if
+  if tdata.count < 1 then
+    return 0
+  end if
+  tdata = tdata.buddies
   tTheBuddyList = pBuddyList.getaProp(#value)
   tTheBuddyList.buddies.setaProp(tdata[#id], tdata)
   if tdata.online then
@@ -161,7 +167,7 @@ on receive_AppendBuddy me, tdata
 end
 
 on receive_RemoveBuddies me, tList
-  if tList.count > 1 then
+  if not me.getInterface().isMessengerActive() then
     if objectExists("buddy_massremove") then
       getObject("buddy_massremove").confirmationReceived()
     end if

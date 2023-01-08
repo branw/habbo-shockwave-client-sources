@@ -120,6 +120,10 @@ on setMessengerActive me
   return 1
 end
 
+on isMessengerActive me
+  return not pMessengerInactive
+end
+
 on createBuddyList me, tBuddyListPntr
   pBuddyListPntr = tBuddyListPntr
   pBuddyDrawObjList = [:]
