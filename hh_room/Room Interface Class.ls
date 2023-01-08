@@ -153,7 +153,7 @@ on showRoomBar me
     tRoomTxt = getText("room_name") && tRoomData[#name] & RETURN & getText("room_owner") && tRoomData[#owner]
     tWndObj.getElement("room_info_text").setText(tRoomTxt)
   else
-    tWndObj.getElement("room_info_text").hide()
+    tWndObj.getElement("room_info_text").Hide()
   end if
   return 1
 end
@@ -203,7 +203,7 @@ on showInterface me, tObjType
       tSomeRights = 1
     end if
     if not tSomeRights then
-      return me.hideInterface(#hide)
+      return me.hideInterface(#Hide)
     end if
   end if
   tCtrlType = EMPTY
@@ -225,7 +225,7 @@ on showInterface me, tObjType
   if variableExists("interface.cmds." & tObjType & "." & tCtrlType) then
     tButtonList = getVariableValue("interface.cmds." & tObjType & "." & tCtrlType)
   else
-    return me.hideInterface(#hide)
+    return me.hideInterface(#Hide)
   end if
   if tObjType = "active" or tObjType = "item" then
     if getObject(#session).get("user_rights").getOne("fuse_pick_up_any_furni") then
@@ -235,7 +235,7 @@ on showInterface me, tObjType
     end if
   end if
   if tButtonList.count = 0 then
-    return me.hideInterface(#hide)
+    return me.hideInterface(#Hide)
   end if
   if tUserRights.getOne("fuse_use_club_dance") then
     tButtonList.deleteOne("dance")
@@ -370,7 +370,7 @@ on hideInterface me, tHideOrRemove
     if tHideOrRemove = #Remove then
       return removeWindow(pInterfaceId)
     else
-      return tWndObj.hide()
+      return tWndObj.Hide()
     end if
   end if
   return 0
@@ -427,9 +427,9 @@ on hideObjectInfo me
   end if
   tWndObj = getWindow(pInfoStandId)
   tWndObj.getElement("info_image").clearImage()
-  tWndObj.getElement("bg_darken").hide()
-  tWndObj.getElement("info_name").hide()
-  tWndObj.getElement("info_text").hide()
+  tWndObj.getElement("bg_darken").Hide()
+  tWndObj.getElement("info_name").Hide()
+  tWndObj.getElement("info_text").Hide()
   tWndObj.getElement("info_badge").clearImage()
   return 1
 end
@@ -447,7 +447,7 @@ on showArrowHiliter me, tUserID
 end
 
 on hideArrowHiliter me
-  return me.getArrowHiliter().hide()
+  return me.getArrowHiliter().Hide()
 end
 
 on showDoorBellWaiting me
@@ -685,7 +685,7 @@ on hideAll me
     getObject(pContainerID).close()
   end if
   if objectExists(pArrowObjID) then
-    getObject(pArrowObjID).hide()
+    getObject(pArrowObjID).Hide()
   end if
   if objectExists("BadgeEffect") then
     removeObject("BadgeEffect")
@@ -884,7 +884,7 @@ on stopObjectMover me
   pSelectedObj = EMPTY
   pSelectedType = EMPTY
   me.hideObjectInfo()
-  me.hideInterface(#hide)
+  me.hideInterface(#Hide)
   getObject(pObjMoverID).clear()
   return 1
 end
@@ -1301,7 +1301,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
   if not tComponent.userObjectExists(pSelectedObj) then
     if not tComponent.activeObjectExists(pSelectedObj) then
       if not tComponent.itemObjectExists(pSelectedObj) then
-        return me.hideInterface(#hide)
+        return me.hideInterface(#Hide)
       end if
     end if
   end if
@@ -1346,7 +1346,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
         "item":
           ttype = "item"
       end case
-      return me.hideInterface(#hide)
+      return me.hideInterface(#Hide)
       return tComponent.getRoomConnection().send("ADDSTRIPITEM", "new" && ttype && pSelectedObj)
     "delete.button":
       pDeleteObjID = pSelectedObj
@@ -1359,7 +1359,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
         tUserName = EMPTY
       end if
       tComponent.getRoomConnection().send("KICKUSER", tUserName)
-      return me.hideInterface(#hide)
+      return me.hideInterface(#Hide)
     "give_rights.button":
       if tComponent.userObjectExists(pSelectedObj) then
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
@@ -1369,7 +1369,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
       tComponent.getRoomConnection().send("ASSIGNRIGHTS", tUserName)
       pSelectedObj = EMPTY
       me.hideObjectInfo()
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       me.hideArrowHiliter()
       return 1
     "take_rights.button":
@@ -1381,7 +1381,7 @@ on eventProcInterface me, tEvent, tSprID, tParam
       tComponent.getRoomConnection().send("REMOVERIGHTS", tUserName)
       pSelectedObj = EMPTY
       me.hideObjectInfo()
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       me.hideArrowHiliter()
       return 1
     "friend.button":
@@ -1406,14 +1406,14 @@ on eventProcInterface me, tEvent, tSprID, tParam
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
         pIgnoreListObj.setIgnoreStatus(tUserName, 1)
       end if
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       pSelectedObj = EMPTY
     "unignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
         tUserName = tComponent.getUserObject(pSelectedObj).getName()
         pIgnoreListObj.setIgnoreStatus(tUserName, 0)
       end if
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       pSelectedObj = EMPTY
     "badge.button":
       if objectExists(pBadgeObjID) then
@@ -1450,7 +1450,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         if tParam <> "object_selection" then
           pSelectedObj = EMPTY
           me.hideObjectInfo()
-          me.hideInterface(#hide)
+          me.hideInterface(#Hide)
           me.hideArrowHiliter()
         end if
         tloc = me.getGeometry().getWorldCoordinate(the mouseH, the mouseV)
@@ -1477,7 +1477,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
         if getObject(#session).get("room_owner") then
           me.placeFurniture(pSelectedObj, pSelectedType)
-          me.hideInterface(#hide)
+          me.hideInterface(#Hide)
           me.hideObjectInfo()
           me.stopObjectMover()
         else
@@ -1501,7 +1501,7 @@ on eventProcRoom me, tEvent, tSprID, tParam
         end if
         if getObject(#session).get("room_owner") then
           if me.placeFurniture(pSelectedObj, pSelectedType) then
-            me.hideInterface(#hide)
+            me.hideInterface(#Hide)
             me.hideObjectInfo()
             me.stopObjectMover()
           end if
@@ -1560,7 +1560,7 @@ on eventProcUserObj me, tEvent, tSprID, tParam
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
     me.hideObjectInfo()
-    me.hideInterface(#hide)
+    me.hideInterface(#Hide)
     me.hideArrowHiliter()
   end if
   return 1
@@ -1587,7 +1587,7 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
     me.hideObjectInfo()
-    me.hideInterface(#hide)
+    me.hideInterface(#Hide)
     me.hideArrowHiliter()
     return error(me, "Active object not found:" && tSprID, #eventProcActiveObj)
   end if
@@ -1655,7 +1655,7 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     pSelectedObj = EMPTY
     pSelectedType = EMPTY
     me.hideObjectInfo()
-    me.hideInterface(#hide)
+    me.hideInterface(#Hide)
     me.hideArrowHiliter()
     return error(me, "Item object not found:" && tSprID, #eventProcItemObj)
   end if
@@ -1671,7 +1671,7 @@ on eventProcItemObj me, tEvent, tSprID, tParam
     pSelectedObj = tSprID
     pSelectedType = "item"
     me.showObjectInfo(pSelectedType)
-    me.hideInterface(#hide)
+    me.hideInterface(#Hide)
     me.hideArrowHiliter()
   end if
 end
@@ -1686,7 +1686,7 @@ on eventProcDelConfirm me, tEvent, tSprID, tParam
         "item":
           me.getComponent().getRoomConnection().send("REMOVEITEM", pDeleteObjID)
       end case
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       me.hideObjectInfo()
       pDeleteObjID = EMPTY
       pDeleteType = EMPTY
@@ -1701,7 +1701,7 @@ on eventProcPlcConfirm me, tEvent, tSprID, tParam
     "habbo_decision_ok":
       me.placeFurniture(pSelectedObj, pSelectedType)
       me.hideConfirmPlace()
-      me.hideInterface(#hide)
+      me.hideInterface(#Hide)
       me.hideObjectInfo()
       me.stopObjectMover()
     "habbo_decision_cancel", "close":

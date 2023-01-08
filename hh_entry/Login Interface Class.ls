@@ -18,13 +18,15 @@ end
 
 on showLogin me
   getObject(#session).set(#userName, EMPTY)
-  getObject(#session).set(#Password, EMPTY)
+  getObject(#session).set(#password, EMPTY)
   pTempPassword = EMPTY
-  if createWindow(#login_a, "habbo_simple.window", 444, 100) then
-    tWndObj = getWindow(#login_a)
-    tWndObj.merge("login_a.window")
-    tWndObj.registerClient(me.getID())
-    tWndObj.registerProcedure(#eventProcLogin, me.getID(), #mouseUp)
+  if not getVariable("registration.disabled", 0) then
+    if createWindow(#login_a, "habbo_simple.window", 444, 100) then
+      tWndObj = getWindow(#login_a)
+      tWndObj.merge("login_a.window")
+      tWndObj.registerClient(me.getID())
+      tWndObj.registerProcedure(#eventProcLogin, me.getID(), #mouseUp)
+    end if
   end if
   if createWindow(#login_b, "habbo_simple.window", 444, 230) then
     tWndObj = getWindow(#login_b)
@@ -95,15 +97,17 @@ on tryLogin me
     return 0
   end if
   getObject(#session).set(#userName, tUserName)
-  getObject(#session).set(#Password, tPassword)
-  tWndObj.getElement("login_ok").Hide()
+  getObject(#session).set(#password, tPassword)
+  tWndObj.getElement("login_ok").hide()
   tWndObj.getElement("login_connecting").setProperty(#blend, 100)
   tElem = tWndObj.getElement("login_forgotten")
   tElem.setProperty(#blend, 99)
   tElem.setProperty(#cursor, 0)
-  tElem = getWindow(#login_a).getElement("login_createUser")
-  tElem.setProperty(#blend, 99)
-  tElem.setProperty(#cursor, 0)
+  if windowExists(#login_a) then
+    tElem = getWindow(#login_a).getElement("login_createUser")
+    tElem.setProperty(#blend, 99)
+    tElem.setProperty(#cursor, 0)
+  end if
   me.blinkConnection()
   me.getComponent().setaProp(#pOkToLogin, 1)
   return me.getComponent().connect()
@@ -197,16 +201,20 @@ on eventProcLogin me, tEvent, tSprID, tParam
         "login_ok":
           return me.tryLogin()
         "login_createUser":
-          pTempPassword = EMPTY
-          if getWindow(#login_a).getElement(tSprID).getProperty(#blend) = 100 then
-            if windowExists(#login_a) then
-              removeWindow(#login_a)
+          if not getVariable("registration.disabled", 0) then
+            pTempPassword = EMPTY
+            if getWindow(#login_a).getElement(tSprID).getProperty(#blend) = 100 then
+              if windowExists(#login_a) then
+                removeWindow(#login_a)
+              end if
+              if windowExists(#login_b) then
+                removeWindow(#login_b)
+              end if
+              executeMessage(#show_registration)
+              return 1
             end if
-            if windowExists(#login_b) then
-              removeWindow(#login_b)
-            end if
-            executeMessage(#show_registration)
-            return 1
+          else
+            executeMessage(#alert, [#msg: "registration_disabled_text", #modal: 1])
           end if
         "login_forgotten":
           if tWndObj.getElement(tSprID).getProperty(#blend) = 100 then

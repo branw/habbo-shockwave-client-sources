@@ -61,7 +61,7 @@ on handle_error me, tMsg
       executeMessage(#leaveRoom)
     "Not owner":
       getObject(#session).set("room_controller", 0)
-      me.getInterface().hideInterface(#hide)
+      me.getInterface().hideInterface(#Hide)
   end case
 end
 
@@ -136,7 +136,7 @@ on handle_chat me, tMsg
       tMode = "SHOUT"
   end case
   if me.getComponent().userObjectExists(tuser) then
-    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #message: tChat])
+    me.getComponent().getBalloon().createBalloon([#command: tMode, #id: tuser, #Message: tChat])
   end if
 end
 
