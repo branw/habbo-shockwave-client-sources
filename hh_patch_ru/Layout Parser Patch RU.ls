@@ -69,8 +69,8 @@ on parse_window me, tFieldName
       if tElem[#height] < 12 then
         tElem[#height] = 12
       end if
-      if tElem[#fontSize] < 14 then
-        tElem[#fixedLineSpace] = 14
+      if tElem[#editable] then
+        tElem[#locV] = tElem[#locV] - 3
       end if
       if voidp(tElem[#wordWrap]) then
         tElem[#wordWrap] = 1
@@ -92,6 +92,11 @@ on parse_window me, tFieldName
       end if
       if voidp(tElem[#txtBgColor]) then
         tElem[#txtBgColor] = rgb(255, 255, 255)
+      end if
+      if the platform contains "windows" then
+        tElem[#fixedLineSpace] = getVariable("win.fixedLineSpace")
+      else
+        tElem[#fixedLineSpace] = getVariable("mac.fixedLineSpace")
       end if
       tSizeMultiplier = tElem[#fontSize] / 9
       case tElem[#media] of
@@ -150,9 +155,9 @@ on parse_window me, tFieldName
           tElem[#scaleH] = #scale
         #strechV:
           tElem[#scaleV] = #scale
-        #centerh:
+        #centerH:
           tElem[#scaleH] = #center
-        #centerv:
+        #centerV:
           tElem[#scaleV] = #center
         #moveHV:
           tElem[#scaleH] = #move

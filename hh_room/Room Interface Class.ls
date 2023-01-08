@@ -1754,7 +1754,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   tdata[#x] = tObj.pLocX
   tdata[#y] = tObj.pLocY
   tdata[#h] = tObj.pLocH
-  tdata[#dir] = tObj.pDirection
+  tdata[#Dir] = tObj.pDirection
   tdata[#locH] = sprite(tSprNum).locH
   tdata[#locV] = sprite(tSprNum).locV
   tdata[#locZ] = EMPTY
@@ -1774,7 +1774,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
   put "World X       " & tdata[#x]
   put "World Y       " & tdata[#y]
   put "World H       " & tdata[#h]
-  put "Dir           " & tdata[#dir]
+  put "Dir           " & tdata[#Dir]
   put "Scr X         " & tdata[#locH]
   put "Scr Y         " & tdata[#locV]
   put "Scr Z         " & tdata[#locZ]

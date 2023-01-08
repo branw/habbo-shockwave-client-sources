@@ -92,10 +92,10 @@ end
 on hideNavigator me, tHideOrRemove
   me.getInterface().setUpdates(0)
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #Remove
+    tHideOrRemove = #remove
   end if
   if windowExists(pWindowTitle) then
-    if tHideOrRemove = #Remove then
+    if tHideOrRemove = #remove then
       removeWindow(pWindowTitle)
     else
       getWindow(pWindowTitle).hide()
@@ -106,7 +106,7 @@ end
 
 on showhidenavigator me, tHideOrRemove
   if voidp(tHideOrRemove) then
-    tHideOrRemove = #Remove
+    tHideOrRemove = #remove
   end if
   if windowExists(pWindowTitle) then
     if getWindow(pWindowTitle).getProperty(#visible) then

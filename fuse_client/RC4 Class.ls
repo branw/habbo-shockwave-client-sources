@@ -66,8 +66,7 @@ on setKey me, tMyKey, tMode
 end
 
 on bitshiftright me, x, n
-  t2 = bitOr(x / power(2, n), 0)
-  return t2
+  return bitOr(x / power(2, n), 0)
 end
 
 on encipher me, tdata

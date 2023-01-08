@@ -6,7 +6,7 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #msgstruct_numtickets:
       return me.handle_numtickets(tdata)

@@ -22,13 +22,13 @@ on deconstruct me
   return 1
 end
 
-on Refresh me, tTopic, tdata
+on refresh me, tTopic, tdata
   case tTopic of
     #gamestatus_events:
       repeat with tEvent in tdata
         case tEvent[#type] of
           0:
-            me.createRoomObject(tEvent[#data])
+            me.createRoomObject(tEvent[#Data])
           1:
             me.deleteRoomObject(tEvent[#id])
           2:
@@ -135,7 +135,7 @@ on updateRoomObjectLocation me, tuser
   if pExpectedLocationList[tUserStrId] <> VOID then
     if [tuser[#locX], tuser[#locY]] <> [pExpectedLocationList[tUserStrId][1], pExpectedLocationList[tUserStrId][2]] and tNextLoc <> 0 then
       pExpectedLocationList.deleteProp(tUserStrId)
-      tUserObj.Refresh(tuser[#locX], tuser[#locY], 0.0)
+      tUserObj.refresh(tuser[#locX], tuser[#locY], 0.0)
       return 1
     end if
   end if
@@ -144,7 +144,7 @@ on updateRoomObjectLocation me, tuser
     tParams = "mv " & tNextLoc[1] & "," & tNextLoc[2] & ",1.0"
     call(symbol("action_mv"), [tUserObj], tParams)
   end if
-  tUserObj.Refresh(tuser[#locX], tuser[#locY], 0.0)
+  tUserObj.refresh(tuser[#locX], tuser[#locY], 0.0)
 end
 
 on updateRoomObjectGoal me, tuser
