@@ -35,10 +35,10 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
   end if
   if me.exists(tid) then
     if voidp(tLocX) then
-      tLocX = me.get(tid).getProperty(#locX)
+      tLocX = me.GET(tid).getProperty(#locX)
     end if
     if voidp(tLocY) then
-      tLocY = me.get(tid).getProperty(#locY)
+      tLocY = me.GET(tid).getProperty(#locY)
     end if
     me.Remove(tid)
   end if
@@ -80,7 +80,7 @@ on create me, tid, tLayout, tLocX, tLocY, tSpecial
 end
 
 on Remove me, tid
-  tWndObj = me.get(tid)
+  tWndObj = me.GET(tid)
   if tWndObj = 0 then
     return 0
   end if
@@ -96,7 +96,7 @@ on Remove me, tid
     tModals = 0
     repeat with i = me.pItemList.count down to 1
       tid = me.pItemList[i]
-      if me.get(tid).getProperty(#modal) then
+      if me.GET(tid).getProperty(#modal) then
         tModals = 1
         tNextActive = tid
         exit repeat
@@ -118,7 +118,7 @@ on Activate me, tid
     return 0
   end if
   if me.exists(me.pActiveItem) then
-    if me.get(me.pActiveItem).getProperty(#modal) then
+    if me.GET(me.pActiveItem).getProperty(#modal) then
       tid = me.pActiveItem
       if me.exists(pModalID) then
         me.pItemList.deleteOne(pModalID)
@@ -137,7 +137,7 @@ on Activate me, tid
   me.pItemList.append(tid)
   me.pAvailableLocZ = me.pDefaultLocZ
   repeat with tCurrID in me.pItemList
-    tWndObj = me.get(tCurrID)
+    tWndObj = me.GET(tCurrID)
     tWndObj.setDeactive()
     repeat with tSpr in tWndObj.getProperty(#spriteList)
       tSpr.locZ = me.pAvailableLocZ
@@ -145,12 +145,12 @@ on Activate me, tid
     end repeat
   end repeat
   me.pActiveItem = tid
-  return me.get(tid).setActive()
+  return me.GET(tid).setActive()
 end
 
 on deactivate me, tid
   if me.exists(tid) then
-    if not me.get(tid).getProperty(#modal) then
+    if not me.GET(tid).getProperty(#modal) then
       me.pItemList.deleteOne(tid)
       me.pItemList.addAt(1, tid)
       me.Activate()
@@ -174,13 +174,13 @@ on modal me, tid, tLayout
   if not me.create(tid, tLayout) then
     return 0
   end if
-  tWndObj = me.get(tid)
+  tWndObj = me.GET(tid)
   tWndObj.center()
   tWndObj.lock()
   tWndObj.setProperty(#modal, 1)
   if not me.exists(pModalID) then
     if me.create(pModalID, "modal.window") then
-      tModal = me.get(pModalID)
+      tModal = me.GET(pModalID)
       tModal.moveTo(0, 0)
       tModal.resizeTo((the stage).rect.width, (the stage).rect.height)
       tModal.lock()

@@ -63,7 +63,7 @@ on getInfo me
   tInfo = [:]
   tInfo[#class] = pClass
   tInfo[#name] = getText("furni_" & pClass & "_name", "furni_" & pClass & "_name")
-  tInfo[#Custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
+  tInfo[#custom] = getText("furni_" & pClass & "_desc", "furni_" & pClass & "_desc")
   tInfo[#smallmember] = pSmallMember
   tInfo[#image] = getObject("Preview_renderer").renderPreviewImage(VOID, pPartColors, VOID, pClass)
   return tInfo
@@ -434,7 +434,7 @@ on solveMembers me
     return 0
   end if
   tid = me.getID()
-  tRoomType = getObject(#session).get("lastroom")[#type]
+  tRoomType = getObject(#session).GET("lastroom")[#type]
   if tRoomType <> #private then
     if tShadowNum <> 0 then
       tSpr = sprite(reserveSprite(tid))

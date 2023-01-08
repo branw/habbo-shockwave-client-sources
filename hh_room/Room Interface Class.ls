@@ -1,4 +1,4 @@
-property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pInfoStandName, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations, pTradeTimeout
+property pInfoConnID, pRoomConnID, pGeometryId, pHiliterId, pContainerID, pSafeTraderID, pObjMoverID, pArrowObjID, pBadgeObjID, pDoorBellID, pRoomSpaceId, pBottomBarId, pInfoStandId, pInterfaceId, pDelConfirmID, pPlcConfirmID, pLoaderBarID, pDeleteObjID, pDeleteType, pIgnoreListObj, pModBadgeList, pInfoStandName, pClickAction, pSelectedObj, pSelectedType, pCoverSpr, pRingingUser, pVisitorQueue, pBannerLink, pLoadingBarID, pQueueCollection, pMessengerFlash, pNewMsgCount, pNewBuddyReq, pFloodblocking, pFloodTimer, pFloodEnterCount, pSwapAnimations
 
 on construct me
   pInfoConnID = getVariable("connection.info.id")
@@ -32,7 +32,6 @@ on construct me
   pLoadingBarID = 0
   pQueueCollection = []
   pModBadgeList = getVariableValue("moderator.badgelist")
-  pTradeTimeout = 0
   createObject(pGeometryId, "Room Geometry Class")
   createObject(pContainerID, "Container Hand Class")
   createObject(pSafeTraderID, "Safe Trader Class")
@@ -46,6 +45,7 @@ on construct me
   registerMessage(#notify, me.getID(), #notify)
   registerMessage(#updateMessageCount, me.getID(), #updateMessageCount)
   registerMessage(#updateBuddyrequestCount, me.getID(), #updateBuddyrequestCount)
+  registerMessage(#objectFinalized, me.getID(), #objectFinalized)
   return 1
 end
 
@@ -54,6 +54,7 @@ on deconstruct me
   unregisterMessage(#notify, me.getID())
   unregisterMessage(#updateMessageCount, me.getID())
   unregisterMessage(#updateBuddyrequestCount, me.getID())
+  unregisterMessage(#objectFinalized, me.getID())
   pIgnoreListObj = VOID
   removeObject(pBadgeObjID)
   removeObject(pDoorBellID)
@@ -190,7 +191,7 @@ end
 
 on showInterface me, tObjType
   tSession = getObject(#session)
-  tUserRights = getObject(#session).get("user_rights")
+  tUserRights = getObject(#session).GET("user_rights")
   tOwnUser = me.getComponent().getOwnUser()
   if tOwnUser = 0 and tObjType <> "user" then
     return error(me, "Own user not found!", #showInterface)
@@ -211,14 +212,14 @@ on showInterface me, tObjType
     end if
   end if
   tCtrlType = EMPTY
-  if tSession.get("room_controller") or tUserRights.getOne("fuse_any_room_controller") then
+  if tSession.GET("room_controller") or tUserRights.getOne("fuse_any_room_controller") then
     tCtrlType = "ctrl"
   end if
-  if tSession.get("room_owner") then
+  if tSession.GET("room_owner") then
     tCtrlType = "owner"
   end if
-  if tObjType = "user" or tObjType = "bot" then
-    if pSelectedObj = tSession.get("user_index") then
+  if tObjType = "user" then
+    if pSelectedObj = tSession.GET("user_index") then
       tCtrlType = "personal"
     else
       if tCtrlType = EMPTY then
@@ -235,7 +236,7 @@ on showInterface me, tObjType
     return me.hideInterface(#hide)
   end if
   if tObjType = "active" or tObjType = "item" then
-    if getObject(#session).get("user_rights").getOne("fuse_pick_up_any_furni") then
+    if getObject(#session).GET("user_rights").getOne("fuse_pick_up_any_furni") then
       if tButtonList.getPos("pick") = 0 then
         tButtonList.add("pick")
       end if
@@ -272,8 +273,8 @@ on showInterface me, tObjType
     tObjType = "personal"
   end if
   if me.getComponent().getRoomData().type = #private then
-    if tObjType = "user" or tObjType = "bot" then
-      if pSelectedObj <> tSession.get("user_name") then
+    if tObjType = "user" then
+      if pSelectedObj <> tSession.GET("user_name") then
         tUserInfo = me.getComponent().getUserObject(pSelectedObj).getInfo()
         if tUserInfo.ctrl = 0 then
           tButtonList.deleteOne("take_rights")
@@ -302,7 +303,7 @@ on showInterface me, tObjType
     tButtonList.deleteOne("give_rights")
     tButtonList.deleteOne("kick")
   end if
-  if tObjType = "user" or tObjType = "bot" then
+  if tObjType = "user" then
     tUserInfo = me.getComponent().getUserObject(pSelectedObj).getInfo()
     tBadge = tUserInfo.getaProp(#badge)
     if pModBadgeList.getOne(tBadge) > 0 then
@@ -315,10 +316,10 @@ on showInterface me, tObjType
     end if
   end if
   if tCtrlType = "personal" then
-    if getObject("session").get("available_badges").ilk <> #list then
+    if getObject("session").GET("available_badges").ilk <> #list then
       tButtonList.deleteOne("badge")
     else
-      if getObject("session").get("available_badges").count < 1 then
+      if getObject("session").GET("available_badges").count < 1 then
         tButtonList.deleteOne("badge")
       end if
     end if
@@ -326,10 +327,6 @@ on showInterface me, tObjType
   if tObjType = "user" then
     tWebID = me.getComponent().getUserObject(pSelectedObj).getWebID()
     if not variableExists("link.format.userpage") or voidp(tWebID) then
-      tButtonList.deleteOne("userpage")
-    end if
-  else
-    if tObjType = "bot" then
       tButtonList.deleteOne("userpage")
     end if
   end if
@@ -356,7 +353,7 @@ on showInterface me, tObjType
       tSpr.locH = (the stage).rect.width - tRightMargin
     end if
   end repeat
-  if tObjType = "user" and tCtrlType <> "personal" or tObjType = "bot" then
+  if tObjType = "user" and tCtrlType <> "personal" then
     if me.getComponent().userObjectExists(pSelectedObj) then
       if threadExists(#messenger) then
         tUserName = me.getComponent().getUserObject(pSelectedObj).getName()
@@ -371,9 +368,7 @@ on showInterface me, tObjType
       end if
     end if
     if tButtonList.getPos("trade") > 0 then
-      tNotPrivateRoom = me.getComponent().getRoomID() <> "private"
-      tNoTrading = me.getComponent().getRoomData()[#trading] = 0
-      if pTradeTimeout or tNotPrivateRoom or tNoTrading then
+      if me.getComponent().getRoomID() <> "private" or me.getComponent().getRoomData()[#trading] = 0 then
         tWndObj.getElement("trade.button").deactivate()
       end if
       if not tUserRights.getOne("fuse_trade") then
@@ -382,28 +377,6 @@ on showInterface me, tObjType
     end if
   end if
   return 1
-end
-
-on startTradeButtonTimeout me
-  pTradeTimeout = 1
-  tWndObj = getWindow(pInterfaceId)
-  if tWndObj <> 0 then
-    if tWndObj.elementExists("trade.button") then
-      tWndObj.getElement("trade.button").deactivate()
-    end if
-  end if
-  tTimeout = getVariable("room.request.timeout", 10000)
-  createTimeout(#activeTradeButton, tTimeout, #endTradeButtonTimeout, me.getID(), VOID, 1)
-end
-
-on endTradeButtonTimeout me
-  pTradeTimeout = 0
-  tWndObj = getWindow(pInterfaceId)
-  if tWndObj <> 0 then
-    if tWndObj.elementExists("trade.button") then
-      tWndObj.getElement("trade.button").Activate()
-    end if
-  end if
 end
 
 on hideInterface me, tHideOrRemove
@@ -427,7 +400,7 @@ on showObjectInfo me, tObjType
     return 0
   end if
   case tObjType of
-    "user", "bot":
+    "user":
       tObj = me.getComponent().getUserObject(pSelectedObj)
     "active":
       tObj = me.getComponent().getActiveObject(pSelectedObj)
@@ -449,7 +422,7 @@ on showObjectInfo me, tObjType
     tWndObj.getElement("info_name").show()
     tWndObj.getElement("info_text").show()
     tWndObj.getElement("info_name").setText(tProps[#name])
-    tWndObj.getElement("info_text").setText(tProps[#Custom])
+    tWndObj.getElement("info_text").setText(tProps[#custom])
     tElem = tWndObj.getElement("info_image")
     if ilk(tProps[#image]) = #image then
       tElem.resizeTo(tProps[#image].width, tProps[#image].height)
@@ -955,7 +928,7 @@ on startObjectMover me, tObjID, tStripID
       pClickAction = "moveActive"
     "item":
       pClickAction = "moveItem"
-    "user", "bot":
+    "user":
       return error(me, "Can't move user objects!", #startObjectMover)
   end case
   return getObject(pObjMoverID).define(tObjID, tStripID, pSelectedType)
@@ -978,7 +951,7 @@ on startTrading me, tTargetUser
   if pSelectedType <> "user" then
     return 0
   end if
-  if tTargetUser = getObject(#session).get("user_name") then
+  if tTargetUser = getObject(#session).GET("user_name") then
     return 0
   end if
   me.getComponent().getRoomConnection().send("TRADE_OPEN", tTargetUser)
@@ -1174,6 +1147,12 @@ on validateEvent me, tEvent, tSprID, tloc
   return 1
 end
 
+on objectFinalized me, tid
+  if pSelectedObj = tid then
+    me.showObjectInfo(pSelectedType)
+  end if
+end
+
 on showRemoveSpecsNotice me
   executeMessage(#alert, [#Msg: "room_remove_specs", #modal: 1])
 end
@@ -1225,7 +1204,7 @@ on eventProcRoomBar me, tEvent, tSprID, tParam
   if tEvent = #keyDown and tSprID = "chat_field" then
     tChatField = getWindow(pBottomBarId).getElement(tSprID)
     if the commandDown and (the keyCode = 8 or the keyCode = 9) then
-      if not getObject(#session).get("user_rights").getOne("fuse_debug_window") then
+      if not getObject(#session).GET("user_rights").getOne("fuse_debug_window") then
         tChatField.setText(EMPTY)
         return 1
       end if
@@ -1373,7 +1352,7 @@ end
 on eventProcInfoStand me, tEvent, tSprID, tParam
   if tSprID = "info_badge" then
     tSession = getObject(#session)
-    if me.getSelectedObject() = tSession.get("user_index") then
+    if me.getSelectedObject() = tSession.GET("user_index") then
       if objectExists(pBadgeObjID) then
         getObject(pBadgeObjID).toggleOwnBadgeVisibility()
       end if
@@ -1497,7 +1476,6 @@ on eventProcInterface me, tEvent, tSprID, tParam
       end if
       me.startTrading(pSelectedObj)
       me.getContainer().open()
-      me.startTradeButtonTimeout()
       return 1
     "ignore.button":
       if tComponent.userObjectExists(pSelectedObj) then
@@ -1575,19 +1553,19 @@ on eventProcRoom me, tEvent, tSprID, tParam
         me.getComponent().getRoomConnection().send("MOVESTUFF", pSelectedObj && tloc[1] && tloc[2] && tObj.pDirection[1])
         me.stopObjectMover()
       "placeActive":
-        if getObject(#session).get("room_controller") or getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+        if getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tCanPlace = 1
         end if
         if not tCanPlace then
           return 0
         end if
-        if getObject(#session).get("room_owner") then
+        if getObject(#session).GET("room_owner") then
           me.placeFurniture(pSelectedObj, pSelectedType)
           me.hideInterface(#hide)
           me.hideObjectInfo()
           me.stopObjectMover()
         else
-          if not getObject(#session).get("user_rights").getOne("fuse_trade") then
+          if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
             return 0
           end if
           tloc = getObject(pObjMoverID).getProperty(#loc)
@@ -1599,20 +1577,20 @@ on eventProcRoom me, tEvent, tSprID, tParam
           end if
         end if
       "placeItem":
-        if getObject(#session).get("room_controller") or getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+        if getObject(#session).GET("room_controller") or getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
           tCanPlace = 1
         end if
         if not tCanPlace then
           return 0
         end if
-        if getObject(#session).get("room_owner") then
+        if getObject(#session).GET("room_owner") then
           if me.placeFurniture(pSelectedObj, pSelectedType) then
             me.hideInterface(#hide)
             me.hideObjectInfo()
             me.stopObjectMover()
           end if
         else
-          if not getObject(#session).get("user_rights").getOne("fuse_trade") then
+          if not getObject(#session).GET("user_rights").getOne("fuse_trade") then
             return 0
           end if
           tloc = getObject(pObjMoverID).getProperty(#itemLocStr)
@@ -1706,8 +1684,8 @@ on eventProcActiveObj me, tEvent, tSprID, tParam
       me.hideArrowHiliter()
     end if
   end if
-  tIsController = getObject(#session).get("room_controller")
-  if getObject(#session).get("user_rights").getOne("fuse_any_room_controller") then
+  tIsController = getObject(#session).GET("room_controller")
+  if getObject(#session).GET("user_rights").getOne("fuse_any_room_controller") then
     tIsController = 1
   end if
   if the optionDown and tIsController then
@@ -1824,7 +1802,7 @@ on eventProcBanner me, tEvent, tSprID, tParam
     "room_banner_link":
       if pBannerLink <> 0 then
         if connectionExists(pInfoConnID) and getObject(#session).exists("ad_id") then
-          getConnection(pInfoConnID).send("ADCLICK", getObject(#session).get("ad_id"))
+          getConnection(pInfoConnID).send("ADCLICK", getObject(#session).GET("ad_id"))
         end if
         openNetPage(pBannerLink)
       end if
@@ -1849,7 +1827,7 @@ on outputObjectInfo me, tSprID, tObjType, tSprNum
     return 0
   end if
   case tObjType of
-    "user", "bot":
+    "user":
       tObj = me.getComponent().getUserObject(tSprID)
     "active":
       tObj = me.getComponent().getActiveObject(tSprID)

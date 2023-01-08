@@ -27,7 +27,7 @@ on setVariable tid, tValue
 end
 
 on getVariable tid, tDefault
-  return getVariableManager().get(tid, tDefault)
+  return getVariableManager().GET(tid, tDefault)
 end
 
 on getIntVariable tid, tDefault
@@ -35,15 +35,15 @@ on getIntVariable tid, tDefault
 end
 
 on getStructVariable tid, tDefault
-  return getVariableManager().getValue(tid, tDefault)
+  return getVariableManager().GetValue(tid, tDefault)
 end
 
 on getClassVariable tid, tDefault
-  return getVariableManager().getValue(tid, tDefault)
+  return getVariableManager().GetValue(tid, tDefault)
 end
 
 on getVariableValue tid, tDefault
-  return getVariableManager().getValue(tid, tDefault)
+  return getVariableManager().GetValue(tid, tDefault)
 end
 
 on variableExists tid

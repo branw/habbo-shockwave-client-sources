@@ -1,4 +1,4 @@
-property pStateSequenceList, pStateIndex, pState, pLayerDataList, pFrameNumberList, pLoopCountList, pBlendList, pInkList, pLoczList, pLocShiftList, pNameBase
+property pStateSequenceList, pStateIndex, pState, pLayerDataList, pFrameNumberList, pFrameNumberList2, pLoopCountList, pFrameRepeatList, pIsAnimatingList, pBlendList, pInkList, pLoczList, pLocShiftList, pNameBase, pInitialized
 
 on define me, tProps
   pStateSequenceList = []
@@ -6,20 +6,16 @@ on define me, tProps
   pState = 1
   pLayerDataList = [:]
   pFrameNumberList = []
+  pFrameNumberList2 = []
   pLoopCountList = []
   pBlendList = []
   pInkList = []
   pLoczList = []
   pLocShiftList = []
-  pNameBase = EMPTY
+  pFrameRepeatList = []
+  pIsAnimatingList = []
+  pNameBase = tProps[#class]
   tClass = tProps[#class]
-  ttype = tProps[#type]
-  case tClass of
-    "poster":
-      pNameBase = "poster" && ttype
-    "post.it.vd", "post.it", "photo":
-      pNameBase = "wallitem" && tClass
-  end case
   tDataName = pNameBase & ".data"
   if getThread(#room).getInterface().getGeometry().pXFactor = 32 then
     tDataName = "s_" & tDataName
@@ -44,7 +40,10 @@ on define me, tProps
       end if
     end if
   end if
-  tstate = 1
+  tstate = tProps[#type]
+  if ilk(value(tstate)) <> #integer or value(tstate) = 0 then
+    tstate = 1
+  end if
   me.setState(tstate)
   me.resetFrameNumbers()
   tCount = 1
@@ -59,6 +58,7 @@ on define me, tProps
     pInkList[tLayer] = me.solveInk(tLayerName)
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
+  pInitialized = 0
   return callAncestor(#define, [me], tProps)
 end
 
@@ -70,25 +70,146 @@ on select me
 end
 
 on update me
+  if pIsAnimatingList.findPos(1) = 0 then
+    return 1
+  end if
+  tIsAnimatingList = []
   repeat with tLayer = 1 to pLayerDataList.count
     tFrameList = me.getFrameList(pLayerDataList.getPropAt(tLayer))
-    if not voidp(tFrameList) then
-      tLoop = pLoopCountList[tLayer]
-      if pLoopCountList[tLayer] > 0 then
-        pLoopCountList[tLayer] = pLoopCountList[tLayer] - 1
-      end if
+    tIsAnimatingList[tLayer] = pIsAnimatingList[tLayer]
+    if not voidp(tFrameList) and tIsAnimatingList[tLayer] then
       if not voidp(tFrameList[#frames]) then
-        tFrameCount = tFrameList[#frames].count
-        if tFrameCount > 0 then
-          if pFrameNumberList[tLayer] < tFrameCount or tLoop then
-            pFrameNumberList[tLayer] = pFrameNumberList[tLayer] mod tFrameCount + 1
-          end if
+        tDelay = tFrameList[#delay]
+        if voidp(tDelay) or voidp(integer(tDelay)) or tDelay < 1 then
+          tDelay = 1
         end if
+        if pFrameRepeatList[tLayer] >= tDelay then
+          tLoop = pLoopCountList[tLayer]
+          tFrameCount = tFrameList[#frames].count
+          if tFrameCount > 0 then
+            if pFrameNumberList[tLayer] = tFrameCount then
+              if pLoopCountList[tLayer] > 0 then
+                pLoopCountList[tLayer] = pLoopCountList[tLayer] - 1
+              end if
+              if pLoopCountList[tLayer] = 0 then
+                tIsAnimatingList[tLayer] = 0
+              end if
+            end if
+            if pFrameNumberList[tLayer] < tFrameCount or tLoop then
+              pFrameNumberList[tLayer] = pFrameNumberList[tLayer] mod tFrameCount + 1
+              tRandom = 0
+              if not voidp(tFrameList[#random]) then
+                tRandom = 1
+              end if
+              if tRandom and tFrameCount > 1 then
+                tValue = random(tFrameCount)
+                if tValue = pFrameNumberList2[tLayer] then
+                  tValue = pFrameNumberList2[tLayer] mod tFrameCount + 1
+                end if
+                pFrameNumberList2[tLayer] = tValue
+              else
+                pFrameNumberList2[tLayer] = pFrameNumberList[tLayer]
+              end if
+              if pFrameNumberList2[tLayer] < 0 then
+                pFrameNumberList2[tLayer] = random(abs(pFrameNumberList2[tLayer]))
+              end if
+            end if
+          end if
+          pFrameRepeatList[tLayer] = 1
+          next repeat
+        end if
+        pFrameRepeatList[tLayer] = pFrameRepeatList[tLayer] + 1
       end if
     end if
   end repeat
   me.solveMembers()
+  repeat with tLayer = 1 to pLayerDataList.count
+    pIsAnimatingList[tLayer] = tIsAnimatingList[tLayer]
+  end repeat
   return 1
+end
+
+on solveMembers me
+  tMembersFound = 0
+  tCount = 1
+  if pLayerDataList.count > 0 then
+    tCount = pLayerDataList.count
+  end if
+  repeat with tLayer = 1 to tCount
+    tAnimating = 1
+    if pIsAnimatingList.count >= tLayer then
+      tAnimating = pIsAnimatingList[tLayer]
+    end if
+    if tAnimating then
+      tLayerName = numToChar(charToNum("a") + tLayer - 1)
+      if pLayerDataList.count >= tLayer then
+        tLayerName = pLayerDataList.getPropAt(tLayer)
+      end if
+      tMemName = me.getMemberName(tLayerName)
+      if me.pSprList.count < tLayer then
+        tSpr = sprite(reserveSprite(me.getID()))
+        tTargetID = getThread(#room).getInterface().getID()
+        tLayerName = pLayerDataList.getPropAt(tLayer)
+        if me.solveTransparency(tLayerName) = 0 then
+          setEventBroker(tSpr.spriteNum, me.getID())
+          tSpr.registerProcedure(#eventProcItemObj, tTargetID, #mouseDown)
+          tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseEnter)
+          tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseLeave)
+        end if
+        me.pSprList.add(tSpr)
+      else
+        tSpr = me.pSprList[tLayer]
+        if not pInitialized then
+          if me.solveTransparency(tLayerName) then
+            removeEventBroker(tSpr.spriteNum)
+          end if
+        end if
+      end if
+      tMemNum = getmemnum(tMemName)
+      if tMemNum <> 0 then
+        tMembersFound = tMembersFound + 1
+        if tMemNum < 1 then
+          tMemNum = abs(tMemNum)
+          tSpr.rotation = 180
+          tSpr.skew = 180
+        else
+          tSpr.rotation = 0
+          tSpr.skew = 0
+        end if
+        tSpr.castNum = tMemNum
+        tSpr.width = member(tMemNum).width
+        tSpr.height = member(tMemNum).height
+      else
+        tSpr.width = 0
+        tSpr.height = 0
+        tSpr.castNum = 0
+      end if
+      if not pInitialized then
+        if pInkList.count < tLayer then
+          pInkList[tLayer] = me.solveInk(tLayerName, pNameBase)
+        end if
+        if pBlendList.count < tLayer then
+          pBlendList[tLayer] = me.solveBlend(tLayerName, pNameBase)
+        end if
+        tSpr.ink = pInkList[tLayer]
+        tSpr.blend = pBlendList[tLayer]
+      end if
+      me.postProcessLayer(tLayer)
+      next repeat
+    end if
+    if me.pSprList.count >= tLayer then
+      tSpr = me.pSprList[tLayer]
+      if tSpr.castNum <> 0 then
+        tMembersFound = tMembersFound + 1
+      end if
+    end if
+  end repeat
+  pInitialized = 1
+  if tMembersFound = 0 then
+    return 0
+  else
+    return 1
+  end if
 end
 
 on updateLocation me
@@ -103,6 +224,7 @@ on updateLocation me
       end if
     end if
   end if
+  tScreenLocs = getThread(#room).getInterface().getGeometry().getScreenCoordinate(me.pWallX - 1, me.pWallY + 1, 0)
   if ilk(tDirection) = #integer then
     tCount = 1
     if pLayerDataList.count > 0 then
@@ -114,63 +236,13 @@ on updateLocation me
         tLayerName = pLayerDataList.getPropAt(tLayer)
       end if
       tlocz = me.solveLocZ(tLayerName)
-      me.pSprList[tLayer].locZ = me.pSprList[tLayer].locZ + tlocz
+      me.pSprList[tLayer].locZ = tScreenLocs[3] + tlocz + tLayer
       tLocShift = me.solveLocShift(tLayerName)
       if ilk(tLocShift) = #point then
         me.pSprList[tLayer].loc = me.pSprList[tLayer].loc + tLocShift
       end if
     end repeat
   end if
-end
-
-on solveMembers me
-  tMembersFound = 0
-  tCount = 1
-  if pLayerDataList.count > 0 then
-    tCount = pLayerDataList.count
-  end if
-  repeat with tLayer = 1 to tCount
-    tLayerName = EMPTY
-    if pLayerDataList.count >= tLayer then
-      tLayerName = pLayerDataList.getPropAt(tLayer)
-      tMemName = me.getMemberName(tLayerName)
-    else
-      tMemName = me.getMemberName()
-    end if
-    if me.pSprList.count < tLayer then
-      tSpr = sprite(reserveSprite(me.getID()))
-      tTargetID = getThread(#room).getInterface().getID()
-      setEventBroker(tSpr.spriteNum, me.getID())
-      tSpr.registerProcedure(#eventProcItemObj, tTargetID, #mouseDown)
-      tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseEnter)
-      tSpr.registerProcedure(#eventProcItemRollOver, tTargetID, #mouseLeave)
-      me.pSprList.add(tSpr)
-    else
-      tSpr = me.pSprList[tLayer]
-    end if
-    tMemNum = getmemnum(tMemName)
-    if tMemNum <> 0 then
-      tMembersFound = tMembersFound + 1
-      if tMemNum < 1 then
-        tMemNum = abs(tMemNum)
-        tSpr.flipH = 1
-      end if
-      tSpr.ink = pInkList[tLayer]
-      tSpr.blend = pBlendList[tLayer]
-      tSpr.castNum = tMemNum
-      tSpr.width = member(tMemNum).width
-      tSpr.height = member(tMemNum).height
-    else
-      tSpr.width = 0
-      tSpr.height = 0
-      tSpr.castNum = 0
-    end if
-    me.postProcessLayer(tLayer)
-  end repeat
-  if tMembersFound = 0 then
-    return 0
-  end if
-  return 1
 end
 
 on postProcessLayer me, tLayer
@@ -184,8 +256,9 @@ on getMemberName me, tLayer
   if not voidp(tFrameList) and not voidp(tLayerIndex) then
     tFrameSequence = tFrameList[#frames]
     if not voidp(tFrameSequence) then
-      tFrameNumber = pFrameNumberList[tLayerIndex]
-      tName = tName & "_" & tLayer & "_" & tFrameSequence[tFrameNumber]
+      tFrameNumber = pFrameNumberList2[tLayerIndex]
+      tFrame = tFrameSequence[tFrameNumber]
+      tName = tName & "_" & tLayer & "_" & tFrame
     end if
   end if
   if me.pXFactor = 32 then
@@ -212,6 +285,13 @@ on getFrameList me, tLayer
 end
 
 on setState me, tNewState
+  repeat with tLayer = 1 to pLayerDataList.count
+    pLoopCountList[tLayer] = 0
+  end repeat
+  if ilk(value(tNewState)) <> #integer then
+    return 0
+  end if
+  tNewState = value(tNewState)
   tNewIndex = 0
   repeat with tIndex = 1 to pStateSequenceList.count
     tstate = pStateSequenceList[tIndex]
@@ -261,7 +341,7 @@ on getNextState me
   else
     tStateNew = tstate
   end if
-  return me.setState(tStateNew)
+  return getThread(#room).getComponent().getRoomConnection().send("SETITEMSTATE", [#string: string(me.id), #integer: tStateNew])
 end
 
 on validateStateSequenceList me
@@ -302,9 +382,15 @@ on validateStateSequenceList me
 end
 
 on resetFrameNumbers me
+  pFrameRepeatList = []
+  pIsAnimatingList = []
   pFrameNumberList = []
-  repeat with i = 1 to pLayerDataList.count
+  pFrameNumberList2 = []
+  repeat with i = 1 to max(me.pLocShiftList.count, pLayerDataList.count)
     pFrameNumberList[i] = 1
+    pFrameNumberList2[i] = 1
+    pFrameRepeatList[i] = 1
+    pIsAnimatingList[i] = 1
   end repeat
 end
 
@@ -402,4 +488,24 @@ on solveLocZ me, tPart, tdir
     end if
   end if
   return tPropList[tPart][#zshift][tdir + 1]
+end
+
+on solveTransparency me, tPart
+  tName = pNameBase
+  if me.pXFactor = 32 then
+    tName = "s_" & tName
+  end if
+  if memberExists(tName & ".props") then
+    tPropList = value(member(getmemnum(tName & ".props")).text)
+    if ilk(tPropList) <> #propList then
+      error(me, tName & ".props is not valid!", #solveInk)
+    else
+      if tPropList[tPart] <> VOID then
+        if tPropList[tPart][#transparent] <> VOID then
+          return tPropList[tPart][#transparent]
+        end if
+      end if
+    end if
+  end if
+  return 0
 end

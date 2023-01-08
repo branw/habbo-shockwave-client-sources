@@ -1,4 +1,4 @@
-property pState, pTraderPal, pAcceptFlagMe, pAcceptFlagHe, pMyStripItems, pItemListMe, pItemListHe, pTraderWndID, pMaxTradeItms, pItemSlotRect, pConfirmationWndID, pMySlotProps, pHerSlotProps
+property pState, pTraderPal, pAcceptFlagMe, pAcceptFlagHe, pMyStripItems, pItemListMe, pItemListHe, pTraderWndID, pMaxTradeItms, pItemSlotRect, pConfirmationWndID, pMySlotProps, pHerSlotProps, pIconPlaceholderName, pRequiredDownloadsToTrade
 
 on construct me
   pState = #closed
@@ -14,6 +14,8 @@ on construct me
   pMySlotProps = [:]
   pHerSlotProps = [:]
   pConfirmationWndID = "safetrading_confirmationdialog"
+  pIconPlaceholderName = "icon_placeholder"
+  pRequiredDownloadsToTrade = []
   return 1
 end
 
@@ -22,6 +24,7 @@ on deconstruct me
 end
 
 on open me, tdata
+  pRequiredDownloadsToTrade = []
   tList = [:]
   tList["showDialog"] = 1
   executeMessage(#getHotelClosingStatus, tList)
@@ -34,7 +37,7 @@ on open me, tdata
     return 0
   end if
   if tdata.count > 1 then
-    if tdata.getPropAt(1) <> getObject(#session).get("user_name") then
+    if tdata.getPropAt(1) <> getObject(#session).GET("user_name") then
       pTraderPal = tdata.getPropAt(1)
     else
       pTraderPal = tdata.getPropAt(2)
@@ -101,7 +104,7 @@ on accept me, tuser, tValue
     if tuser = pTraderPal then
       pAcceptFlagHe = tValue
     else
-      if tuser = getObject(#session).get("user_name") then
+      if tuser = getObject(#session).GET("user_name") then
         pAcceptFlagMe = tValue
         me.blendLockedSlots(tValue)
       end if
@@ -136,7 +139,7 @@ on Refresh me, tdata
   me.open(tdata)
   pMyStripItems = []
   tWndObj = getWindow(pTraderWndID)
-  pItemListMe = tdata[getObject(#session).get("user_name")][#items]
+  pItemListMe = tdata[getObject(#session).GET("user_name")][#items]
   pMySlotProps = [:]
   repeat with i = 1 to pItemListMe.count
     tClass = pItemListMe[i][#class]
@@ -148,7 +151,7 @@ on Refresh me, tdata
       if tWndObj.elementExists("trading_mystuff_" & tAddToSlot) then
         pMySlotProps.addProp(tClass, ["count": 1, "slot": tAddToSlot, "name": pItemListMe[i][#name]])
         tWndObj.getElement("trading_mycount_" & tAddToSlot).setText(pMySlotProps[tClass]["count"])
-        tImage = me.createItemImg(pItemListMe[i], pItemListMe[i][#colors])
+        tImage = me.createItemImg(pItemListMe[i])
         tWndObj.getElement("trading_mystuff_" & tAddToSlot).feedImage(tImage)
         tWndObj.getElement("trading_mystuff_" & tAddToSlot).draw(rgb(64, 64, 64))
       end if
@@ -175,7 +178,7 @@ on Refresh me, tdata
       if tWndObj.elementExists("trading_herstuff_" & tAddToSlot) then
         pHerSlotProps.addProp(tClass, ["count": 1, "slot": tAddToSlot, "name": pItemListHe[i][#name]])
         tWndObj.getElement("trading_hercount_" & tAddToSlot).setText(pHerSlotProps[tClass]["count"])
-        tImage = me.createItemImg(pItemListHe[i], pItemListHe[i][#colors])
+        tImage = me.createItemImg(pItemListHe[i])
         tWndObj.getElement("trading_herstuff_" & tAddToSlot).feedImage(tImage)
         tWndObj.getElement("trading_herstuff_" & tAddToSlot).draw(rgb(64, 64, 64))
       end if
@@ -198,7 +201,11 @@ on isUnderTrade me, tStripID
   return pMyStripItems.getPos(tStripID) > 0
 end
 
-on createItemImg me, tProps
+on createItemImg me, tProps, tDownloadPrevented
+  if voidp(tProps) then
+    error(me, "Invalid props!", #createItemImg)
+    return image(1, 1, 8)
+  end if
   tImgProps = [#ink: 8]
   if voidp(tProps[#props]) then
     tProps[#props] = EMPTY
@@ -236,7 +243,36 @@ on createItemImg me, tProps
             if memberExists("rightwall" && tClass && tProps[#props]) then
               tMemStr = "rightwall" && tClass && tProps[#props]
             else
-              error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+              if not tDownloadPrevented then
+                tDynThread = getThread(#dynamicdownloader)
+                if tDynThread = 0 then
+                  error(me, "Couldn't define member for trade item!" & RETURN & tProps, #createItemImg)
+                  return image(1, 18, 8)
+                else
+                  tDynComponent = tDynThread.getComponent()
+                  tRoomSizePrefix = EMPTY
+                  tRoomThread = getThread(#room)
+                  if tRoomThread <> 0 then
+                    tTileSize = tRoomThread.getInterface().getGeometry().getTileWidth()
+                    if tTileSize = 32 then
+                      tRoomSizePrefix = "s_"
+                    end if
+                  end if
+                  if tProps[#class] contains "poster" then
+                    tDownloadIdName = tClass && tProps[#props]
+                  else
+                    tDownloadIdName = tClass
+                  end if
+                  tDownloadIdName = tRoomSizePrefix & tDownloadIdName
+                  tDynComponent.downloadCastDynamically(tDownloadIdName, #unknown, me.getID(), #traderItemDownloadCallback, 1, tProps)
+                  if pRequiredDownloadsToTrade.getPos(tDownloadIdName) = 0 then
+                    pRequiredDownloadsToTrade.add(tDownloadIdName)
+                  end if
+                  tMemStr = pIconPlaceholderName
+                end if
+              else
+                tMemStr = pIconPlaceholderName
+              end if
             end if
           end if
         end if
@@ -244,10 +280,55 @@ on createItemImg me, tProps
     end if
   end if
   tImage = getObject("Preview_renderer").renderPreviewImage(tMemStr, VOID, tProps[#colors], tProps[#class])
+  if voidp(tImage) then
+    return image(1, 18, 8)
+  end if
   tImgProps[#maskImage] = tImage.createMatte()
   tNewImg = image(tImage.width, tImage.height, 32)
   tNewImg.copyPixels(tImage, tImage.rect, tImage.rect, tImgProps)
   return me.cropToFit(tNewImg)
+end
+
+on traderItemDownloadCallback me, tDownloadedId, tSuccess, tCallbackParams
+  if not tSuccess then
+    return 0
+  end if
+  if pRequiredDownloadsToTrade.getPos(tDownloadedId) > 0 then
+    pRequiredDownloadsToTrade.deleteOne(tDownloadedId)
+  end if
+  tWndObj = getWindow(pTraderWndID)
+  repeat with i = 1 to pItemListMe.count
+    tClass = pItemListMe[i][#class]
+    if not voidp(pItemListMe[i][#props]) then
+      tClass = tClass & "_" & pItemListMe[i][#props]
+    end if
+    if voidp(pMySlotProps[tClass]) then
+      return 0
+      next repeat
+    end if
+    tCount = pMySlotProps[tClass]["count"]
+    tSlot = pMySlotProps[tClass]["slot"]
+    if tWndObj.elementExists("trading_mystuff_" & tSlot) then
+      tImage = me.createItemImg(pItemListMe[i], 1)
+      tWndObj.getElement("trading_mystuff_" & tSlot).feedImage(tImage)
+    end if
+  end repeat
+  repeat with i = 1 to pItemListHe.count
+    tClass = pItemListHe[i][#class]
+    if not voidp(pItemListHe[i][#props]) then
+      tClass = tClass & pItemListHe[i][#props]
+    end if
+    if voidp(pHerSlotProps[tClass]) then
+      return 0
+      next repeat
+    end if
+    tCount = pHerSlotProps[tClass]["count"]
+    tSlot = pHerSlotProps[tClass]["slot"]
+    if tWndObj.elementExists("trading_mystuff_" & tSlot) then
+      tImage = me.createItemImg(pItemListHe[i], 1)
+      tWndObj.getElement("trading_herstuff_" & tSlot).feedImage(tImage)
+    end if
+  end repeat
 end
 
 on cropToFit me, tImage
@@ -309,6 +390,9 @@ on eventProcTrading me, tEvent, tSprID, tParam
             return getThread(#room).getComponent().getRoomConnection().send("TRADE_UNACCEPT")
           else
             if pHerSlotProps.count = 0 then
+              if pRequiredDownloadsToTrade.count > 0 then
+                return 1
+              end if
               if not createWindow(pConfirmationWndID, VOID, 0, 0, #modal) then
                 return 0
               end if
@@ -325,6 +409,9 @@ on eventProcTrading me, tEvent, tSprID, tParam
               tWinObj.registerProcedure(#eventProcTradingConfirmation, me.getID(), #mouseUp)
               return 1
             else
+              if pRequiredDownloadsToTrade.count > 0 then
+                return 1
+              end if
               pAcceptFlagMe = 1
               return getThread(#room).getComponent().getRoomConnection().send("TRADE_ACCEPT")
             end if

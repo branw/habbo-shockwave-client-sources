@@ -42,8 +42,8 @@ on setProperty me, tPropID, tValue
   return 0
 end
 
-on createMember me, tMemName, ttype
-  if not voidp(pAllMemNumList[tMemName]) then
+on createMember me, tMemName, ttype, tForcedDuplicate
+  if not voidp(pAllMemNumList[tMemName]) and not tForcedDuplicate then
     error(me, "Member already exists:" && tMemName, #createMember)
     return me.getmemnum(tMemName)
   end if
@@ -59,7 +59,9 @@ on createMember me, tMemName, ttype
   tmember.name = tMemName
   tMemNum = tmember.number
   pAllMemNumList[tMemName] = tMemNum
-  pDynMemNumList.add(tMemNum)
+  if pDynMemNumList.getPos(tMemNum) = 0 then
+    pDynMemNumList.add(tMemNum)
+  end if
   return tMemNum
 end
 
@@ -160,32 +162,7 @@ on preIndexMembers me, tCastNum
     end if
     tAliasIndex = getVariable("alias.index.field")
     if member(tAliasIndex, tCastLib).number > 0 then
-      tAliasList = field(tAliasIndex, tCastLib)
-      tItemDeLim = the itemDelimiter
-      the itemDelimiter = "="
-      repeat with i = 1 to tAliasList.line.count
-        tLine = tAliasList.line[i]
-        if length(tLine) > 2 then
-          tName = item 2 to the number of items in tLine of tLine
-          if the last char in tName = "*" then
-            tName = tName.char[1..length(tName) - 1]
-            tNumber = pAllMemNumList[tName]
-            if tNumber > 0 then
-              tReplacingNum = -tNumber
-            else
-              tReplacingNum = tNumber
-            end if
-          else
-            tNumber = pAllMemNumList[tName]
-            tReplacingNum = tNumber
-          end if
-          if tNumber > 0 then
-            tMemName = item 1 of tLine
-            pAllMemNumList[tMemName] = tReplacingNum
-          end if
-        end if
-      end repeat
-      the itemDelimiter = tItemDeLim
+      me.readAliasIndexesFromField(tAliasIndex, tCastLib)
     end if
     tClsIndex = getVariable("class.index.field")
     if member(tClsIndex, tCastLib).number > 0 then
@@ -193,6 +170,35 @@ on preIndexMembers me, tCastNum
     end if
   end repeat
   return 1
+end
+
+on readAliasIndexesFromField me, tAliasIndex, tCastlibNo
+  tAliasList = field(tAliasIndex, tCastlibNo)
+  tItemDeLim = the itemDelimiter
+  the itemDelimiter = "="
+  repeat with i = 1 to tAliasList.line.count
+    tLine = tAliasList.line[i]
+    if length(tLine) > 2 then
+      tName = item 2 to the number of items in tLine of tLine
+      if the last char in tName = "*" then
+        tName = tName.char[1..length(tName) - 1]
+        tNumber = pAllMemNumList[tName]
+        if tNumber > 0 then
+          tReplacingNum = -tNumber
+        else
+          tReplacingNum = tNumber
+        end if
+      else
+        tNumber = pAllMemNumList[tName]
+        tReplacingNum = tNumber
+      end if
+      if tNumber > 0 then
+        tMemName = item 1 of tLine
+        pAllMemNumList[tMemName] = tReplacingNum
+      end if
+    end if
+  end repeat
+  the itemDelimiter = tItemDeLim
 end
 
 on unregisterMembers me, tCastNum

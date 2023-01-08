@@ -1,6 +1,6 @@
 property ancestor, pPart, pmodel, pDirection, pDrawProps, pAction, pActionLh, pActionRh, pMemString, pXFix, pYFix, pLastLocFix, pCacheImage, pCacheRectA, pCacheRectB, pFlipH, pAnimation, pAnimFrame, pTotalFrame
 
-on deconstruct me
+on deconsturct me
   ancestor = VOID
   return 1
 end

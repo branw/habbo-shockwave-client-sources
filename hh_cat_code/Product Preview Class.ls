@@ -21,7 +21,7 @@ end
 on define me, tdata
   pClass = tdata[#class]
   pName = tdata[#name]
-  pCustom = tdata[#Custom]
+  pCustom = tdata[#custom]
   pDirection = tdata[#direction]
   pDimensions = tdata[#dimensions]
   pObjectType = tdata[#objectType]
@@ -78,7 +78,7 @@ on getPicture me, tImg
         tInk = tProps[#ink]
         tImage = member(tMemNum).image
         tRegp = member(tMemNum).regPoint
-        tX = 100 - tRegp[1]
+        tX = 150 - tRegp[1]
         tY = 150 - tRegp[2]
         if ilk(tTempLocShifts[j]) = #point then
           tX = tX + tTempLocShifts[j].locH
@@ -276,7 +276,66 @@ on solveItemMembers me
   if pLayerProps.count > 0 then
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveItemMembers)
+    if not me.solveAnimatedItemMembers() then
+      return error(me, "Couldn't define members:" && pClass, #solveItemMembers)
+    end if
+  end if
+end
+
+on solveAnimatedItemMembers me
+  tMemNum = 1
+  i = charToNum("a")
+  j = 1
+  pLayerProps = []
+  pLoczList = []
+  pLocShiftList = []
+  repeat while tMemNum > 0
+    tMemNameA = "rightwall" && pClass & "_" & numToChar(i) & "_"
+    repeat with tFrame = 0 to 10
+      tMemName = tMemNameA & string(tFrame)
+      tMemNum = getmemnum(tMemName)
+      tOldMemName = tMemName
+      if tMemNum <> 0 then
+        exit repeat
+      end if
+    end repeat
+    if tMemNum <> 0 then
+      pLoczList.add([])
+      pLocShiftList.add([])
+      repeat with tdir = 0 to 7
+        pLoczList.getLast().add(me.solveLocZ(numToChar(i), tdir) + i)
+        pLocShiftList.getLast().add(me.solveLocShift(numToChar(i), tdir))
+      end repeat
+      if tMemNum < 1 then
+        tMemNum = abs(tMemNum)
+        tFlipH = 1
+      else
+        tFlipH = 0
+      end if
+      tProps = [:]
+      tProps[#member] = tMemNum
+      tProps[#width] = member(tMemNum).width
+      tProps[#height] = member(tMemNum).height
+      tProps[#ink] = me.solveInk(numToChar(i))
+      tProps[#blend] = me.solveBlend(numToChar(i))
+      tProps[#flipH] = tFlipH
+      if j <= pPartColors.count then
+        if string(pPartColors[j]).char[1] = "#" then
+          tProps[#bgColor] = rgb(pPartColors[j])
+          tInk = 41
+        else
+          tProps[#bgColor] = paletteIndex(integer(pPartColors[j]))
+        end if
+      end if
+      pLayerProps.append(tProps)
+    end if
+    i = i + 1
+    j = j + 1
+  end repeat
+  if pLayerProps.count > 0 then
+    return 1
+  else
+    return error(me, "Couldn't define members:" && pClass, #solveStuffMembers)
   end if
 end
 

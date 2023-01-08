@@ -74,7 +74,7 @@ on update me
     tMoverClientId = tObjectMover.getProperty(#clientID)
     tClickAction = getThread(#room).getInterface().getProperty(#clickAction)
   end if
-  tAdminChooser = getObject(#session).get("user_rights").getOne("fuse_any_room_controller")
+  tAdminChooser = getObject(#session).GET("user_rights").getOne("fuse_any_room_controller")
   repeat with tObj in tActiveObjList
     if tAdminChooser then
       pObjList.setaProp("a" & tObj.getID(), "Id:" & tObj.getID() && tObj.getLocation() && tObj.getInfo().name)

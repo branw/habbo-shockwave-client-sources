@@ -132,6 +132,19 @@ on handle_catalogpage me, tMsg
   me.getComponent().saveCataloguePage(tList)
 end
 
+on handle_purchasenotallowed me, tMsg
+  if voidp(tMsg.connection) then
+    return 0
+  end if
+  tCode = tMsg.connection.GetIntFrom(tMsg)
+  case tCode of
+    0:
+    1:
+      return executeMessage(#alert, [#Msg: "catalog_purchase_not_allowed_hc", #modal: 1])
+  end case
+  return 0
+end
+
 on regMsgList me, tBool
   tMsgs = [:]
   tMsgs.setaProp(67, #handle_purchase_ok)
@@ -139,6 +152,7 @@ on regMsgList me, tBool
   tMsgs.setaProp(68, #handle_purchase_nobalance)
   tMsgs.setaProp(126, #handle_catalogindex)
   tMsgs.setaProp(127, #handle_catalogpage)
+  tMsgs.setaProp(296, #handle_purchasenotallowed)
   tCmds = [:]
   tCmds.setaProp("GPRC", 100)
   tCmds.setaProp("GCIX", 101)

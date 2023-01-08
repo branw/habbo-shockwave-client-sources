@@ -73,6 +73,9 @@ on renderPreviewImage me, tMemStr, tColorList, tColorListToSolve, tClass
     tColorList = me.solveColorList(tColorListToSolve)
   end if
   if not me.doLayersExist(tMemStr) then
+    if getmemnum(tMemStr) = 0 then
+      return member(getmemnum("no_icon_small")).image
+    end if
     tColor = me.getSmallsColor(tMemStr, tColorList)
     if tColor = 0 then
       return member(getmemnum(tMemStr)).image

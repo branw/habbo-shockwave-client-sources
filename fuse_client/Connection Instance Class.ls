@@ -1,5 +1,4 @@
 property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pEncoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr, pDecipherOn, pD
-global _player
 
 on construct me
   pDecipherOn = 0
@@ -111,11 +110,6 @@ on setEncryption me, tBoolean
 end
 
 on send me, tCmd, tMsg
-  if _player <> VOID then
-    if _player.traceScript then
-      return 0
-    end if
-  end if
   if pConnectionShouldBeKilled then
     return 0
   end if
@@ -156,11 +150,6 @@ on send me, tCmd, tMsg
 end
 
 on sendNew me, tCmd, tParmArr
-  if _player <> VOID then
-    if _player.traceScript then
-      return 0
-    end if
-  end if
   if not (pConnectionOk and objectp(pXtra)) then
     return error(me, "Connection not ready:" && me.getID(), #send)
   end if
@@ -432,7 +421,7 @@ on forwardMsg me, tSubject, tParams
   tObjMgr = getObjectManager()
   repeat with i = 1 to count(tCallbackList)
     tCallback = tCallbackList[i]
-    tObject = tObjMgr.get(tCallback[1])
+    tObject = tObjMgr.GET(tCallback[1])
     if tObject <> 0 then
       pMsgStruct.setaProp(#subject, tSubject)
       pMsgStruct.setaProp(#content, tParams)

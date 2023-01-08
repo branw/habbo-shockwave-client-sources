@@ -46,7 +46,7 @@ on construct me
   pYFactor = pGeometry.pYFactor
   pHFactor = pGeometry.pHFactor
   pCorrectLocZ = 0
-  pPartClass = value(getThread(#room).getComponent().getClassContainer().get("bodypart"))
+  pPartClass = value(getThread(#room).getComponent().getClassContainer().GET("bodypart"))
   pBaseLocZ = 0
   return 1
 end
@@ -102,7 +102,7 @@ on define me, tdata
   pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
-  pInfoStruct[#Custom] = pCustom
+  pInfoStruct[#custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
   pInfoStruct[#badge] = " "
@@ -116,7 +116,7 @@ end
 
 on changeFigureAndData me, tdata
   pSex = tdata[#sex]
-  pCustom = tdata[#Custom]
+  pCustom = tdata[#custom]
   tmodels = tdata[#figure]
   repeat with tPart in pPartList
     tPartId = tPart.getPartID()
@@ -133,18 +133,14 @@ on changeFigureAndData me, tdata
   end repeat
   pChanges = 1
   me.render()
-  if me.isInSwimsuit() then
-    me.setPartLists(tdata[#figure], #preserveAnimation)
-  else
-    me.reDraw()
-  end if
+  me.reDraw()
   pInfoStruct[#image] = me.getPicture()
 end
 
 on setup me, tdata
   pName = tdata[#name]
   pClass = tdata[#class]
-  pCustom = tdata[#Custom]
+  pCustom = tdata[#custom]
   pSex = tdata[#sex]
   pDirection = tdata[#direction][1]
   pHeadDir = pDirection
@@ -344,12 +340,12 @@ on getInfo me
   end if
   pInfoStruct[#badge] = me.pBadge
   if pTrading then
-    pInfoStruct[#Custom] = pCustom & RETURN & getText("human_trading", "Trading")
+    pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
     if pCarrying <> 0 then
-      pInfoStruct[#Custom] = pCustom & RETURN & getText("human_carrying", "Carrying:") && pCarrying
+      pInfoStruct[#custom] = pCustom & RETURN & getText("human_carrying", "Carrying:") && pCarrying
     else
-      pInfoStruct[#Custom] = pCustom
+      pInfoStruct[#custom] = pCustom
     end if
   end if
   return pInfoStruct
@@ -412,12 +408,6 @@ on openEyes me
   pChanges = 1
 end
 
-on resumeAnimation me
-  tMemName = pCurrentAnim
-  pCurrentAnim = EMPTY
-  me.startAnimation(tMemName)
-end
-
 on startAnimation me, tMemName
   if tMemName = pCurrentAnim then
     return 0
@@ -443,6 +433,12 @@ on stopAnimation me
   pAnimating = 0
   pCurrentAnim = EMPTY
   call(#remAnimation, pPartList)
+end
+
+on resumeAnimation me
+  tMemName = pCurrentAnim
+  pCurrentAnim = EMPTY
+  me.startAnimation(tMemName)
 end
 
 on show me

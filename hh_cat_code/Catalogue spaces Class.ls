@@ -95,9 +95,6 @@ on setWallPaper me, ttype, tChange
   if not tWndObj then
     return error(me, "Couldn't access catalogue window!", #setWallPaper)
   end if
-  if pWallPatterns.count = 0 then
-    return error(me, "There are no wallpatterns!", #setWallPaper)
-  end if
   if ttype = "pattern" then
     pWallPattern = pWallPattern + tChange
     if pWallPattern > pWallPatterns.count then

@@ -23,7 +23,7 @@ on removeWriter tid
 end
 
 on getWriter tid, tDefault
-  return getWriterManager().get(tid, tDefault)
+  return getWriterManager().GET(tid, tDefault)
 end
 
 on writerExists tid

@@ -76,7 +76,7 @@ on getInfo me
   tInfo = [:]
   tInfo[#name] = pName
   tInfo[#class] = pClass
-  tInfo[#Custom] = pCustom
+  tInfo[#custom] = pCustom
   tInfo[#smallmember] = pClass & "_small"
   if memberExists(pClass & "_small") then
     tInfo[#image] = member(getmemnum(pClass & "_small")).image
@@ -268,6 +268,10 @@ on solveMembers me
   return 0
 end
 
+on setState me, tValue
+  me.updateColor(tValue)
+end
+
 on updateColor me, tHexstr
   if not listp(pSprList) then
     return 0
@@ -373,7 +377,7 @@ on updateLocation me
         end if
       end if
       if not (pClass contains "post.it") then
-        if not tWallObjFound and getObject(#session).get(#room_owner) then
+        if not tWallObjFound and getObject(#session).GET(#room_owner) then
           tComponent = getThread(#room).getComponent()
           if not (tComponent = 0) then
             tComponent.getRoomConnection().send("ADDSTRIPITEM", "new item" && me.getID())

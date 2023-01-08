@@ -13,12 +13,12 @@ end
 
 on definePulse me
   pPulseState = #Opening
-  pSprite = sprite(me.get(#sprite))
-  pStartloc = me.get(#humanLoc) + point(0, -20)
-  pStopLoc = me.get(#stoploc)
+  pSprite = sprite(me.GET(#sprite))
+  pStartloc = me.GET(#humanLoc) + point(0, -20)
+  pStopLoc = me.GET(#stoploc)
   pSprite.loc = pStartloc
   pSprite.member = pMember
-  pSprite.color = me.get(#balloonColor)
+  pSprite.color = me.GET(#balloonColor)
   return 1
 end
 
@@ -49,7 +49,7 @@ on set me, tKey, tValue
   return 1
 end
 
-on get me, tKey
+on GET me, tKey
   tValue = pProps[tKey]
   if voidp(tValue) then
     tValue = 0

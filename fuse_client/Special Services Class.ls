@@ -35,6 +35,7 @@ end
 on catch me
   the alertHook = pSavedHook
   return pCatchFlag
+  return 0
 end
 
 on createToolTip me, tText
@@ -171,7 +172,7 @@ end
 on getExtVarPath me
   tVariableID = "system.v2"
   if not variableExists(tVariableID) then
-    return getVariableManager().get("external.variables.txt")
+    return getVariableManager().GET("external.variables.txt")
   end if
   return deobfuscate(getVariable(tVariableID))
 end

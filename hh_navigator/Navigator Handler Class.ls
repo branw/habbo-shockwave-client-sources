@@ -1,12 +1,8 @@
-property pLastRoomForwardTimeStamp
-
 on construct me
-  pLastRoomForwardTimeStamp = 0
   return me.regMsgList(1)
 end
 
 on deconstruct me
-  pLastRoomForwardTimeStamp = 0
   return me.regMsgList(0)
 end
 
@@ -302,13 +298,6 @@ on handle_parentchain me, tMsg
 end
 
 on handle_roomforward me, tMsg
-  tTimeSinceLast = the milliSeconds - pLastRoomForwardTimeStamp
-  tTimeout = getVariable("navigator.room.forward.timeout")
-  if tTimeSinceLast < tTimeout then
-    return 0
-  else
-    pLastRoomForwardTimeStamp = the milliSeconds
-  end if
   tConn = tMsg.connection
   tIsPublic = tConn.GetIntFrom()
   if tIsPublic > 0 then

@@ -1,8 +1,12 @@
+property pRemoteControlledUsers
+
 on construct me
+  pRemoteControlledUsers = []
   return me.regMsgList(1)
 end
 
 on deconstruct me
+  pRemoteControlledUsers = []
   return me.regMsgList(0)
 end
 
@@ -36,7 +40,7 @@ end
 
 on handle_logout me, tMsg
   tuser = tMsg.content.word[1]
-  if tuser <> getObject(#session).get("user_index") then
+  if tuser <> getObject(#session).GET("user_index") then
     me.getComponent().removeUserObject(tuser)
   end if
 end
@@ -111,13 +115,15 @@ on handle_status me, tMsg
   end repeat
   the itemDelimiter = tDelim
   repeat with tuser in tList
-    tUserObj = me.getComponent().getUserObject(tuser[#id])
-    if tUserObj <> 0 then
-      tUserObj.resetValues(tuser[#x], tuser[#y], tuser[#h], tuser[#dirHead], tuser[#dirBody])
-      repeat with tAction in tuser[#actions]
-        call(symbol("action_" & tAction[#name]), [tUserObj], tAction[#params])
-      end repeat
-      tUserObj.Refresh(tuser[#x], tuser[#y], tuser[#h])
+    if not (pRemoteControlledUsers.getOne(tuser[#id]) > 0) then
+      tUserObj = me.getComponent().getUserObject(tuser[#id])
+      if tUserObj <> 0 then
+        tUserObj.resetValues(tuser[#x], tuser[#y], tuser[#h], tuser[#dirHead], tuser[#dirBody])
+        repeat with tAction in tuser[#actions]
+          call(symbol("action_" & tAction[#name]), [tUserObj], tAction[#params])
+        end repeat
+        tUserObj.Refresh(tuser[#x], tuser[#y], tuser[#h])
+      end if
     end if
   end repeat
 end
@@ -174,7 +180,7 @@ on handle_users me, tMsg
         tList[tuser][#y] = integer(tdata.word[2])
         tList[tuser][#h] = getLocalFloat(tdata.word[3])
       "c":
-        tList[tuser][#Custom] = tdata
+        tList[tuser][#custom] = tdata
       "s":
         if tdata.char[1] = "F" or tdata.char[1] = "f" then
           tList[tuser][#sex] = "F"
@@ -213,7 +219,7 @@ on handle_users me, tMsg
   if count(tList) = 0 then
     me.getComponent().validateUserObjects(0)
   else
-    tName = getObject(#session).get(#userName)
+    tName = getObject(#session).GET(#userName)
     repeat with tuser in tList
       if tuser[#name] = tName then
         getObject(#session).set("user_index", tuser[#id])
@@ -368,10 +374,11 @@ on handle_activeobject_update me, tMsg
   end if
   tComponent = me.getComponent()
   if tComponent.activeObjectExists(tObj[#id]) then
+    tObj = getThread(#buffer).getComponent().processObject(tObj, "active")
     tActiveObj = tComponent.getActiveObject(tObj[#id])
     tActiveObj.define(tObj)
     tComponent.removeSlideObject(tObj[#id])
-    call(#prepareForMove, [tActiveObj])
+    call(#movingFinished, [tActiveObj])
     executeMessage(#activeObjectsUpdated)
   else
     return error(me, "Active object not found:" && tObj[#id], #handle_activeobject_update)
@@ -443,7 +450,7 @@ end
 on handle_updateitem me, tMsg
   tItem = me.getComponent().getItemObject(tMsg.content.word[1])
   if objectp(tItem) then
-    tItem.updateColor(the last word in the content of tMsg)
+    tItem.setState(the last word in the content of tMsg)
   end if
 end
 
@@ -527,9 +534,10 @@ on handle_stripinfo me, tMsg
       "S":
         tObj[#name] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_name")
         tObj[#striptype] = "active"
-        tObj[#Custom] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_desc")
+        tObj[#custom] = getText("furni_" & tObj[#class] & "_name", "furni_" & tObj[#class] & "_desc")
         tObj[#dimensions] = [integer(tItem.item[7]), integer(tItem.item[8])]
-        tObj[#colors] = tItem.item[9]
+        tObj[#stuffdata] = tItem.item[9]
+        tObj[#colors] = tItem.item[10]
         the itemDelimiter = ","
         if tObj[#colors].char[1] = "#" then
           if tObj[#colors].item.count > 1 then
@@ -650,7 +658,7 @@ on handle_door_in me, tMsg
   tDoorObj = me.getComponent().getActiveObject(tDoor)
   if tDoorObj <> 0 then
     tDoorObj.animate(18)
-    if getObject(#session).get("user_name") = tuser then
+    if getObject(#session).GET("user_name") = tuser then
       tDoorObj.prepareToKick(tuser)
     end if
   end if
@@ -677,7 +685,7 @@ end
 
 on handle_doordeleted me, tMsg
   if getObject(#session).exists("current_door_ID") then
-    tDoorID = getObject(#session).get("current_door_ID")
+    tDoorID = getObject(#session).GET("current_door_ID")
     tDoorObj = me.getComponent().getActiveObject(tDoorID)
     if tDoorObj <> 0 then
       tDoorObj.kickOut()
@@ -787,7 +795,9 @@ on handle_slideobjectbundle me, tMsg
   tTileID = tConn.GetIntFrom()
   tTileObj = tComponent.getActiveObject(tTileID)
   if tTileObj <> 0 then
-    call(#setAnimation, tTileObj, 1)
+    if tTileObj.handler(#setAnimation) then
+      call(#setAnimation, tTileObj, 1)
+    end if
   end if
   tMoveType = tConn.GetIntFrom()
   case tMoveType of
@@ -984,6 +994,7 @@ on regMsgList me, tBool
   tCmds.setaProp("SETBADGE", 158)
   tCmds.setaProp("GETINTERST", 182)
   tCmds.setaProp("ROOM_QUEUE_CHANGE", 211)
+  tCmds.setaProp("SETITEMSTATE", 214)
   if tBool then
     registerListener(getVariable("connection.room.id"), me.getID(), tMsgs)
     registerCommands(getVariable("connection.room.id"), me.getID(), tCmds)
