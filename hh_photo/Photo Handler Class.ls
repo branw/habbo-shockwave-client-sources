@@ -23,6 +23,7 @@ end
 
 on handle_film_mus me, tMsg
   me.getComponent().setFilm(integer(tMsg.getaProp(#content)))
+  getObject(#session).set("user_photo_film", integer(tMsg.getaProp(#content)))
   executeMessage(#updateFilmCount)
   return 1
 end

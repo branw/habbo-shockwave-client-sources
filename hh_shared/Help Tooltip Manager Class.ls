@@ -23,7 +23,7 @@ on createHelpTooltip me, tParams
   if textExists(tMsg) then
     tMsg = getText(tMsg)
   end if
-  tPos = getProp(tParams, #pos)
+  tPos = getaProp(tParams, #pos)
   if ilk(tPos) = #point then
     me.createTooltipToPoint(tMsg, tPos)
   else
@@ -78,8 +78,9 @@ on createTooltipToPoint me, tMsg, tloc
   tmember.margin = tLineWidth
   tmember.text = tMsg & " "
   tmember.lineHeight = tFontStruct.getaProp(#fontSize)
+  tMargin = 11
   tLineCount = tmember.lineCount
-  tHelpHeight = 2 * 11 + tLineCount * tFontStruct.getaProp(#fontSize)
+  tHelpHeight = 2 * tMargin + tLineCount * tFontStruct.getaProp(#fontSize)
   if tHelpHeight < 40 then
     tHelpHeight = 40
   end if
