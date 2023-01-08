@@ -1,7 +1,7 @@
 property pDirection, pDefOffset, pCurOffset, pActOffset, pHitOffset, pBalOffList, pAnimFrm, pAction, pimage
 
 on define me, tPart, tProps
-  if tProps[#Dir] = 4 then
+  if tProps[#dir] = 4 then
     pDirection = 3
     pDefOffset = rect(1, 0, 1, 0)
   else

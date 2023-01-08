@@ -114,8 +114,17 @@ on Refresh me, tX, tY, tH
   me.pChanges = 1
 end
 
+on deconstructPartList me
+  repeat with tPart in me.pPartList
+    tPart.deconstruct()
+  end repeat
+end
+
 on setPartLists me, tmodels
   tAction = me.pMainAction
+  if me.pPartList.ilk = #list then
+    me.deconstructPartList()
+  end if
   me.pPartList = []
   if me.pSex = "F" then
     tphModel = "s01"

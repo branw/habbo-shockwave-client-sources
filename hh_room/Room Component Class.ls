@@ -614,19 +614,18 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
   tSession = getObject(#session)
   tFigureParser = getObject("Figure_System")
   tParsedFigure = tFigureParser.parseFigure(tUserFigure, tsex, "user")
-  if tSession.get("lastroom") = "Entry" then
+  if tSession.get("user_user_id") = tUserID then
     tSession.set("user_figure", tParsedFigure)
     tSession.set("user_sex", tsex)
     tSession.set("user_customData", tUserCustomInfo)
+  end if
+  if tSession.get("lastroom") = "Entry" then
     executeMessage(#updateFigureData)
   else
     if voidp(pUserObjList[tUserID]) then
       return 0
     end if
     tUserObj = pUserObjList[tUserID]
-    if tUserObj.isInSwimsuit() then
-      return 0
-    end if
     tloc = tUserObj.getLocation()
     tdir = tUserObj.getDirection()
     tuser = [:]

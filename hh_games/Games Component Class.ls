@@ -54,7 +54,7 @@ on openGameBoard me, tMsg
         me.openChess(pOpenGameProps)
       end if
     "BattleShip":
-      pOpenGameProps[#gameend] = 0
+      pOpenGameProps[#gameEnd] = 0
       if me.sendGameOpen() then
         me.openBattleShip(pOpenGameProps)
       end if
@@ -142,8 +142,8 @@ on processItemMessage me, tMsg
         end if
       end if
     "BattleShip":
-      if not voidp(pOpenGameProps[#gameend]) then
-        if pOpenGameProps[#gameend] = 1 then
+      if not voidp(pOpenGameProps[#gameEnd]) then
+        if pOpenGameProps[#gameEnd] = 1 then
           tText = getText("game_bs_won", "WON!") && pOpenGameProps[#winner]
           me.getInterface().battleShipGameEnd(tText)
           return 1
@@ -153,8 +153,8 @@ on processItemMessage me, tMsg
         if voidp(pOpenGameProps[#myTurnNum]) then
           return 0
         end if
-        if not voidp(pOpenGameProps[#gameend]) then
-          if pOpenGameProps[#gameend] = 1 then
+        if not voidp(pOpenGameProps[#gameEnd]) then
+          if pOpenGameProps[#gameEnd] = 1 then
             return 0
           end if
         end if
@@ -216,7 +216,7 @@ on processItemMessage me, tMsg
                 else
                   if tMsg[#command] contains "GAMEEND" then
                     pOpenGameProps[#winner] = tMsg[#data].word[1]
-                    pOpenGameProps[#gameend] = 1
+                    pOpenGameProps[#gameEnd] = 1
                   else
                     if tMsg[#command] contains "SITUATION" then
                       tOpponent1Data = tMsg[#data].line[2]
@@ -419,8 +419,8 @@ on sendBattleShipShoot me, tX, tY
   if not connectionExists(getVariable("connection.room.id")) then
     return 0
   end if
-  if not voidp(pOpenGameProps[#gameend]) then
-    if pOpenGameProps[#gameend] = 1 then
+  if not voidp(pOpenGameProps[#gameEnd]) then
+    if pOpenGameProps[#gameEnd] = 1 then
       return 0
     end if
   end if
