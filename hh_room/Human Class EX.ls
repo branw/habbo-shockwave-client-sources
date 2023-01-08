@@ -102,7 +102,7 @@ on define me, tdata
   pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   pInfoStruct[#name] = pName
   pInfoStruct[#class] = pClass
-  pInfoStruct[#custom] = pCustom
+  pInfoStruct[#Custom] = pCustom
   pInfoStruct[#image] = me.getPicture()
   pInfoStruct[#ctrl] = "furniture"
   pInfoStruct[#badge] = " "
@@ -116,7 +116,7 @@ end
 
 on changeFigureAndData me, tdata
   pSex = tdata[#sex]
-  pCustom = tdata[#custom]
+  pCustom = tdata[#Custom]
   tmodels = tdata[#figure]
   repeat with tPart in pPartList
     tPartId = tPart.getPartID()
@@ -144,7 +144,7 @@ end
 on setup me, tdata
   pName = tdata[#name]
   pClass = tdata[#class]
-  pCustom = tdata[#custom]
+  pCustom = tdata[#Custom]
   pSex = tdata[#sex]
   pDirection = tdata[#direction][1]
   pHeadDir = pDirection
@@ -344,12 +344,12 @@ on getInfo me
   end if
   pInfoStruct[#badge] = me.pBadge
   if pTrading then
-    pInfoStruct[#custom] = pCustom & RETURN & getText("human_trading", "Trading")
+    pInfoStruct[#Custom] = pCustom & RETURN & getText("human_trading", "Trading")
   else
     if pCarrying <> 0 then
-      pInfoStruct[#custom] = pCustom & RETURN & getText("human_carrying", "Carrying:") && pCarrying
+      pInfoStruct[#Custom] = pCustom & RETURN & getText("human_carrying", "Carrying:") && pCarrying
     else
-      pInfoStruct[#custom] = pCustom
+      pInfoStruct[#Custom] = pCustom
     end if
   end if
   return pInfoStruct

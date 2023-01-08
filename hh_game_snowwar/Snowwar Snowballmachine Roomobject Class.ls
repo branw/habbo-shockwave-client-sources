@@ -1,5 +1,11 @@
 property pActive
 
+on define me, tdata
+  me.ancestor.define(tdata)
+  me.setFrame(tdata[#objectDataStruct][#snowball_count])
+  return 1
+end
+
 on setFrame me, tValue
   if tValue = VOID then
     tValue = 0

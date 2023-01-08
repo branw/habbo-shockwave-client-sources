@@ -42,16 +42,6 @@ on define me, tGameObject
     me.getGameSystem().sendGameSystemEvent(#statusbar_health_update, me.pGameObjectSyncValues[#hit_points])
     me.getGameSystem().sendGameSystemEvent(#statusbar_ballcount_update, me.pGameObjectSyncValues[#snowball_count])
   end if
-  case me.pGameObjectSyncValues[#activity_state] of
-    1:
-      me.startCreateSnowballAnimation()
-    2:
-      me.startStunnedAnimation([#hit_direction: me.pGameObjectSyncValues[#body_direction]], 1)
-    3:
-      me.startInvincibleAnimation()
-    otherwise:
-      me.resetFigureAnimation()
-  end case
   return 1
 end
 
@@ -445,6 +435,9 @@ on startHitAnimation me, tdata
     return error(me, "Room object wrapper missing", #startHitAnimation)
   end if
   tHumanObject = pRoomObject.getRoomObject()
+  if tHumanObject = 0 then
+    return error(me, "Room object missing", #startHitAnimation)
+  end if
   if tDirection >= 225 or tDirection <= 45 then
     tlocz = tHumanObject.pSprite.locZ + 1
   else
@@ -491,14 +484,11 @@ on startCreateSnowballAnimation me
   return 1
 end
 
-on startStunnedAnimation me, tdata, tSkipFrame
+on startStunnedAnimation me, tdata
   if not objectp(pRoomObject) then
     return error(me, "Room object wrapper missing", #startStunnedAnimation)
   end if
   pRoomObject.gameObjectAction("start_stunned", tdata)
-  if tSkipFrame then
-    pRoomObject.gameObjectAction("next_stunned")
-  end if
   return 1
 end
 

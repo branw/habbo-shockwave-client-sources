@@ -126,6 +126,9 @@ on showhidenavigator me, tHideOrRemove
 end
 
 on ChangeWindowView me, tWindowName
+  if tWindowName = "nav_pr" then
+    me.sendTrackingCall()
+  end if
   tWndObj = getWindow(pWindowTitle)
   tScrollOffset = 0
   if tWndObj <> 0 then
