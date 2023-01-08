@@ -59,6 +59,8 @@ on define me, tProps
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
   pInitialized = 0
+  me.pName = getText(pNameBase & "_name")
+  me.pCustom = getText(pNameBase & "_desc")
   return callAncestor(#define, [me], tProps)
 end
 
@@ -149,7 +151,6 @@ on solveMembers me
       if me.pSprList.count < tLayer then
         tSpr = sprite(reserveSprite(me.getID()))
         tTargetID = getThread(#room).getInterface().getID()
-        tLayerName = pLayerDataList.getPropAt(tLayer)
         if me.solveTransparency(tLayerName) = 0 then
           setEventBroker(tSpr.spriteNum, me.getID())
           tSpr.registerProcedure(#eventProcItemObj, tTargetID, #mouseDown)
@@ -183,6 +184,9 @@ on solveMembers me
         tSpr.width = 0
         tSpr.height = 0
         tSpr.castNum = 0
+        if tLayer = 1 then
+          exit repeat
+        end if
       end if
       if not pInitialized then
         if pInkList.count < tLayer then
@@ -470,7 +474,7 @@ on solveLocZ me, tPart, tdir
     tName = "s_" & tName
   end if
   if not memberExists(tName & ".props") then
-    return charToNum(tPart)
+    return charToNum(string(tPart)) - charToNum("a") + 1
   end if
   tPropList = value(field(getmemnum(tName & ".props")))
   if ilk(tPropList) <> #propList then

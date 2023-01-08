@@ -333,9 +333,10 @@ on solveAnimatedItemMembers me
     j = j + 1
   end repeat
   if pLayerProps.count > 0 then
+    pObjectType = "s"
     return 1
   else
-    return error(me, "Couldn't define members:" && pClass, #solveStuffMembers)
+    return error(me, "Couldn't define members:" && pClass, #solveAnimatedItemMembers)
   end if
 end
 
