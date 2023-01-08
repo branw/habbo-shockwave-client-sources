@@ -30,7 +30,7 @@ on construct me
       return me.connect()
     end if
   end if
-  registerMessage(#initialize, me.getID(), #initA)
+  registerMessage(#Initialize, me.getID(), #initA)
   if not objectExists("Help_Tooltip_Manager") then
     createObject("Help_Tooltip_Manager", "Help Tooltip Manager Class")
   end if

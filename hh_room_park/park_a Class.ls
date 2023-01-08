@@ -17,8 +17,8 @@ end
 on prepare me
   tRoomVis = getThread(#room).getInterface().getRoomVisualizer()
   repeat with tid in ["bus", "hubu_kiosk_1", "hubu_kiosk_2", "hubu_kiosk_3", "hubu_kiosk_4", "hubu_kiosk_5"]
-    tSprite = tRoomVis.getSprById(tid)
-    registerProcedure(tSprite, #parkAEventProc, me.getID(), #mouseDown)
+    tsprite = tRoomVis.getSprById(tid)
+    registerProcedure(tsprite, #parkAEventProc, me.getID(), #mouseDown)
   end repeat
 end
 

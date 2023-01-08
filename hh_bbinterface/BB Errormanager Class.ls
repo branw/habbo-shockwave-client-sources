@@ -6,7 +6,7 @@ on deconstruct me
   return 1
 end
 
-on refresh me, tTopic, tdata
+on Refresh me, tTopic, tdata
   if tdata = 0 then
     return 0
   end if

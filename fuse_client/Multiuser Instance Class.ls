@@ -99,7 +99,7 @@ on getProperty me, tProp
       return pListenersPntr
     #commands:
       return pCommandsPntr
-    #Message:
+    #message:
       return pMsgStruct
   end case
   return 0
@@ -198,7 +198,7 @@ on forwardMsg me, tMessage
       tCallback = tCallbackList[i]
       tObject = tObjMngr.get(tCallback[1])
       if tObject <> 0 then
-        pMsgStruct.setaProp(#Message, tMessage)
+        pMsgStruct.setaProp(#message, tMessage)
         pMsgStruct.setaProp(#subject, tSubject)
         pMsgStruct.setaProp(#content, tMessage.word[2..tMessage.word.count])
         call(tCallback[2], tObject, pMsgStruct)

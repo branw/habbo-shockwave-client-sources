@@ -53,7 +53,7 @@ on show me
   return 1
 end
 
-on Hide me
+on hide me
   pVisible = 0
   pSprite.visible = 0
   return 1
@@ -218,7 +218,7 @@ on setProperty me, tProp, tValue
       if tValue = 1 then
         me.show()
       else
-        me.Hide()
+        me.hide()
       end if
   end case
   return 0
