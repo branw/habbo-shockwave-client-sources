@@ -59,8 +59,7 @@ on define me, tProps
     pInkList[tLayer] = me.solveInk(tLayerName)
     pBlendList[tLayer] = me.solveBlend(tLayerName)
   end repeat
-  callAncestor(#define, [me], tProps)
-  return 1
+  return callAncestor(#define, [me], tProps)
 end
 
 on select me
@@ -125,6 +124,7 @@ on updateLocation me
 end
 
 on solveMembers me
+  tMembersFound = 0
   tCount = 1
   if pLayerDataList.count > 0 then
     tCount = pLayerDataList.count
@@ -150,6 +150,7 @@ on solveMembers me
     end if
     tMemNum = getmemnum(tMemName)
     if tMemNum <> 0 then
+      tMembersFound = tMembersFound + 1
       if tMemNum < 1 then
         tMemNum = abs(tMemNum)
         tSpr.flipH = 1
@@ -166,6 +167,9 @@ on solveMembers me
     end if
     me.postProcessLayer(tLayer)
   end repeat
+  if tMembersFound = 0 then
+    return 0
+  end if
   return 1
 end
 

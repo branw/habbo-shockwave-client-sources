@@ -94,7 +94,7 @@ on renderGameTimer me, tEndTime
     return 0
   end if
   tTime = me.convertToMinSec(tEndTime - the milliSeconds)
-  tTimeStr = replaceChunks(getText("gs_timeleft"), "\x", tTime[1] & ":" & tTime[2])
+  tTimeStr = tTime[1] & ":" & tTime[2]
   tElem.setText(tTimeStr)
   tElem = tWndObj.getElement("snowwar_timeleft")
   if tElem = 0 then
@@ -189,9 +189,14 @@ on showGameScoreWindows me
     end if
   end if
   if not windowExists(pTimeWindowId) then
-    if createWindow(pTimeWindowId, "sw_timeleft.window") then
+    if createWindow(pTimeWindowId, "habbo_simple.window") then
       tWndObj = getWindow(pTimeWindowId)
-      tWndObj.moveTo(-20, 26)
+      tWndObj.merge("sw_timeleft.window")
+      if me.getGameSystem().getSpectatorModeFlag() then
+        tWndObj.moveTo(26, 36)
+      else
+        tWndObj.moveTo(10, 15)
+      end if
       tWndObj.lock()
     else
       return error(me, "Cannot open timeleft window.", #showGameScoreWindows)

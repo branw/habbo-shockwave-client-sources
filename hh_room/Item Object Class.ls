@@ -54,7 +54,9 @@ on define me, tProps
       pName = getText("wallitem_" & pClass & "_name", "wallitem_" & pClass & "_name")
       pCustom = getText("wallitem_" & pClass & "_desc", "wallitem_" & pClass & "_desc")
   end case
-  me.solveMembers()
+  if me.solveMembers() = 0 then
+    return 0
+  end if
   if me.prepare(tProps) = 0 then
     return 0
   end if
@@ -386,6 +388,9 @@ on updateLocation me
     end repeat
   else
     repeat with tSpr in pSprList
+      if tSpr.member = member(0, 0) then
+        return error(me, "Spritelist contains empty sprite!", #updateLocation)
+      end if
       tItemRp = tSpr.member.regPoint
       tItemR = rect(tSpr.locH, tSpr.locV, tSpr.locH, tSpr.locV) + rect(-tItemRp[1], -tItemRp[2], tSpr.member.width - tItemRp[1], tSpr.member.height - tItemRp[2])
       tPieceUnderSpr = tObjMover.getPassiveObjectIntersectingRect(tItemR)[1]

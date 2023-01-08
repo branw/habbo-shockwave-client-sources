@@ -820,3 +820,29 @@ on flipImage me, tImg_a
   tImg_b.copyPixels(tImg_a, tQuad, tImg_a.rect)
   return tImg_b
 end
+
+on updatePasswordAsterisks me, tParams
+  if not windowExists(tParams[1]) then
+    return 0
+  end if
+  tWndObj = getWindow(tParams[1])
+  if not tWndObj.elementExists(tParams[2]) then
+    return 0
+  end if
+  tElementId = tParams[2]
+  tElement = tWndObj.getElement(tParams[2])
+  tPwdTxt = tElement.getText()
+  tPreviousTxt = me.pFlatPasswords[tElementId]
+  repeat with tPos = 1 to tPwdTxt.length
+    tNewChar = chars(tPwdTxt, tPos, tPos)
+    if tNewChar <> "*" then
+      tPreviousTxt = tPreviousTxt & tNewChar
+    end if
+  end repeat
+  me.pFlatPasswords[tElementId] = tPreviousTxt
+  tStars = EMPTY
+  repeat with i = 1 to me.pFlatPasswords[tElementId].length
+    tStars = tStars & "*"
+  end repeat
+  tElement.setText(tStars)
+end

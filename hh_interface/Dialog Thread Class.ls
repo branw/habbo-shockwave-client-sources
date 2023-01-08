@@ -435,8 +435,12 @@ on eventProcBan me, tEvent, tElemID, tParam, tWndID
   if tEvent = #mouseUp then
     case tElemID of
       "alert_ok", "close":
-        me.removeDialog(tWndID, pAlertList)
-        resetClient()
+        if variableExists("use.sso.ticket") then
+          openNetPage(getText("url_logged_out"), "self")
+        else
+          me.removeDialog(tWndID, pAlertList)
+          resetClient()
+        end if
     end case
   end if
 end
