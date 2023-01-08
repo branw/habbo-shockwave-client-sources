@@ -40,7 +40,7 @@ on define me, tdata
   me.pShadowSpr.registerProcedure(#eventProcUserObj, tTargetID, #mouseDown)
   me.pInfoStruct[#name] = me.pName
   me.pInfoStruct[#class] = me.pClass
-  me.pInfoStruct[#custom] = me.pCustom
+  me.pInfoStruct[#Custom] = me.pCustom
   me.pInfoStruct[#image] = me.getPicture()
   me.pInfoStruct[#ctrl] = "furniture"
   me.pInfoStruct[#badge] = " "

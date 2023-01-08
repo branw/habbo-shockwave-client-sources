@@ -631,7 +631,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
       tdir = tUserObj.getDirection()
       tuser = [:]
       tuser[#figure] = tParsedFigure
-      tuser[#custom] = tUserCustomInfo
+      tuser[#Custom] = tUserCustomInfo
       tuser[#sex] = tsex
       tUserObj.changeFigureAndData(tuser)
       tScale = #large

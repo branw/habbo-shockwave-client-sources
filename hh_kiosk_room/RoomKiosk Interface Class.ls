@@ -297,7 +297,7 @@ on eventProc me, tEvent, tSprID, tParm
       "roomatic_2_button_next":
         tRoomName = replaceChars(getWindow(pWindowTitle).getElement("roomatic_roomname_field").getText(), "/", EMPTY)
         if tRoomName = EMPTY then
-          return executeMessage(#alert, [#Msg: "roomatic_givename"])
+          return executeMessage(#alert, [#msg: "roomatic_givename"])
         end if
         pRoomProps[#name] = tRoomName
         pRoomProps[#description] = getWindow(pWindowTitle).getElement("romatic_roomdescription_field").getText()

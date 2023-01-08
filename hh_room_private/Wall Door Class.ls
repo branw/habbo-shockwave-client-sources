@@ -21,6 +21,6 @@ on getInfo me
   tInfo = [:]
   tInfo[#name] = "wall door"
   tInfo[#class] = me.pClass
-  tInfo[#custom] = me.pCustom
+  tInfo[#Custom] = me.pCustom
   return tInfo
 end
