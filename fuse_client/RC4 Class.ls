@@ -1,6 +1,12 @@
 property pSbox, pKey, i, j
+global _player
 
 on setKey me, tMyKey, tMode
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   tMyKeyS = string(tMyKey)
   pSbox = []
   pKey = []
@@ -66,6 +72,11 @@ on setKey me, tMyKey, tMode
 end
 
 on encipher me, tdata
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   tCipher = EMPTY
   tBytes = []
   repeat with e = 1 to length(tdata)
@@ -91,6 +102,11 @@ on encipher me, tdata
 end
 
 on decipher me, tdata
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   tCipher = EMPTY
   tStrServ = getStringServices()
   repeat with a = 1 to length(tdata)
@@ -108,6 +124,11 @@ on decipher me, tdata
 end
 
 on createKey me
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   tKey = EMPTY
   tSeed = the randomSeed
   the randomSeed = the milliSeconds

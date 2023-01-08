@@ -1,4 +1,5 @@
 property pHost, pPort, pXtra, pMsgStruct, pConnectionOk, pConnectionSecured, pConnectionShouldBeKilled, pEncryptionOn, pDecoder, pLastContent, pContentChunk, pLogMode, pLogfield, pCommandsPntr, pListenersPntr
+global _player
 
 on construct me
   pEncryptionOn = 0
@@ -95,6 +96,11 @@ on setEncryption me, tBoolean
 end
 
 on send me, tCmd, tMsg
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   if pConnectionShouldBeKilled then
     return 0
   end if
@@ -136,6 +142,11 @@ on send me, tCmd, tMsg
 end
 
 on sendNew me, tCmd, tParmArr
+  if _player <> VOID then
+    if _player.traceScript then
+      return 0
+    end if
+  end if
   if not (pConnectionOk and objectp(pXtra)) then
     return error(me, "Connection not ready:" && me.getID(), #send)
   end if
