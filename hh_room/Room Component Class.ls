@@ -614,7 +614,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
   tSession = getObject(#session)
   tFigureParser = getObject("Figure_System")
   tParsedFigure = tFigureParser.parseFigure(tUserFigure, tsex, "user")
-  if tSession.get("user_user_id") = tUserID then
+  if tSession.get("user_index") = tUserID then
     tSession.set("user_figure", tParsedFigure)
     tSession.set("user_sex", tsex)
     tSession.set("user_customData", tUserCustomInfo)
@@ -640,6 +640,7 @@ on updateCharacterFigure me, tUserID, tUserFigure, tsex, tUserCustomInfo
     tChangeEffect = createObject(#random, "Change Clothes Effect Class")
     tUserSprites = tUserObj.getSprites()
     tChangeEffect.defineWithSprite(tUserSprites[1], tScale)
+    me.getInterface().updateInfostandAvatar(tUserObj)
   end if
 end
 

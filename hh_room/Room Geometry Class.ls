@@ -91,8 +91,7 @@ on getWorldCoordinate me, tLocX, tLocY
       tHeight = pHeightMap[tY + 1][tX + 1]
     end if
   end if
-  tMaxHeight = 10
-  if tHeight >= 0 and tHeight <= tMaxHeight then
+  if tHeight = 0 then
     return [tX, tY, 0]
   else
     repeat with i = 1 to 9
