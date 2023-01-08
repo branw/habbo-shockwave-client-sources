@@ -25,7 +25,7 @@ on Refresh me, tTopic, tdata
     #personal_score_updated:
       return me.renderPersonalScores(tdata)
     #update_game_visuals:
-      me.renderTeamScores()
+      me.cacheTeamScores()
       me.renderPersonalScores(me.getOwnScore())
       return 1
     #gamestart:
@@ -125,6 +125,26 @@ on renderPersonalScores me, tdata
   return 1
 end
 
+on cacheTeamScores me
+  if pTeamCount < 1 then
+    return error(me, "Team count has not been set!", #cacheTeamScores)
+  end if
+  pTeamScoreCache = []
+  pTeamScoreCache[pTeamCount] = 0
+  tGameSystem = me.getGameSystem()
+  tIdList = tGameSystem.getGameObjectIdsOfType("avatar")
+  repeat with tid in tIdList
+    tObject = tGameSystem.getGameObject(tid)
+    if tObject <> 0 then
+      tTeamId = tObject.getGameObjectProperty("team_id") + 1
+      tScore = tObject.getGameObjectProperty("score")
+      pTeamScoreCache[tTeamId] = pTeamScoreCache[tTeamId] + tScore
+    end if
+  end repeat
+  put "* Rebuilt team scores:" && pTeamScoreCache
+  return me.renderTeamScores()
+end
+
 on updateTeamScores me, tdata
   if not listp(tdata) then
     return 0
@@ -165,7 +185,7 @@ on showGameScoreWindows me
     if createWindow(pTeamScoreWindowId, "team_stats.window") then
       tWndObj = getWindow(pTeamScoreWindowId)
       if me.getGameSystem().getSpectatorModeFlag() then
-        tWndObj.moveTo(666, 10)
+        tWndObj.moveTo(636, 40)
       else
         tWndObj.moveTo(666, 70)
       end if

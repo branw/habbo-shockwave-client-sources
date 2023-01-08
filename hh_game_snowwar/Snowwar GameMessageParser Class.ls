@@ -181,6 +181,7 @@ on handle_msgstruct_fullgamestatus me, tMsg
   tGameSystem.sendGameSystemEvent(#fullgamestatus_time, tdata[#time])
   tGameSystem.clearTurnBuffer()
   tObjectIdList = []
+  put "* SERVER:" && tdata
   repeat with tGameObject in tdata[#game_objects]
     tObjectIdList.add(string(tGameObject[#id]))
     if tGameSystem.getGameObject(tGameObject[#id]) = 0 then

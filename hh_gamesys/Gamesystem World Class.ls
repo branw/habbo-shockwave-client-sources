@@ -85,10 +85,10 @@ on getTile me, tLocX, tLocY
     return 0
   end if
   if pTileGrid.count < tLocY then
-    return error(me, "Tile world too short, length:" && pTileGrid.count, #getTile)
+    return error(me, "Tile world too short for locY:" && tLocY & ", length:" && pTileGrid.count, #getTile)
   end if
   if pTileGrid[tLocY].count < tLocX then
-    return error(me, "Tile world too narrow, width:" && pTileGrid[tLocY].count, #getTile)
+    return error(me, "Tile world too narrow for locX:" && tLocX & ", width:" && pTileGrid[tLocY].count, #getTile)
   end if
   return pTileGrid[tLocY][tLocX]
 end

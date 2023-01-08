@@ -6,6 +6,7 @@ on construct me
     error(me, "Stats tracking URL not found!", #construct)
   end if
   registerListener(getVariable("connection.info.id", #info), me.getID(), [166: #updateStats])
+  registerMessage(#sendTrackingData, me.getID(), #updateStats)
   return 1
 end
 

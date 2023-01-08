@@ -86,6 +86,9 @@ on showNavigator me
   me.getInterface().setUpdates(1)
   if windowExists(pWindowTitle) then
     getWindow(pWindowTitle).show()
+    if pOpenWindow = "nav_pr" then
+      me.sendTrackingCall()
+    end if
   else
     return me.ChangeWindowView(pOpenWindow)
   end if
@@ -845,4 +848,8 @@ on updatePasswordAsterisks me, tParams
     tStars = tStars & "*"
   end repeat
   tElement.setText(tStars)
+end
+
+on sendTrackingCall me
+  executeMessage(#sendTrackingData, [#content: "navigator"])
 end
