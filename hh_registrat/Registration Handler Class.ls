@@ -108,8 +108,8 @@ on handle_parent_email_validated me, tMsg
 end
 
 on handle_update_account me, tMsg
-  tFlag = tMsg.connection.GetIntFrom(tMsg)
-  me.getInterface().responseToAccountUpdate(tFlag)
+  tParam = tMsg.connection.GetIntFrom(tMsg)
+  me.getInterface().responseToAccountUpdate(tParam)
   return 1
 end
 

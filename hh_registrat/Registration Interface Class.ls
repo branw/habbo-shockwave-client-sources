@@ -37,8 +37,8 @@ on deconstruct me
   return 1
 end
 
-on showHideFigureCreator me, tNewOrUpdate
-  if windowExists(pWindowTitle) and pOpenWindow <> "reg_loading.window" then
+on showHideFigureCreator me, tNewOrUpdate, tForceOpen
+  if windowExists(pWindowTitle) and pOpenWindow <> "reg_loading.window" and not tForceOpen then
     return me.closeFigureCreator()
   else
     return me.openFigureCreator(tNewOrUpdate)
@@ -1408,9 +1408,15 @@ on responseToAccountUpdate me, tStatus
     "1":
       tWndObj.merge(pLastWindow)
       tWndObj.getElement("updateaccount_topic").setText(getText("reg_verification_incorrectPassword"))
+      if tWndObj.elementExists("monthDrop") then
+        tWndObj.getElement("monthDrop").setOrdering(0)
+      end if
       me.highlightVerifyTopic()
     "2":
       tWndObj.merge(pLastWindow)
+      if tWndObj.elementExists("monthDrop") then
+        tWndObj.getElement("monthDrop").setOrdering(0)
+      end if
       tWndObj.getElement("updateaccount_topic").setText(getText("reg_verification_incorrectBirthday"))
       me.highlightVerifyTopic()
   end case
