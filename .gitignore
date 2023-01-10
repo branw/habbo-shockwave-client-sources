@@ -1,0 +1,13 @@
+releases/
+staging/
+projectorrays.exe
+
+.idea/
+
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
