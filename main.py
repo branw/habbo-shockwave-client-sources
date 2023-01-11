@@ -5,6 +5,7 @@ import git
 import time
 import subprocess
 import re
+import datetime
 
 with open('releases.txt', 'r') as f:
     RELEASE_ORDER = f.read().strip().split()
@@ -57,7 +58,7 @@ def get_version_from_release(release):
     if release is None:
         return 0
     elif release.startswith('release'):
-        return int(re.search(r'release(\d+)[_.](.*)', release).group(1))
+        return int(re.search(r'release(\d+)[_.]?(.*)', release).group(1))
     elif release.startswith('r'):
         return int(re.search(r'r(\d+)_(.*)', release).group(1))
 
@@ -122,9 +123,6 @@ for release in new_releases:
         output_suffix = 'dir' if input_file_path.suffix == 'dcr' else 'cst'
         output_file_path = output_path / f"{input_file_path.stem}.{output_suffix}"
 
-        # os.chdir(output_path)
-        # os.system(f'{projector_rays_path} --dump-scripts {input_file_path.name} {output_file_path.name}')
-
         cmd = f'{projector_rays_path} --dump-scripts {input_file_path.name} {output_file_path.name}'
         process = subprocess.Popen(cmd, cwd=output_path, stdout=subprocess.DEVNULL)
 
@@ -140,17 +138,22 @@ for release in new_releases:
         process.wait()
 
         script_files_by_simplified_name = {}
+        lowercase_simplified_names = set()
         for generated_file_path in output_path.iterdir():
             if generated_file_path.suffix == '.ls':
+                # Simplify name by removing script file info
                 script_name = generated_file_path.stem
                 if ' - ' in script_name:
-                    script_name = script_name.split(' - ', 1)[1]
+                    if match := re.match(r'Cast \w+ (\w+) \d+( - (.*))?', script_name):
+                        script_name = match.group(3)
 
+                # De-duplicate names for Windows
                 new_name = script_name
                 count = 1
-                while new_name in script_files_by_simplified_name:
+                while new_name.lower() in lowercase_simplified_names:
                     new_name = f'{script_name} ({count})'
                     count += 1
+                lowercase_simplified_names.add(new_name.lower())
 
                 new_name += generated_file_path.suffix
 
@@ -172,11 +175,14 @@ for release in new_releases:
 
     # Uncomment to show deletions between releases. Disabled by default
     # because several releases only have a file or two, muddying up the
-    # history.
+    # history. See #1.
     #
     # repo.git.add(update=True)
 
-    repo.index.commit(release)
+    author = git.Actor('Habbo Devs', None)
+    # TODO use more relevant dates (#2)
+    date = str(datetime.datetime(2000, 1, 1))
+    repo.index.commit(release, author=author, committer=author, author_date=date, commit_date=date)
     repo.create_tag(f'releases/{release}')
 
     end_time = time.time()
@@ -188,8 +194,6 @@ overall_end_time = time.time()
 print(f'Completed {len(new_releases)} releases in {overall_end_time-overall_start_time:.3f}')
 
 URL = "https://github.com/branw/habbo-shockwave-client-sources"
-
-print('='*80)
 
 table = ''
 all_releases = get_releases_from_tags(repo.tags)
@@ -216,7 +220,7 @@ with open('README.md', 'rb') as f:
 with open('README.md', 'wb') as f:
     f.write(re.sub(
         rb'\|\*\*.*\n\n## Generator',
-        table.encode() + b'\n\n## Generator',
+        table.encode() + b'\n## Generator',
         readme,
         flags=re.DOTALL))
 
