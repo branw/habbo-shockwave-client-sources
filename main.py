@@ -132,7 +132,7 @@ print('-'*80)
 
 # Parse any new releases and add them to the repo's HEAD
 last_release = None
-for release in new_releases:
+for i, release in enumerate(new_releases):
     delete_all_files_in_dir(staging_path)
 
     start_time = time.time()
@@ -142,7 +142,7 @@ for release in new_releases:
     file_names = []
 
     input_path = releases_path / release
-    print('Loading', release)
+    print(f'[{i+1:03}/{len(new_releases):03}] Loading', release)
     for input_file_path in input_path.iterdir():
         if not input_file_path.is_file():
             continue
@@ -216,16 +216,19 @@ for release in new_releases:
     #
     # repo.git.add(update=True)
 
-    # Prune files that no longer appear in releases
+    # Prune files that no longer appear in releases, and scripts that did not
+    # appear in the current release
     deletions_to_commit = []
     diff = repo.index.diff(None)
     for change in diff:
         if not change.deleted_file:
             continue
 
-        script_name = change.a_path.split('/', 1)[0]
-        if last_release_with_file[script_name] == last_release:
-            print(f'Pruning {change.a_path}')
+        file_name = change.a_path.split('/', 1)[0]
+        entire_file_deleted = last_release_with_file[file_name] == last_release
+        only_script_deleted = file_name in file_names
+        if entire_file_deleted or only_script_deleted:
+            print(f'Pruning {change.a_path} (deleted {"file" if entire_file_deleted else "script"})')
             deletions_to_commit.append(change.a_path)
 
     if deletions_to_commit:
@@ -233,7 +236,7 @@ for release in new_releases:
 
     author = git.Actor('Habbo Devs', None)
     # TODO use more relevant dates (#2)
-    date = str(datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc))
+    date = str(datetime.datetime(2000, 1, 1))
     repo.index.commit(release, author=author, committer=author, author_date=date, commit_date=date)
 
     tag = f'releases/{release}'
@@ -261,7 +264,7 @@ for release in new_releases:
     notes = {
         'files': file_info,
     }
-    repo.git.notes('add', '--ref', 'source-info', '-m', json.dumps(notes), tag)
+    repo.git.notes('add', '-m', json.dumps(notes), tag)
 
     end_time = time.time()
     print(f'Completed {release} (history took {end_time-git_time:.3f} s; {end_time-start_time:.3f} s in total)')
