@@ -1,3 +1,6 @@
+import collections
+import hashlib
+import json
 import os
 import shutil
 from pathlib import Path
@@ -54,6 +57,12 @@ def get_releases_from_tags(tags):
     return sorted(releases, key=RELEASE_ORDER.index)
 
 
+def get_notes_for_releases(repo, releases):
+    notes = [json.loads(repo.git.notes('show', f'releases/{release}'))
+             for release in releases]
+    return list(zip(releases, notes))
+
+
 def get_version_from_release(release):
     if release is None:
         return 0
@@ -94,15 +103,35 @@ else:
 
 new_releases = [release for release in RELEASE_ORDER
                 if release in releases and release not in existing_releases]
-print('New releases:', new_releases)
+print(f'Found {len(new_releases)} new releases:', new_releases)
 
 unknown_releases = [release for release in releases if release not in RELEASE_ORDER]
 if unknown_releases:
     raise Exception('Unknown releases found, please update releases.txt:\n ', '\n'.join(unknown_releases))
 
+print('-'*80)
 overall_start_time = time.time()
 
+# Record the last release each file appears in. Ideally we would record the
+# individual scripts as well, but that requires doing two passes :(
+last_release_with_file = {}
+for release in new_releases:
+    input_path = releases_path / release
+
+    for input_file_path in input_path.iterdir():
+        if not input_file_path.is_file():
+            continue
+        if input_file_path.suffix not in ['.dcr', '.cct']:
+            continue
+
+        last_release_with_file[input_file_path.name] = release
+
+first_pass_time = time.time()
+print(f'First pass took {first_pass_time-overall_start_time:.3f} s')
+print('-'*80)
+
 # Parse any new releases and add them to the repo's HEAD
+last_release = None
 for release in new_releases:
     delete_all_files_in_dir(staging_path)
 
@@ -110,16 +139,22 @@ for release in new_releases:
 
     # Start dumping all the scripts in parallel
     work = []
+    file_names = []
 
     input_path = releases_path / release
-    print('Exploring', input_path)
+    print('Loading', release)
     for input_file_path in input_path.iterdir():
         if not input_file_path.is_file():
             continue
+        if input_file_path.suffix in ['.dir', '.cst']:
+            raise Exception(f'Release {release} contains unprotected ' +
+                            f'Shockwave file {input_file_path.name}')
         if input_file_path.suffix not in ['.dcr', '.cct']:
             continue
 
-        output_path = staging_path / input_file_path.stem
+        file_names.append(input_file_path.name)
+
+        output_path = staging_path / input_file_path.name
         output_path.mkdir(exist_ok=True)
 
         shutil.copy(input_file_path.absolute(), output_path.absolute() / input_file_path.name)
@@ -133,8 +168,7 @@ for release in new_releases:
         work.append((output_path, process))
 
     processing_time = time.time()
-
-    print(f'Processing (exploring took {processing_time-start_time:.3f} s)')
+    print(f'Processing (loading took {processing_time-start_time:.3f} s)')
 
     # Process the outputs
     files_to_commit = []
@@ -172,7 +206,6 @@ for release in new_releases:
             convert_mac_line_endings_to_unix(new_path)
 
     git_time = time.time()
-
     print(f'Building Git history (processing took {git_time-start_time:.3f} s)')
 
     repo.index.add(files_to_commit)
@@ -183,30 +216,83 @@ for release in new_releases:
     #
     # repo.git.add(update=True)
 
+    # Prune files that no longer appear in releases
+    deletions_to_commit = []
+    diff = repo.index.diff(None)
+    for change in diff:
+        if not change.deleted_file:
+            continue
+
+        script_name = change.a_path.split('/', 1)[0]
+        if last_release_with_file[script_name] == last_release:
+            print(f'Pruning {change.a_path}')
+            deletions_to_commit.append(change.a_path)
+
+    if deletions_to_commit:
+        repo.index.remove(deletions_to_commit)
+
     author = git.Actor('Habbo Devs', None)
     # TODO use more relevant dates (#2)
     date = str(datetime.datetime(2000, 1, 1))
-    repo.index.commit(release, author=author, committer=author, author_date=date, commit_date=date)
-    repo.create_tag(f'releases/{release}')
+    repo.index.commit(release, committer=author, commit_date=date)
+
+    tag = f'releases/{release}'
+    repo.create_tag(tag)
+
+    # Store the list of files present using Git notes. This allows us to do
+    # things like display the number of files per release in the README in an
+    # existing repo.
+    file_info = {}
+    for input_file_path in input_path.iterdir():
+        if not input_file_path.is_file():
+            continue
+        if input_file_path.name not in file_names:
+            continue
+
+        sha256 = hashlib.sha256()
+        with open(input_file_path, 'rb') as f:
+            while data := f.read(66536):
+                sha256.update(data)
+
+        file_info[input_file_path.name] = {
+            'sha256': sha256.hexdigest()
+        }
+
+    notes = {
+        'files': file_info,
+    }
+    repo.git.notes('add', '--ref', 'source-info', '-m', json.dumps(notes), tag)
 
     end_time = time.time()
-
     print(f'Completed {release} (history took {end_time-git_time:.3f} s; {end_time-start_time:.3f} s in total)')
+    print('-'*80)
+
+    last_release = release
 
 overall_end_time = time.time()
 
 print(f'Completed {len(new_releases)} releases in {overall_end_time-overall_start_time:.3f}')
+print('-'*80)
 
 URL = "https://github.com/branw/habbo-shockwave-client-sources"
 
-table = ''
+print('Loading all release info')
+
 all_releases = get_releases_from_tags(repo.tags)
+all_releases_with_notes = get_notes_for_releases(repo, all_releases)
+
+print('Creating releases table')
+
+# Create a Markdown table of releases for the README
+release_table = ''
 last_release = None
-for release in all_releases:
+for release, notes in all_releases_with_notes:
     is_new_version = get_version_from_release(last_release) < get_version_from_release(release)
 
     line = '|**' if is_new_version else '|'
     line += release
+    line += '**|**' if is_new_version else '|'
+    line += f"{len(notes['files'])}"
     line += '**|**' if is_new_version else '|'
     line += f'[Browse]({URL}/tree/releases/{release})'
     line += '**|' if is_new_version else '|'
@@ -216,15 +302,42 @@ for release in all_releases:
         line += '**' if is_new_version else ''
     line += '|\n'
 
-    table += line
+    release_table += line
     last_release = release
 
+print('Creating files table')
+
+# Create a Markdown table with each file's first and last appearance
+file_appearances = {}
+for release, notes in all_releases_with_notes:
+    for file in notes['files'].keys():
+        if file not in file_appearances:
+            file_appearances[file] = []
+        file_appearances[file].append(release)
+
+file_table = ''
+for file, appearances in sorted(file_appearances.items(), key=lambda kv: len(kv[1]), reverse=True):
+    first_release = appearances[0]
+    last_release = appearances[-1]
+    line = f'|{file}|{len(appearances)}' + \
+           f'|[{first_release}]({URL}/tree/releases/{first_release})' + \
+           f'|[{last_release}]({URL}/tree/releases/{last_release})|'
+
+    file_table += line + '\n'
+
+# Update the README
 with open('README.md', 'rb') as f:
     readme = f.read()
 with open('README.md', 'wb') as f:
-    f.write(re.sub(
-        rb'\|\*\*.*\n\n## Generator',
-        table.encode() + b'\n## Generator',
+    readme = re.sub(
+        rb'\|\*\*.*\n\n### Files',
+        release_table.encode() + b'\n### Files',
         readme,
-        flags=re.DOTALL))
+        flags=re.DOTALL)
+    readme = re.sub(
+        rb'\|--------------\|.*\|.*\n\n## Generator',
+        rb'|--------------|\n' + file_table.encode() + b'\n## Generator',
+        readme,
+        flags=re.DOTALL)
+    f.write(readme)
 
