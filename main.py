@@ -90,11 +90,15 @@ existing_releases = []
 if repo := try_getting_git_repo(staging_path):
     existing_releases.extend(get_releases_from_tags(repo.tags))
 else:
-    repo = git.Repo.init(staging_path)
+    repo = git.Repo.init(staging_path, initial_branch='sources')
 
 new_releases = [release for release in RELEASE_ORDER
                 if release in releases and release not in existing_releases]
 print('New releases:', new_releases)
+
+unknown_releases = [release for release in releases if release not in RELEASE_ORDER]
+if unknown_releases:
+    raise Exception('Unknown releases found, please update releases.txt:\n ', '\n'.join(unknown_releases))
 
 overall_start_time = time.time()
 
