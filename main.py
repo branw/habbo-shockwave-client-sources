@@ -233,8 +233,8 @@ for release in new_releases:
 
     author = git.Actor('Habbo Devs', None)
     # TODO use more relevant dates (#2)
-    date = str(datetime.datetime(2000, 1, 1))
-    repo.index.commit(release, committer=author, commit_date=date)
+    date = str(datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc))
+    repo.index.commit(release, author=author, committer=author, author_date=date, commit_date=date)
 
     tag = f'releases/{release}'
     repo.create_tag(tag)
@@ -320,8 +320,8 @@ for file, appearances in sorted(file_appearances.items(), key=lambda kv: len(kv[
     first_release = appearances[0]
     last_release = appearances[-1]
     line = f'|{file}|{len(appearances)}' + \
-           f'|[{first_release}]({URL}/tree/releases/{first_release})..' + \
-           f'[{last_release}]({URL}/tree/releases/{last_release})|'
+           f'|[{first_release}]({URL}/tree/releases/{first_release}/{file}/)..' + \
+           f'[{last_release}]({URL}/tree/releases/{last_release}/{file}/)|'
 
     file_table += line + '\n'
 
