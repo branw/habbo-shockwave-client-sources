@@ -271,7 +271,7 @@ for release in new_releases:
 
 overall_end_time = time.time()
 
-print(f'Completed {len(new_releases)} releases in {overall_end_time-overall_start_time:.3f}')
+print(f'Completed {len(new_releases)} releases in {overall_end_time-overall_start_time:.3f} s')
 print('-'*80)
 
 URL = "https://github.com/branw/habbo-shockwave-client-sources"
@@ -320,8 +320,8 @@ for file, appearances in sorted(file_appearances.items(), key=lambda kv: len(kv[
     first_release = appearances[0]
     last_release = appearances[-1]
     line = f'|{file}|{len(appearances)}' + \
-           f'|[{first_release}]({URL}/tree/releases/{first_release})' + \
-           f'|[{last_release}]({URL}/tree/releases/{last_release})|'
+           f'|[{first_release}]({URL}/tree/releases/{first_release})..' + \
+           f'[{last_release}]({URL}/tree/releases/{last_release})|'
 
     file_table += line + '\n'
 
@@ -335,8 +335,8 @@ with open('README.md', 'wb') as f:
         readme,
         flags=re.DOTALL)
     readme = re.sub(
-        rb'\|--------------\|.*\|.*\n\n## Generator',
-        rb'|--------------|\n' + file_table.encode() + b'\n## Generator',
+        rb'\|-------------------------------\|.*\|.*\n\n## Generator',
+        rb'|-------------------------------|\n' + file_table.encode() + b'\n## Generator',
         readme,
         flags=re.DOTALL)
     f.write(readme)
