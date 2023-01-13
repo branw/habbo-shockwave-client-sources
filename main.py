@@ -13,6 +13,10 @@ import datetime
 with open('releases.txt', 'r') as f:
     RELEASE_ORDER = f.read().strip().split()
 
+# https://stackoverflow.com/a/40884093/5616282
+GIT_EMPTY_TREE_COMMIT_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+
+
 # https://stackoverflow.com/a/39956572/5616282
 def try_getting_git_repo(path):
     try:
@@ -109,7 +113,7 @@ print(f'Found {len(new_releases)} new releases:', new_releases)
 
 unknown_releases = [release for release in releases if release not in RELEASE_ORDER]
 if unknown_releases:
-    raise Exception('Unknown releases found, please update releases.txt:\n ', '\n'.join(unknown_releases))
+    raise Exception('Unknown releases found, please update releases.txt:\n ' + '\n'.join(unknown_releases))
 
 print('-'*80)
 overall_start_time = time.time()
@@ -299,18 +303,23 @@ last_release = None
 for release, notes in all_releases_with_notes:
     is_new_version = get_version_from_release(last_release) < get_version_from_release(release)
 
+    commit = repo.tags[f'releases/{release}'].commit
+
+    # Get the number of changes/additions/deletions in the commit
+    last_ref = f'releases/{last_release}' if last_release else GIT_EMPTY_TREE_COMMIT_HASH
+    diff_shortstat = repo.git.diff('--shortstat', last_ref, f'releases/{release}').strip()
+    diff_text = diff_shortstat if diff_shortstat else 'Empty Diff'
+
     line = '|**' if is_new_version else '|'
-    line += release
+    line += f'[{release}]({URL}/tree/releases/{release})'
     line += '**|**' if is_new_version else '|'
     line += f"{len(notes['files'])}"
     line += '**|**' if is_new_version else '|'
-    line += f'[Browse]({URL}/tree/releases/{release})'
-    line += '**|' if is_new_version else '|'
     if last_release:
-        line += '**' if is_new_version else ''
-        line += f'[Diff]({URL}/compare/releases/{last_release}...releases/{release})'
-        line += '**' if is_new_version else ''
-    line += '|\n'
+        line += f'[{diff_text}]({URL}/compare/releases/{last_release}...releases/{release})'
+    else:
+        line += f'[{diff_text}]({URL}/commit/{commit.hexsha})'
+    line += '**|\n' if is_new_version else '|\n'
 
     release_table += line
     last_release = release
