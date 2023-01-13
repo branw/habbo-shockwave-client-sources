@@ -172,6 +172,7 @@ for i, release in enumerate(new_releases):
 
     # Process the outputs
     files_to_commit = []
+    script_names = {}
     for output_path, process in work:
         process.wait()
 
@@ -197,10 +198,13 @@ for i, release in enumerate(new_releases):
 
                 script_files_by_simplified_name[new_name] = generated_file_path
 
+        script_names[output_path.name] = list(script_files_by_simplified_name.keys())
+
         for new_name, existing_path in script_files_by_simplified_name.items():
             new_path = output_path / new_name
             os.rename(existing_path, new_path)
             files_to_commit.append(new_path)
+            print(f'+ Adding {output_path.name}/{new_name}')
 
             # Old Macs used "\r" for line endings, which confuses GitHub
             convert_mac_line_endings_to_unix(new_path)
@@ -228,7 +232,7 @@ for i, release in enumerate(new_releases):
         entire_file_deleted = last_release_with_file[file_name] == last_release
         only_script_deleted = file_name in file_names
         if entire_file_deleted or only_script_deleted:
-            print(f'Pruning {change.a_path} (deleted {"file" if entire_file_deleted else "script"})')
+            print(f'- Pruning {change.a_path} (deleted {"file" if entire_file_deleted else "script"})')
             deletions_to_commit.append(change.a_path)
 
     if deletions_to_commit:
@@ -258,7 +262,8 @@ for i, release in enumerate(new_releases):
                 sha256.update(data)
 
         file_info[input_file_path.name] = {
-            'sha256': sha256.hexdigest()
+            'sha256': sha256.hexdigest(),
+            # 'scripts': script_names[input_file_path.name],
         }
 
     notes = {
@@ -314,6 +319,10 @@ print('Creating files table')
 file_appearances = {}
 for release, notes in all_releases_with_notes:
     for file in notes['files'].keys():
+        # # Don't count files that had no scripts in a release
+        # if not notes['files'][file]['scripts']:
+        #     continue
+
         if file not in file_appearances:
             file_appearances[file] = []
         file_appearances[file].append(release)
