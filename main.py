@@ -66,6 +66,8 @@ def get_notes_for_releases(repo, releases):
 def get_version_from_release(release):
     if release is None:
         return 0
+    elif release.startswith('dcr'):
+        return 1  # TODO find out actual version numbers of the early releases
     elif release.startswith('release'):
         return int(re.search(r'release(\d+)[_.]?(.*)', release).group(1))
     elif release.startswith('r'):
